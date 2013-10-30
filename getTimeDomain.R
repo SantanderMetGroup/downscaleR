@@ -17,6 +17,10 @@
 			# (i.e., seasons for different years) from NetCDF files in a more efficient way.
 			# Note that this is not necessary in the case of ASCII source files, but implemented in all cases for simplicity (in this case, time indices are unlisted)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#season = c(12,1,2)
+#years = 2009
+
 getTimeDomain <- function(timeDates, season, years) {
 	timeDates <- timeDates
 	startDay <- timeDates[1]
@@ -53,18 +57,22 @@ getTimeDomain <- function(timeDates, season, years) {
 		}
 		timeInd <- which((timeDates$year + 1900) %in% years & (timeDates$mon + 1) %in% season)
 		# Remove tails/heads of the years to match season start/end
+		# TODO fix single year crossing seasons
 		ranks <- rank(season)
 		for (i in 2:length(season)) {
 			ranks[i] <- sign(ranks[i] - ranks[i-1])
 		}
 		crossSeason <- which(sign(ranks) == -1)
-		rm.ind.start <- which((timeDates$mon + 1) %in% season[crossSeason : length(season)] & (timeDates$year + 1900) %in% years[1])
-		rm.ind.end <- which((timeDates$mon + 1) %in% season[1 : (crossSeason - 1)] & (timeDates$year + 1900) %in% years[length(years)])
-		timeInd <- setdiff(timeInd, c(rm.ind.start, rm.ind.end))
+		rm.ind <- which((timeDates$mon + 1) %in% season[1 : (crossSeason - 1)] & (timeDates$year + 1900) %in% years[length(years)])
+		if (length(years) > 1) {
+			rm.ind <- c(rm.ind, which((timeDates$mon + 1) %in% season[crossSeason : length(season)] & (timeDates$year + 1900) %in% years[1]))
+		} 
+		timeInd <- setdiff(timeInd, rm.ind)
 	} else {
 		timeInd <- which((timeDates$year + 1900) %in% years & (timeDates$mon + 1) %in% season)
 	}
 	dateSlice <- timeDates[timeInd]
+	# TODO: esta parte casca cuando solo se coge un año y es crossing-year season (por lo de years-1, creo)
 	# Particion de la time slice en tramos continuos en forma de lista (timeIndList)	
 	brkInd <- rep(1, length(timeInd))
 	for (i in 2:length(timeInd)) {

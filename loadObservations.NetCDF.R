@@ -33,8 +33,8 @@ if (.jinstanceof(fc.list[[1]], "ucar.nc2.ft.StationTimeSeriesFeatureCollection")
 #            st$getCalendarDateRange()$toString()
 	
 	########################
-	lonLim = c(-3,-2)
-	latLim = c(42,43)
+#	lonLim = c(-3,-2)
+#	latLim = c(42,43)
 	#######################
 	if (is.null(lonLim) == FALSE) {
 		latLon <- getLatLonDomainStations(lonLim, latLim, lons, lats)
@@ -45,8 +45,8 @@ if (.jinstanceof(fc.list[[1]], "ucar.nc2.ft.StationTimeSeriesFeatureCollection")
 		stInd <- 1:length(stations.list)
 	}
 	######################
-	ids
-	stationID = c("000229")
+#	ids
+#	stationID = c("000229")
 	######################
 	if (is.null(stationID) == FALSE) {
 		stInd <- match(stationID, ids)
@@ -83,6 +83,7 @@ if (.jinstanceof(fc.list[[1]], "ucar.nc2.ft.StationTimeSeriesFeatureCollection")
 	
 	str(stDataList)
 	stData <- do.call("cbind", stDataList)                  
+}
 }
 
 
