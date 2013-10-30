@@ -1,0 +1,5 @@
+identifier,short_name,time_step,lower_time_bound,upper_time_bound,aggr_fun,offset,scale,deaccum
+hus,Q,24h,0,0,none,0,1,0
+psl,SLPd,24h,0,24,mean,0,1,0
+ta,T,24h,0,0,none,-273.15,1,0
+zg,Z,24h,0,0,none,0,0.1020408,0
