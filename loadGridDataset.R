@@ -1,3 +1,4 @@
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 loadGridDataset <- function(dataset, var, dictionary = NULL, lonLim = NULL, latLim = NULL, level = NULL, season = NULL, years = NULL) {
       dataset <- dataset
       var <- var
@@ -37,9 +38,10 @@ loadGridDataset <- function(dataset, var, dictionary = NULL, lonLim = NULL, latL
                               err <- NULL
                               return(err)
                         })
-      if (is.null(vAxis)) {
-            message(paste("No vertical levels defined for variable", var))
-      } else {
+#      if (is.null(vAxis)) {
+#            message(paste("No vertical levels defined for variable", var))
+#      } else {
+      if (is.null(vAxis) == FALSE) {
             if (is.null(level)) {
                   stop("Variable with vertical levels: Argument 'level' required.\nSee data inventory for valid argument values")
             }
@@ -49,43 +51,42 @@ loadGridDataset <- function(dataset, var, dictionary = NULL, lonLim = NULL, latL
             }
       }
       # Data retrieval
-      dimensions <- unlist(strsplit(grid$getVariable()$getDimensionsString(), split = " "))
+	  message(paste("[",Sys.time(),"] - Retrieving data...", sep=""))
+      dims <- unlist(strsplit(grid$getVariable()$getDimensionsString(), split = " "))
 	  Data <- matrix(ncol = nrow(latLon$Grid), nrow = length(unlist(timePars$timeIndList)))
-      # Time slices
-      start <- rep(NA, length(dimensions))
+      start <- rep(NA, length(dims))
       count <- start
 	  if (is.null(vAxis) == FALSE) {
-      	start[grep("^level", dimensions)] <- levelInd
-      	count[grep("^level", dimensions)] <- 1
+      	start[grep("^level", dims)] <- levelInd
+      	count[grep("^level", dims)] <- 1
 	  }
-	  start[grep("^lat", dimensions)] <- latLon$LatIndex[1]
-      count[grep("^lat", dimensions)] <- length(latLon$LatIndex)
-
+	  start[grep("^lat", dims)] <- latLon$LatIndex[1]
+      count[grep("^lat", dims)] <- length(latLon$LatIndex)
 	  indRowRange <- c(1)
       for (i in 1:length(timePars$timeIndList)) {
             DataRowRange <- seq.int(indRowRange, length(timePars$timeIndList[[i]]) + indRowRange - 1)
             indRowRange <- DataRowRange[length(DataRowRange)] + 1
-            start[grep("^time", dimensions)] <- timePars$timeIndList[[i]][1]
-            count[grep("^time", dimensions)] <- length(timePars$timeIndList[[i]])
+            start[grep("^time", dims)] <- timePars$timeIndList[[i]][1]
+            count[grep("^time", dims)] <- length(timePars$timeIndList[[i]])
             if (is.null(latLon$DatelineCrossInd)) {
-                  start[grep("^lon", dimensions)] <- latLon$LonIndex[1]
-                  count[grep("^lon", dimensions)] <- length(latLon$LonIndex)
+                  start[grep("^lon", dims)] <- latLon$LonIndex[1]
+                  count[grep("^lon", dims)] <- length(latLon$LonIndex)
                   aux <- grid$getVariable()$read(as.integer(start), as.integer(count))$getStorage()
                   aux.mat <- matrix(aux, ncol = nrow(latLon$Grid), byrow = TRUE) ; rm(aux)
                   Data[DataRowRange, ] <- aux.mat ; rm(aux.mat)
             } else {
                   lonStartList <- list(1 : (latLon$DatelineCrossInd), (latLon$DatelineCrossInd + 1) : length(latLon$LonIndex))
-                  DataColRangeList <- list(1:(latLon$DatelineCrossInd * length(latLon$LatIndex)), (latLon$DatelineCrossInd * length(latLon$LatIndex) + 1) : nrow(latLon$Grid))
+                  DataColRangeList <- list(1 : (latLon$DatelineCrossInd * length(latLon$LatIndex)), (latLon$DatelineCrossInd * length(latLon$LatIndex) + 1) : nrow(latLon$Grid))
                   for (j in 1:length(lonStartList)) {
-                        start[grep("^lon", dimensions)] <- latLon$LonIndex[lonStartList[[j]][1]]
-                        count[grep("^lon", dimensions)] <- length(lonStartList[[j]])
+                        start[grep("^lon", dims)] <- latLon$LonIndex[lonStartList[[j]][1]]
+                        count[grep("^lon", dims)] <- length(lonStartList[[j]])
                         aux <- grid$getVariable()$read(as.integer(start), as.integer(count))$getStorage()
-                        aux.mat <- matrix(aux, ncol = length(DataColRangeList[[j]]), byrow = TRUE) #; rm(aux)
-                        Data[DataRowRange, DataColRangeList[[j]]] <- aux.mat #; rm(aux.mat)
+                        aux.mat <- matrix(aux, ncol = length(DataColRangeList[[j]]), byrow = TRUE) ; rm(aux)
+                        Data[DataRowRange, DataColRangeList[[j]]] <- aux.mat ; rm(aux.mat)
                   }
+				  latLon$Grid <- rbind(latLon$Grid[which(latLon$Grid[ ,1] < 0), ], latLon$Grid[which(latLon$Grid[ ,1] >= 0), ])
             }
-			latLon$Grid <- rbind(latLon$Grid[which(latLon$Grid[ ,1] < 0), ], latLon$Grid[which(latLon$Grid[ ,1] >= 0), ])
-      }
+	  }
       gds$close()
       # Var transformation
       if (is.null(dictionary) == FALSE) {
@@ -100,9 +101,29 @@ loadGridDataset <- function(dataset, var, dictionary = NULL, lonLim = NULL, latL
       }
       dateSliceStart <- as.POSIXlt(dateSliceStart)
       dateSliceEnd <- as.POSIXlt(dateSliceEnd)
+	  message(paste("[",Sys.time(),"] - Done.", sep=""))
       return(list("VarName" = standardName, "isStandard" = isStandard, "Level" = level, "Dates" = list("Start" = dateSliceStart,"End" = dateSliceEnd), "LonLatCoords" = latLon$Grid, "Data" = Data))
 }
 # End
+#
+#dataset = "/home/juaco/workspace/globalWildfires/fwi.ncml"
+#var = "fwi"
+#dictionary = NULL
+#lonLim = c(-130,-80)
+#latLim = c(20,50)
+#level = NULL
+#season = 6:9
+#years = 1961:1965
+#ex <- loadGridDataset(dataset, var, dictionary, lonLim, latLim, level, season, years)
+#df <- cbind.data.frame(ex$LonLatCoords, colMeans(ex$Data))
+# require(sp)
+# require(maptools)
+# data(wrld_simpl)
+# l <- as(wrld_simpl, "SpatialLines")
+# l1 <- list("sp.lines", l)
+#coordinates(df) <- c(1,2)
+#gridded(df) <- TRUE
+#spplot(df, sp.layout = list(l1), col.regions = topo.colors(21), scales = list(draw = TRUE))
 
 # Examples
 # dataset = "/home/juaco/temp/meteoR/datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml"

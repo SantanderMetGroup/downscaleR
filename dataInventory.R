@@ -9,7 +9,7 @@
 
 dataInventory <- function(dataset) {
       dataset <- dataset
-#      jString <- .jnew("java/lang/String", dataset)
+#	        jString <- .jnew("java/lang/String", dataset)
       gds = J("ucar.nc2.dt.grid.GridDataset")$open(dataset)
       varNames = unlist(strsplit(gsub("\\[|]|\\s", "", gds$getGrids()$toString()), ","))
       if (length(varNames) == 0) {
@@ -57,8 +57,8 @@ dataInventory <- function(dataset) {
       } else {
             # datasetType = "GridDataset"
             var.list = list()
-            for (i in 1:length(varNames)) {
-                  length(var.list) = i
+			for (i in 1:length(varNames)) {
+			      length(var.list) = i
                   dataVar <- gds$getDataVariable(varNames[i])
                   description = dataVar$getDescription()
                   varName = dataVar$getShortName()
@@ -109,6 +109,7 @@ dataInventory <- function(dataset) {
                               axis = gcs$getVerticalAxis()
                         }
                         axisType = axis$getAxisType()$toString()
+						# TODO: consider 2-D lon/lat dimension definition!!
                         if (grepl("^time|run|^lev", dimensions[j]) == FALSE) {
                               values = axis$getCoordValues() 
                         }
@@ -169,3 +170,5 @@ dataInventory <- function(dataset) {
 # sys4.inventory$Mean_sea_level_pressure_surface$Dimensions$run
 # # Forecast Time range
 # range(sys4.inventory$Mean_sea_level_pressure_surface$Dimensions$time1$Values)
+
+
