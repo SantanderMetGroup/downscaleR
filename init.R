@@ -4,7 +4,7 @@ rfuncs <- list.files("/home/juaco/workspace/gitRepo/downscaling/", full.names=TR
 for (i in 1:length(rfuncs)) {
       source(rfuncs[i])
 }
-## Read Vocabulary
+## Read vocabulary
 #vocabulary <- read.csv("./init/vocabulary.csv")
 #rm(list = c("i","rfuncs"))
 # Init JVM
