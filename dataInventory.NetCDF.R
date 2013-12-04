@@ -5,6 +5,7 @@ dataInventory.NetCDF <- function(dataset) {
       varNames <- unlist(strsplit(gsub("\\[|]|\\s", "", gds$getGrids()$toString()), ","))
       if (length(varNames) == 0) {
             # datasetType = "PointDataset"
+            # Note that the use of netCDF station data is not yet implemented
             ncds = gds$getNetcdfDataset()
             varList = .jevalArray(ncds$getVariables()$toArray())
             varNames = rep(NA, length(varList))
@@ -98,9 +99,21 @@ dataInventory.NetCDF <- function(dataset) {
                               axis <- gcs$getVerticalAxis()
                         }
                         axisType <- axis$getAxisType()$toString()
-                        # TODO: consider 2-D lon/lat dimension definition!!
+                        lonAxisShape <- gcs$getLonAxis()$getShape()
                         if (grepl("^time|run|^lev", dimensions[j]) == FALSE) {
-                              values <- axis$getCoordValues() 
+                              values <- axis$getCoordValues()
+                              if (grepl("^lon", dimensions[j])) {
+                                    values[which(values > 180)] <- values[which(values > 180)] - 360
+                                    if (length(lonAxisShape) == 2) {
+                                          values <- apply(t(matrix(values, ncol = lonAxisShape[1])), 2, min)
+                                    }
+                              }
+                              if (grepl("^lat", dimensions[j])) {
+                                    latAxisShape <- gcs$getLatAxis()$getShape()
+                                    if (length(latAxisShape) == 2) {
+                                          values <- apply(t(matrix(values, ncol = lonAxisShape[1])), 1, min)
+                                    }
+                              }
                         }
                         if(grepl("^lev", dimensions[j])) {
                               if (length(noLevelInd) > 0) {
@@ -132,3 +145,8 @@ dataInventory.NetCDF <- function(dataset) {
       return(var.list)
 }
 # End
+
+# Example
+dataset <- "/home/juaco/workspace/globalWildfires/fwi.ncml"
+di <- dataInventory(dataset)
+di
