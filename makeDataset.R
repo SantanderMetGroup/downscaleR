@@ -1,6 +1,6 @@
 # TODO: include argument pattern for inclusion of selected files according to regular expressions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-makeNcmlDataset <- function(source.dir, ncml.file) {
+makeDataset <- function(source.dir, ncml.file) {
       source.dir <- source.dir
       ncml.file <- ncml.file
       file.create(ncml.file)
