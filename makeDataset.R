@@ -1,12 +1,21 @@
 # TODO: include argument pattern for inclusion of selected files according to regular expressions
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-makeDataset <- function(source.dir, ncml.file, recursive = FALSE) {
+
+
+makeDataset <- function(source.dir, ncml.file, pattern = NULL, recursive = FALSE) {
       source.dir <- source.dir
       ncml.file <- ncml.file
+      pattern <- pattern
       recursive <- recursive
       message(paste("[",Sys.time(),"]", sep=""))
       file.create(ncml.file)
-	lf <- normalizePath(list.files(source.dir, full.names = TRUE, pattern = "\\.nc$", recursive = recursive), winslash = "/")
+      if (is.null(pattern)) {
+            lf <- normalizePath(list.files(source.dir, full.names = TRUE, pattern = "\\.nc$", recursive = recursive), winslash = "/")      
+      } else {
+            lf <- normalizePath(list.files(source.dir, full.names = TRUE, pattern = pattern, recursive = recursive), winslash = "/")      
+            lf <- lf[grep("\\.nc$", lf)]
+      }
+# 	lf <- normalizePath(list.files(source.dir, full.names = TRUE, pattern = pattern, recursive = recursive), winslash = "/")
 	message(paste("Creating dataset from", length(lf), "files"))
 	z <- file(ncml.file, "w")
       # [http://www.unidata.ucar.edu/software/netcdf/ncml/v2.2/Aggregation.html]
@@ -40,7 +49,18 @@ makeDataset <- function(source.dir, ncml.file, recursive = FALSE) {
 }
 # End
 
-# list.files('/home/juaco/.gvfs/SFTP for juaco on ui01.macc.unican.es/vols/seal/oceano/gmeteo/DATA/METEOLAB_PUBLIC/ObservationsData/WFDEI/daily/data/', recursive=TRUE)
-path <- "/home/juaco/.gvfs/SFTP for juaco on ui01.macc.unican.es/vols/seal/oceano/gmeteo/DATA/METEOLAB_PUBLIC/ObservationsData/WFDEI/daily/data/"
-makeDataset(path, ncml.file= "../../exampleDatasets/WFDEI_daily.ncml", recursive = TRUE)
-
+# # Example 1: non-recursive dataset creation with filtering by years
+# pat = paste(2001:2005, collapse="|")
+# path <- "/home/juaco/.gvfs/SFTP for juaco on ui01.macc.unican.es/vols/seal/oceano/gmeteo/DATA/METEOLAB_PUBLIC/ObservationsData/WFDEI/daily/data/fwi"
+# makeDataset(path, ncml.file= "../../exampleDatasets/fwi_WFDEI_daily.ncml", pattern=pat)
+# # Example 2: recursive dataset creation with filtering by years
+# pat = paste(2001:2005, collapse="|")
+# path <- "/home/juaco/.gvfs/SFTP for juaco on ui01.macc.unican.es/vols/seal/oceano/gmeteo/DATA/METEOLAB_PUBLIC/ObservationsData/WFDEI/daily/data"
+# makeDataset(source.dir=path, ncml.file="../../exampleDatasets/WFDEI_daily_2001_2005.ncml", pattern = pat, recursive = TRUE)
+# # Example 3: recursive dataset creation with filtering by years and variables
+# dataInventory("../../exampleDatasets/WFDEI_daily_2001_2005.ncml")
+## [2013-12-08 15:07:39]
+## Creating dataset from 497 files
+## [2013-12-08 15:35:40]
+## NcML file "../../exampleDatasets/WFDEI_daily_2001_2005.ncml" created from 497 files corresponding to 5 variables
+## Use 'dataInventory(NcML file)' to obtain a description of the dataset
