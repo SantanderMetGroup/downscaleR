@@ -18,24 +18,28 @@ dataInventory.ASCII <- function(dataset, rs) {
       rm(timeDates)
       station.info <- list("stationIDs" = as.character(stations[ ,1]), "stationNames" = as.character(stations[ ,2]), "Altitude" = stations[ ,5], "LonLatCoords" = stations[ ,3:4], "timeAxis" = timeAxis)
       rm(timeAxis)
-      info <- list("Stations" = station.info, "Variables" = var.info, "perc.missing" = NULL)
+      info <- list("Stations" = station.info, "Variables" = var.info, "Summary.stats" = NULL)
       if (isTRUE(rs)) {
             na.perc <- function(x) {round(length(which(is.na(x))) * 100 / length(x), 1)}
             aux.mat <- matrix(ncol = nrow(vars), nrow = length(station.info$stationIDs), dimnames = list(station.info$stationIDs, vars$ID))
+            stats.list <- list("missing.percent" = aux.mat, "min" = aux.mat, "max" = aux.mat, "mean" = aux.mat)
             for (i in 1:nrow(vars)) {
                   var <- read.csv(lf[grep(paste("^", vars$ID[i], "\\.*", sep = ""), list.files(dataset))], na.strings = var.info$missing.code[i])[ ,-1]
-                  aux.mat[ ,i] <- apply(var, 2, na.perc)
+                  stats.list[[1]][ ,i] <- apply(var, 2, na.perc)
+                  stats.list[[2]][ ,i] <- apply(var, 2, min, na.rm = TRUE)
+                  stats.list[[3]][ ,i] <- apply(var, 2, max, na.rm = TRUE)
+                  stats.list[[4]][ ,i] <- apply(var, 2, mean, na.rm = TRUE)
             }
-            info <- list("Stations" = station.info, "Variables" = var.info, "perc.missing" = aux.mat)
+            info <- list("Stations" = station.info, "Variables" = var.info, "Summary.stats" = stats.list)
       }
       return(info)
 }
 # End
-# Example wiki [https://github.com/SantanderMetGroup/downscaling/wiki/Data-inventory]
+
+# # Example wiki [https://github.com/SantanderMetGroup/downscaling/wiki/Data-inventory]
 # inventory.csv <- dataInventory(dataset = "datasets/observations/GSN_Iberia/", return.stats = TRUE)
 # str(inventory.csv)
 # inventory.csv$perc.missing
 # which(inventory.csv$perc.missing == max(inventory.csv$perc.missing), arr.ind = TRUE)
 # inventory.csv$Stations$stationNames[5]
-
 
