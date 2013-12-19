@@ -1,4 +1,4 @@
-downscaling
-===========
+downscaleR
+==========
 
 R package for statistical downscaling
