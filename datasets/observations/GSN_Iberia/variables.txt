@@ -1,4 +1,4 @@
-ID, DESCRIPTION, UNITS, MISSING_CODE, OTHER_INFO
-tmax, maximum daily temperature, 0.1 deg C, NaN, GSN
-tmin, minimum daily temperature, 0.1 deg C, NaN, GSN
-precip, daily accumulated precipitation, 0.1 mm, NaN, GSN
+variable, longname, unit, missing_code, type, source, url
+tmax, maximum daily temperature, 0.1 deg C, NaN, observation, Global Station Network, ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/gsn/
+tmin, minimum daily temperature, 0.1 deg C, NaN, observation, Global Station Network, ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/gsn/
+precip, daily accumulated precipitation, 0.1 mm, NaN, observation, Global Station Network, ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/gsn/
