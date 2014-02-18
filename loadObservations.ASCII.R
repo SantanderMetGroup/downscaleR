@@ -56,12 +56,12 @@ loadObservations.ASCII <- function(source.dir, var, stationID = NULL, lonLim = N
 	## Metadata
       message(paste("[", Sys.time(), "] Retrieving metadata ...", sep = ""))
       ind.meta <- c(1:length(names(aux)))[-pmatch(c("station_id", "longitude", "latitude"), names(aux))]
-      rm(aux)      
       if (length(ind.meta) == 0) {
             meta.list <- NULL
       } else {
             meta.list <- as.list(aux[stInd,ind.meta])
       }
+      rm(aux)  
       return(list("variable" = var, "station_id" = stids, "LonLatCoords" = SpatialPoints(coords), "time" = timePars, "metadata" = meta.list, "Data" = Data))
 }
 # End

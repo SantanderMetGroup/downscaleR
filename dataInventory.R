@@ -1,14 +1,14 @@
 # dataset can be either a ncml-like file or a directory in the case of observations
 dataInventory <- function(dataset, return.stats = FALSE) {
       rs <- return.stats
-      message(paste("[", Sys.time(), "] - Doing inventory ...", sep = ""))
+      message(paste("[", Sys.time(), "] Doing inventory ...", sep = ""))
       if (isTRUE(file.info(dataset)$isdir)) {
             out <- dataInventory.ASCII(dataset, rs)
       } else {
             out <- dataInventory.NetCDF(dataset)
       }
       return(out)
-      message(paste("[", Sys.time(), "] - Done.", sep = ""))
+      message(paste("[", Sys.time(), "] Done.", sep = ""))
 }
 # End
 
