@@ -1,18 +1,8 @@
-# TODO: Add comment
-# 
-# Author: juaco
-###############################################################################
-loadObservations.ASCII <- function(source.dir, shortName, stationID = NULL, lonLim = NULL, latLim = NULL, season = NULL, years = NULL) {
-	source.dir <- source.dir
-	shortName <- shortName
-	stationID <- stationID 
-	lonLim <- lonLim
-	latLim <- latLim
-	season <- season
-	years <- years
-	## Station Ids
-	stids <- read.csv(paste(source.dir, "/stations.txt", sep = ""), colClasses = "character")[ ,1]
-	if (is.null(stationID) == FALSE) {
+loadObservations.ASCII <- function(source.dir, var, stationID = NULL, lonLim = NULL, latLim = NULL, season = NULL, years = NULL) {
+      aux <- read.csv(paste(source.dir, "/stations.txt", sep = ""), stringsAsFactors = FALSE, strip.white = TRUE)
+      # Station codes
+      stids <- read.csv(paste(source.dir, "/stations.txt", sep = ""), colClasses = "character")[ ,grep("station_id", names(aux), ignore.case = TRUE)]
+      if (!is.null(stationID)) {
 		stInd <- match(stationID, stids)
 		if (any(is.na(stInd))) {
 			stop("'stationID' values not found.\nCheck data inventory")
@@ -20,10 +10,10 @@ loadObservations.ASCII <- function(source.dir, shortName, stationID = NULL, lonL
 	} else {
 		stInd <- 1:length(stids)
 	}
-	## Longitude and latitude
-	lons <- read.csv(paste(source.dir, "/stations.txt", sep = ""))[ ,3]
-	lats <- read.csv(paste(source.dir, "/stations.txt", sep = ""))[ ,4]
-	if (is.null(lonLim) == FALSE) {
+      ## Longitude and latitude
+	lons <- aux[ ,grep("^longitude$", names(aux), ignore.case = TRUE)]
+	lats <- aux[ ,grep("^latitude$", names(aux), ignore.case = TRUE)]
+	if (!is.null(lonLim)) {
 		latLon <- getLatLonDomainStations(lonLim, latLim, lons, lats)
 		if (length(latLon$stInd) == 0) {
 			stop("No stations were found in the selected spatial domain")
@@ -32,34 +22,46 @@ loadObservations.ASCII <- function(source.dir, shortName, stationID = NULL, lonL
 		coords <- latLon$stCoords
 		rm(latLon)
 	} else {
-		coords <- cbind(lons, lats)[stInd, ]
+		coords <- matrix(cbind(lons, lats)[stInd, ], ncol = 2)
 	}
-	if (is.null(nrow(coords)) == FALSE) {
-		row.names(coords) <- stids[stInd]
+      stids <- stids[stInd]
+      dimnames(coords) <- list(stids, c("longitude", "latitude"))
+      ## Time dimension
+	fileInd <- grep(paste("^", var, "\\.txt", sep = ""), list.files(source.dir))
+	if(length(fileInd) == 0) {
+            stop("[", Sys.time(),"] Variable requested not found")
 	}
-	## Time dimension
-	fileInd <- grep(paste("^", shortName, "\\.txt", sep = ""), list.files(source.dir))
-	timeString <- read.csv(list.files(source.dir, full.names=TRUE)[fileInd], colClasses = "character")[ ,1]
-	if (nchar(timeString[1]) == 8) {
+      timeString <- read.csv(list.files(source.dir, full.names = TRUE)[fileInd], colClasses = "character")[ ,1]
+      if (nchar(timeString[1]) == 8) {
 		timeDates <- strptime(timeString, "%Y%m%d")  
 	} else {
 		timeDates <- strptime(timeString, "%Y%m%d%H")
 	}
-	timePars <- getTimeDomain(timeDates, season, years)
-	# Data retrieval
-	Data <- as.data.frame(read.csv(list.files(source.dir, full.names = TRUE)[fileInd])[unlist(timePars$timeIndList), stInd + 1])
-	names(Data) <- stids[stInd]
-	stNames <- gsub("^\\s|\\s*$", "", read.csv(paste(source.dir, "/stations.txt", sep = ""))[stInd,2])
-	stations <- cbind.data.frame("stationIDs" = stids[stInd], "stationNames" = stNames, stringsAsFactors = FALSE)
-	return(list("VarName" = shortName, "Stations" = stations, "LonLatCoords" = coords, "TimePars" = timePars, "Data" = Data))
+      rm(timeString)
+      timePars <- getTimeDomain(timeDates, season, years)
+      rm(timeDates)
+      ## missing data code
+      vars <- read.csv(list.files(source.dir, full.names=TRUE)[grep("variables", list.files(source.dir), ignore.case = TRUE)])
+      miss.col <- grep("missing_code", names(vars), ignore.case = TRUE)
+      if(length(miss.col) > 0) {
+            na.string <- vars[grep(var, vars[ ,grep("variable", names(vars), ignore.case = TRUE)]), miss.col]
+            rm(vars, miss.col)
+      } else {
+            na.string <- NA
+      }
+      # Data retrieval
+      message(paste("[", Sys.time(), "] Loading data ...", sep = ""))
+      Data <- as.data.frame(read.csv(list.files(source.dir, full.names = TRUE)[fileInd], na.strings = na.string)[unlist(timePars$timeIndList), stInd + 1])
+      names(Data) <- stids
+	## Metadata
+      message(paste("[", Sys.time(), "] Retrieving metadata ...", sep = ""))
+      ind.meta <- c(1:length(names(aux)))[-pmatch(c("station_id", "longitude", "latitude"), names(aux))]
+      rm(aux)      
+      if (length(ind.meta) == 0) {
+            meta.list <- NULL
+      } else {
+            meta.list <- as.list(aux[stInd,ind.meta])
+      }
+      return(list("variable" = var, "station_id" = stids, "LonLatCoords" = SpatialPoints(coords), "time" = timePars, "metadata" = meta.list, "Data" = Data))
 }
 # End
-
-# Example
-#list.files('/home/juaco/temp/VALUE_validationTest_v2')
-#source.dir = '/home/juaco/temp/VALUE_validationTest_v2'
-#dictionary = "/home/juaco/temp/VALUE_validationTest_v2/dictionary.dic"
-#var = "ta"
-#lonLim = c(-10,10)
-#latLim = c(35,44)
-#ex <- loadObservations.ASCII(source.dir, shortName = "temp", stationID = NULL, , season = c(12,1,2), years = 1987:2000)

@@ -1,10 +1,4 @@
-# Description: Function to perform the spatial selection of stations based on lon-lat window definitions
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 getLatLonDomainStations <- function(lonLim, latLim, lons, lats) {
-      lonLim <- lonLim
-      latLim <- latLim
-      lons <- lons
-      lats <- lats
       if (length(lonLim) > 2 | length(latLim) > 2) {
             stop("Invalid definition of geographical position")
       }
@@ -17,7 +11,9 @@ getLatLonDomainStations <- function(lonLim, latLim, lons, lats) {
             stInd <- intersect(lonInd, latInd)
       } else {
             stInd <- which.min(sqrt((lons-lonLim)^2 + (lats-latLim)^2))
+            message("[", Sys.time(),"] Closest station located at ", round(min(sqrt((lons-lonLim)^2 + (lats-latLim)^2)), digits=4), " spatial units from the specified 'lonLim-latLim' coordinate") 
+      
       }
-      return(list("stInd" = stInd, "stCoords" = cbind(lons, lats)[stInd, ]))
+      return(list("stInd" = stInd, "stCoords" = as.matrix(cbind(lons[stInd], lats[stInd]))))
 }
 # End
