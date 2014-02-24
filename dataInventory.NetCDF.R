@@ -1,8 +1,8 @@
 dataInventory.NetCDF <- function(dataset) {
-      dataset <- dataset
       # jString <- .jnew("java/lang/String", dataset)
       gds <- J("ucar.nc2.dt.grid.GridDataset")$open(dataset)
       varNames <- unlist(strsplit(gsub("\\[|]|\\s", "", gds$getGrids()$toString()), ","))
+      varNames
       if (length(varNames) == 0) {
             # datasetType = "PointDataset"
             # Note that the use of netCDF station data is not yet implemented
@@ -12,30 +12,30 @@ dataInventory.NetCDF <- function(dataset) {
             for (k in 1:length(varList)) {
                   varNames[k] = varList[[k]]$getShortName()
             }
-            ## Station IDs -----------------------------------------------------------------------
+            ## Station IDs 
             stationIds = unlist(strsplit(varList[[grep("station", varNames)]]$read()$toString(),","))
-            ## Coordinates -----------------------------------------------------------------------
+            ## Coordinates 
             coordSysList = .jevalArray(ncds$getCoordinateAxes()$toArray())
             coordNames = rep(NA, length(coordSysList))
             for (k in 1:length(coordSysList)) {
                   coordNames[k] = coordSysList[[k]]$getShortName()
             }
-            ## Longitude and Latitude ------------------------------------------------------------
+            ## Longitude and Latitude 
             lonUnits = coordSysList[[grep("longitude", coordNames)]]$getUnitsString()
             lon = coordSysList[[grep("longitude", coordNames)]]$getCoordValues()
             latUnits = coordSysList[[grep("latitude", coordNames)]]$getUnitsString()
             lat = coordSysList[[grep("latitude", coordNames)]]$getCoordValues()
             lonLatList = list("Units" = paste(c(latUnits, lonUnits), collapse = ","), "Values" = cbind(lat,lon))
-            ## Altitude --------------------------------------------------------------------------
+            ## Altitude 
             altUnits = coordSysList[[grep("altitude", coordNames)]]$getUnitsString()
             altValues = coordSysList[[grep("altitude", coordNames)]]$getCoordValues()
             altList = list("Units" = altUnits, "Values" = altValues)
-            ## Times -----------------------------------------------------------------------------
+            ## Times 
             timeUnits = coordSysList[[grep("time", coordNames)]]$getUnitsString()
             timeStep = coordSysList[[grep("time", coordNames)]]$getIncrement()
             timeRange = c(coordSysList[[grep("time", coordNames)]]$getMinValue(), coordSysList[[grep("time", coordNames)]]$getMaxValue())
             timeList = list("Units" = timeUnits, "TimeStep" = timeStep, "TimeRange" = timeRange)
-            ## Rest of variables -----------------------------------------------------------------
+            ## Rest of variables 
             climVars = varNames[which(varNames %in% c(coordNames, grep("station", varNames, value=TRUE)) == FALSE)]
             climVarList = list()
             for (k in 1:length(climVars)) {
@@ -58,8 +58,6 @@ dataInventory.NetCDF <- function(dataset) {
                   units <- dataVar$getUnitsString()
                   grid <- gds$findGridByName(varName)
                   gridLevels <- as.numeric(unlist(strsplit(gsub("\\[|]|\\s","", grid$getLevels()$toString()), split=",")))
-                  # Handles the non-existence of some levels for variables with vertical axis
-                  ## It is important to know the position of the dimension level (it cannot be guaranteed that it is the second)
                   levelDimIndex <- grep("^lev", dimensions)
                   if (length(gridLevels) > 0) {
                         v <- c()
@@ -99,8 +97,9 @@ dataInventory.NetCDF <- function(dataset) {
                               axis <- gcs$getVerticalAxis()
                         }
                         axisType <- axis$getAxisType()$toString()
-                        lonAxisShape <- gcs$getLonAxis()$getShape()
-                        if (grepl("^time|run|^lev", dimensions[j]) == FALSE) {
+                      
+                      lonAxisShape <- gcs$getLonAxis()$getShape()
+                        if (!grepl("^time|run|^lev", dimensions[j])) {
                               values <- axis$getCoordValues()
                               if (grepl("^lon", dimensions[j])) {
                                     values[which(values > 180)] <- values[which(values > 180)] - 360
@@ -137,6 +136,9 @@ dataInventory.NetCDF <- function(dataset) {
                   for (h in 1:length(dim.list)) {
                         dimShape[h] <- length(dim.list[[h]]$Values)
                   }
+                  if(!exists("time.agg")) {
+                      time.agg <- NULL
+                  }
                   var.list[[i]] <- list("Description" = description, "DataType" = dataType, "Units" = units, "TimeStep" = time.agg, "Dimensions" = dim.list)
             }
             names(var.list) <- varNames
@@ -145,8 +147,3 @@ dataInventory.NetCDF <- function(dataset) {
       return(var.list)
 }
 # End
-
-# Example
-#dataset <- "/home/juaco/workspace/globalWildfires/fwi.ncml"
-#di <- dataInventory(dataset)
-#di
