@@ -1,19 +1,28 @@
 # Load functions
 #rfuncs <- normalizePath(list.files(full.names=TRUE)[-grep("\\.md$|^init\\.R|loadGridDataset", list.files())])
-rfuncs <- list.files("/home/juaco/workspace/gitRepo/downscaling/", full.names=TRUE)[-grep("\\.md$|^init\\.R|\\.Rproj", list.files("/home/juaco/workspace/gitRepo/downscaling/"))]
+exceptions <- c("ignore|\\.md$|^init\\.R|\\.Rproj|datasets|commonR|loadPredictors.GridDataset.R")
+
+rfuncs <- list.files(full.names=TRUE)[-grep(exceptions, list.files())]
 for (i in 1:length(rfuncs)) {
+      message("Sourcing", rfuncs[i], sep = " ")
       source(rfuncs[i])
 }
-rm(list=c("rfuncs", "i"))
+rm(list=c("rfuncs", "i", "exceptions"))
 ## Read vocabulary
 #vocabulary <- read.csv("./init/vocabulary.csv")
 #rm(list = c("i","rfuncs"))
+if (isTRUE("sp" %in% installed.packages()[ ,1])) {
+    library(sp)
+} else {
+    install.packages("sp", repos="http://cran.es.r-project.org", dependencies=TRUE)
+}
 # Init JVM
 if (isTRUE("rJava" %in% installed.packages()[ ,1])) {
-      require(rJava)
+    library(rJava)
 	options(java.parameters = "-Xmx2g")
-      .jinit("/home/juaco/workspace/netcdfAll-4.3.jar")
+    .jinit("/home/juaco/workspace/netcdfAll-4.3.jar")
 } else {
-      warning("library 'rJava' not found. Please install 'rJava' and source the init.R file again.")
+    install.packages("rJava", repos="http://cran.es.r-project.org", dependencies=TRUE)
+    #       warning("library 'rJava' not found. Please install 'rJava' and source the init.R file again.")
 }
 #End
