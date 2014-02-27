@@ -1,7 +1,6 @@
 # Author: juaco
 # Date: 28 Oct 2013
 # Info: netcdf-Java 4.3.18 / R 3.0.2/ rJava 0.9-4
-# TODO: complete documentation
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ====================
 # getTimeDomain.R #
@@ -18,7 +17,7 @@
 			# Note that this is not necessary in the case of ASCII source files, but implemented in all cases for simplicity (in this case, time indices are unlisted)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 getTimeDomain <- function(timeDates, season, years) {
-      startDay <- timeDates[1]
+    startDay <- timeDates[1]
 	endDay <- timeDates[length(timeDates)]
 	startYear <- startDay$year + 1900
 	endYear <- endDay$year + 1900
@@ -43,7 +42,7 @@ getTimeDomain <- function(timeDates, season, years) {
 		}
 	}
 	## year-crossing season
-	if (identical(season, sort(season)) == FALSE) {
+    if (!identical(season, sort(season))) {
 		if (years[1] == startYear) {
 			warning(paste("First date in dataset: ", startDay, ". Seasonal data for the first year requested not available", sep = ""))
 		} else {
@@ -64,20 +63,24 @@ getTimeDomain <- function(timeDates, season, years) {
 	} else {
 		timeInd <- which((timeDates$year + 1900) %in% years & (timeDates$mon + 1) %in% season)
 	}
-	dateSlice <- timeDates[timeInd]
-	brkInd <- rep(1, length(timeInd))
-	for (i in 2:length(timeInd)) {
-		brkInd[i] <- timeInd[i] - timeInd[i-1]
-	}
-	brkInd <- c(1, which(brkInd > 1), length(timeInd) + 1)
-      timeIndList <- list()
-      if (length(brkInd) == 0) { 
-		timeIndList[[1]] <- timeInd - 1
+    dateSlice <- timeDates[timeInd]
+    timeIndList <- list()
+    if (length(dateSlice) > 1) {
+        brkInd <- rep(1, length(timeInd))
+	    for (i in 2:length(timeInd)) {
+		    brkInd[i] <- timeInd[i] - timeInd[i-1]
+	    }
+	    brkInd <- c(1, which(brkInd > 1), length(timeInd) + 1)
+        if (length(brkInd) == 0) { 
+		    timeIndList[[1]] <- timeInd - 1
+	    } else {
+		    for (i in 2:length(brkInd)) {
+		        timeIndList[[i - 1]] <- timeInd[brkInd[i - 1] : (brkInd[i] - 1)] - 1
+		    }
+	    }
 	} else {
-		for (i in 2:length(brkInd)) {
-			timeIndList[[i - 1]] <- timeInd[brkInd[i - 1] : (brkInd[i] - 1)] - 1
-		}
-	}
-      return(list("dateSlice" = dateSlice, "timeIndList" = timeIndList))
+	    timeIndList[[1]] <- timeInd - 1
+    }
+    return(list("dateSlice" = dateSlice, "timeIndList" = timeIndList))
 }
 # End
