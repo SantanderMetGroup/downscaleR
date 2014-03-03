@@ -11,7 +11,7 @@ getLatLonDomainStations <- function(lonLim, latLim, lons, lats) {
             stInd <- intersect(lonInd, latInd)
       } else {
             stInd <- which.min(sqrt((lons-lonLim)^2 + (lats-latLim)^2))
-            message("[", Sys.time(),"] Closest station located at ", round(min(sqrt((lons-lonLim)^2 + (lats-latLim)^2)), digits=4), " spatial units from the specified 'lonLim-latLim' coordinate") 
+            message("[", Sys.time(),"] Closest station located at ", round(min(sqrt((lons-lonLim)^2 + (lats-latLim)^2)), digits=4), " spatial units from the specified [lonLim,latLim] coordinate") 
       
       }
       return(list("stInd" = stInd, "stCoords" = as.matrix(cbind(lons[stInd], lats[stInd]))))
