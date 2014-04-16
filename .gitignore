@@ -1,5 +1,7 @@
 .Rproj.user
 .Rhistory
 .RData
-downscaling.Rproj
 .project
+ignore
+commonR
+init.R
