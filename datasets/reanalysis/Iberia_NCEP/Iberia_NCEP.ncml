@@ -1,24 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <netcdf xmlns="http://www.unidata.ucar.edu/namespaces/netcdf/ncml-2.2">
+
+	<dimension name='level' length='3'/>
+	<variable name="level" type="float" >
+		<attribute name="units" value="millibar"/>
+		<attribute name="long_name" value="Level"/>
+		<attribute name="_CoordinateAxisType" value="Pressure" />
+		<values>500 850 1000</values>
+	</variable>
+
 	<aggregation type="union">
+		<netcdf location="NCEP_2T.nc"/>
+		<netcdf location="NCEP_SLP.nc"/>
+		<netcdf location="NCEP_TP.nc"/>
+
 		<netcdf>
-		<aggregation dimName="time" type="joinExisting">
-			<netcdf location="./NCEP_Q850.nc"/>
+		<aggregation dimName="level" type="joinNew">
+			<variableAgg name="Q"/>
+			<netcdf location="NCEP_Q500.nc" coordValue="500"/>
+			<netcdf location="NCEP_Q850.nc" coordValue="850"/>
+			<netcdf location="NCEP_Q1000.nc" coordValue="1000"/>
 		</aggregation>
 		</netcdf>
+
 		<netcdf>
-		<aggregation dimName="time" type="joinExisting">
-			<netcdf location="./NCEP_SLPd.nc"/>
+		<aggregation dimName="level" type="joinNew">
+			<variableAgg name="T"/>
+			<netcdf location="NCEP_T500.nc" coordValue="500"/>
+			<netcdf location="NCEP_T850.nc" coordValue="850"/>
+			<netcdf location="NCEP_T1000.nc" coordValue="1000"/>
 		</aggregation>
 		</netcdf>
+
 		<netcdf>
-		<aggregation dimName="time" type="joinExisting">
-			<netcdf location="./NCEP_T850.nc"/>
-		</aggregation>
-		</netcdf>
-		<netcdf>
-		<aggregation dimName="time" type="joinExisting">
-			<netcdf location="./NCEP_Z500.nc"/>
+		<aggregation dimName="level" type="joinNew">
+			<variableAgg name="Z"/>
+			<netcdf location="NCEP_Z500.nc" coordValue="500"/>
+			<netcdf location="NCEP_Z850.nc" coordValue="850"/>
+			<netcdf location="NCEP_Z1000.nc" coordValue="1000"/>
 		</aggregation>
 		</netcdf>
 	</aggregation>
