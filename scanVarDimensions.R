@@ -18,6 +18,9 @@ scanVarDimensions <- function(grid) {
     gridShape <- grid$getShape()
     gcs <- grid$getCoordinateSystem()
     dim.list <- list()
+    length(dim.list) <- length(gridShape)
+    dimNames <- gsub("\\[|]|\\s|;|=|[0-9]" , "", unlist(strsplit(grid$getDimensions()$toString(), split=",")))
+    names(dim.list) <- dimNames
     if (grid$getRunTimeDimensionIndex() >= 0) {
         rtDimIndex <- grid$getRunTimeDimensionIndex() + 1
         axis <- gcs$getRunTimeAxis()

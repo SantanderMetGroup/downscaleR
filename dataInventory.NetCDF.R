@@ -4,7 +4,7 @@
 #' Sub-routine of \code{dataInventory}
 #' 
 #' @param dataset A full path to the file describing the dataset (ncml)
-#' @return A (named) list whose length is determined by the number of variables stored in teh dataset,
+#' @return A (named) list whose length is determined by the number of variables stored in the dataset,
 #' its names corresponding to the short names of the variables.
 #' For each variable, information on the variable long name, data type, units and
 #' characteristics of its dimensions is provided.
@@ -22,15 +22,12 @@ dataInventory.NetCDF <- function(dataset) {
         var.list <- list()
         for (i in 1:length(varNames)) {
             message("[", Sys.time(), "] Retrieving info for \'", varNames[i], "\' (", length(varNames) - i, " vars remaining)")
-            dataVar <- gds$getDataVariable(varNames[i])
             description <- gds$getDataVariable(varNames[i])$getDescription()
             varName <- gds$getDataVariable(varNames[i])$getShortName()
             dataType <- gds$getDataVariable(varNames[i])$getDataType()$toString()
             units <- gds$getDataVariable(varNames[i])$getUnitsString()
-            dimNames <- unlist(strsplit(gds$getDataVariable(varNames[i])$getDimensionsString(), "\\s"))
             grid <- gds$findGridByShortName(varName)
             dim.list <- scanVarDimensions(grid)
-            names(dim.list) <- dimNames
             var.list[[i]] <- list("Description" = description, "DataType" = dataType, "Units" = units, "Dimensions" = dim.list)
         }
         names(var.list) <- varNames
