@@ -7,8 +7,8 @@ dataInventory <- function(dataset, return.stats = FALSE) {
       } else {
             out <- dataInventory.NetCDF(dataset)
       }
-      return(out)
       message(paste("[", Sys.time(), "] Done.", sep = ""))
+      return(out)
 }
 # End
 
