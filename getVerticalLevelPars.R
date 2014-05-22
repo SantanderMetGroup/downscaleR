@@ -1,10 +1,7 @@
 #' Definition of vertical dimension slices
 #' 
-#' Returns the selected level value (if any) and a suitable java structur. This is a subroutine
-#' of \code{loadGridDataset} 
-#' 
-#' (\sQuote{ucar.ma2.Range}) for definition of the slice. Subroutine of
-#'  \code{loadGridDataset} whose output is passed to \code{makeSubset}.
+#' Returns the selected level value (if any) and a suitable java structure. This is a subroutine
+#' of \code{loadGridDataset}, whose output is passed to \code{makeSubset}. 
 #'  
 #' @param gcs An object of the java class \sQuote{GeoGrid})
 #' @param level Vertical level. Passed by \code{loadGridDataset}
