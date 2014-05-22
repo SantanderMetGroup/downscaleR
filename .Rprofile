@@ -1,4 +1,5 @@
 cat("***WELCOME TO downscaleR!***")
+require(abind)
 # Load functions
 #rfuncs <- normalizePath(list.files(full.names=TRUE)[-grep("\\.md$|^init\\.R|loadGridDataset", list.files())])
 exceptions <- c("ignore|\\.md$|^init\\.R|\\.Rproj|datasets|commonR|loadPredictors.GridDataset.R")
@@ -19,11 +20,11 @@ if (isTRUE("sp" %in% installed.packages()[ ,1])) {
 }
 # Init JVM
 if (!isTRUE("rJava" %in% installed.packages()[ ,1])) {
-    install.packages("rJava", repos = "http://cran.es.r-project.org", dependencies=TRUE)
+    install.packages("rJava", repos = "http://cran.es.r-project.org", dependencies = TRUE)
 }
 require(rJava)
 options(java.parameters = "-Xmx2g")
 .jinit("./inst/java/netcdfAll-4.3.jar")
 cat("JVM successfuly initialized \n")
-cat("Here we go")
+cat("Ready")
 #End
