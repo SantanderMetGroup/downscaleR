@@ -1,91 +1,95 @@
-# ~~~~~~~~~~~~~~~ #
-# getLatLonDomain
-# ~~~~~~~~~~~~~~~ #
-# Description
-# ~~~~~~~~~~~~
-# Low-level function used to retrieve the cartesian coordinates of a selected spatial slice -either single point locations or rectangular domains- from a grid coordinate system of the scientific data type "Grid" of netcdf-Java
-# Arguments
-# ~~~~~~~~~~~~
-      # gridCoordinateSystem: coordinate system of the netcdf-Java class "Grid"
-      # lonLim: argument passed by the loading function (see e.g. loadSeasonalForecast)
-      # latLim: argument passed by the loading function (see e.g. loadSeasonalForecast)
+#' Determine the geo-location parameters of an arbitrary user selection
+#' 
+#' The function uses the \sQuote{GeoGrid} object and the parameters \code{lonLim}
+#'  and \code{latLim} passed by \code{loadGridDataset} and calculates the corresponding
+#'  index positions.
+#' 
+#' @param grid Java class \sQuote{GeoGrid}
+#' @param lonLim see \code{\link{loadGridDataset}}
+#' @param latLim see \code{\link{loadGridDataset}}
+#' @return A list with the following items
+##' \itemize{
+##'  \item{llbbox}{A list of length 1 or two depending on whether the selected domain
+##'  crosses or not the dateline and longitude units go from 0 to 360. See details.}
+##'  \item{pointXYindex}{A vector of length two with the index positions of the 
+##'  selected XY coordinates -in this order- in case of point selections. See details.}
+##'  \item{lonSlice}{The X coordinates of the domain selected}
+##'  \item{latSlice}{The Y coordinates of the domain selected}
+##' }
+#' @details In order to deal with the problem of dateline crossing, the selection is
+#' partitioned into two, and the part of the domain with negative eastings is put in first
+#' place for consistent spatial mapping.
+#' The index position of lon and lat in the corresponding axes is returned 
+#' by \code{pointXYindex}, and is passed to the \sQuote{readDataSlice} method in
+#'  \code{makeSubset}. For single point locations, this is a integer vector of length
+#'   two defining these positions, while in the case of rectangular domains its value is
+#'    c(-1L,-1L).
+#' @note The function assumes that datasets have degrees-east and degress-north as units
+#' of the corresponding X and Y axes.
+#' @references \url{https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/v4.0/javadocAll/ucar/nc2/dt/GridCoordSystem.html#getRangesFromLatLonRect%28ucar.unidata.geoloc.LatLonRect%29}
+#' @author J. Bedia \email{joaquin.bedia@@gmail.com} and A. Cofin\~no
 
-# Notes
-# ~~~~~~~~~~~~
-# Implemented under netcdf-Java 4.3.18 / R 3.0.1/ rJava 0.9-4
-# Juaco, 25 Sep 2013
-# Modified 1 Oct 2013, dateline cross index introduced; netcdf-Java 4.3.18 / R 3.0.2/ rJava 0.9-4
-# Modified 31 Oct 2013, account for bidimensional lonlat coordinate axes
-# Modified 18 Jan 2014, bug fix, dateline crossing sub-routine relocated to be applied also in case lonLim is NULL
-# Modified 23 Jan 2014, bug fix, selection fo the whole latitudinal domain for 2D lat definition, when latLim is NULL 
-# ~~~~~~~~~~~~
-getLatLonDomain <- function(gridCoordinateSystem, lonLim, latLim) {
-      gcs <- gridCoordinateSystem
-      if (length(lonLim) > 2 | length(latLim) > 2) {
-    	      stop("Invalid coordinates. Check the spatial window definition")
-      }
-      lons <- gcs$getLonAxis()$getCoordValues()
-      lons[which(lons > 180)] <- lons[which(lons > 180)] - 360
-	#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	lonAxisShape <- gcs$getLonAxis()$getShape()
-	if (length(lonAxisShape) == 2) {
-		lons <- apply(t(matrix(lons, ncol = lonAxisShape[1])), 2, min)
-	}
-	#-------------------------------------------------------
-	if (is.null(lonLim)) {
-    	      lonSlice <- sort(lons)
-    	      # lonInd <- (1:gcs$getLonAxis()$getShapeAll())[sort(lons, index.return = TRUE)$ix] - 1
-	      lonInd <- (1:length(lons))[sort(lons, index.return = TRUE)$ix] - 1
-    	      lonInd <- lonInd[order(lonSlice)]
-    	      lonSlice <- sort(lonSlice)
-      } else {
-            if (length(lonLim) == 1) {
-        	      lonInd <- which.min(abs(lons - lonLim)) - 1
-        	      lonSlice <- lons[lonInd + 1]
-        	      datelineCrossInd <- NULL
-		}
-            if (length(lonLim) == 2) {
-			lonSlice <- subset(lons, lons >= lonLim[which.min(lonLim)] & lons <= lonLim[which.max(lonLim)])
-                  lonInd <- which(lons %in% lonSlice) - 1
-                  lonInd <- lonInd[order(lonSlice)]
-                  lonSlice <- sort(lonSlice)
-         	}
-	}
-      # dateline crossing 
-      index <- c()
-      for (i in 2:length(lonInd)) {
-            index[i-1] <- lonInd[i] - lonInd[i-1]
-      }
-      datelineCrossInd <- which(index < 0)
-      if (length(datelineCrossInd) == 0) {
-            datelineCrossInd <- NULL
-      }
-      # Latitudes
-      lats <- gcs$getLatAxis()$getCoordValues()
-	#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	latAxisShape <- gcs$getLatAxis()$getShape()
-	if (length(latAxisShape) == 2) {
-	      lats <- apply(t(matrix(lats, ncol = lonAxisShape[1])), 1, min)
-	}
-	#-------------------------------------------------------
-      if (is.null(latLim)) {
-            latSlice <- lats
-            # latInd <- (1:gcs$getLatAxis()$getShapeAll()) - 1
-            latInd <- 1:length(lats) - 1
-     	} else {
-            if (length(latLim) == 1) {
-                  latInd <- which.min(abs(lats - latLim)) - 1
-                  latSlice <- lats[latInd + 1]
+getLatLonDomain <- function(grid, lonLim, latLim) {
+    gcs <- grid$getCoordinateSystem()
+    bboxDataset <- gcs$getLatLonBoundingBox()
+    pointXYindex <- c(-1L, -1L)
+    if (length(lonLim) == 1 | length(latLim) == 1) {
+        if (length(lonLim) == 1) {
+            pointXYindex[1] <- gcs$findXYindexFromCoord(lonLim, latLim[1], .jnull())[1]
+            if (pointXYindex[1] < 0) {
+                stop("Selected X point coordinate is out of range")
             }
-            if (length(latLim) == 2) {
-                  latSlice <- subset(lats, lats >= latLim[which.min(latLim)] & lats <= latLim[which.max(latLim)])
-                  latInd <- which(lats %in% latSlice) - 1
+        }
+        if (length(latLim) == 1) {
+            pointXYindex[2] <- gcs$findXYindexFromCoord(lonLim[1], latLim, .jnull())[2]
+            if (pointXYindex[2] < 0) {
+                stop("Selected Y point coordinate is out of range")
             }
-      }
-	if (length(lonInd) < 1 | length(latInd) < 1) {
-	      stop("Empty Spatial Domain.\nConsider expanding the boundaries or selecting a single point location")
-	}
-	gridPoints <- as.matrix(expand.grid("lon" = lonSlice, "lat" = latSlice))
-	return(list("Grid" = gridPoints, "LatIndex" = latInd, "LonIndex" = lonInd, "DatelineCrossInd" = datelineCrossInd))
+        }
+        lonLim <- NULL   
+        latLim <- NULL
+    }
+    if (is.null(lonLim)) {
+        lonLim <- c(bboxDataset$getLonMin(), bboxDataset$getLonMax())
+    }
+    if (is.null(latLim)) {
+        latLim <- c(bboxDataset$getLatMin(), bboxDataset$getLatMax())
+    }
+    deltaLat <- latLim[2] - latLim[1]
+    deltaLon <- lonLim[2] - lonLim[1]
+    spec <- .jnew("java/lang/String", paste(latLim[1], lonLim[1], deltaLat, deltaLon, sep = ", "))
+    bboxRequest <- .jnew("ucar/unidata/geoloc/LatLonRect", spec)
+    llbbox <- list()
+    if (bboxRequest$getLonMin() < 0 & bboxRequest$getLonMax() >= 0 & bboxDataset$crossDateline()) {
+        spec1 <- .jnew("java/lang/String", paste(latLim[1], lonLim[1], deltaLat, 0 - lonLim[1], sep = ", "))
+        spec2 <- .jnew("java/lang/String", paste(latLim[1], 0, deltaLat, lonLim[2], sep = ", "))
+        llbbox[[1]] <- .jnew("ucar/unidata/geoloc/LatLonRect", spec1)
+        llbbox[[2]] <- .jnew("ucar/unidata/geoloc/LatLonRect", spec2)
+    } else {
+        llbbox[[1]] <- .jnew("ucar/unidata/geoloc/LatLonRect", spec)
+    }
+    if (pointXYindex[1] >= 0) {
+        aux <- grid$makeSubset(.jnull(), .jnull(), .jnull(), 1L, 1L, 1L)
+        lonSlice <- aux$getCoordinateSystem()$getLonAxis()$getCoordValue(pointXYindex[1])
+    } else {
+        lonAux <- list()
+        for (k in 1:length(llbbox)) {
+            aux <- grid$makeSubset(.jnull(), .jnull(), llbbox[[k]], 1L, 1L, 1L)
+            lonAux[[k]] <- aux$getCoordinateSystem()$getLonAxis()$getCoordValues()
+        }
+        if (length(lonAux) == 1) {
+            lonSlice <- lonAux[[1]]
+        } else {
+            lonSlice <- do.call("append", lonAux)      
+        }
+    }    
+    lonSlice[which(lonSlice > 180)] <- lonSlice[which(lonSlice > 180)] - 360
+    aux <- grid$makeSubset(.jnull(), .jnull(), llbbox[[1]], 1L, 1L, 1L)
+    if (pointXYindex[2] >= 0) {
+        latSlice <- aux$getCoordinateSystem()$getLatAxis()$getCoordValue(pointXYindex[2])
+    } else {
+        latSlice <- aux$getCoordinateSystem()$getLatAxis()$getCoordValues()
+    }
+    return(list("llbbox" = llbbox, "pointXYindex" = pointXYindex, "lonSlice" = lonSlice, "latSlice" = latSlice))            
 }
 # End
