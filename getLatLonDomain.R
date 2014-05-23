@@ -75,20 +75,24 @@ getLatLonDomain <- function(grid, lonLim, latLim) {
         lonAux <- list()
         for (k in 1:length(llbbox)) {
             aux <- grid$makeSubset(.jnull(), .jnull(), llbbox[[k]], 1L, 1L, 1L)
-            lonAux[[k]] <- aux$getCoordinateSystem()$getLonAxis()$getCoordValues()
+            lonAxisShape <- aux$getCoordinateSystem()$getXHorizAxis()$getShape()
+            lonAux[[k]] <- aux$getCoordinateSystem()$getXHorizAxis()$getCoordValues()
+            if (length(lonAxisShape) > 1) {
+                lonAux[[k]] <- apply(t(matrix(lonAux[[k]], ncol = lonAxisShape[1])), 2, min)
+            } 
         }
-        if (length(lonAux) == 1) {
-            lonSlice <- lonAux[[1]]
-        } else {
-            lonSlice <- do.call("append", lonAux)      
-        }
+        lonSlice <- do.call("c", lonAux)      
     }    
     lonSlice[which(lonSlice > 180)] <- lonSlice[which(lonSlice > 180)] - 360
+        
     aux <- grid$makeSubset(.jnull(), .jnull(), llbbox[[1]], 1L, 1L, 1L)
     if (pointXYindex[2] >= 0) {
-        latSlice <- aux$getCoordinateSystem()$getLatAxis()$getCoordValue(pointXYindex[2])
+        latSlice <- aux$getCoordinateSystem()$getYHorizAxis()$getCoordValue(pointXYindex[2])
     } else {
-        latSlice <- aux$getCoordinateSystem()$getLatAxis()$getCoordValues()
+        latSlice <- aux$getCoordinateSystem()$getYHorizAxis()$getCoordValues()
+        if (length(lonAxisShape) > 1) {
+            latSlice <- apply(t(matrix(latSlice, ncol = lonAxisShape[1])), 1, min)
+        }
     }
     return(list("llbbox" = llbbox, "pointXYindex" = pointXYindex, "lonSlice" = lonSlice, "latSlice" = latSlice))            
 }
