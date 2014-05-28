@@ -15,6 +15,8 @@
 ##'  selected XY coordinates -in this order- in case of point selections. See details.}
 ##'  \item{lonSlice}{The X coordinates of the domain selected}
 ##'  \item{latSlice}{The Y coordinates of the domain selected}
+##'  \item{revLat}{Logical. Whether the order of latitudes should be reversed or 
+##'  not in order to map the data properly in the geographical space}
 ##' }
 #' @details In order to deal with the problem of dateline crossing, the selection is
 #' partitioned into two, and the part of the domain with negative eastings is put in first
@@ -84,8 +86,8 @@ getLatLonDomain <- function(grid, lonLim, latLim) {
         lonSlice <- do.call("c", lonAux)      
     }    
     lonSlice[which(lonSlice > 180)] <- lonSlice[which(lonSlice > 180)] - 360
-        
     aux <- grid$makeSubset(.jnull(), .jnull(), llbbox[[1]], 1L, 1L, 1L)
+    revLat <- FALSE
     if (pointXYindex[2] >= 0) {
         latSlice <- aux$getCoordinateSystem()$getYHorizAxis()$getCoordValue(pointXYindex[2])
     } else {
@@ -93,7 +95,11 @@ getLatLonDomain <- function(grid, lonLim, latLim) {
         if (length(lonAxisShape) > 1) {
             latSlice <- apply(t(matrix(latSlice, ncol = lonAxisShape[1])), 1, min)
         }
+        if (diff(latSlice)[1] < 0) {
+            latSlice <- rev(latSlice)
+            revLat <- TRUE
+        }
     }
-    return(list("llbbox" = llbbox, "pointXYindex" = pointXYindex, "lonSlice" = lonSlice, "latSlice" = latSlice))            
+    return(list("llbbox" = llbbox, "pointXYindex" = pointXYindex, "xyCoords" = list("x" = lonSlice, "y" = latSlice), "revLat" = revLat))            
 }
 # End
