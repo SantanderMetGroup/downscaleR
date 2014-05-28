@@ -9,7 +9,7 @@
 #' @param zRange A \sQuote{ucar.ma2.Range} or a null reference, as returned by
 #'  \code{getVerticalLevelPars}
 #' @param latLon A list of geospatial parameters, as returned by
-#' \code{getLatLonDomain}
+#' \code{getLatLonDomain}.
 #' @return A n-dimensional array with the selected subset data.
 #' @note The process is somewhat tricky because R cannot adequately represent NDjavaArrays.
 #' Several tests have shown that R (unlike MatLab) puts zeroes where they shouldn't be
@@ -34,20 +34,29 @@ makeSubset <- function(grid, tRanges, zRange, latLon) {
             shapeArray <- rev(subSet$getShape()) # Reversed!!
             # shape of the output depending on spatial selection
             if (latLon$pointXYindex[1] >= 0) {
-                rm.dim <- grep(paste("^", gcs$getXHorizAxis()$getDimensionsString(), "$", sep = ""), dimNamesRef)
+                rm.dim <- grep(gcs$getXHorizAxis()$getDimensionsString(), dimNamesRef, fixed = TRUE)
                 shapeArray <- shapeArray[-rm.dim]
                 dimNamesRef <- dimNamesRef[-rm.dim]
             }
             if (latLon$pointXYindex[2] >= 0) {
-                rm.dim <- grep(paste("^", gcs$getYHorizAxis()$getDimensionsString(), "$", sep = ""), dimNamesRef)
+                rm.dim <- grep(gcs$getYHorizAxis()$getDimensionsString(), dimNamesRef, fixed = TRUE)
                 shapeArray <- shapeArray[-rm.dim]
                 dimNamesRef <- dimNamesRef[-rm.dim]
             }        
             aux.list2[[j]] <- array(subSet$readDataSlice(-1L, -1L, latLon$pointXYindex[2], latLon$pointXYindex[1])$copyTo1DJavaArray(), dim = shapeArray)
         }
         aux.list[[i]] <- do.call("abind", c(aux.list2, along = grep(paste("^", gcs$getXHorizAxis()$getDimensionsString(), "$", sep = ""), dimNamesRef)[1]))
+        rm(aux.list2)
     }
     mdArray <- do.call("abind", c(aux.list, along = grep(gcs$getTimeAxis()$getDimensionsString(), dimNamesRef)))
+    rm(aux.list)
+    if (any(dim(mdArray) == 1)) {
+        dimNamesRef <- dimNamesRef[-which(dim(mdArray) == 1)]    
+        mdArray <- drop(mdArray)
+    }
+    if (isTRUE(latLon$revLat)) {
+        mdArray <- revArrayLatDim(mdArray, dimNamesRef, gcs)
+    }
     attr(mdArray, "dimensions") <- dimNamesRef
     return(mdArray)
 }
