@@ -28,3 +28,6 @@ options(java.parameters = "-Xmx2g")
 cat("JVM successfuly initialized \n")
 cat("Ready")
 #End
+library(maptools)
+wpolys <- readShapePoly("/home/DATA//CARTOGRAPHY//BASICA//World/LandPolys/ne_110m_land")
+wlines <- as(wpolys, "SpatialLines")
