@@ -1,0 +1,4 @@
+Simple reanalysis dataset covering the Iberian Peninsula used in the examples of the downscaling R package.
+
+The global fields for a number of predictors can be downloaded from:
+http://meteo.unican.es/thredds/catalog/VALUE/Renalysis/NCEP/catalog.html
