@@ -45,7 +45,8 @@ makeSubset <- function(grid, tRanges, zRange, latLon) {
             }        
             aux.list2[[j]] <- array(subSet$readDataSlice(-1L, -1L, latLon$pointXYindex[2], latLon$pointXYindex[1])$copyTo1DJavaArray(), dim = shapeArray)
         }
-        aux.list[[i]] <- do.call("abind", c(aux.list2, along = grep(paste("^", gcs$getXHorizAxis()$getDimensionsString(), "$", sep = ""), dimNamesRef)[1]))
+#         aux.list[[i]] <- do.call("abind", c(aux.list2, along = grep(paste("^", gcs$getXHorizAxis()$getDimensionsString(), "$", sep = ""), dimNamesRef)[1]))
+        aux.list[[i]] <- do.call("abind", c(aux.list2, along = 1))
         rm(aux.list2)
     }
     mdArray <- do.call("abind", c(aux.list, along = grep(gcs$getTimeAxis()$getDimensionsString(), dimNamesRef)))

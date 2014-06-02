@@ -30,7 +30,8 @@ scanVarDimensions <- function(grid) {
     if (grid$getEnsembleDimensionIndex() >= 0) {
         ensDimIndex <- grid$getEnsembleDimensionIndex() + 1
         axis <- gcs$getEnsembleAxis()
-        dim.list[[ensDimIndex]] <- list("Type" = axis$getAxisType()$toString(), "Units" = axis$getUnitsString(), "Values" = axis$getCoordValues())
+        ens.values <- tryCatch(axis$getCoordValues(), error = function(er) {er <- javaString2rChar(axis$getNames()$toString()); return(er)})
+        dim.list[[ensDimIndex]] <- list("Type" = axis$getAxisType()$toString(), "Units" = axis$getUnitsString(), "Values" = ens.values)
         names(dim.list)[ensDimIndex] <- axis$getDimensionsString()
     }
     if (grid$getTimeDimensionIndex() >= 0) {
@@ -38,11 +39,21 @@ scanVarDimensions <- function(grid) {
         axis <- gcs$getTimeAxis()
         if (gcs$hasTimeAxis1D()) {
             time.agg <- gcs$getTimeAxis1D()$getTimeResolution()$toString()
+            date.range <- axis$getCalendarDateRange()$toString()
+            tdim.name <- axis$getDimensionsString()
         } else {
             time.agg <- gcs$getTimeAxisForRun(0L)$getTimeResolution()$toString()
+            lastRunIndex <- as.integer(gcs$getRunTimeAxis()$getSize() - 1)
+            lastRun <- gcs$getTimeAxisForRun(lastRunIndex)
+            lastDateIndex <- as.integer(lastRun$getSize() - 1)    
+            time.end <- javaCalendarDate2rPOSIXlt(lastRun$getCalendarDate(lastDateIndex))
+            time.start <- javaCalendarDate2rPOSIXlt(gcs$getTimeAxisForRun(0L)$getCalendarDate(0L))
+            date.range <- range(time.start, time.end)
+            aux <- unlist(strsplit(axis$getDimensionsString(), split="\\s"))
+            tdim.name <- aux[grep("time", aux)]
         }
-        dim.list[[tDimIndex]] <- list("Type" = axis$getAxisType()$toString(), "TimeStep" = time.agg, "Units" = axis$getUnitsString(), "Date_range" = axis$getCalendarDateRange()$toString())
-        names(dim.list)[tDimIndex] <- axis$getDimensionsString()
+        dim.list[[tDimIndex]] <- list("Type" = axis$getAxisType()$toString(), "TimeStep" = time.agg, "Units" = axis$getUnitsString(), "Date_range" = date.range)
+        names(dim.list)[tDimIndex] <- tdim.name
     }
     if (grid$getZDimensionIndex() >= 0) {
         zDimIndex <- grid$getZDimensionIndex() + 1

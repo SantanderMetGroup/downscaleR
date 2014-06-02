@@ -1,23 +1,17 @@
-# Author: juaco
-# Date: 28 Oct 2013
-# Info: netcdf-Java 4.3.18 / R 3.0.2/ rJava 0.9-4
-# TODO: complete documentation
-# TODO: implement netCDF version
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# ====================
-# loadObservations.R #
-# ====================
-# Description: loads observations data from station datasets.
-# Arguments: # 'source.dir': A valid path to the directory containing the station files
-			 # 'file.format': Wether the stations data are stored in a netCDF or ASCII (default) file. See details for standard format definition.
-			 # 'var': character string indicating the variable to be loaded. Note that the notation depends on wether the dictionary is being used or not.
-			 # 'dictionary': Optional. A full path to the file containing the dictionary. See details
-			 # 'stationID': Optional. A character vector indicating the code names of the stations to be loaded.
-			 # 'lonLim':
-			 # 'latLim':
-			 # 'season':
-			 # 'years':
-# Value: a list with the following elements:
+#' Load observations data
+
+#' Loads observations data from station and gridded datasets, either in standard ASCII format or netCDF
+
+#' @param source.dir A valid path to the directory containing the station files
+#' @param file.format Wether the stations data are stored in a netCDF or ASCII (default) file. See details for standard format definition.
+#' @param var Character string indicating the variable to be loaded. Note that the notation depends on wether the dictionary is being used or not.
+#' @param dictionary Optional. A full path to the file containing the dictionary. See details
+#' @param stationID Optional. A character vector indicating the code names of the stations to be loaded.
+#' @param lonLim
+#' @param latLim
+#' @param season
+#' @param years
+#' @return a list with the following elements:
              # 'VarName': name of the variable requested (Note that the name can be either standard or not depending on wether a dictionary is being used)
 			 # 'isStandard': logical flag indicating if the variable is standard (dictionary is in use) or not.
 			 # 'Stations': A data frame containing the station codes and their names (locations).
@@ -26,6 +20,9 @@
 					# 'Start': The lower time bound of the verification period
 					# 'End': The upper time bound of the verification period
 			 # 'Data': A matrix with the values of the variable. Dates are ordered by rows and Stations in columns.
+#' @export
+#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @seealso \code{\link{loadGridDataset}}, \code{\link{dataInventory}}
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # source.dir = "/home/DATA/CLIMATE/GSN_World/"
 # file.format = "ascii"

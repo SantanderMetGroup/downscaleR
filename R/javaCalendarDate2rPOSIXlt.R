@@ -9,7 +9,7 @@
 #' @references \url{https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/v4.3/javadoc/ucar/nc2/time/CalendarDate.html}
 
 javaCalendarDate2rPOSIXlt <- function(javaCalendarDate) {
-    r.string <- unlist(strsplit(gsub("\\[|]|\\s", "", javaCalendarDate$toString()), split = ","))
-    r.posix <- as.POSIXlt(r.string, format = "%Y-%m-%dT%H:%M:%SZ")
-    return(r.posix)
+      r.string <- javaString2rChar(javaCalendarDate$toString())
+      r.posix <- as.POSIXlt(r.string, format = "%Y-%m-%dT%H:%M:%SZ")
+      return(r.posix)
 }

@@ -77,7 +77,9 @@ getLatLonDomain <- function(grid, lonLim, latLim) {
         lonAux <- list()
         for (k in 1:length(llbbox)) {
             aux <- grid$makeSubset(.jnull(), .jnull(), llbbox[[k]], 1L, 1L, 1L)
-            lonAxisShape <- aux$getCoordinateSystem()$getXHorizAxis()$getShape()
+            # REVISAR: getShape() no devuelve lo que necesitas siempre
+#             lonAxisShape <- aux$getCoordinateSystem()$getXHorizAxis()$getShape()
+            lonAxisShape <- aux$getCoordinateSystem()$getXHorizAxis()$getRank()
             lonAux[[k]] <- aux$getCoordinateSystem()$getXHorizAxis()$getCoordValues()
             if (length(lonAxisShape) > 1) {
                 lonAux[[k]] <- apply(t(matrix(lonAux[[k]], ncol = lonAxisShape[1])), 2, min)

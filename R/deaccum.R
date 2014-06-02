@@ -4,7 +4,7 @@
 #' of \code{dictionaryTransform}.
 #' 
 #' @param x a vector of (accumulated) data.
-#' @param t.ranges a vector defining the start/end indices for each annual season, as returned ny
+#' @param t.ranges a vector defining the start/end indices for each annual season, as returned by
 #' \code{dictionaryTransform}. This is used to restart the deaccumulation at the beginning of each season.
 #' @return a vector of deaccumulated data
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
