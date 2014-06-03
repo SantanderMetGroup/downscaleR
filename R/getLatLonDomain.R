@@ -85,8 +85,6 @@ getLatLonDomain <- function(grid, lonLim, latLim) {
         lonAux <- list()
         for (k in 1:length(llbbox)) {
             aux <- grid$makeSubset(.jnull(), .jnull(), llbbox[[k]], 1L, 1L, 1L)
-            # REVISAR: getShape() no devuelve lo que necesitas siempre
-#             lonAxisShape <- aux$getCoordinateSystem()$getXHorizAxis()$getShape()
             lonAxisShape <- aux$getCoordinateSystem()$getXHorizAxis()$getRank()
             lonAux[[k]] <- aux$getCoordinateSystem()$getXHorizAxis()$getCoordValues()
             if (length(lonAxisShape) > 1) {
@@ -96,6 +94,7 @@ getLatLonDomain <- function(grid, lonLim, latLim) {
         lonSlice <- do.call("c", lonAux)      
     }    
     lonSlice[which(lonSlice > 180)] <- lonSlice[which(lonSlice > 180)] - 360
+    lonSlice <- sort(lonSlice)
     aux <- grid$makeSubset(.jnull(), .jnull(), llbbox[[1]], 1L, 1L, 1L)
     revLat <- FALSE
     if (pointXYindex[2] >= 0) {
