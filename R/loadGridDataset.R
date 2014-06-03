@@ -52,15 +52,15 @@ loadGridDataset <- function(dataset, var, vocabulary = "standard", dictionary = 
     if (!is.null(dictionary)) {
         ltb <- as.difftime(dic$lower_time_bound, format = "%H", units = "hours")
         utb <- as.difftime(dic$upper_time_bound, format = "%H", units = "hours")
-        dateSliceStart <- timePars$dateSlice - ltb
-        dateSliceEnd <- timePars$dateSlice + utb
+        dateSliceStart <- as.POSIXlt(timePars$dateSlice - ltb)
+        dateSliceEnd <- as.POSIXlt(timePars$dateSlice + utb)
         mdArray <- dictionaryTransform(dic, grid, timePars, mdArray) 
     } else {
         dateSliceStart <- timePars$dateSlice
         dateSliceEnd <- timePars$dateSlice + timePars$timeResInSeconds
     }
     message(paste("[",Sys.time(),"] - Done.", sep=""))
-    return(list("VarName" = shortName, "isStandard" = isStandard, "Level" = levelPars$level, "Dates" = list("Start" = dateSliceStart,"End" = dateSliceEnd), "LonLatCoords" = latLon$xyCoords, "Data" = mdArray))
+    return(list("VarName" = shortName, "isStandard" = isStandard, "Level" = levelPars$level, "Dates" = list("Start" = dateSliceStart,"End" = dateSliceEnd), "xyCoords" = latLon$xyCoords, "Data" = mdArray))
 }
 # End
 
