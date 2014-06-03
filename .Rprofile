@@ -2,10 +2,11 @@ cat("***WELCOME TO downscaleR!***")
 require(abind)
 # Load functions
 #rfuncs <- normalizePath(list.files(full.names=TRUE)[-grep("\\.md$|^init\\.R|loadGridDataset", list.files())])
-exceptions <- c("ignore|\\.md$|^init\\.R|\\.Rproj|datasets|commonR|loadPredictors.GridDataset.R")
-rfuncs <- list.files(full.names=TRUE)[-grep(exceptions, list.files())]
+exceptions <- c("loadPredictors.GridDataset.R")
+rfuncs <- list.files("R", full.names=TRUE)
+rfuncs <- rfuncs[-grep(exceptions, rfuncs)]
 for (i in 1:length(rfuncs)) {
-    message("Sourcing", rfuncs[i], sep = " ")
+    message("Sourcing ", rfuncs[i])
     source(rfuncs[i])
 }
 rm(list=c("rfuncs", "i", "exceptions"))
