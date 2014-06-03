@@ -13,10 +13,8 @@
 #'  with the index values defined as java objects of the class \sQuote{ucar.ma2.Range}.
 #'  Output passed to \code{loadGridDataset}.
 #' @details The indices of time positions are returned as a list, in order to read 
-#' discontinuous data in the time dimension (i.e., seasons for different years)
-#' from NetCDF files in a more efficient way. Note that this is not necessary 
-#' in the case of ASCII source files, but implemented in all cases for simplicity
-#' (in this case, time indices are unlisted)
+#' discontinuous data in the time dimension from NetCDF files in a more efficient way
+#' (i.e. seasons for different years). 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 
 getTimeDomain <- function(grid, season, years, verifTime) {
@@ -106,7 +104,7 @@ getTimeDomain <- function(grid, season, years, verifTime) {
         timeStride <- as.integer(verifTimeInd[2] - verifTimeInd[1])
     }
     dateSlice <- do.call("c", dateSliceList)
-    tRanges <- lapply(1:length(timeIndList), function(j) .jnew("ucar/ma2/Range", as.integer(timeIndList[[j]][1]), as.integer(timeIndList[[j]][length(timeIndList[[j]])]), timeStride)$shiftOrigin(timeShift))
+    tRanges <- lapply(1:length(timeIndList), function(j) .jnew("ucar/ma2/Range", as.integer(timeIndList[[j]][1]), as.integer(tail(timeIndList[[j]], 1L)), timeStride)$shiftOrigin(timeShift))
     return(list("dateSlice" = dateSlice, "timeResInSeconds" = timeResInSeconds, "tRanges" = tRanges))
 }
 # End
