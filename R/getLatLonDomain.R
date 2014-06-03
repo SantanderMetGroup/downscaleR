@@ -36,23 +36,31 @@ getLatLonDomain <- function(grid, lonLim, latLim) {
     bboxDataset <- gcs$getLatLonBoundingBox()
     pointXYindex <- c(-1L, -1L)
     if (length(lonLim) == 1 | length(latLim) == 1) {
+        if (any(lonLim < 0) & bboxDataset$getLonMin() >= 0) {
+            lon.aux <- sort(lonLim[which(lonLim < 0)] + 360)
+        } else {
+            lon.aux <- lonLim
+        }
         if (length(lonLim) == 1) {
-            pointXYindex[1] <- gcs$findXYindexFromCoord(lonLim, latLim[1], .jnull())[1]
+            pointXYindex[1] <- gcs$findXYindexFromCoord(lon.aux, latLim[1], .jnull())[1]
             if (pointXYindex[1] < 0) {
                 stop("Selected X point coordinate is out of range")
             }
+            lonLim <- NULL   
         }
         if (length(latLim) == 1) {
-            pointXYindex[2] <- gcs$findXYindexFromCoord(lonLim[1], latLim, .jnull())[2]
+            pointXYindex[2] <- gcs$findXYindexFromCoord(lon.aux[1], latLim, .jnull())[2]
             if (pointXYindex[2] < 0) {
                 stop("Selected Y point coordinate is out of range")
             }
+            latLim <- NULL
         }
-        lonLim <- NULL   
-        latLim <- NULL
     }
     if (is.null(lonLim)) {
         lonLim <- c(bboxDataset$getLonMin(), bboxDataset$getLonMax())
+        if (any(lonLim > 180)) {
+            lonLim <- lonLim - 180      
+        }
     }
     if (is.null(latLim)) {
         latLim <- c(bboxDataset$getLatMin(), bboxDataset$getLatMax())
@@ -94,8 +102,9 @@ getLatLonDomain <- function(grid, lonLim, latLim) {
         latSlice <- aux$getCoordinateSystem()$getYHorizAxis()$getCoordValue(pointXYindex[2])
     } else {
         latSlice <- aux$getCoordinateSystem()$getYHorizAxis()$getCoordValues()
-        if (length(lonAxisShape) > 1) {
-            latSlice <- apply(t(matrix(latSlice, ncol = lonAxisShape[1])), 1, min)
+        latAxisShape <- aux$getCoordinateSystem()$getYHorizAxis()$getRank()
+        if (length(latAxisShape) > 1) {
+            latSlice <- apply(t(matrix(latSlice, ncol = latAxisShape[1])), 1, min)
         }
         if (diff(latSlice)[1] < 0) {
             latSlice <- rev(latSlice)
