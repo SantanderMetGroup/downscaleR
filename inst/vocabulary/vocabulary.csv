@@ -1,0 +1,15 @@
+identifier,standard_name,units
+tas,2-meter temperature,degrees Celsius
+tasmax,maximum 2-m temperature,degrees Celsius
+tasmin,minimum 2-m temperature,degrees Celsius
+tp,total precipitation amount,mm
+psl,air pressure at sea level,Pa
+rsds,surface downwelling shortwave radiation,W.m-2
+rlds,surface downwelling longwave radiation,W.m-2
+uas,eastward near-surface wind,m.s-1
+vas,northward near-surface wind,m.s-1
+tdps,2-meter dewpoint temperature,degrees Celsius
+snld,snow depth,mm
+huss,2-meter specific humidity,kg.kg-1
+hurs,2-meter relative humidity,%
+ps,surface air pressure,Pa
