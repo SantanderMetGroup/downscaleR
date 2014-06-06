@@ -44,11 +44,9 @@ makeAggregatedDataset <- function(source.dir, ncml.file, file.ext = "nc", aggr.d
     suffix <- paste("\\.", file.ext, "$", sep = "")
     if (is.null(pattern)) {
         pattern <- suffix
-        lf <- normalizePath(list.files(source.dir, full.names = TRUE, pattern = pattern, recursive = recursive), winslash = "/")
-    } else {
-        lf <- normalizePath(list.files(source.dir, full.names = TRUE, pattern = pattern, recursive = recursive), winslash = "/")
-        lf <- grep(suffix, lf, value = TRUE)
     }
+    lf <- normalizePath(list.files(source.dir, full.names = TRUE, pattern = pattern, recursive = recursive), winslash = "/")
+    lf <- grep(suffix, lf, value = TRUE)
     message("[",Sys.time(),"] Creating dataset from ", length(lf), " files")
     z <- file(ncml.file, "w")
     # http://www.unidata.ucar.edu/software/netcdf/ncml/v2.2/Aggregation.html
