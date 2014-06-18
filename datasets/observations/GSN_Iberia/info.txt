@@ -1,4 +1,0 @@
-Simple observational dataset covering the Iberian peninsula used in the examples of the downscaling R package.
-
-The worldwide dataset can be downloaded from:
-http://meteo.unican.es/work/datasets/GSN_World.zip
