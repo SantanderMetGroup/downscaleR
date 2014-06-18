@@ -1,9 +1,9 @@
 #' Determine the geo-location parameters of an arbitrary user selection
-#' 
+#'
 #' The function uses the \sQuote{GeoGrid} object and the parameters \code{lonLim}
 #'  and \code{latLim} passed by \code{loadGridDataset} and calculates the corresponding
 #'  index positions.
-#' 
+#'
 #' @param grid Java class \sQuote{GeoGrid}
 #' @param lonLim see \code{\link{loadGridDataset}}
 #' @param latLim see \code{\link{loadGridDataset}}
@@ -11,17 +11,17 @@
 ##' \itemize{
 ##'  \item{llbbox}{A list of length 1 or two depending on whether the selected domain
 ##'  crosses or not the dateline and longitude units go from 0 to 360. See details.}
-##'  \item{pointXYindex}{A vector of length two with the index positions of the 
+##'  \item{pointXYindex}{A vector of length two with the index positions of the
 ##'  selected XY coordinates -in this order- in case of point selections. See details.}
 ##'  \item{lonSlice}{The X coordinates of the domain selected}
 ##'  \item{latSlice}{The Y coordinates of the domain selected}
-##'  \item{revLat}{Logical. Whether the order of latitudes should be reversed or 
+##'  \item{revLat}{Logical. Whether the order of latitudes should be reversed or
 ##'  not in order to map the data properly in the geographical space}
 ##' }
 #' @details In order to deal with the problem of dateline crossing, the selection is
 #' partitioned into two, and the part of the domain with negative eastings is put in first
 #' place for consistent spatial mapping.
-#' The index position of lon and lat in the corresponding axes is returned 
+#' The index position of lon and lat in the corresponding axes is returned
 #' by \code{pointXYindex}, and is passed to the \sQuote{readDataSlice} method in
 #'  \code{makeSubset}. For single point locations, this is a integer vector of length
 #'   two defining these positions, while in the case of rectangular domains its value is
@@ -34,32 +34,18 @@
 getLatLonDomain <- function(grid, lonLim, latLim) {
     gcs <- grid$getCoordinateSystem()
     bboxDataset <- gcs$getLatLonBoundingBox()
-    pointXYindex <- c(-1L, -1L)
     if (length(lonLim) == 1 | length(latLim) == 1) {
-        if (any(lonLim < 0) & bboxDataset$getLonMin() >= 0) {
-            lon.aux <- sort(lonLim[which(lonLim < 0)] + 360)
-        } else {
-            lon.aux <- lonLim
-        }
-        if (length(lonLim) == 1) {
-            pointXYindex[1] <- gcs$findXYindexFromCoord(lon.aux, latLim[1], .jnull())[1]
-            if (pointXYindex[1] < 0) {
-                stop("Selected X point coordinate is out of range")
-            }
-            lonLim <- NULL   
-        }
-        if (length(latLim) == 1) {
-            pointXYindex[2] <- gcs$findXYindexFromCoord(lon.aux[1], latLim, .jnull())[2]
-            if (pointXYindex[2] < 0) {
-                stop("Selected Y point coordinate is out of range")
-            }
-            latLim <- NULL
-        }
-    }
+            pointXYpars <- findPointXYindex(lonLim, latLim, gcs)
+            lonLim <- pointXYpars$lonLim
+            latLim <- pointXYpars$latLim
+            pointXYindex <- pointXYpars$pointXYindex
+      } else {
+            pointXYindex <- c(-1L, -1L)
+      }
     if (is.null(lonLim)) {
         lonLim <- c(bboxDataset$getLonMin(), bboxDataset$getLonMax())
         if (any(lonLim > 180)) {
-            lonLim <- lonLim - 180      
+            lonLim <- lonLim - 180
         }
     }
     if (is.null(latLim)) {
@@ -89,10 +75,10 @@ getLatLonDomain <- function(grid, lonLim, latLim) {
             lonAux[[k]] <- aux$getCoordinateSystem()$getXHorizAxis()$getCoordValues()
             if (length(lonAxisShape) > 1) {
                 lonAux[[k]] <- apply(t(matrix(lonAux[[k]], ncol = lonAxisShape[1])), 2, min)
-            } 
+            }
         }
-        lonSlice <- do.call("c", lonAux)      
-    }    
+        lonSlice <- do.call("c", lonAux)
+    }
     lonSlice[which(lonSlice > 180)] <- lonSlice[which(lonSlice > 180)] - 360
     lonSlice <- sort(lonSlice)
     aux <- grid$makeSubset(.jnull(), .jnull(), llbbox[[1]], 1L, 1L, 1L)
@@ -110,6 +96,6 @@ getLatLonDomain <- function(grid, lonLim, latLim) {
             revLat <- TRUE
         }
     }
-    return(list("llbbox" = llbbox, "pointXYindex" = pointXYindex, "xyCoords" = list("x" = lonSlice, "y" = latSlice), "revLat" = revLat))            
+    return(list("llbbox" = llbbox, "pointXYindex" = pointXYindex, "xyCoords" = list("x" = lonSlice, "y" = latSlice), "revLat" = revLat))
 }
 # End
