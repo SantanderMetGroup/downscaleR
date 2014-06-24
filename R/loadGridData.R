@@ -1,6 +1,5 @@
-loadGridData <- function(dataset, var, dictionary = TRUE, 
-                      members = NULL, lonLim = NULL, latLim = NULL, season = NULL,
-                      years = NULL, leadMonth = NULL, time = "none") {
+loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
+                         latLim = NULL, season = NULL, years = NULL, time = "none") {
     dataset <- dataset
     time <- match.arg(time, choices = c("none", "00", "06", "12", "18", "DD"))
     level <- findVerticalLevel(var)
