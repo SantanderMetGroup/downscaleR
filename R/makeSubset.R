@@ -22,6 +22,8 @@
 #' @references \url{https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/v4.0/javadocAll/ucar/nc2/dt/grid/GeoGrid.html}
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com} and A. Cofin\~no.
 
+# zRange <- levelPars$zRange
+
 makeSubset <- function(grid, tRanges, zRange, latLon) {
     gcs <- grid$getCoordinateSystem()
     dimNames <- rev(names(scanVarDimensions(grid)))
@@ -47,18 +49,19 @@ makeSubset <- function(grid, tRanges, zRange, latLon) {
         }
 #         aux.list[[i]] <- do.call("abind", c(aux.list2, along = grep(paste("^", gcs$getXHorizAxis()$getDimensionsString(), "$", sep = ""), dimNamesRef)[1]))
         aux.list[[i]] <- do.call("abind", c(aux.list2, along = 1))
-        rm(aux.list2)
+        aux.list2 <- NULL
     }
     mdArray <- do.call("abind", c(aux.list, along = grep(gcs$getTimeAxis()$getDimensionsString(), dimNamesRef)))
-    rm(aux.list)
+    aux.list <- NULL
     if (any(dim(mdArray) == 1)) {
         dimNamesRef <- dimNamesRef[-which(dim(mdArray) == 1)]    
-        mdArray <- drop(mdArray)
-    }
-    if (isTRUE(latLon$revLat)) {
-        mdArray <- revArrayLatDim(mdArray, dimNamesRef, gcs)
+        mdArray <- unname(drop(mdArray))
     }
     attr(mdArray, "dimensions") <- dimNamesRef
+    if (isTRUE(latLon$revLat)) {
+        mdArray <- unname(revArrayLatDim(mdArray, grid))
+        attr(mdArray, "dimensions") <- dimNamesRef
+    }
     return(mdArray)
 }
 # End

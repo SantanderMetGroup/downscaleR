@@ -23,44 +23,23 @@
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @references \url{http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/tutorial/GridDatatype.html}
 
-loadGridDataset <- function(dataset, var, vocabulary = "standard", dictionary = NULL, lonLim = NULL, latLim = NULL, level = NULL, season = NULL, years = NULL, verifTime = NULL) {
-    vocabulary <- match.arg(vocabulary, choices = c("standard", "none"))
-    if (vocabulary == "standard") {
-        if (is.null(dictionary)) {
-            dictionary <- gsub("ncml$|nc$", "dic", dataset)
-        } else {
-            dictionary <- dictionary
-        }
-        dic <- dictionaryLookup(dictionary, var)
-        shortName <- dic$short_name
-        isStandard <- TRUE
-    } else {
-        warning("Non-standard variable requested: \'", var, "\'")
-        shortName <- var
-        isStandard <- FALSE
-    }
-    gds <- J("ucar.nc2.dt.grid.GridDataset")$open(dataset)
-    grid <- gds$findGridByShortName(shortName)
-    if (is.null(grid)) {
-        stop("Variable requested not found. Check variable nomenclature")
-    }
-    latLon <- getLatLonDomain(grid, lonLim, latLim)
-    timePars <- getTimeDomain(grid, season, years, verifTime)
+loadGridDataset <- function(var, grid, dic, level, season, years, time, latLon) {
+    timePars <- getTimeDomain(grid, dic, season, years, time)
     levelPars <- getVerticalLevelPars(grid, level)
     mdArray <- makeSubset(grid, timePars$tRanges, levelPars$zRange, latLon)
-    gds$close()
-    if (!is.null(dictionary)) {
-        ltb <- as.difftime(dic$lower_time_bound, format = "%H", units = "hours")
-        utb <- as.difftime(dic$upper_time_bound, format = "%H", units = "hours")
-        dateSliceStart <- as.POSIXlt(timePars$dateSlice - ltb)
-        dateSliceEnd <- as.POSIXlt(timePars$dateSlice + utb)
-        mdArray <- dictionaryTransform(dic, grid, timePars, mdArray) 
+    if (!is.null(dic)) {
+        isStandard <- TRUE
+        mdArray <- dictionaryTransformGrid(dic, timePars, mdArray)
     } else {
-        dateSliceStart <- timePars$dateSlice
-        dateSliceEnd <- timePars$dateSlice + timePars$timeResInSeconds
+        isStandard <- FALSE
     }
-    message(paste("[",Sys.time(),"] - Done.", sep=""))
-    return(list("VarName" = shortName, "isStandard" = isStandard, "Level" = levelPars$level, "Dates" = list("Start" = dateSliceStart,"End" = dateSliceEnd), "xyCoords" = latLon$xyCoords, "Data" = mdArray))
+    if (isTRUE(latLon$revLat)) {
+        mdArray <- revArrayLatDim(mdArray, grid)
+    }
+    return(list("Variable" = list("varName" = var, "isStandard" = isStandard),
+                "Data" = mdArray,
+                "xyCoords" = c(latLon$xyCoords, "CRS_string" = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"), 
+                "Dates" = timePars$dateSlice))
 }
 # End
 
