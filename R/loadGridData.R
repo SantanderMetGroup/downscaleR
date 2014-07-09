@@ -1,17 +1,22 @@
 loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
                          latLim = NULL, season = NULL, years = NULL, time = "none") {
-    dataset <- dataset
     time <- match.arg(time, choices = c("none", "00", "06", "12", "18", "DD"))
-    level <- findVerticalLevel(var)
-    dic <- NULL
-    if (isTRUE(dictionary)) {
-        dicPath <- file.path(find.package("ecomsUDG.Raccess"), "dictionaries", paste(dataset,".dic", sep = ""))
-        # devel
-        # dicPath <- file.path("./inst/dictionaries", paste(dataset,".dic", sep = ""))
-        dic <- dictionaryLookup(dicPath, var, time)
-        shortName <- dic$short_name      
-    } else {
+    aux.level <- findVerticalLevel(var)
+    var <- aux.level$var
+    level <- aux.level$level
+    # Dictionary lookup
+    if (dictionary == FALSE) {
+        dic <- NULL
         shortName <- var
+    } else {
+        if (isTRUE(dictionary)) {
+            dicPath <- gsub("ncml$", "dic", dataset)
+        }
+        if (is.character(dictionary)) {
+            dicPath <- dictionary
+        }
+        dic <- dictionaryLookup(dicPath, var, time)
+        shortName <- dic$short_name          
     }
     if (is.null(season)) {
         season <- 1:12
@@ -26,6 +31,9 @@ loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
     }
     latLon <- getLatLonDomain(grid, lonLim, latLim)
     out <- loadGridDataset(var, grid, dic, level, season, years, time, latLon)
+    # Definition of projection
+    proj <- grid$getCoordinateSystem()$getProjection()$toString()
+    attr(out$xyCoords, which = "projection") <- proj
     gds$close()
     message("[",Sys.time(),"]", " Done")
     return(out)

@@ -1,9 +1,9 @@
 #' Performs variable transformation
-#' 
+#'
 #' Performs variable transformation according to dictionary specifications.
 #' Sub-routine of \code{loadGridDataset}.
-#' 
-#' @param dic Dictionary line for the variable, as returned by \code{dictionaryLookup}
+#'
+#' @param dic Dictionary line for the variable, as returned by \code{dictionaryLookup} or \code{dictionaryLookup.ECOMS}
 #' @param foreTimePars A list of time selection parameters, as returned by \code{getTimeDomain}
 #' @param mdArray A n-dimensional array, as returned by \code{makeSubset}
 #' @return The transformed n dimensional array of data. See details.
@@ -24,7 +24,7 @@ dictionaryTransformGrid <- function(dic, timePars, mdArray) {
                   mdArray <- deaccum(mdArray, t.ranges, dff)
                   attr(mdArray, "dimensions") <- dimNames
             } else {
-                  margin <- c(1:length(dim(mdArray)))[-grep("^time", dimNames)]  
+                  margin <- c(1:length(dim(mdArray)))[-grep("^time", dimNames)]
                   mdArray <- apply(mdArray, MARGIN = margin, FUN = deaccum, t.ranges, dff)
                   dimNames <- c(grep("^time", dimNames, value = TRUE), dimNames[-grep("^time", dimNames)])
                   attr(mdArray, "dimensions") <- dimNames
@@ -33,4 +33,3 @@ dictionaryTransformGrid <- function(dic, timePars, mdArray) {
       return(mdArray)
 }
 # End
-	 

@@ -1,8 +1,8 @@
 #' Reverse latitude coordinates ordering
-#'
+#' 
 #' Reverses the order of the latitudinal coordinates when the dataset is read in
 #'  reverse y order. Sub-routine of \code{makeSubset}.
-#'
+#'  
 #' @param mdArray A n-dimensional array of data as returned by \code{makeSubset}
 #' @param dimNamesRef Character vector with the (ordered) names of the dimensions of the array
 #' @param grid A java-class \sQuote{GeoGrid}
@@ -14,12 +14,13 @@
 
 revArrayLatDim <- function(mdArray, grid) {
       dimNames <- attr(mdArray, "dimensions")
-      gcs <- grid$getCoordinateSystem()
+      gcs <- grid$getCoordinateSystem()      
       lat.dim.index <- grep(gcs$getYHorizAxis()$getDimensionsString(), dimNames, fixed = TRUE)
       indices <- rep(list(bquote()), length(dim(mdArray)))
       indices[[lat.dim.index]] <- dim(mdArray)[lat.dim.index] : 1
       call <- as.call(c(list(as.name("["), quote(mdArray)), indices))
       mdArray <- eval(call)
+      attr(mdArray, "dimensions") <- dimNames
       return(mdArray)
 }
 # End
