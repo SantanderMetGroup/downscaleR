@@ -25,14 +25,14 @@ scanVarDimensions <- function(grid) {
         rtDimIndex <- grid$getRunTimeDimensionIndex() + 1
         axis <- gcs$getRunTimeAxis()
         dim.list[[rtDimIndex]] <- list("Type" = axis$getAxisType()$toString(), "Units" = axis$getUnitsString(), "Values" = axis$getCoordValues())
-        names(dim.list)[rtDimIndex] <- axis$getDimensionsString()
+        names(dim.list)[rtDimIndex] <- "runtime" # axis$getDimensionsString()
     }
     if (grid$getEnsembleDimensionIndex() >= 0) {
         ensDimIndex <- grid$getEnsembleDimensionIndex() + 1
         axis <- gcs$getEnsembleAxis()
         ens.values <- tryCatch(axis$getCoordValues(), error = function(er) {er <- javaString2rChar(axis$getNames()$toString()); return(er)})
         dim.list[[ensDimIndex]] <- list("Type" = axis$getAxisType()$toString(), "Units" = axis$getUnitsString(), "Values" = ens.values)
-        names(dim.list)[ensDimIndex] <- axis$getDimensionsString()
+        names(dim.list)[ensDimIndex] <- "member" # axis$getDimensionsString()
     }
     if (grid$getTimeDimensionIndex() >= 0) {
         tDimIndex <- grid$getTimeDimensionIndex() + 1
@@ -40,7 +40,7 @@ scanVarDimensions <- function(grid) {
         if (gcs$hasTimeAxis1D()) {
             time.agg <- gcs$getTimeAxis1D()$getTimeResolution()$toString()
             date.range <- axis$getCalendarDateRange()$toString()
-            tdim.name <- axis$getDimensionsString()
+            # tdim.name <- axis$getDimensionsString()
         } else {
             time.agg <- gcs$getTimeAxisForRun(0L)$getTimeResolution()$toString()
             lastRunIndex <- as.integer(gcs$getRunTimeAxis()$getSize() - 1)
@@ -50,8 +50,9 @@ scanVarDimensions <- function(grid) {
             time.start <- javaCalendarDate2rPOSIXlt(gcs$getTimeAxisForRun(0L)$getCalendarDate(0L))
             date.range <- range(time.start, time.end)
             aux <- unlist(strsplit(axis$getDimensionsString(), split="\\s"))
-            tdim.name <- aux[grep("time", aux)]
+            #tdim.name <- aux[grep("time", aux)]
         }
+        tdim.name <- "time"
         dim.list[[tDimIndex]] <- list("Type" = axis$getAxisType()$toString(), "TimeStep" = time.agg, "Units" = axis$getUnitsString(), "Date_range" = date.range)
         names(dim.list)[tDimIndex] <- tdim.name
     }
@@ -72,7 +73,7 @@ scanVarDimensions <- function(grid) {
             gridLevels <- gridLevels[-noLevelInd]
         }
         dim.list[[zDimIndex]] <- list("Type" = axis$getAxisType()$toString(), "Units" = axis$getUnitsString(), "Values" = gridLevels)
-        names(dim.list)[zDimIndex] <- axis$getDimensionsString()
+        names(dim.list)[zDimIndex] <- "level" # axis$getDimensionsString()
     }
     if (grid$getXDimensionIndex() >= 0) {
         xDimIndex <- grid$getXDimensionIndex() + 1
@@ -83,7 +84,7 @@ scanVarDimensions <- function(grid) {
             values <- apply(t(matrix(values, ncol = lonAxisShape[1])), 2, min)
         }
         dim.list[[xDimIndex]] <- list("Type" = axis$getAxisType()$toString(), "Units" = axis$getUnitsString(), "Values" = values)
-        names(dim.list)[xDimIndex] <- axis$getDimensionsString()
+        names(dim.list)[xDimIndex] <- "lon" # axis$getDimensionsString()
     }
     if (grid$getYDimensionIndex() >= 0) {
         yDimIndex <- grid$getYDimensionIndex() + 1
@@ -94,7 +95,7 @@ scanVarDimensions <- function(grid) {
             values <- apply(t(matrix(values, ncol = latAxisShape[1])), 1, min)
         }
         dim.list[[yDimIndex]] <- list("Type" = axis$getAxisType()$toString(), "Units" = axis$getUnitsString(), "Values" = values)
-        names(dim.list)[yDimIndex] <- axis$getDimensionsString()
+        names(dim.list)[yDimIndex] <- "lat" # axis$getDimensionsString()
     }
     return(dim.list)
 }
