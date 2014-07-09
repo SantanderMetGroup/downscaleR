@@ -130,7 +130,12 @@ getTimeDomain <- function(grid, dic, season, years, time) {
       dateSlice <- timeBounds(dic, dateSlice)
       tRanges <- lapply(1:length(timeIndList), function(j) .jnew("ucar/ma2/Range", as.integer(timeIndList[[j]][1]), as.integer(tail(timeIndList[[j]], 1L)), timeStride))# $shiftOrigin(timeShift))
       timeIndList <- NULL
-      return(list("dateSlice" = dateSlice, "timeResInSeconds" = timeResInSeconds, "tRanges" = tRanges, "deaccumFromFirst" = deaccumFromFirst, "dailyAggr" = dic$dailyAggr))
+      if (is.null(dic)) {
+            dailyAggr <- NA
+      } else {
+            dailyAggr <- dic$dailyAggr
+      }
+      return(list("dateSlice" = dateSlice, "timeResInSeconds" = timeResInSeconds, "tRanges" = tRanges, "deaccumFromFirst" = deaccumFromFirst, "dailyAggr" = dailyAggr))
 }
 # End
 
