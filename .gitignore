@@ -5,3 +5,5 @@
 ignore
 commonR
 init.R
+downscaleR.Rproj
+.Rprofile
