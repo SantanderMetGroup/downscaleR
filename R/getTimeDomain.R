@@ -91,6 +91,9 @@ getTimeDomain <- function(grid, dic, season, years, time) {
       }
       if (is.null(dic)) {
             timeStride <- 1L
+            for (x in 1:length(dateSliceList)) {
+                  dateSliceList[[x]] <- as.POSIXct(dateSliceList[[x]], tz = "GMT")
+            }
       } else {
             if (time == "DD" | time == "none") {
                   timeStride <- 1L
