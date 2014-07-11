@@ -1,3 +1,10 @@
+#' Make data inventory from a station dataset in standard ASCII format
+#' 
+#' @param dataset path to the directory containng the dataset
+#' @param rs 
+#' @author J Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
+
 dataInventory.ASCII <- function(dataset, rs) {
       lf <- list.files(dataset, full.names = TRUE)
       stations <- read.csv(lf[grep("stations", lf, ignore.case = TRUE)], strip.white = TRUE, stringsAsFactors = FALSE)

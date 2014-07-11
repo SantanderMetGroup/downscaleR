@@ -3,12 +3,15 @@
 #' Returns a list with summary information about the variables stored in a gridded dataset.
 #' Sub-routine of \code{dataInventory}
 #' 
-#' @param dataset A full path to the file describing the dataset (ncml)
+#' @param dataset A full path to the file describing the dataset (NcML)
 #' @return A (named) list whose length is determined by the number of variables stored in the dataset,
 #' its names corresponding to the short names of the variables.
 #' For each variable, information on the variable long name, data type, units and
 #' characteristics of its dimensions is provided.
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
+ 
+
 dataInventory.NetCDF <- function(dataset) {
     gds <- J("ucar.nc2.dt.grid.GridDataset")$open(dataset)
     varNames <- unlist(strsplit(gsub("\\[|]|\\s", "", gds$getGrids()$toString()), ","))

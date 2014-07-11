@@ -2,10 +2,11 @@
 #' 
 #' @param tas surface air temperature (K)
 #' @param ps surface pressure (Pa)
-#' @param hurs surface relative humidity (%)
+#' @param hurs surface relative humidity (\%)
 #' @return Specific humidity (kg.kg-1)
 #' @references Bohren & Albrecht (2000) Atmospheric thermodynamics. Oxford University Press. 402 pp
-#' @author Sixto Herrera
+#' @author S. Herrera \email{sixto@@predictia.es}
+#' @keywords internal
 
 hurs2huss <- function(tas, ps, hurs) {
       Rd <- 287.058 # dry air constant J/(K kg)

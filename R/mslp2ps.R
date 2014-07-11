@@ -4,7 +4,8 @@
 #' @param zs surface geopotential (m^2/s^2)
 #' @param mslp sea-level pressure (Pa)
 #' @return surface pressure (Pa)
-#' @author Sixto Herrera
+#' @author S. Herrera \email{sixto@@predictia.es}
+#' @keywords internal
  
 mslp2ps <- function(tas, zs, mslp) {
       Rd <- 287.058 # dry air constant J/(K kg)

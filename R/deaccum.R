@@ -13,6 +13,8 @@
 #'  first value of the time series is taken 'as is'. Otherwise, one value before the start has to be taken
 #'  to preserve time series length (this is previously done by getForecastDomain.S4).
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
+#' @export
 
 deaccum <- function(x, t.ranges, dff) {
       if (isTRUE(dff)) {

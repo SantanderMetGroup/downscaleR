@@ -1,6 +1,4 @@
-#' Load weather station data
-
-#' Loads observations data from station datasets, either in standard ASCII format or netCDF
+#' Load observations data from station datasets in standard ASCII format.
 
 #' @param source.dir A valid path to the directory containing the station files
 #' @param file.format Wether the stations data are stored in a netCDF or ASCII (default) file. See details for standard format definition.
@@ -20,10 +18,10 @@
 #' 
 #' @return a list with the following elements:
 #' \itemize{
-#' \item Variable. Name of the variable
-#' \item Data. Dates are ordered by rows and Stations in columns. Names are station codes
-#' \item xyCoords. A 2-D matrix with longitude and latitudes of the stations
-#' \item Dates. A list with the verification time interval of each record in the time series.
+#' \item \code{Variable}. Name of the variable
+#' \item \code{Data}. Dates are ordered by rows and Stations in columns. Names are station codes
+#' \item \code{xyCoords}. A 2-D matrix with longitude and latitudes of the stations
+#' \item \code{Dates}. A list with the verification time interval of each record in the time series.
 #'  This is represented by a list with two elements: \code{start} and \code{end}, representing the
 #'  lower and upper bounds of the verification period
 #' \item Metadata A list of variable length depending on the available metadata associated

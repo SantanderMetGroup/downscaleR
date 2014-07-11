@@ -1,4 +1,17 @@
-# dataset can be either a ncml-like file or a directory in the case of observations
+#' @name dataInventory
+#' @description Function to provide a quick overview of a climate dataset
+#'  (either stations or gridded data)
+#' @param dataset A character string poiting to the target. Either a directory containing the data
+#'  in the case of station data in standard ASCII format (see \code{\link(loadStationData)} for details),
+#'  or a target file (a NcML) in the case of other types of gridded data (reanalysis, gridded observations ...,
+#'  see \code{\link{loadGridData}} for details).
+#' @param return.stats Optional logical flag indicating if summary statistics of the dataset
+#'  should be returned with the inventory. Only used for station data.
+#'  
+#' @return A list of components describing the variables and other characteristics of the target dataset.
+#' @export
+#' @author J Bedia \email{joaquin.bedia@@gmail.com}
+
 dataInventory <- function(dataset, return.stats = FALSE) {
       rs <- return.stats
       message(paste("[", Sys.time(), "] Doing inventory ...", sep = ""))
@@ -11,29 +24,4 @@ dataInventory <- function(dataset, return.stats = FALSE) {
       return(out)
 }
 # End
-
-
-# # Examples
-# # 1. NCEP reanalysis
-# dataset = '/home/juaco/workspace/gitRepo/downscaling/datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml'
-# station.inv <- dataInventory(dataset)
-# str(station.inv)
-# names(station.inv)
-# station.inv$Q$Description
-
-# # 2. Seasonal Forecast
-# dataset = "http://www.meteo.unican.es/tds5/dodsC/system4/System4_Seasonal_51Members.ncml"
-# source("../useRportal/loginTHREDDS.R")
-# loginTHREDDS("juaco", "********")
-# sys4.inventory <- dataInventory(dataset) # Note that a summary table is printed on screen
-# # Names of the variables
-# names(sys4.inventory) 
-# # Structure of the inventory
-# str(sys4.inventory) 
-# # Details of variable sea level pressure
-# # Initializations (Run times)
-# sys4.inventory$Mean_sea_level_pressure_surface$Dimensions$run
-# # Forecast Time range
-# range(sys4.inventory$Mean_sea_level_pressure_surface$Dimensions$time1$Values)
-
 
