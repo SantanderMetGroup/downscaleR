@@ -6,6 +6,7 @@
 #' @return A list with the variable name (string) and vertical level (double)
 #' @details The level output of this function is passed to \code{\link{getVerticalLevelPars}}
 #' @author J Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
 
 findVerticalLevel <- function(var) {
       if (grepl("@", var)) {

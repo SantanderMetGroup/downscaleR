@@ -10,6 +10,7 @@
 #' @return A data.frame of 1 row with the mapping information
 #' @references \url{http://meteo.unican.es/ecoms-udg/RPackage/Homogeneization}
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
 
 dictionaryLookup <- function(dicPath, var, time) {
       message("[", Sys.time(), "] Defining homogeneization parameters for variable \"", var, "\"")

@@ -12,6 +12,7 @@
 #' of each runtime is lost in the deaccumulation. The function handles the re-ordering of the "dimensions" label in this case.
 #' @note The current implementation does not support deaccumulation of CFSv2 variables (not needed so far...)
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
 
 dictionaryTransformGrid <- function(dic, timePars, mdArray) {
       dimNames <- attr(mdArray, "dimensions")

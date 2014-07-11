@@ -11,6 +11,7 @@
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @note The code is partially based on an example provided at \url{http://stackoverflow.com/a/14502298}
 #'  by Hadley Wickham
+#'  @keywords internal
 
 revArrayLatDim <- function(mdArray, grid) {
       dimNames <- attr(mdArray, "dimensions")

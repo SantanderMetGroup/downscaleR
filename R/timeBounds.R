@@ -1,4 +1,6 @@
-# Internal function to compute the time bounds of each verification time
+#' Internal function to compute the time bounds of each verification time
+#' @keywords internal
+#' 
 timeBounds <- function(dic, foreDates) { 
       foreDates <- as.POSIXlt(foreDates, tz = "GMT")
       if (!is.null(dic)) {

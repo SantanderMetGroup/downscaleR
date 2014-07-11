@@ -6,6 +6,7 @@
 #' @details Because of the re-ordering of dimensions after using \code{apply}, the 
 #' vector of dimension names is needed for re-arranging accordingly
 #' @author J Bedia \email{joaquin.bedia@@gmail}
+#' @keywords internal
 
 toDD <- function(NDarray, dimNamesRef, dailyAggr) {
       mar <- grep("^time", dimNamesRef, invert = TRUE)

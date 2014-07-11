@@ -8,6 +8,7 @@
 #' @return A list with the level value and either a java Range or a java null reference
 #' defining the index of the vertical axis (null if no vertical levels exist)
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
 
 getVerticalLevelPars <- function(grid, level) {
     gcs <- grid$getCoordinateSystem()

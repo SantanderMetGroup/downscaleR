@@ -14,6 +14,7 @@
 #' The function also takes into account the possibility of selection of \dQuote{strips}, i.e.,
 #' a selection across a whole or part of a meridian/parallel.
 #' @author J Bedia \joaquin.bedia@@gmail.com
+#' @keywords internal
 
 
 findPointXYindex <- function(lonLim, latLim, gcs)  {

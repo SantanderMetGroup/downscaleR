@@ -8,6 +8,7 @@
 #' @param mdArray A n-dimensional array, as returned by \code{makeSubset}
 #' @return a list with start/end dates and de transformed n dimensional array of data.
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
 
 dictionaryTransform <- function(dic, grid, timePars, mdArray) {
 	Data <- mdArray * dic$scale + dic$offset

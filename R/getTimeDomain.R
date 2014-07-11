@@ -10,13 +10,14 @@
 #' @param years Vector of selected years. Passed by \code{loadGridDataset}.
 #' @param time Verification time defined as a character string (e.g. \dQuote{06} for data
 #' verifying at 06:00:00). Only applies for sub-daily datasets.
-#' @returns A list of length two with the selected verification dates and a list
+#' @return A list of length two with the selected verification dates and a list
 #'  with the index values defined as java objects of the class \sQuote{ucar.ma2.Range}.
 #'  Output passed to \code{loadGridDataset}.
 #' @details The indices of time positions are returned as a list, in order to read 
 #' discontinuous data in the time dimension from NetCDF files in a more efficient way
 #' (i.e. seasons for different years). 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
 
 getTimeDomain <- function(grid, dic, season, years, time) {
       message("[", Sys.time(), "] Defining time selection parameters")

@@ -7,6 +7,7 @@
 #' @param years A vector of (continuous) year selection
 #' @return A list with a vector of time index positions and the corresponding POSIXlt dates
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
 
 getTimeDomainStations <- function(timeDates, season, years) {
     if (is.null(season)) {

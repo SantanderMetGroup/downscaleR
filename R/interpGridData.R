@@ -1,7 +1,6 @@
 #' Interpolate a dataset to a grid
 #' 
-#' Usaes bilinear weights or nearest neighbour interpolation for interpolating a gridded
-#'  dataset into a new grid.
+#' Uses bilinear weights for interpolating a gridded dataset into a new user-defined grid.
 #'  
 #'  @param obj An object coming from \code{\link{loadGridData}} or the \code{ecomsUDG.Raccess} package function
 #'   \code{\link[ecomsUDG.Raccess]{loadECOMS}}.
@@ -11,15 +10,15 @@
 #'   westernmost, easternmost and grid cell width in the X axis parameters. See details.
 #'  @param new.grid.y Same as \code{new.grid.x} but for the Y coordinates, giving the southernmost,
 #'   northernmost and grid cell resolution in the Y axis. See details
-#'  @param method Currently two interpolation methods are accepted: bilinear interpolation (default)
-#'   and nearest neighbour (faster for large data).
+#'  @param method Currently unused, as only bilinear interpolation is implemented so far.
 #'  @return An interpolated object preserving the output structure of the input
+#'   (See e.g. \code{\link{loadGridData}}) for details on the output structure. 
 #'  @details  In case of default definition of either x, y or both grid coordinates, the default grid
 #'  is calculated taking the corners of the current grid and assuming x and y resolutions equal to 
-#'  the default \code{by} arguent value in function \code{\link[base]{seq}}: \emph{by = ((to - from)/(length.out - 1))}.
+#'  the default \code{by} argument value in function \code{\link[base]{seq}}: \emph{by = ((to - from)/(length.out - 1))}.
 #'  The bilinear interpolator is essentially a wrapper of the \code{fields} package 
 #'  function \code{\link[fields]{interp.surface.grid}}.
-#'  @note To avoid unnecessary NA values within the dataset, the function will not accept new grid domains outside the
+#'  @note To avoid unnecessary NA values, the function will not extrapolate using a new grid outside the
 #'  current extent of the dataset, returning an error message.
 #'  @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #'  @export
@@ -59,7 +58,7 @@
 # x
 # y
 
-interpGridData <- function(gridData, new.grid.x = NULL, new.grid.y = NULL, method = c("bilinear", "nearest")) {
+interpGridData <- function(gridData, new.grid.x = NULL, new.grid.y = NULL, method = "bilinear") {
       x <- gridData$xyCoords$x
       y <- gridData$xyCoords$y
       # Definition of new grid
@@ -101,26 +100,10 @@ interpGridData <- function(gridData, new.grid.x = NULL, new.grid.y = NULL, metho
       grid.list <- list("x" = new.grid.x, "y" = new.grid.y)
       new.grid.x <- NULL
       new.grid.y <- NULL
-
-
-#       
-#       # nearest
-
-# which.min(abs(x-your.number))
-#       ng <- expand.grid(grid.list$x, grid.list$y)
-#       og <- expand.grid(x, y)
-#       
-#       for (i in 1:nrow(ng)) {
-#                         
-#       }
-#             
-#       
-#       for (i in 1:length(grid.list$x))
-#             
-#             i=100
-#             
-#             grid.list$x[i]^2
-      
+      # nearest
+      # which.min(abs(x-your.number))
+      # ng <- expand.grid(grid.list$x, grid.list$y)
+      # og <- expand.grid(x, y)
       # Bilinear
       if (any(grepl("member", attr(gridData$Data, "dimensions")))) {
             mem.ind <- grep("member", attr(gridData$Data, "dimensions"))

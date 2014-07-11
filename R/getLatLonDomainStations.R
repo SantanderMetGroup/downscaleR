@@ -11,6 +11,7 @@
 #' @return A list with index positions of the requested data and a 2D matrix
 #' of XY coordinates
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
 
 getLatLonDomainStations <- function(lonLim, latLim, lons, lats) {
       if (length(lonLim) > 2 | length(latLim) > 2) {
