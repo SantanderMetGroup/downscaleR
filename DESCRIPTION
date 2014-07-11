@@ -1,0 +1,18 @@
+Package: downscaleR
+Depends:
+    downscaleR.java,
+    rJava,
+    abind,
+    fields,
+    R(>= 3.0.0)
+Type: Package
+Title: R package for climate data analysis and downscaling
+Version: 0.0-0
+Date: 11-Jul-2014
+Author: Santander Meteorology Group <http://www.meteo.unican.es>
+Maintainer: Joaquin Bedia <bediaj@unican.es>
+BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
+URL: https://github.com/SantanderMetGroup/downscaleR/wiki
+Description: Load climate and weather data into R and performs climate data
+    analysis operations.
+License: GPL (>= 3)
