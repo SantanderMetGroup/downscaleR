@@ -52,10 +52,10 @@ loadStationData.ASCII <- function(source.dir, var, stationID = NULL, lonLim = NU
 	}
       timeString <- read.csv(list.files(source.dir, full.names = TRUE)[fileInd], colClasses = "character")[ ,1]
       if (nchar(timeString[1]) == 8) {
-	      timeDates <- strptime(timeString, "%Y%m%d")  
+	      timeDates <- strptime(timeString, "%Y%m%d", tz = tz)  
 	}
       if (nchar(timeString[1]) == 10) {
-		timeDates <- strptime(timeString, "%Y%m%d%H")
+		timeDates <- strptime(timeString, "%Y%m%d%H", tz = tz)
 	}
       timeString <- NULL
       timePars <- getTimeDomainStations(timeDates, season, years)
@@ -75,14 +75,11 @@ loadStationData.ASCII <- function(source.dir, var, stationID = NULL, lonLim = NU
       names(Data) <- stids
 	## Metadata
       message("[", Sys.time(), "] Retrieving metadata ...", sep = "")
-      ind.meta <- c(1:length(names(aux)))[-pmatch(c("station_id", "longitude", "latitude"), names(aux))]
-      if (length(ind.meta) == 0) {
-            meta.list <- NULL
-      } else {
-            meta.list <- as.list(aux[stInd,ind.meta])
-      }
+      # Assumes that at least station ids must exist, and therefore meta.list is never empty
+      ind.meta <- c(1:length(names(aux)))[-pmatch(c("longitude", "latitude"), names(aux))]
+      meta.list <- as.list(aux[stInd,ind.meta])
       aux <- NULL  
-      return(list("Variable" = var, "station_id" = stids, "xyCoords" = coords, "time" = timePars$timeDates, "metadata" = meta.list, "Data" = Data))
+      return(list("Variable" = var, "Data" = Data, "xyCoords" = coords, "Dates" = timePars$timeDates, "Metadata" = meta.list))
 }
 # End
 
