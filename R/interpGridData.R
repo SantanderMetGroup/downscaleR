@@ -16,8 +16,8 @@
 #'  @details  In case of default definition of either x, y or both grid coordinates, the default grid
 #'  is calculated taking the corners of the current grid and assuming x and y resolutions equal to 
 #'  the default \code{by} argument value in function \code{\link[base]{seq}}: \emph{by = ((to - from)/(length.out - 1))}.
-#'  The bilinear interpolator is essentially a wrapper of the \code{fields} package 
-#'  function \code{\link[fields]{interp.surface.grid}}.
+#'  The bilinear interpolator is a wrapper of the \code{\link[fields]{interp.surface.grid}} function
+#'  in package \pkg{fields}.
 #'  @note To avoid unnecessary NA values, the function will not extrapolate using a new grid outside the
 #'  current extent of the dataset, returning an error message.
 #'  @author J. Bedia \email{joaquin.bedia@@gmail.com}
