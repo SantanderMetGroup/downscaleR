@@ -1,13 +1,13 @@
-#' Load observations data
+#' Load weather station data
 
-#' Loads observations data from station and gridded datasets, either in standard ASCII format or netCDF
+#' Loads observations data from station datasets, either in standard ASCII format or netCDF
 
 #' @param source.dir A valid path to the directory containing the station files
 #' @param file.format Wether the stations data are stored in a netCDF or ASCII (default) file. See details for standard format definition.
 #' @param var Character string indicating the variable to be loaded. Note that the notation depends on wether the dictionary is being used or not.
 #' @param dictionary Optional. A full path to the file containing the dictionary. See details
 #' @param stationID Optional. A character vector indicating the code names of the stations to be loaded.
-#' @param lonLim
+#' @param lonLim 
 #' @param latLim
 #' @param season
 #' @param years
@@ -21,10 +21,11 @@
 	# 'End': The upper time bound of the verification period
 #' Data A matrix with the values of the variable. Dates are ordered by rows and Stations in columns.
 #' \end{itemize}
+#' @references \url{https://github.com/SantanderMetGroup/downscaleR/wiki/Observation-Data-format} 
 #' @export
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' @seealso \code{\link{loadGridDataset}}, \code{\link{dataInventory}}
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#' @seealso \code{\link{loadGridData}}, \code{\link{dataInventory}}
+
 # source.dir = "/home/DATA/CLIMATE/GSN_World/"
 # file.format = "ascii"
 # var = "tasmax"
@@ -35,7 +36,7 @@
 # season = 6:8
 # years = 1990:1995
 
-loadObservations <- function(source.dir, file.format = c("ascii", "netcdf"), var, stationID = NULL, lonLim = NULL, latLim = NULL, season = NULL, years = NULL) {
+loadStationData <- function(source.dir, file.format = c("ascii", "netcdf"), var, stationID = NULL, lonLim = NULL, latLim = NULL, season = NULL, years = NULL) {
     file.format <- match.arg(file.format, choices = c("ascii", "netcdf"))
     if ((!is.null(lonLim) | !is.null(latLim)) & !is.null(stationID)) { 
         lonLim <- NULL 
@@ -43,14 +44,14 @@ loadObservations <- function(source.dir, file.format = c("ascii", "netcdf"), var
         warning("lonLim/latLim arguments ignored as Station Codes have been specified.")
     }
     if (file.format == "ascii") {
-        out <- loadObservations.ASCII(source.dir, var, stationID, lonLim, latLim, season, years)
+        out <- loadStationData.ASCII(source.dir, var, stationID, lonLim, latLim, season, years)
     } else if (file.format == "netcdf") {
-        out <- loadObservations.NetCDF(source.dir, var, stationID, lonLim, latLim, season, years)
+        out <- loadStationData.NetCDF(source.dir, var, stationID, lonLim, latLim, season, years)
     }
     varTimeStep <- difftime(out$time[2], out$time[1])
     dateSliceStart <- out$time
     dateSliceEnd <- as.POSIXlt(out$time + varTimeStep)
-    out$time <- list("Start" = dateSliceStart, "End" = dateSliceEnd)
+    out$time <- list("start" = dateSliceStart, "end" = dateSliceEnd)
     message(paste("[", Sys.time(), "] Done.", sep = ""))
     return(out)
 }

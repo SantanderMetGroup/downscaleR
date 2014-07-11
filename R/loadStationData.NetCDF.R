@@ -1,7 +1,4 @@
-# TODO: Add comment
-# 
-# Author: juaco
-###############################################################################
+
 
 
 loadObservations.NetCDF <- function(dataset, var, lonLim, latLim) {
