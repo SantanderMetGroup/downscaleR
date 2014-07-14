@@ -1,6 +1,7 @@
 #' Interpolate a dataset to a grid
 #' 
-#' Uses bilinear weights for interpolating a gridded dataset into a new user-defined grid.
+#' Performs interpolation of a gridded dataset into a new user-defined grid using bilinear weights 
+#' or nearest-neighbour methods.
 #'  
 #'  @param obj An object coming from \code{\link{loadGridData}} or the \code{ecomsUDG.Raccess} package function
 #'   \code{\link[ecomsUDG.Raccess]{loadECOMS}}.
@@ -10,7 +11,8 @@
 #'   westernmost, easternmost and grid cell width in the X axis parameters. See details.
 #'  @param new.grid.y Same as \code{new.grid.x} but for the Y coordinates, giving the southernmost,
 #'   northernmost and grid cell resolution in the Y axis. See details
-#'  @param method Currently unused, as only bilinear interpolation is implemented so far.
+#'  @param method Method for interpolation. Currently implemented methods are either \code{bilinear},
+#'  for bilinear interpolation, and \code{nearest}, for nearest-neighbor interpolation.
 #'  @return An interpolated object preserving the output structure of the input
 #'   (See e.g. \code{\link{loadGridData}}) for details on the output structure. 
 #'  @details  In case of default definition of either x, y or both grid coordinates, the default grid
@@ -18,45 +20,24 @@
 #'  the default \code{by} argument value in function \code{\link[base]{seq}}: \emph{by = ((to - from)/(length.out - 1))}.
 #'  The bilinear interpolator is a wrapper of the \code{\link[fields]{interp.surface.grid}} function
 #'  in package \pkg{fields}.
+#'  The output has special attributes in the \code{xyCoords} element that indicate that the object
+#'   has been interpolated. These attributes are \code{interpolation}, which indicates the method used and
+#'   \code{resX} and \code{resY}, for the grid-cell resolutions in the X and Y axes respectively.
 #'  @note To avoid unnecessary NA values, the function will not extrapolate using a new grid outside the
 #'  current extent of the dataset, returning an error message.
 #'  @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #'  @export
-
-# gridData <- loadGridData(dataset = "inst/datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml", 
-#                          var = "ta@100000",
-#                          dictionary = TRUE,
-#                          lonLim = c(-12, 5),
-#                          latLim = c(35,45),
-#                          season = 6:8,
-#                          years = 1981:2000,
-#                          time = "none")
-# 
-# 
-# library(ecomsUDG.Raccess)
-# loginECOMS_UDG("juaco", "*********")
-# 
-# gridData <- loadECOMS(dataset = "System4_seasonal_15",
-#           var = "psl",
-#           dictionary = TRUE,
-#           members = 1:4,
-#           lonLim = c(-15,15),
-#           latLim = c(33,45),
-#           season = 6:9,
-#           years = 1999:2003,
-#           leadMonth = 2,
-#           time = "12") 
-#             
-# 
-# plotMeanField(gridData)
-# 
-# new.grid.x <- c(-10,5,.25)
-# new.grid.y <- c(35,43,.25)
-# 
-# new.grid.x <- c(-16,38,.25)
-# 
-# x
-# y
+#'  @example 
+#'  ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+#' # Load air temperature at 1000 mb isobaric pressure level for boreal winter (DJF) 1991-2000
+#' t1000.djf <- loadGridData(ncep, var = "ta@@100000", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 1991:2000)
+#' par(mfrow = c(2,1))
+#' plotMeanField(t1000.djf)
+#' # Bilinear interpolation to a smaller domain centered in Spain using a 0.5 degree resolution in bot X and Y axes
+#' t1000.djf.05 <- interpGridData(t1000.djf, new.grid.x = c(-10,5,.5), new.grid.y = c(36,44,.5), method = "bilinear")
+#' plotMeanField(t1000.djf.05)
+#' # New attributes "interpolation", "resX" and "resY" indicate that the original data have been interpolated
+#' str(t1000.djf.05$xyCoords)
 
 interpGridData <- function(gridData, new.grid.x = NULL, new.grid.y = NULL, method = "bilinear") {
       x <- gridData$xyCoords$x
@@ -100,11 +81,6 @@ interpGridData <- function(gridData, new.grid.x = NULL, new.grid.y = NULL, metho
       grid.list <- list("x" = new.grid.x, "y" = new.grid.y)
       new.grid.x <- NULL
       new.grid.y <- NULL
-      # nearest
-      # which.min(abs(x-your.number))
-      # ng <- expand.grid(grid.list$x, grid.list$y)
-      # og <- expand.grid(x, y)
-      # Bilinear
       if (any(grepl("member", attr(gridData$Data, "dimensions")))) {
             mem.ind <- grep("member", attr(gridData$Data, "dimensions"))
             n.members <- dim(gridData$Data)[mem.ind]
@@ -118,11 +94,40 @@ interpGridData <- function(gridData, new.grid.x = NULL, new.grid.y = NULL, metho
       if (!identical(sort(ind.order), ind.order)) {
             transpose <- TRUE
       }
-      if (!is.null(n.members)) {
-            message("[", Sys.time(), "] Performing multi-member interpolation (", n.members, " members) ... may take a while")
+      if (is.null(n.members)) {
+            message("[", Sys.time(), "] Performing ", method, " interpolation... may take a while")
+            interp.list <- lapply(1:dim(gridData$Data)[time.ind], function(j) {
+                  indices <- rep(list(bquote()), length(dim(gridData$Data)))
+                  indices[[time.ind]] <- j
+                  ind.call <- as.call(c(list(as.symbol("["), quote(gridData$Data)), indices))
+                  z <- eval(ind.call)
+                  if (isTRUE(transpose)) {
+                        z <- t(z)      
+                  }
+                  if (method == "bilinear") {
+                        int <- interp.surface.grid(list("x" = x, "y" = y, "z" = z), grid.list)$z
+                  }
+                  if (method == "nearest") {
+                        int <- matrix(nrow = length(grid.list$x), ncol = length(grid.list$y))
+                        for (k in 1:length(grid.list$x)) {
+                              for (l in 1:length(grid.list$y)) {
+                                    ind.x <- which.min(abs(x - grid.list$x[k]))
+                                    ind.y <- which.min(abs(y - grid.list$y[l]))
+                                    int[k,l] <- z[ind.x, ind.y]
+                              }
+                        }
+                  }
+                  z <- NULL
+                  return(int)
+            })
+            gridData$Data <- unname(do.call("abind", c(interp.list, along = 3)))
+            interp.list <- NULL
+            attr(gridData$Data, "dimensions") <- c("lon", "lat", "time")
+      } else {
+            message("[", Sys.time(), "] Performing multi-member ", method, " interpolation... may take a while")
             aux.list <- list()
             for (i in 1:n.members) {
-                  message("[", Sys.time(), "] Interpolating member ", i, " ...")
+                  message("[", Sys.time(), "] Interpolating member ", i, " out of ", n.members)
                   interp.list <- lapply(1:dim(gridData$Data)[time.ind], function(j) {
                         indices <- rep(list(bquote()), length(dim(gridData$Data)))
                         indices[[time.ind]] <- j
@@ -131,48 +136,36 @@ interpGridData <- function(gridData, new.grid.x = NULL, new.grid.y = NULL, metho
                         z <- eval(ind.call)
                         if (isTRUE(transpose)) {
                               z <- t(z)      
-                        } 
-                        obj <- list("x" = x, "y" = y, "z" = z)
+                        }
+                        if (method == "bilinear") {
+                              int <- interp.surface.grid(list("x" = x, "y" = y, "z" = z), grid.list)$z
+                        }
+                        if (method == "nearest") {
+                              int <- matrix(nrow = length(grid.list$x), ncol = length(grid.list$y))
+                              for (k in 1:length(grid.list$x)) {
+                                    for (l in 1:length(grid.list$y)) {
+                                          ind.x <- which.min(abs(x - grid.list$x[k]))
+                                          ind.y <- which.min(abs(y - grid.list$y[l]))
+                                          int[k,l] <- z[ind.x, ind.y]
+                                    }
+                              }
+                        }
                         z <- NULL
-                        int <- interp.surface.grid(obj, grid.list)$z
-                        obj <- NULL
                         return(int)
                   })
                   aux.list[[i]] <- unname(do.call("abind", c(interp.list, along = 3)))
-                  interp.list <- NULL
             }
+            interp.list <- NULL
             gridData$Data <- unname(do.call("abind", c(aux.list, along = 4)))
             aux.list <- NULL
             attr(gridData$Data, "dimensions") <- c("lon", "lat", "time", "member")
-      } else {
-            message("[", Sys.time(), "] Performing bilinear interpolation... may take a while")
-            interp.list <- lapply(1:dim(gridData$Data)[time.ind], function(j) {
-                  indices <- rep(list(bquote()), length(dim(gridData$Data)))
-                  indices[[time.ind]] <- j
-                  indices[[mem.ind]] <- i
-                  ind.call <- as.call(c(list(as.symbol("["), quote(gridData$Data)), indices))
-                  z <- eval(ind.call)
-                  if (isTRUE(transpose)) {
-                        z <- t(z)      
-                  } 
-                  obj <- list("x" = x, "y" = y, "z" = z)
-                  z <- NULL
-                  int <- interp.surface.grid(obj, grid.list)$z
-                  obj <- NULL
-                  return(int)
-            })
-            grid$Data <- unname(do.call("abind", c(interp.list, along = 3)))
-            interp.list <- NULL
-            attr(gridData$Data, "dimensions") <- c("lon", "lat", "time")
       }      
-      message("[", Sys.time(), "] Done")
       gridData$xyCoords[1:2] <- grid.list
+      attr(gridData$xyCoords, "interpolation") <-  method
+      attr(gridData$xyCoords, "resX") <- abs(grid.list$x[2] - grid.list$x[1])
+      attr(gridData$xyCoords, "resY") <- abs(grid.list$y[2] - grid.list$y[1]) 
+      message("[", Sys.time(), "] Done")
       return(gridData)
 }
 # End   
- 
 
-# a <- interpGridData(gridData, new.grid.x = c(-10, 5, .2), new.grid.y = c(35,43,.2), method = "bilinear")
-# plotMeanField(a)
-# str(a)
-            
