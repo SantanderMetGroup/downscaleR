@@ -39,7 +39,7 @@
 loadStationData <- function(source.dir, file.format = c("ascii", "netcdf"), var, 
             stationID = NULL, lonLim = NULL, latLim = NULL, season = NULL,
             years = NULL, tz = "GMT") {
-      file.format <- match.arg(file.format, choices = c("ascii", "netcdf"))
+            file.format <- match.arg(file.format, choices = c("ascii", "netcdf"))
       if ((!is.null(lonLim) | !is.null(latLim)) & !is.null(stationID)) { 
             lonLim <- NULL 
             latLim <- NULL
