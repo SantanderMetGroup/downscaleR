@@ -1,4 +1,4 @@
-#' @descriptionPerforms the 6h to 24h aggregation of variables
+#' @description Performs the 6h to 24h aggregation of variables
 #' 
 #' @param NDarray A N-dimensional array, as returned by \sQuote{sQuote}
 #' @param dimNamesRefRef A vector of dimension names

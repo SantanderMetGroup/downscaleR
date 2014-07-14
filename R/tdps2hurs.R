@@ -1,3 +1,4 @@
+#' @title Dew point to relative humidity
 #' @description Conversion of dew point to relative humidity
 #' 
 #' @param tas vector of surface temperature (K)

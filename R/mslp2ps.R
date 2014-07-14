@@ -1,3 +1,4 @@
+#' @title Sea-level pressure to surface pressure
 #' @description Conversion of sea-level pressure to surface pressure
 #' 
 #' @param tas surface temperature

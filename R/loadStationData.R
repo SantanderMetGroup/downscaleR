@@ -1,4 +1,5 @@
-#' Load observations data from station datasets in standard ASCII format.
+#' @title Load station data
+#' @description Load observations data from station datasets in standard ASCII format.
 
 #' @param source.dir A valid path to the directory containing the station files
 #' @param file.format Wether the stations data are stored in a netCDF or ASCII (default) file. See details for standard format definition.
@@ -24,7 +25,7 @@
 #' \item \code{Dates}. A list with the verification time interval of each record in the time series.
 #'  This is represented by a list with two elements: \code{start} and \code{end}, representing the
 #'  lower and upper bounds of the verification period
-#' \item Metadata A list of variable length depending on the available metadata associated
+#' \item \code{Metadata}. A list of variable length depending on the available metadata associated
 #' to each observation. If no metadata are provided, at least the station codes (compulsory) are displayed.
 #' }
 #' 

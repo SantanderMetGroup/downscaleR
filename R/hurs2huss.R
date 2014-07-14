@@ -1,3 +1,4 @@
+#' @title Specific humidity from relative humidity
 #' @description Derive specific humidity from relative humidity
 #' 
 #' @param tas surface air temperature (K)

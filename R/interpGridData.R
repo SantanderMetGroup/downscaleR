@@ -2,6 +2,8 @@
 #' 
 #' @description Performs interpolation of a gridded dataset into a new user-defined grid using bilinear weights 
 #' or nearest-neighbour methods.
+#' 
+#' @importFrom fields interp.surface.grid
 #'  
 #'  @param obj An object coming from \code{\link{loadGridData}} or the \code{ecomsUDG.Raccess} package function
 #'   \code{\link[ecomsUDG.Raccess]{loadECOMS}}.

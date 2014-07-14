@@ -2,6 +2,8 @@
 #' 
 #' @description Load a user-defined spatio-temporal slice from a gridded dataset
 #' 
+#' @import rJava
+
 #' @param dataset
 #' @param var
 #' @param dictionary
@@ -11,7 +13,7 @@
 #' @param years
 #' @param time
 #' 
-#' @return
+#' @return a list of elements
 #' 
 #' @export
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
