@@ -1,8 +1,10 @@
-#' Reverse latitude coordinates ordering
+#' @title Reverse latitude coordinates ordering
 #' 
-#' Reverses the order of the latitudinal coordinates when the dataset is read in
+#' @description Reverses the order of the latitudinal coordinates when the dataset is read in
 #'  reverse y order. Sub-routine of \code{makeSubset}.
-#'  
+#' 
+#' @import rJava
+#'   
 #' @param mdArray A n-dimensional array of data as returned by \code{makeSubset}
 #' @param dimNamesRef Character vector with the (ordered) names of the dimensions of the array
 #' @param grid A java-class \sQuote{GeoGrid}

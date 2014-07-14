@@ -1,4 +1,4 @@
-#' Derive specific humidity from relative humidity
+#' @description Derive specific humidity from relative humidity
 #' 
 #' @param tas surface air temperature (K)
 #' @param ps surface pressure (Pa)
@@ -7,6 +7,8 @@
 #' @references Bohren & Albrecht (2000) Atmospheric thermodynamics. Oxford University Press. 402 pp
 #' @author S. Herrera \email{sixto@@predictia.es}
 #' @keywords internal
+#' @export
+#' @aliases conversion
 
 hurs2huss <- function(tas, ps, hurs) {
       Rd <- 287.058 # dry air constant J/(K kg)

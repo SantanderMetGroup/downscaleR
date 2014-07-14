@@ -1,4 +1,4 @@
-#' Performs the 6h to 24h aggregation of variables
+#' @descriptionPerforms the 6h to 24h aggregation of variables
 #' 
 #' @param NDarray A N-dimensional array, as returned by \sQuote{sQuote}
 #' @param dimNamesRefRef A vector of dimension names
@@ -7,6 +7,7 @@
 #' vector of dimension names is needed for re-arranging accordingly
 #' @author J Bedia \email{joaquin.bedia@@gmail}
 #' @keywords internal
+#' @export
 
 toDD <- function(NDarray, dimNamesRef, dailyAggr) {
       mar <- grep("^time", dimNamesRef, invert = TRUE)

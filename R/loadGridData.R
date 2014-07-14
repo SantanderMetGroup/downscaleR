@@ -1,3 +1,22 @@
+#' @title Load a gridded dataset
+#' 
+#' @description Load a user-defined spatio-temporal slice from a gridded dataset
+#' 
+#' @param dataset
+#' @param var
+#' @param dictionary
+#' @param lonLim
+#' @param latLim
+#' @param season
+#' @param years
+#' @param time
+#' 
+#' @return
+#' 
+#' @export
+#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @aliases loading
+
 loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
                          latLim = NULL, season = NULL, years = NULL, time = "none") {
     time <- match.arg(time, choices = c("none", "00", "06", "12", "18", "DD"))

@@ -1,6 +1,6 @@
-#' Interpolate a dataset to a grid
+#' @title Interpolate a dataset to a grid
 #' 
-#' Performs interpolation of a gridded dataset into a new user-defined grid using bilinear weights 
+#' @description Performs interpolation of a gridded dataset into a new user-defined grid using bilinear weights 
 #' or nearest-neighbour methods.
 #'  
 #'  @param obj An object coming from \code{\link{loadGridData}} or the \code{ecomsUDG.Raccess} package function
@@ -27,7 +27,7 @@
 #'  current extent of the dataset, returning an error message.
 #'  @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #'  @export
-#'  @example 
+#'  @examples 
 #'  ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 #' # Load air temperature at 1000 mb isobaric pressure level for boreal winter (DJF) 1991-2000
 #' t1000.djf <- loadGridData(ncep, var = "ta@@100000", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 1991:2000)

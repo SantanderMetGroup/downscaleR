@@ -13,6 +13,7 @@
 #' @note The current implementation does not support deaccumulation of CFSv2 variables (not needed so far...)
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @keywords internal
+#' @export
 
 dictionaryTransformGrid <- function(dic, timePars, mdArray) {
       dimNames <- attr(mdArray, "dimensions")

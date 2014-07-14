@@ -1,7 +1,9 @@
-#' Reads an arbitrary data slice
+#' @title Reads an arbitrary data slice
 #' 
-#' Reads an arbitrary data slice from a new GeoGrid that is a logical subset of
+#' @description Reads an arbitrary data slice from a new GeoGrid that is a logical subset of
 #' the original GeoGrid.
+#' 
+#' @import abind rJava
 #' 
 #' @param A grid of the java class \sQuote{ucar.nc2.dt.grid.GeoGrid}
 #' @param timePars A list of time parameters as returnde by \code{getTimeDomain}.

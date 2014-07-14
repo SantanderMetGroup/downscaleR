@@ -15,6 +15,8 @@
 #' a selection across a whole or part of a meridian/parallel.
 #' @author J Bedia \email{joaquin.bedia@@gmail.com}
 #' @keywords internal
+#' @export
+#' @import rJava
 
 
 findPointXYindex <- function(lonLim, latLim, gcs)  {

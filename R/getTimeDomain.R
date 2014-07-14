@@ -18,6 +18,8 @@
 #' (i.e. seasons for different years). 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @keywords internal
+#' @export
+#' @import rJava
 
 getTimeDomain <- function(grid, dic, season, years, time) {
       message("[", Sys.time(), "] Defining time selection parameters")

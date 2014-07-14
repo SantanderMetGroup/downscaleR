@@ -1,7 +1,9 @@
-#' Retrieve dimension information for a gridded variable
+#' @title Retrieve dimension information for a gridded variable
 
-#' Goes through variable dimensions and retrieves information for the inventory.
+#' @description Goes through variable dimensions and retrieves information for the inventory.
 #' This is a sub-routine of \code{dataInventory.NetCDF}, \code{makeSubset}.
+#' 
+#' @import rJava
 #' 
 #' @param grid A java object of the class \sQuote{ucar.nc2.dt.grid.GeoGrid}
 #' @return a list of length \emph{N}, being N the number of dimensions defining the grid shape.
@@ -13,8 +15,10 @@
 #'  one by one and those that do not exist for that particular variable are removed. This way, the inventory returns
 #'  only the non-empty level values for each variable. In case of horizontal 2D axes,
 #'  coordinate values are truncated to 1D for conciseness in the inventory.
+#'  
 #' @references \url{https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/v4.0/javadocAll/ucar/nc2/dt/grid/GeoGrid.html}
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @export
 #' @keywords internal
 
 scanVarDimensions <- function(grid) {

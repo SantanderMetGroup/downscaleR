@@ -1,6 +1,9 @@
-#' Internal function to compute the time bounds of each verification time
+#' @title Calculate time bounds of a verification time
+#' @description Internal function to compute the time bounds of each verification time
 #' @keywords internal
-#' 
+#' @export
+#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+
 timeBounds <- function(dic, foreDates) { 
       foreDates <- as.POSIXlt(foreDates, tz = "GMT")
       if (!is.null(dic)) {

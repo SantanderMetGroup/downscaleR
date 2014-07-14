@@ -4,6 +4,9 @@
 #' a quick visual reference of the data loaded. In case of multi-member gridded datasets, it displays
 #' the multi-member mean
 #' 
+#' @importFrom fields image.plot
+#' @importFrom fields world
+#' 
 #' @param gridData A grid dataset
 #' @return a plot of the mean field with a world map superposed
 #' @export
@@ -12,7 +15,7 @@
 #' @author J Bedia joaquin.bedia@@gmail.com
 #' @note The function plots a simple temporal mean of the loaded object in the form of
 #' a map. It does not handle other temporal aggregations. In case of multimember grid datasets,
-#' It simply plots the multi-member mean  .
+#' It simply plots the multi-member mean.
 #' 
 plotMeanField <- function (gridData) {
       dimNames <- attr(gridData$Data, "dimensions")

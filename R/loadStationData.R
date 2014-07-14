@@ -35,6 +35,7 @@
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' 
 #' @seealso \code{\link{loadGridData}}, \code{\link{dataInventory}}
+#' @aliases loading
 
 loadStationData <- function(source.dir, file.format = c("ascii", "netcdf"), var, 
             stationID = NULL, lonLim = NULL, latLim = NULL, season = NULL,

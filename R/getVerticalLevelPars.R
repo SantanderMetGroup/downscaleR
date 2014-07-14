@@ -9,6 +9,7 @@
 #' defining the index of the vertical axis (null if no vertical levels exist)
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @keywords internal
+#' @import rJava
 
 getVerticalLevelPars <- function(grid, level) {
     gcs <- grid$getCoordinateSystem()

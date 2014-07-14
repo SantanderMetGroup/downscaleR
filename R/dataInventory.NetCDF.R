@@ -10,6 +10,7 @@
 #' characteristics of its dimensions is provided.
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @keywords internal
+#' @import rJava
  
 
 dataInventory.NetCDF <- function(dataset) {

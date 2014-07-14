@@ -2,7 +2,7 @@
 #' @description Function to provide a quick overview of a climate dataset
 #'  (either stations or gridded data)
 #' @param dataset A character string poiting to the target. Either a directory containing the data
-#'  in the case of station data in standard ASCII format (see \code{\link(loadStationData)} for details),
+#'  in the case of station data in standard ASCII format (see \code{\link{loadStationData}}) for details),
 #'  or a target file (a NcML) in the case of other types of gridded data (reanalysis, gridded observations ...,
 #'  see \code{\link{loadGridData}} for details).
 #' @param return.stats Optional logical flag indicating if summary statistics of the dataset

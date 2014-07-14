@@ -1,4 +1,4 @@
-#' Conversion of sea-level pressure to surface pressure
+#' @description Conversion of sea-level pressure to surface pressure
 #' 
 #' @param tas surface temperature
 #' @param zs surface geopotential (m^2/s^2)
@@ -6,6 +6,8 @@
 #' @return surface pressure (Pa)
 #' @author S. Herrera \email{sixto@@predictia.es}
 #' @keywords internal
+#' @aliases conversion
+#' @export
  
 mslp2ps <- function(tas, zs, mslp) {
       Rd <- 287.058 # dry air constant J/(K kg)
