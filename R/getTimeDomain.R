@@ -20,6 +20,7 @@
 #' @keywords internal
 #' @export
 #' @import rJava
+#' @importFrom downscaleR.java javaCalendarDate2rPOSIXlt
 
 getTimeDomain <- function(grid, dic, season, years, time) {
       message("[", Sys.time(), "] Defining time selection parameters")
