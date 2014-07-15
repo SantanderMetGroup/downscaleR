@@ -7,3 +7,4 @@ commonR
 init.R
 downscaleR.Rproj
 .Rprofile
+.Rbuildignore
