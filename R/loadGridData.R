@@ -4,20 +4,27 @@
 #' 
 #' @import rJava
 
-#' @param dataset
-#' @param var
-#' @param dictionary
-#' @param lonLim
-#' @param latLim
-#' @param season
-#' @param years
-#' @param time
+#' @template templateParams
+#' @param dictionary Default to TRUE, indicating that a dictionary is used and the .dic file is stored in the same path than the
+#' dataset. If the .dic file is stored elsewhere, then the argument is the full path to the .dic file (including the extension,
+#' e.g.: \code{"/path/to/the/dictionary_file.dic"}). This is the case for instance when the dataset is stored in a remote URL,
+#' and we have a locally stored dictionary for that particular dataset. If FALSE no variable homogenization takes place,
+#' and the raw variable, as originally stored in the dataset, will be returned. See details for dictionary specification.
+#' @param time A character vector indicating the temporal filtering/aggregation 
+#' of the output data. Default to \code{"none"}, which returns the original time 
+#' series as stored in the dataset. For sub-daily variables, instantantaneous data at 
+#' selected verification times can be filtered using one of the character strings 
+#' \code{"00"}, \code{"06"}, \code{"12"} and \code{"18"}. If daily aggregated data are 
+#' required use \code{"DD"}. If the requested variable is static (e.g. orography) it will be ignored. 
+#' See details for time aggregation options
 #' 
-#' @return a list of elements
-#' 
+#' @template templateReturnGridData
+#' @template templateDicDetails  
+#' @template templateGeolocation
 #' @export
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' @aliases loading
+#' @family loading
+#' @family homogenization
 
 loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
                          latLim = NULL, season = NULL, years = NULL, time = "none") {

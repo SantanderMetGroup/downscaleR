@@ -1,4 +1,4 @@
-#' @name dataInventory
+#' @title Dataset inventory
 #' @description Function to provide a quick overview of a climate dataset
 #'  (either stations or gridded data)
 #' @param dataset A character string poiting to the target. Either a directory containing the data
@@ -9,6 +9,13 @@
 #'  should be returned with the inventory. Only used for station data.
 #'  
 #' @return A list of components describing the variables and other characteristics of the target dataset.
+#' 
+#' @note The variable names returned correspond to the original names of the variables as stored in the dataset,
+#' and not to the standard naming convention defined in the vocabulary.
+#' 
+#' @family loading
+#' @family homogenization
+#' 
 #' @export
 #' @author J Bedia \email{joaquin.bedia@@gmail.com}
 

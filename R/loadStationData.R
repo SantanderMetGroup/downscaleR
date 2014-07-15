@@ -1,17 +1,9 @@
 #' @title Load station data
 #' @description Load observations data from station datasets in standard ASCII format.
-
-#' @param source.dir A valid path to the directory containing the station files
+#'
+#' @template templateParams 
 #' @param file.format Wether the stations data are stored in a netCDF or ASCII (default) file. See details for standard format definition.
-#' @param var Character string indicating the variable to be loaded. Note that the notation depends on wether the dictionary is being used or not.
-#' @param dictionary Optional. A full path to the file containing the dictionary. See details
 #' @param stationID Optional. A character vector indicating the code names of the stations to be loaded.
-#' @param lonLim Vector of length = 2, with minimum and maximum longitude coordinates of the bounding box
-#'  selected. For single-point queries, a numeric value with the longitude coordinate. See details.
-#' @param latLim Same as \code{lonLim}, but for the selection of the latitudinal range. See details.
-#' @param season An integer vector specifying the desired season (in months, January = 1 ..., December = 12).
-#'  Options include one to several (contiguous) months. If NULL (default), full year selections is performed (same as \code{season = 1:12})
-#' @param years Optional vector of years to select. Default (NULL) to all available years
 #' @param tz A time zone specification to be used for the conversion of dates, if one is required
 #' (i.e., if the time zone of the dataset does not correspond to the system-specific one; see
 #' \code{\link[base]{timezones}} for details). The default assumes "GMT" (UTC, Universal Time, Coordinated),
@@ -29,16 +21,20 @@
 #' to each observation. If no metadata are provided, at least the station codes (compulsory) are displayed.
 #' }
 #' 
+#' @template templateGeolocation
+#' 
+#' @note Unlike gridded datasets, station data do not use a dictionary for variable homogenization. Thus, users
+#' must take care of variable units and eventual conversions when necessary.
+#' 
 #' @references \url{https://github.com/SantanderMetGroup/downscaleR/wiki/Observation-Data-format} 
 #' 
 #' @export
 #' 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' 
-#' @seealso \code{\link{loadGridData}}, \code{\link{dataInventory}}
-#' @aliases loading
+#' @family loading
 
-loadStationData <- function(source.dir, file.format = c("ascii", "netcdf"), var, 
+loadStationData <- function(dataset, file.format = c("ascii", "netcdf"), var, 
             stationID = NULL, lonLim = NULL, latLim = NULL, season = NULL,
             years = NULL, tz = "GMT") {
             file.format <- match.arg(file.format, choices = c("ascii", "netcdf"))

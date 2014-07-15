@@ -4,6 +4,7 @@
 #' or nearest-neighbour methods.
 #' 
 #' @importFrom fields interp.surface.grid
+#' 
 #'  
 #'  @param obj An object coming from \code{\link{loadGridData}} or the \code{ecomsUDG.Raccess} package function
 #'   \code{\link[ecomsUDG.Raccess]{loadECOMS}}.
@@ -29,7 +30,8 @@
 #'  current extent of the dataset, returning an error message.
 #'  @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #'  @export
-#'  @examples 
+#'  @examples \dontrun{
+#' # This is the path to the package built-in NCEP dataset
 #'  ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 #' # Load air temperature at 1000 mb isobaric pressure level for boreal winter (DJF) 1991-2000
 #' t1000.djf <- loadGridData(ncep, var = "ta@@100000", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 1991:2000)
@@ -38,8 +40,10 @@
 #' # Bilinear interpolation to a smaller domain centered in Spain using a 0.5 degree resolution in bot X and Y axes
 #' t1000.djf.05 <- interpGridData(t1000.djf, new.grid.x = c(-10,5,.5), new.grid.y = c(36,44,.5), method = "bilinear")
 #' plotMeanField(t1000.djf.05)
+#' par(mfrow=c(1,1))
 #' # New attributes "interpolation", "resX" and "resY" indicate that the original data have been interpolated
 #' str(t1000.djf.05$xyCoords)
+#' }
 
 interpGridData <- function(gridData, new.grid.x = NULL, new.grid.y = NULL, method = "bilinear") {
       x <- gridData$xyCoords$x
