@@ -110,5 +110,8 @@ Other homogenization: \code{\link{dataInventory}};
 
 Other loading: \code{\link{dataInventory}};
   \code{\link{loadStationData}}
+
+Other loading.grid: \code{\link{getGrid}};
+  \code{\link{interpGridData}}
 }
 

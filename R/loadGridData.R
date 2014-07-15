@@ -24,6 +24,7 @@
 #' @export
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @family loading
+#' @family loading.grid
 #' @family homogenization
 
 loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
