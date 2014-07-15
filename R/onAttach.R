@@ -9,7 +9,7 @@
       mess <- paste(pkgname, " version ", ver, " (", builddate,") is loaded", sep = "")
       packageStartupMessage(mess)
       url <- "https://raw.githubusercontent.com/SantanderMetGroup/downscaleR/stable/DESCRIPTION"
-      a <- getURL(url)
+      a <- getURL(url, ssl.verifypeer = FALSE)
       b <- readLines(textConnection(a))
       latest.ver <- package_version(gsub("Version: ", "", b[grep("Version", b)]))
       if (ver < latest.ver) {
