@@ -3,9 +3,9 @@
 \alias{loadStationData}
 \title{Load station data}
 \usage{
-loadStationData(dataset, file.format = c("ascii", "netcdf"), var,
-  stationID = NULL, lonLim = NULL, latLim = NULL, season = NULL,
-  years = NULL, tz = "GMT")
+loadStationData(dataset, file.format = "ascii", var, stationID = NULL,
+  lonLim = NULL, latLim = NULL, season = NULL, years = NULL,
+  tz = "GMT")
 }
 \arguments{
 \item{dataset}{A character string indicating the database to be accessed. This is usually a path to a local file or a URL
@@ -29,7 +29,8 @@ Options include one to several (contiguous) months. Default to \code{NULL}, indi
 \item{years}{Optional vector of years to select. Default (\code{NULL}) to all available years. If the requested variable is static (e.g. orography)
 it will be ignored.}
 
-\item{file.format}{Wether the stations data are stored in a netCDF or ASCII (default) file. See details for standard format definition.}
+\item{file.format}{Wether the stations data are stored in a netCDF or ASCII (default) file.
+Currently only the standard \dQuote{ASCII} format supported. See references for details.}
 
 \item{stationID}{Optional. A character vector indicating the code names of the stations to be loaded.}
 

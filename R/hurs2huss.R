@@ -9,7 +9,7 @@
 #' @author S. Herrera \email{sixto@@predictia.es}
 #' @keywords internal
 #' @export
-#' @aliases conversion
+#' @family conversion
 
 hurs2huss <- function(tas, ps, hurs) {
       Rd <- 287.058 # dry air constant J/(K kg)

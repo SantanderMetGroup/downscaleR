@@ -16,7 +16,7 @@ makeAggregatedDataset(source.dir, ncml.file, file.ext = "nc",
 to be aggregated. Default to \code{nc} (netCDF).}
 
 \item{aggr.dim}{Character string indicating the dimension along which the
-files will be concatenated. Default to \code{\dQuote{time}}.}
+files will be concatenated. Default to \code{"time"}.}
 
 \item{pattern}{An optional regular expression. Only file names which match the
 regular expression will be considered in the aggregation

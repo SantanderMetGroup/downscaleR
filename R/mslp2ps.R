@@ -7,7 +7,7 @@
 #' @return surface pressure (Pa)
 #' @author S. Herrera \email{sixto@@predictia.es}
 #' @keywords internal
-#' @aliases conversion
+#' @family conversion
 #' @export
  
 mslp2ps <- function(tas, zs, mslp) {

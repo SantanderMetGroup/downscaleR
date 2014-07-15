@@ -3,7 +3,7 @@
 #' Load station data in standard ASCII format, being the standard defined in the framework
 #' of the action COST VALUE
 #' 
-#' @param source.dir Directory containing the stations dataset
+#' @param dataset Directory containing the stations dataset
 #' @param var Character string. Name of the variable, as defined in the dataset
 #' @param stationID Character string. Optional, Id code(s) of the station(s) selected
 #' @param lonLim numeric vector of length 1 or two defining X coordinate(s).
@@ -17,10 +17,10 @@
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @keywords internal
 
-loadStationData.ASCII <- function(source.dir, var, stationID = NULL, lonLim = NULL, latLim = NULL, season = NULL, years = NULL) {
-      aux <- read.csv(file.path(source.dir, "stations.txt"), stringsAsFactors = FALSE, strip.white = TRUE)
+loadStationData.ASCII <- function(dataset, var, stationID, lonLim, latLim, season, years, tz) {
+      aux <- read.csv(file.path(dataset, "stations.txt"), stringsAsFactors = FALSE, strip.white = TRUE)
       # Station codes
-      stids <- read.csv(file.path(source.dir, "stations.txt"), colClasses = "character")[ ,grep("station_id", names(aux), ignore.case = TRUE)]
+      stids <- read.csv(file.path(dataset, "stations.txt"), colClasses = "character")[ ,grep("station_id", names(aux), ignore.case = TRUE)]
       if (!is.null(stationID)) {
 	      stInd <- match(stationID, stids)
 		if (any(is.na(stInd))) {
@@ -46,11 +46,11 @@ loadStationData.ASCII <- function(source.dir, var, stationID = NULL, lonLim = NU
       stids <- stids[stInd]
       dimnames(coords) <- list(stids, c("longitude", "latitude"))
       ## Time dimension
-	fileInd <- grep(paste("^", var, "\\.txt", sep = ""), list.files(source.dir))
+	fileInd <- grep(paste("^", var, "\\.txt", sep = ""), list.files(dataset))
 	if(length(fileInd) == 0) {
             stop("[", Sys.time(),"] Variable requested not found")
 	}
-      timeString <- read.csv(list.files(source.dir, full.names = TRUE)[fileInd], colClasses = "character")[ ,1]
+      timeString <- read.csv(list.files(dataset, full.names = TRUE)[fileInd], colClasses = "character")[ ,1]
       if (nchar(timeString[1]) == 8) {
 	      timeDates <- strptime(timeString, "%Y%m%d", tz = tz)  
 	}
@@ -60,7 +60,7 @@ loadStationData.ASCII <- function(source.dir, var, stationID = NULL, lonLim = NU
       timeString <- NULL
       timePars <- getTimeDomainStations(timeDates, season, years)
       ## missing data code
-      vars <- read.csv(list.files(source.dir, full.names=TRUE)[grep("variables", list.files(source.dir), ignore.case = TRUE)])
+      vars <- read.csv(list.files(dataset, full.names=TRUE)[grep("variables", list.files(dataset), ignore.case = TRUE)])
       miss.col <- grep("missing_code", names(vars), ignore.case = TRUE)
       if(length(miss.col) > 0) {
             na.string <- vars[grep(var, vars[ ,grep("variable", names(vars), ignore.case = TRUE)]), miss.col]
@@ -71,7 +71,7 @@ loadStationData.ASCII <- function(source.dir, var, stationID = NULL, lonLim = NU
       }
       # Data retrieval
       message("[", Sys.time(), "] Loading data ...", sep = "")
-      Data <- as.data.frame(read.csv(list.files(source.dir, full.names = TRUE)[fileInd], na.strings = na.string)[timePars$timeInd, stInd + 1])
+      Data <- as.data.frame(read.csv(list.files(dataset, full.names = TRUE)[fileInd], na.strings = na.string)[timePars$timeInd, stInd + 1])
       names(Data) <- stids
 	## Metadata
       message("[", Sys.time(), "] Retrieving metadata ...", sep = "")

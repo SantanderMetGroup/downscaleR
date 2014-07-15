@@ -7,7 +7,7 @@ interpGridData(gridData, new.grid.x = NULL, new.grid.y = NULL,
   method = "bilinear")
 }
 \arguments{
-\item{obj}{An object coming from \code{\link{loadGridData}} or the \code{ecomsUDG.Raccess} package function
+\item{gridData}{An object coming from \code{\link{loadGridData}} or the \code{ecomsUDG.Raccess} package function
  \code{\link[ecomsUDG.Raccess]{loadECOMS}}.}
 
 \item{new.grid.x}{Definition of the x coordinates of the grid to interpolate.

@@ -6,7 +6,7 @@
 #' @return vector of relative humidity (\%)
 #' @author J Bedia \email{joaquin.bedia@@gmail.com}, borrowing MatLab code from S. Herrera
 #' @keywords internal
-#' @aliases conversion
+#' @family conversion
 #' @export
 
 tdps2hurs <- function(tas, tdps) {

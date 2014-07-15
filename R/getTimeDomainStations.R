@@ -34,7 +34,7 @@ getTimeDomainStations <- function(timeDates, season, years) {
     # Year-crossing seasons - year to take the initialization
     if (!identical(season, sort(season))) {
         if (years[1] == startYear) { 
-            warning(paste("First forecast date in dataset: ", startDay, ".\nRequested seasonal data for ", startYear," not available", sep=""))
+            warning(paste("First forecast day in dataset: ", timeDates[1], ".\nRequested seasonal data for ", startYear," not available", sep=""))
             years <- years[-length(years)]
         } else {
             years <- years - 1      

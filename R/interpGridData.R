@@ -6,7 +6,7 @@
 #' @importFrom fields interp.surface.grid
 #' 
 #'  
-#'  @param obj An object coming from \code{\link{loadGridData}} or the \code{ecomsUDG.Raccess} package function
+#'  @param gridData An object coming from \code{\link{loadGridData}} or the \code{ecomsUDG.Raccess} package function
 #'   \code{\link[ecomsUDG.Raccess]{loadECOMS}}.
 #'  @param new.grid.x Definition of the x coordinates of the grid to interpolate.
 #'  This is a vector of length three with components \emph{from}, \emph{to} and \emph{by},

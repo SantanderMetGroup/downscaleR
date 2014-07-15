@@ -3,11 +3,11 @@
 \alias{loadStationData.ASCII}
 \title{Load station data in standard ASCII format}
 \usage{
-loadStationData.ASCII(source.dir, var, stationID = NULL, lonLim = NULL,
-  latLim = NULL, season = NULL, years = NULL)
+loadStationData.ASCII(dataset, var, stationID, lonLim, latLim, season, years,
+  tz)
 }
 \arguments{
-\item{source.dir}{Directory containing the stations dataset}
+\item{dataset}{Directory containing the stations dataset}
 
 \item{var}{Character string. Name of the variable, as defined in the dataset}
 

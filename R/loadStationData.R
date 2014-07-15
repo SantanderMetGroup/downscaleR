@@ -2,7 +2,8 @@
 #' @description Load observations data from station datasets in standard ASCII format.
 #'
 #' @template templateParams 
-#' @param file.format Wether the stations data are stored in a netCDF or ASCII (default) file. See details for standard format definition.
+#' @param file.format Wether the stations data are stored in a netCDF or ASCII (default) file. 
+#' Currently only the standard \dQuote{ASCII} format supported. See references for details.
 #' @param stationID Optional. A character vector indicating the code names of the stations to be loaded.
 #' @param tz A time zone specification to be used for the conversion of dates, if one is required
 #' (i.e., if the time zone of the dataset does not correspond to the system-specific one; see
@@ -34,7 +35,7 @@
 #' 
 #' @family loading
 
-loadStationData <- function(dataset, file.format = c("ascii", "netcdf"), var, 
+loadStationData <- function(dataset, file.format = "ascii", var, 
             stationID = NULL, lonLim = NULL, latLim = NULL, season = NULL,
             years = NULL, tz = "GMT") {
             file.format <- match.arg(file.format, choices = c("ascii", "netcdf"))
@@ -44,10 +45,13 @@ loadStationData <- function(dataset, file.format = c("ascii", "netcdf"), var,
             warning("lonLim/latLim arguments ignored as Station Codes have been specified.")
       }
       if (file.format == "ascii") {
-            out <- loadStationData.ASCII(source.dir, var, stationID, lonLim, latLim, season, years)
-      } else if (file.format == "netcdf") {
-            out <- loadStationData.NetCDF(source.dir, var, stationID, lonLim, latLim, season, years)
+            out <- loadStationData.ASCII(dataset, var, stationID, lonLim, latLim, season, years, tz)
+      } else {
+            stop("Unrecognized/not supported station data format")
       }
+#       } else if (file.format == "netcdf") {
+#             out <- loadStationData.NetCDF(dataset, var, stationID, lonLim, latLim, season, years, tz)
+#       }
       varTimeStep <- difftime(out$Dates[2], out$Dates[1])
       dateSliceStart <- as.POSIXct(out$Dates)
       dateSliceEnd <- as.POSIXct(as.POSIXlt(out$Dates + varTimeStep))
