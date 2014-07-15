@@ -9,7 +9,7 @@ Depends:
     R(>= 3.0.0)
 Type: Package
 Title: R package for climate data analysis and downscaling
-Version: 0.1-0
+Version: 0.1-1
 Date: 15-Jul-2014
 Author: Santander Meteorology Group <http://www.meteo.unican.es>
 Maintainer: Joaquin Bedia <bediaj@unican.es>
