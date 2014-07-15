@@ -14,6 +14,7 @@
 #' @note The code is partially based on an example provided at \url{http://stackoverflow.com/a/14502298}
 #'  by Hadley Wickham
 #'  @keywords internal
+#'  @export
 
 revArrayLatDim <- function(mdArray, grid) {
       dimNames <- attr(mdArray, "dimensions")
