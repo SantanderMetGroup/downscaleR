@@ -7,8 +7,8 @@ interpGridData(gridData, new.grid.x = NULL, new.grid.y = NULL,
   method = "bilinear")
 }
 \arguments{
-\item{gridData}{A grid data object coming from \code{\link{loadGridData}} or the \code{ecomsUDG.Raccess}
- package function \code{\link[ecomsUDG.Raccess]{loadECOMS}}.}
+\item{gridData}{A grid data object coming from \code{\link{loadGridData}} or the \pkg{ecomsUDG.Raccess}
+package function \code{\link[ecomsUDG.Raccess]{loadECOMS}}.}
 
 \item{new.grid.x}{Definition of the x coordinates of the grid to interpolate.
 This is a vector of length three with components \emph{from}, \emph{to} and \emph{by},
@@ -38,8 +38,8 @@ In case of default definition of either x, y or both grid coordinates, the defau
  The output has special attributes in the \code{xyCoords} element that indicate that the object
   has been interpolated. These attributes are \code{interpolation}, which indicates the method used and
   \code{resX} and \code{resY}, for the grid-cell resolutions in the X and Y axes respectively.
- It is also possible to pass the interpolator the grid of a previously existing grid dataset using the
- \code{\link{getGrid}} method.
+  It is also possible to pass the interpolator the grid of a previously existing grid dataset using the
+  \code{\link{getGrid}} method.
 }
 \note{
 To avoid unnecessary NA values, the function will not extrapolate using a new grid outside the

@@ -6,8 +6,8 @@
 #' @importFrom fields interp.surface.grid
 #' 
 #'  
-#'  @param gridData An object coming from \code{\link{loadGridData}} or the \code{ecomsUDG.Raccess} package function
-#'   \code{\link[ecomsUDG.Raccess]{loadECOMS}}.
+#'  @param gridData A grid data object coming from \code{\link{loadGridData}} or the \pkg{ecomsUDG.Raccess} 
+#'  package function \code{\link[ecomsUDG.Raccess]{loadECOMS}}.
 #'  @param new.grid.x Definition of the x coordinates of the grid to interpolate.
 #'  This is a vector of length three with components \emph{from}, \emph{to} and \emph{by},
 #'   in this order, similar as the arguments passed to the \code{\link[base]{seq}} function, giving the 
@@ -26,8 +26,11 @@
 #'  The output has special attributes in the \code{xyCoords} element that indicate that the object
 #'   has been interpolated. These attributes are \code{interpolation}, which indicates the method used and
 #'   \code{resX} and \code{resY}, for the grid-cell resolutions in the X and Y axes respectively.
+#'   It is also possible to pass the interpolator the grid of a previously existing grid dataset using the
+#'   \code{\link{getGrid}} method.
 #'  @note To avoid unnecessary NA values, the function will not extrapolate using a new grid outside the
 #'  current extent of the dataset, returning an error message.
+#'  @family loading.grid
 #'  @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #'  @export
 #'  @examples \dontrun{
