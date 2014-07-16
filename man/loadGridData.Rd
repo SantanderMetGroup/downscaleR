@@ -109,7 +109,8 @@ Other homogenization: \code{\link{dataInventory}};
   \code{\link{vocabulary}}
 
 Other loading: \code{\link{dataInventory}};
-  \code{\link{loadStationData}}
+  \code{\link{loadStationData}};
+  \code{\link{makeAggregatedDataset}}
 
 Other loading.grid: \code{\link{getGrid}};
   \code{\link{interpGridData}}

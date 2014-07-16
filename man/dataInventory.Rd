@@ -33,6 +33,7 @@ Other homogenization: \code{\link{loadGridData}};
   \code{\link{vocabulary}}
 
 Other loading: \code{\link{loadGridData}};
-  \code{\link{loadStationData}}
+  \code{\link{loadStationData}};
+  \code{\link{makeAggregatedDataset}}
 }
 

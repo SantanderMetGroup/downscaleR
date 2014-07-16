@@ -82,6 +82,7 @@ J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
 Other loading: \code{\link{dataInventory}};
-  \code{\link{loadGridData}}
+  \code{\link{loadGridData}};
+  \code{\link{makeAggregatedDataset}}
 }
 
