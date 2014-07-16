@@ -14,8 +14,7 @@
             return(er)
       })
       if (!is.null(con)) {
-            a <- getURL(url, ssl.verifypeer = FALSE)
-            b <- readLines(textConnection(a))
+            b <- readLines(textConnection(con))
             latest.ver <- package_version(gsub("Version: ", "", b[grep("Version", b)]))
             if (ver < latest.ver) {
                   ver.mess1 <- paste("WARNING: Your current version of ", pkgname, " (v", ver, ") is not up-to-date", sep = "")
