@@ -20,7 +20,6 @@
             if (ver < latest.ver) {
                   ver.mess1 <- paste("WARNING: Your current version of ", pkgname, " (v", ver, ") is not up-to-date", sep = "")
                   ver.mess <- paste("Get the latest stable version (", latest.ver, ") using <devtools::install_github('SantanderMetGroup/downscaleR@stable'>)", sep = "")
-                  ver.mess
                   packageStartupMessage(ver.mess1)
                   packageStartupMessage(ver.mess)
             }
