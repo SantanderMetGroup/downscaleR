@@ -1,7 +1,7 @@
-#' @title Get grid definition 
-#' @description Get the grid definition from an existing (gridded) dataset
+#' @title Get regular grid definition 
+#' @description Get the (regular) grid definition from an existing (gridded) dataset
 #' @param gridData A grid data object coming from \code{\link{loadGridData}} or \code{\link{interpGridData}}
-#'  or the \code{ecomsUDG.Raccess} package function \code{\link[ecomsUDG.Raccess]{loadECOMS}}.
+#'  or the function \code{\link[ecomsUDG.Raccess]{loadECOMS}} of package \pkg{ecomsUDG.Raccess}.
 #' @author J Bedia \email{joaquin.bedia@@gmail.com}
 #' @details The returned grid object inherits the attributes from the input \code{xyCoords} definition.
 #' @export
