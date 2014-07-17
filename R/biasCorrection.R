@@ -5,10 +5,6 @@
 
 
 biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "unbiasing", "piani"), varcode = c("tas", "hurs", "pr", "wss"), pr.threshold = 1) {
-	obs <- obs
-	pred <- pred
-	sim <- sim
-	varcode <- match.arg(varcode, c("tas","hurs","pr","wss"))
 	if (varcode == "pr") {
 		threshold<-pr.threshold
 		nP<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
@@ -35,7 +31,6 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "unbias
 			}
 		}
 	}
-	method <- match.arg(method, c("qqmap","scaling","unbiasing","piani"))
 	if (method == "unbiasing") {
 		obsMean <- apply(obs, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
 		prdMean <- apply(pred, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
