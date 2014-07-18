@@ -22,6 +22,11 @@
 #' @template templateDicDetails  
 #' @template templateGeolocation
 #' @export
+#' 
+#' @note The possible values of argument \code{dictionary} are slightly different from those from the
+#'  \code{\link[ecomsUDG.Raccess]{loadECOMS}} function in package \pkg{ecomsUDG.Raccess}, basically because
+#'  the latter does not accept user-defined dictionaries at arbitrary file paths.
+#'    
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @family loading
 #' @family loading.grid

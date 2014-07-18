@@ -70,6 +70,11 @@ provides geo-referencing information as stored in the original dataset.}
 \description{
 Load a user-defined spatio-temporal slice from a gridded dataset
 }
+\note{
+The possible values of argument \code{dictionary} are slightly different from those from the
+ \code{\link[ecomsUDG.Raccess]{loadECOMS}} function in package \pkg{ecomsUDG.Raccess}, basically because
+ the latter does not accept user-defined dictionaries at arbitrary file paths.
+}
 \section{Variable homogenization}{
  The different nature of the various databases, models and variables,
 and the idiosyncratic naming and storage conventions often applied by the different
