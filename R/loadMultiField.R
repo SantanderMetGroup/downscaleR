@@ -21,11 +21,11 @@
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 
 
-
 loadMultiField <- function(dataset, vars, dictionary = FALSE, lonLim = NULL, latLim = NULL, season = NULL, years = NULL, time = "none", new.grid = list(x = NULL, y = NULL), interp.method = "bilinear") {
       if (length(vars) == 1) {
             stop("One single variable is not a multi-field.\nUse 'loadGridData' instead")
       }
+      names(new.grid) <- c("x", "y")
       # loading vars
       var.list <- lapply (1:length(vars), function(x) {
             message("[", Sys.time(), "] Loading predictor ", x, " (", vars[x], ") out of ", length(vars))
@@ -39,7 +39,7 @@ loadMultiField <- function(dataset, vars, dictionary = FALSE, lonLim = NULL, lat
             new.grid$y <- getGrid(var.list[[1]])$y
       }
       if (is.null(new.grid$x) & is.null(new.grid$y)) {
-            message("[", Sys.time(), "] Using original grid as no 'new.grid' has been introduced")
+            message("[", Sys.time(), "] Using the original grid as no 'new.grid' has been introduced")
             grid.list <- lapply(1:length(var.list), function(x) getGrid(var.list[[x]]))
             # Check for equality of grid definition
             aux <- do.call("c", grid.list)
@@ -72,7 +72,7 @@ loadMultiField <- function(dataset, vars, dictionary = FALSE, lonLim = NULL, lat
       } else {
             var.list <- lapply(1:length(var.list), function(x) {
                   message("[", Sys.time(), "] Regridding to 'new.grid' varible ", x, " (", vars[x], ") out of ", length(vars), " ...")
-                  var.list[[x]] <- suppressMessages(interpGridData(var.list[[x]], getGrid(var.list[[1]]), interp.method))
+                  var.list[[x]] <- suppressMessages(interpGridData(var.list[[x]], new.grid, interp.method))
             })
       }
       # Variables
