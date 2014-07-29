@@ -17,7 +17,7 @@ dictionaryLookup <- function(dicPath, var, time) {
       dictionary <- tryCatch({read.csv(dicPath, stringsAsFactors = FALSE)}, error = function(e) stop("Dictionary not found"))
       dicRow <- grep(paste("^", var, "$", sep = ""), dictionary$identifier) 
       if (length(dicRow) == 0) {
-            stop("Variable requested does not match any identifier in the dictionary")
+            stop("Variable requested does not match any identifier in the dictionary\nType 'help(vocabulary)' for help on standard variable naming")
       }
       dailyAggr <- NA
       if (length(dicRow) > 1) {
