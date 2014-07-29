@@ -11,7 +11,7 @@
 getGrid <- function(gridData) {
       grid.x <- c(gridData$xyCoords$x[1], tail(gridData$xyCoords$x, 1), abs(gridData$xyCoords$x[2] - gridData$xyCoords$x[1]))
       grid.y <- c(gridData$xyCoords$y[1], tail(gridData$xyCoords$y, 1), abs(gridData$xyCoords$y[2] - gridData$xyCoords$y[1]))
-      out <- list(grid.x, grid.y)
+      out <- list(x = grid.x, y = grid.y)
       attributes(out) <- attributes(gridData$xyCoords)
       return(out)
 }
