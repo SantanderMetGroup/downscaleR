@@ -5,6 +5,7 @@
 #' @importFrom fields image.plot
 #' @importFrom fields world
 #' @importFrom graphics layout
+#' @importFrom abind asub
 #' 
 #' @param gridData A grid dataset
 #' @return a plot of the mean field with a world map superposed
