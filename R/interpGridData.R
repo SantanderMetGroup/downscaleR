@@ -8,12 +8,11 @@
 #'  
 #'  @param gridData A grid data object coming from \code{\link{loadGridData}} or the \pkg{ecomsUDG.Raccess} 
 #'  package function \code{\link[ecomsUDG.Raccess]{loadECOMS}}.
-#'  @param new.grid.x Definition of the x coordinates of the grid to interpolate.
-#'  This is a vector of length three with components \emph{from}, \emph{to} and \emph{by},
+#'  @param new.grid Definition of the new grid, in the form of a list with the x and y components, in thir order.
+#'  Each component consists of a vector of length three with components \emph{from}, \emph{to} and \emph{by},
 #'   in this order, similar as the arguments passed to the \code{\link[base]{seq}} function, giving the 
-#'   westernmost, easternmost and grid cell width in the X axis parameters. See details.
-#'  @param new.grid.y Same as \code{new.grid.x} but for the Y coordinates, giving the southernmost,
-#'   northernmost and grid cell resolution in the Y axis. See details
+#'   westernmost, easternmost and grid cell width in the X axis and, in the same way,
+#'   the southernmost, northernmost and grid cell resolution in the Y axis. See details.
 #'  @param method Method for interpolation. Currently implemented methods are either \code{bilinear},
 #'  for bilinear interpolation, and \code{nearest}, for nearest-neighbor interpolation.
 #'  @return An interpolated object preserving the output structure of the input
@@ -41,51 +40,50 @@
 #' par(mfrow = c(2,1))
 #' plotMeanField(t1000.djf)
 #' # Bilinear interpolation to a smaller domain centered in Spain using a 0.5 degree resolution in bot X and Y axes
-#' t1000.djf.05 <- interpGridData(t1000.djf, new.grid.x = c(-10,5,.5), new.grid.y = c(36,44,.5), method = "bilinear")
+#' t1000.djf.05 <- interpGridData(t1000.djf, new.grid = list(x = c(-10,5,.5), y = c(36,44,.5)), method = "bilinear")
 #' plotMeanField(t1000.djf.05)
 #' par(mfrow=c(1,1))
 #' # New attributes "interpolation", "resX" and "resY" indicate that the original data have been interpolated
 #' str(t1000.djf.05$xyCoords)
 #' }
 
-interpGridData <- function(gridData, new.grid.x = NULL, new.grid.y = NULL, method = "bilinear") {
+interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method = "bilinear") {
       x <- gridData$xyCoords$x
       y <- gridData$xyCoords$y
       # Definition of new grid
-      if (is.null(new.grid.x)) {
+      if (is.null(new.grid$x)) {
             new.grid.x <- seq(x[1], tail(x, 1))
       } else {
-            if (length(new.grid.x) != 3 | new.grid.x[2] < new.grid.x[1]) {
+            if (length(new.grid$x) != 3 | new.grid$x[2] < new.grid$x[1]) {
                   stop("Invalid grid definition in X")
             }
-            if (new.grid.x[1] < floor(x[1]) & new.grid.x[2] <= ceiling(tail(x, 1))) {
+            if (new.grid$x[1] < floor(x[1]) & new.grid$x[2] <= ceiling(tail(x, 1))) {
                   stop("The westernmost corner of the new grid is outside the data extent\n Minimum X accepted value: ", floor(x[1]))
             }
-            if (new.grid.x[2] > ceiling(tail(x, 1)) & new.grid.x[1] >= floor(x[1])) {
+            if (new.grid$x[2] > ceiling(tail(x, 1)) & new.grid$x[1] >= floor(x[1])) {
                   stop("The easternmost corner of the new grid is outside the data extent\n Maximum X accepted value: ", ceiling(tail(x, 1)))
             }
-            if (new.grid.x[2] > ceiling(tail(x, 1)) & new.grid.x[1] < floor(x[1])) {
+            if (new.grid$x[2] > ceiling(tail(x, 1)) & new.grid$x[1] < floor(x[1])) {
                   stop("The new grid is outside the data extent\n Accepted X values in the range: [", floor(x[1]), ",", ceiling(tail(x, 1)), "]")
             }
-            new.grid.x <- do.call("seq", as.list(new.grid.x))
+            new.grid.x <- do.call("seq", as.list(new.grid$x))
       }
-      if (is.null(new.grid.y)) {
+      if (is.null(new.grid$y)) {
             new.grid.y <- seq(y[1], tail(y, 1))
       } else {
-            if (length(new.grid.y) != 3 | new.grid.y[2] < new.grid.y[1]) {
+            if (length(new.grid$y) != 3 | new.grid$y[2] < new.grid$y[1]) {
                   stop("Invalid grid definition in Y")
             }
-            
-            if (new.grid.y[1] < floor(y[1]) & new.grid.y[2] <= ceiling(tail(y, 1))) {
+            if (new.grid$y[1] < floor(y[1]) & new.grid$y[2] <= ceiling(tail(y, 1))) {
                   stop("The southernmost corner of the new grid is outside the data extent\n Minimum Y accepted value: ", floor(y[1]))
             }
-            if (new.grid.y[2] > ceiling(tail(y, 1)) & new.grid.y[1] >= floor(y[1])) {
+            if (new.grid$y[2] > ceiling(tail(y, 1)) & new.grid$y[1] >= floor(y[1])) {
                   stop("The northernmost corner of the new grid is outside the data extent\n Maximum Y accepted value: ", ceiling(tail(y, 1)))
             }
-            if (new.grid.y[2] > ceiling(tail(y, 1)) & new.grid.y[1] < floor(y[1])) {
+            if (new.grid$y[2] > ceiling(tail(y, 1)) & new.grid$y[1] < floor(y[1])) {
                   stop("The new grid is outside the data extent\n Accepted Y values in the range: [", floor(y[1]), ",", ceiling(tail(y, 1)), "]")
             }
-            new.grid.y <- do.call("seq", as.list(new.grid.y))
+            new.grid.y <- do.call("seq", as.list(new.grid$y))
       }
       grid.list <- list("x" = new.grid.x, "y" = new.grid.y)
       new.grid.x <- NULL
