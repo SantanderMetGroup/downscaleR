@@ -1,6 +1,10 @@
 #' @title Load several gridded variables
+#' 
 #' @description Load a set of selected variables from the same datasets for a common 
 #' spatio-temporal domain, typically to be used as predictors in a perfect-prog downscaling method.
+#' 
+#' @importFrom abind abind
+#' 
 #' @param
 #' @param vars A character vector of length >= 2, specifying the names of the variables to be loaded.
 #' @param 
