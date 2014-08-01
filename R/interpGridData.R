@@ -30,7 +30,7 @@
 #'  @note To avoid unnecessary NA values, the function will not extrapolate using a new grid outside the
 #'  current extent of the dataset, returning an error message.
 #'  @family loading.grid
-#'  @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#'  @author J. Bedia \email{joaquin.bedia@@gmail.com} and S. Herrera
 #'  @export
 #'  @examples \dontrun{
 #' # This is the path to the package built-in NCEP dataset (assumes reading permission)
@@ -48,11 +48,11 @@
 #' }
 
 
-interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method = c("bilinear", "nearest") {
+interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method = c("bilinear", "nearest")) {
       x <- gridData$xyCoords$x
       y <- gridData$xyCoords$y
       # Definition of new grid
-      if (exists("resX", where = attributes(new.grid)){
+      if (exists("resX", where = attributes(new.grid))) {
         if (is.null(new.grid$x)) {
           new.grid.x <- seq(x[1], tail(x, 1))
         } else {
@@ -68,12 +68,12 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
           if (new.grid$x[2] > ceiling(tail(x, 1)) & new.grid$x[1] < floor(x[1])) {
             stop("The new grid is outside the data extent\n Accepted X values in the range: [", floor(x[1]), ",", ceiling(tail(x, 1)), "]")
           }
-          new.grid.x <- do.call("seq", as.list(c(new.grid$x,attr(new.grid,'resX')))
+          new.grid.x <- do.call("seq", as.list(c(new.grid$x, attr(new.grid, 'resX'))))
         }
-      }else{
+      } else {
         new.grid.x <- new.grid$x
       }
-      if (exists("resY", where = attributes(new.grid)){
+      if (exists("resY", where = attributes(new.grid))) {
         if (is.null(new.grid$y)) {
           new.grid.y <- seq(y[1], tail(y, 1))
         } else {
@@ -91,7 +91,7 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
           }
           new.grid.y <- do.call("seq", as.list(new.grid$y))
         }
-      }else{
+      } else {
         new.grid.y <- new.grid$y
       }
       grid.list <- list("x" = new.grid.x, "y" = new.grid.y)
