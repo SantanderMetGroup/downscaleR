@@ -9,10 +9,12 @@
 #' 
 
 getGrid <- function(gridData) {
-      grid.x <- c(gridData$xyCoords$x[1], tail(gridData$xyCoords$x, 1), abs(gridData$xyCoords$x[2] - gridData$xyCoords$x[1]))
-      grid.y <- c(gridData$xyCoords$y[1], tail(gridData$xyCoords$y, 1), abs(gridData$xyCoords$y[2] - gridData$xyCoords$y[1]))
+      grid.x <- c(gridData$xyCoords$x[1], tail(gridData$xyCoords$x, 1))
+      grid.y <- c(gridData$xyCoords$y[1], tail(gridData$xyCoords$y, 1))
       out <- list(x = grid.x, y = grid.y)
       attributes(out) <- attributes(gridData$xyCoords)
+      attr(out,'resX')<-(tail(gridData$xyCoords$x, 1)-gridData$xyCoords$x[1])/(length(gridData$xyCoords$x)-1)
+      attr(out,'resY')<-(tail(gridData$xyCoords$y, 1)-gridData$xyCoords$y[1])/(length(gridData$xyCoords$y)-1)
       return(out)
 }
 # End
