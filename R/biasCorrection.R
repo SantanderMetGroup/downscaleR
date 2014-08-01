@@ -1,8 +1,8 @@
 #' @title Bias correction methods
 #' @description Implementation of several standard bias correction methods
 #' @author S. Herrera \email{sixto@@predictia.es}
-#' @keywords internal
-
+#' @export
+#' 
 
 biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "unbiasing", "piani"), varcode = c("tas", "hurs", "pr", "wss"), pr.threshold = 1) {
 	if (varcode == "pr") {
