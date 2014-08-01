@@ -4,8 +4,6 @@
 #' 
 #' @importFrom fields image.plot
 #' @importFrom fields world
-#' @importFrom graphics layout
-#' @importFrom abind asub
 #' 
 #' @param gridData A grid dataset
 #' @param multi.member Should members be plotted sepparately (TRUE), or just a plot
