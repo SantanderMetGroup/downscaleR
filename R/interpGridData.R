@@ -33,7 +33,7 @@
 #'  @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #'  @export
 #'  @examples \dontrun{
-#' # This is the path to the package built-in NCEP dataset
+#' # This is the path to the package built-in NCEP dataset (assumes reading permission)
 #'  ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 #' # Load air temperature at 1000 mb isobaric pressure level for boreal winter (DJF) 1991-2000
 #' t1000.djf <- loadGridData(ncep, var = "ta@@100000", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 1991:2000)
@@ -47,7 +47,8 @@
 #' str(t1000.djf.05$xyCoords)
 #' }
 
-interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method = "bilinear") {
+
+interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method = c("bilinear", "nearest") {
       x <- gridData$xyCoords$x
       y <- gridData$xyCoords$y
       # Definition of new grid
@@ -97,10 +98,7 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
       time.ind <- grep("^time", attr(gridData$Data, "dimensions"))
       # Handles reverse ordering of lon-lat (i.e. lat-lon)
       ind.order <- match(c("lon", "lat"), attr(gridData$Data, "dimensions"))
-      transpose <- FALSE
-      if (!identical(sort(ind.order), ind.order)) {
-            transpose <- TRUE
-      }
+      transpose <- ifelse(!identical(sort(ind.order), ind.order), TRUE, FALSE)
       if (is.null(n.members)) {
             message("[", Sys.time(), "] Performing ", method, " interpolation... may take a while")
             interp.list <- lapply(1:dim(gridData$Data)[time.ind], function(j) {
@@ -175,4 +173,3 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
       return(gridData)
 }
 # End   
-
