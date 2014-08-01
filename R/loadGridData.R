@@ -61,7 +61,7 @@ loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
     gds <- J("ucar.nc2.dt.grid.GridDataset")$open(dataset)
     grid <- gds$findGridByShortName(shortName)
     if (is.null(grid)) {
-        stop("Variable requested not found")#.\nCheck variables using 'datasetInventory'")
+        stop("Variable '", shortName, "' not found\nCheck variable names using 'datasetInventory' and/or dictionary 'identifiers'")
     }
     latLon <- getLatLonDomain(grid, lonLim, latLim)
     out <- loadGridDataset(var, grid, dic, level, season, years, time, latLon)
