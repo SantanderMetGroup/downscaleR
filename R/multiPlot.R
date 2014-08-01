@@ -1,0 +1,20 @@
+multiPlot <- function(gridData, split.dim.name) {
+      dimNames <- attr(gridData$Data, "dimensions")
+      index <- grep(split.dim.name, dimNames, fixed = TRUE)
+      n <- dim(gridData$Data)[index]
+      nrows <- ifelse(sqrt(n) < round(sqrt(n)), ceiling(sqrt(n)), floor(sqrt(n)))
+      mat <- matrix(1, ncol = ceiling(sqrt(n)), nrow = nrows)
+      def.par <- par(no.readonly = TRUE)
+      par(mfrow = dim(mat))
+      titles <- ifelse(split.dim.name == "member", gridData$Members, gridData$Variable$varName)
+      for (i in 1:n) {
+            aux <- asub(gridData$Data, idx = i, dims = index)
+            mar <- grep("lon|lat", dimNames[-index])
+            aux <- apply(aux, mar, mean, na.rm = TRUE)
+            image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1, horizontal = TRUE) #, axes = axes)
+            world(add = TRUE)
+            mtext(titles[i])
+      }
+      par(def.par)
+}      
+# End   
