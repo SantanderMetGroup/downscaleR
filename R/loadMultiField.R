@@ -106,7 +106,7 @@ loadMultiField <- function(dataset, vars, dictionary = TRUE, lonLim = NULL, latL
             y.aux <- NULL
       } else {
             var.list <- lapply(1:length(var.list), function(x) {
-                  message("[", Sys.time(), "] Regridding to 'new.grid' varible ", x, " (", vars[x], ") out of ", length(vars), " ...")
+                  message("[", Sys.time(), "] Regridding variable ", x, " (", vars[x], ") out of ", length(vars), " ...")
                   var.list[[x]] <- suppressMessages(interpGridData(var.list[[x]], new.grid, interp.method))
             })
       }
@@ -117,11 +117,7 @@ loadMultiField <- function(dataset, vars, dictionary = TRUE, lonLim = NULL, latL
             isStandard <- FALSE
       } 
       level <- unlist(lapply(1:length(var.list), function(x) {
-            lev <- var.list[[x]]$Variable$level
-            if (is.null(lev)) {
-                  lev <- NA
-            }
-            return(lev)
+            return(ifelse(is.null(var.list[[x]]$Variable$level), NA, var.list[[x]]$Variable$level))
       }))
       Variable <- list("varName" = varNames, "isStandard" = isStandard, "level" = level)
       Dates <- var.list[[1]]$Dates
