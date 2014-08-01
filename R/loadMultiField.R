@@ -5,16 +5,47 @@
 #' 
 #' @importFrom abind abind
 #' 
-#' @param
-#' @param vars A character vector of length >= 2, specifying the names of the variables to be loaded.
-#' @param 
-#' @return
+#' @param dataset A character string indicating the database to be accessed. This is usually a path to a local file or a URL 
+#' pointing to a netCDF or NcML file in the case of netCDF and/or gridded datasets. For station data in standard ASCII format,
+#' this is the path to the directory the dataset lives in.
+#' @param vars A character vector of length >= 2, specifying the names of the variables to be loaded. For variables with vertical
+#'  levels, the vertical level is specified next to the variable name followed by the \dQuote{@@} symbol 
+#'  (e.g. \code{var = "z@@700"} for geopotential heigth at 700 mb isobaric surface pressure level). It is also possible
+#'   to enter the variable names as originally coded in the dataset to skip data homogenization (see nect argument).
+#' @param dictionary Default to TRUE, indicating that a dictionary is used and the .dic file is stored in the same path than the
+#' dataset. If the .dic file is stored elsewhere, then the argument is the full path to the .dic file (including the extension,
+#' e.g.: \code{"/path/to/the/dictionary_file.dic"}). This is the case for instance when the dataset is stored in a remote URL,
+#' and we have a locally stored dictionary for that particular dataset. If FALSE no variable homogenization takes place,
+#' and the raw variable, as originally stored in the dataset, will be returned. See details for dictionary specification.
+#' @param lonLim Vector of length = 2, with minimum and maximum longitude coordinates, in decimal degrees, of the bounding box selected.
+#'  For single-point queries, a numeric value with the longitude coordinate. If \code{NULL} (default), the whole longitudinal range
+#'   is selected (Note that this may lead to a large output object size).
+#' @param latLim Same as \code{lonLim}, but for the selection of the latitudinal range.
+#' @param season An integer vector specifying the desired season (in months, January = 1 ..., December = 12).
+#'  Options include one to several (contiguous) months. Default to \code{NULL}, indicating a full year selection (same as \code{season = 1:12}).
+#' @param years Optional vector of years to select. Default (\code{NULL}) to all available years. If the requested variable is static (e.g. orography)
+#'  it will be ignored.  
+#'  @param time A character vector indicating the temporal filtering/aggregation of the output data.
+#'   Default to \code{"none"}, which returns the original time series as stored in the dataset. See \code{\link{loadGridData}}
+#'   for further details.
+#' \code{"00"}, \code{"06"}, \code{"12"} and \code{"18"}. If daily aggregated data are 
+#' required use \code{"DD"}. If the requested variable is static (e.g. orography) it will be ignored. 
+#' See details for time aggregation options
+#' @param new.grid Definition of the new grid, in the form of a list with the x and y components, in this order.
+#' If no \code{new.grid} is introduced, then the grid of the first variable in \code{vars} is taken. See details.
+#' @param interp.method Interpolation method. Currently acceted values are \code{"bilinear"} and \code{"nearest"}. 
+#' See \code{\link{interpGridData}} for details.
+#'  
+#' @return A list of components similar to the output of \code{\link{loadGridData}}, excepting for the fact that within the
+#'  \code{Variable} slot, there is more than one variables in the \code{varName} and \code{level} elements. Also, the N-dimensional 
+#'  array of the \code{Data} slot contains one additional dimension, corresponding to each of the variables loaded, following
+#'   the order in the \code{Variable} slot info.
 #' 
 #' @details In essence, the function does as many calls to \code{\link{loadGridData}} as variables indicated in
-#'  the \code{vars} argument, and then performs the interpolation and/or spatial checks to ensure the spatial consistency.
-#' See \code{\link{loadGridData}} for details on input parameters for time, geolocation and homogenization parameters.
-#' If any but not both of the components of the new.grid, the missing (NULL) one will be inherited from the grid of the
-#'  first variable in \code{vars}
+#'  the \code{vars} argument, and then performs the interpolation and/or spatial checks to ensure the spatial consistency, via
+#'  \code{\link{interpGridData}}. See \code{\link{loadGridData}} for details on input parameters for time, geolocation and homogenization parameters.
+#' If only one (either x or y, but not both) of the components of the \code{new.grid} are provided, the missing one will be
+#'  inherited from the grid of the first variable in \code{vars}, via \code{\link{getGrid}}.
 #' 
 #' @export
 #' 
@@ -25,7 +56,7 @@
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 
 
-loadMultiField <- function(dataset, vars, dictionary = FALSE, lonLim = NULL, latLim = NULL, season = NULL, years = NULL, time = "none", new.grid = list(x = NULL, y = NULL), interp.method = "bilinear") {
+loadMultiField <- function(dataset, vars, dictionary = TRUE, lonLim = NULL, latLim = NULL, season = NULL, years = NULL, time = "none", new.grid = list(x = NULL, y = NULL), interp.method = "bilinear") {
       if (length(vars) == 1) {
             stop("One single variable is not a multi-field.\nUse 'loadGridData' instead")
       }
@@ -53,8 +84,8 @@ loadMultiField <- function(dataset, vars, dictionary = FALSE, lonLim = NULL, lat
             ref.x <- x.aux[ ,1]
             ref.y <- y.aux[ ,1]
             if (ncol(x.aux) > 2) {
-                  x.aux <- apply(x.aux[ ,2:ncol(x.aux)], FUN = {function(x) {x - ref.x}}, MAR = 2)
-                  y.aux <- apply(y.aux[ ,2:ncol(y.aux)], FUN = {function(x) {x - ref.y}}, MAR = 2)
+                  x.aux <- apply(x.aux[ ,2:ncol(x.aux)], 2, {function(x) {x - ref.x}})
+                  y.aux <- apply(y.aux[ ,2:ncol(y.aux)], 2, {function(x) {x - ref.y}})
             } else {
                   x.aux <- x.aux[ ,2] - ref.x
                   y.aux <- y.aux[ ,2] - ref.y
