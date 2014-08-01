@@ -25,7 +25,7 @@ plotMeanField <- function (gridData) {
       }
       if (is.na(match("var", dimNames))) {
             aux <- apply(gridData$Data, FUN = mean, MARGIN = mar)
-            image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1)
+            image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1, horizontal = TRUE)
             world(add = TRUE)
       } else {
             var.dim.index <- grep("var", dimNames, fixed = TRUE)
@@ -40,7 +40,7 @@ plotMeanField <- function (gridData) {
                   mar <- grep("lon|lat", dimNames[-var.dim.index])
                   aux <- apply(aux, FUN = mean, MARGIN = mar)
                   # axes <- ifelse(i == 1, TRUE, FALSE)
-                  image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1) #, axes = axes)
+                  image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1, horizontal = TRUE) #, axes = axes)
                   world(add = TRUE)
                   mtext(gridData$Variable$varName[i])
             }
