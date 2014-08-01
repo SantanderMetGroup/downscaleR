@@ -12,4 +12,5 @@ Implementation of several standard bias correction methods
 \author{
 S. Herrera \email{sixto@predictia.es}
 }
+\keyword{internal}
 

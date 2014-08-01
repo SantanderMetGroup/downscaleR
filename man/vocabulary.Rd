@@ -42,7 +42,7 @@ print(vocabulary)
 }
 \seealso{
 Other homogenization: \code{\link{dataInventory}};
-  \code{\link{loadGridData}}
+  \code{\link{loadGridData}}; \code{\link{loadMultiField}}
 }
 \keyword{datasets}
 

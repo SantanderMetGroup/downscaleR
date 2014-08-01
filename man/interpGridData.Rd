@@ -3,20 +3,18 @@
 \alias{interpGridData}
 \title{Interpolate a dataset to a grid}
 \usage{
-interpGridData(gridData, new.grid.x = NULL, new.grid.y = NULL,
+interpGridData(gridData, new.grid = list(x = NULL, y = NULL),
   method = "bilinear")
 }
 \arguments{
 \item{gridData}{A grid data object coming from \code{\link{loadGridData}} or the \pkg{ecomsUDG.Raccess}
 package function \code{\link[ecomsUDG.Raccess]{loadECOMS}}.}
 
-\item{new.grid.x}{Definition of the x coordinates of the grid to interpolate.
-This is a vector of length three with components \emph{from}, \emph{to} and \emph{by},
+\item{new.grid}{Definition of the new grid, in the form of a list with the x and y components, in thir order.
+Each component consists of a vector of length three with components \emph{from}, \emph{to} and \emph{by},
  in this order, similar as the arguments passed to the \code{\link[base]{seq}} function, giving the
- westernmost, easternmost and grid cell width in the X axis parameters. See details.}
-
-\item{new.grid.y}{Same as \code{new.grid.x} but for the Y coordinates, giving the southernmost,
- northernmost and grid cell resolution in the Y axis. See details}
+ westernmost, easternmost and grid cell width in the X axis and, in the same way,
+ the southernmost, northernmost and grid cell resolution in the Y axis. See details.}
 
 \item{method}{Method for interpolation. Currently implemented methods are either \code{bilinear},
 for bilinear interpolation, and \code{nearest}, for nearest-neighbor interpolation.}
@@ -54,7 +52,7 @@ t1000.djf <- loadGridData(ncep, var = "ta@100000", lonLim = c(-12,10), latLim = 
 par(mfrow = c(2,1))
 plotMeanField(t1000.djf)
 # Bilinear interpolation to a smaller domain centered in Spain using a 0.5 degree resolution in bot X and Y axes
-t1000.djf.05 <- interpGridData(t1000.djf, new.grid.x = c(-10,5,.5), new.grid.y = c(36,44,.5), method = "bilinear")
+t1000.djf.05 <- interpGridData(t1000.djf, new.grid = list(x = c(-10,5,.5), y = c(36,44,.5)), method = "bilinear")
 plotMeanField(t1000.djf.05)
 par(mfrow=c(1,1))
 # New attributes "interpolation", "resX" and "resY" indicate that the original data have been interpolated
@@ -66,6 +64,6 @@ J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
 Other loading.grid: \code{\link{getGrid}};
-  \code{\link{loadGridData}}
+  \code{\link{loadGridData}}; \code{\link{loadMultiField}}
 }
 

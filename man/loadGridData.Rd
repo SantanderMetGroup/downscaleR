@@ -111,13 +111,15 @@ J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
 Other homogenization: \code{\link{dataInventory}};
-  \code{\link{vocabulary}}
+  \code{\link{loadMultiField}}; \code{\link{vocabulary}}
 
 Other loading: \code{\link{dataInventory}};
+  \code{\link{loadMultiField}};
   \code{\link{loadStationData}};
   \code{\link{makeAggregatedDataset}}
 
 Other loading.grid: \code{\link{getGrid}};
-  \code{\link{interpGridData}}
+  \code{\link{interpGridData}};
+  \code{\link{loadMultiField}}
 }
 

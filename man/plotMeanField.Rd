@@ -12,9 +12,7 @@ plotMeanField(gridData)
 a plot of the mean field with a world map superposed
 }
 \description{
-Plot the mean of a loaded grid dataset. The funciton is intended for obtaining
-a quick visual reference of the data loaded. In case of multi-member gridded datasets, it displays
-the multi-member mean
+Plot the spatial mean of a gridded variable, or variables in the case of multi-fields.
 }
 \details{
 The function is a wrapper of the \code{\link[fields]{image.plot}} function

@@ -18,6 +18,9 @@ defining the index of the vertical axis (null if no vertical levels exist)
 Returns the selected level value (if any) and a suitable java structure. This is a subroutine
 of \code{loadGridDataset}, whose output is passed to \code{makeSubset}.
 }
+\details{
+The function opens the grid and checks all possible level values.
+}
 \author{
 J. Bedia \email{joaquin.bedia@gmail.com}
 }
