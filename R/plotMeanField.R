@@ -31,6 +31,7 @@ plotMeanField <- function (gridData) {
             var.dim.index <- grep("var", dimNames, fixed = TRUE)
             n.vars <- length(gridData$Variable$varName)
             nrows <- ifelse(sqrt(n.vars) < round(sqrt(n.vars)), ceiling(sqrt(n.vars)), floor(sqrt(n.vars)))
+            mat <- matrix(1, ncol = ceiling(sqrt(n.vars)), nrow = nrows)
             def.par <- par(no.readonly = TRUE)
             par(mfrow = dim(mat))
             # plot(2,2, ty = "n", axes = FALSE, xlab = "", ylab = "")
