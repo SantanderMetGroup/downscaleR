@@ -15,8 +15,7 @@
 #' in package \pkg{fields}
 #' @author J Bedia joaquin.bedia@@gmail.com
 #' @note The function plots a simple temporal mean of the loaded object in the form of
-#' a map. It does not handle other temporal aggregations. In case of multimember grid datasets,
-#' It simply plots the multi-member mean.
+#' a map. It does not handle other temporal aggregations. 
 
 plotMeanField <- function (gridData, multi.member = FALSE) {
       dimNames <- attr(gridData$Data, "dimensions")
