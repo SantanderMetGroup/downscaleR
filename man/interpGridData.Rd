@@ -14,7 +14,8 @@ package function \code{\link[ecomsUDG.Raccess]{loadECOMS}}.}
 Each component consists of a vector of length three with components \emph{from}, \emph{to} and \emph{by},
  in this order, similar as the arguments passed to the \code{\link[base]{seq}} function, giving the
  westernmost, easternmost and grid cell width in the X axis and, in the same way,
- the southernmost, northernmost and grid cell resolution in the Y axis. See details.}
+ the southernmost, northernmost and grid cell resolution in the Y axis. The value passed to this argument can be also
+ the output from \code{\link{getGrid}}, thus inheriting the grid characteristics from other dataset. See details.}
 
 \item{method}{Method for interpolation. Currently implemented methods are either \code{bilinear},
 for bilinear interpolation, and \code{nearest}, for nearest-neighbor interpolation.}
@@ -31,17 +32,17 @@ or nearest-neighbour methods.
 In case of default definition of either x, y or both grid coordinates, the default grid
  is calculated taking the corners of the current grid and assuming x and y resolutions equal to
  the default \code{by} argument value in function \code{\link[base]{seq}}: \emph{by = ((to - from)/(length.out - 1))}.
- The bilinear interpolator is a wrapper of the \code{\link[fields]{interp.surface.grid}} function
- in package \pkg{fields}.
  The output has special attributes in the \code{xyCoords} element that indicate that the object
   has been interpolated. These attributes are \code{interpolation}, which indicates the method used and
-  \code{resX} and \code{resY}, for the grid-cell resolutions in the X and Y axes respectively.
-  It is also possible to pass the interpolator the grid of a previously existing grid dataset using the
-  \code{\link{getGrid}} method.
-}
-\note{
-To avoid unnecessary NA values, the function will not extrapolate using a new grid outside the
- current extent of the dataset, returning an error message.
+  \code{resX} and \code{resY}, for the grid-cell resolutions in the X and Y axes respectively. In case
+  the \code{\link{getGrid}} method is used for new grid definition, if the extent of the input grid
+  is larger than the dataset to interpolate, the domain will be cropped to its current extent,
+  either in X, Y or both dimensions. Note that this behaviour is different than when providing a new grid
+   definiton explicitly, becasue in this latter case, the X and Y limits must be within the dataset extent, otherwise
+   raising an error of the type: \dQuote{\emph{...new grid is outside the data extent...}}.
+
+ The bilinear interpolator is a wrapper of the \code{\link[fields]{interp.surface.grid}} function
+ in package \pkg{fields}.
 }
 \examples{
 \dontrun{

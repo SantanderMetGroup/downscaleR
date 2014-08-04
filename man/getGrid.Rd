@@ -7,16 +7,24 @@ getGrid(gridData)
 }
 \arguments{
 \item{gridData}{A grid data object coming from \code{\link{loadGridData}} or \code{\link{interpGridData}}
-or the function \code{\link[ecomsUDG.Raccess]{loadECOMS}} of package \pkg{ecomsUDG.Raccess}.}
+ or the function \code{\link[ecomsUDG.Raccess]{loadECOMS}} of package \pkg{ecomsUDG.Raccess}.}
+}
+\value{
+A list of two named components, emph{x} and \emph{y}, consisting of a vector of length two each one, defining
+the x/y lower and upper bounds. The grid-cell resolution is given by the attributes \sQuote{resX} and
+ \sQuote{resY} respectively.
 }
 \description{
 Get the (regular) grid definition from an existing (gridded) dataset
 }
 \details{
+In case of irregular grid definitions, the function forces the grid to regularity.
 The returned grid object inherits the attributes from the input \code{xyCoords} definition.
 }
 \author{
-J Bedia \email{joaquin.bedia@gmail.com}
+J Bedia \email{joaquin.bedia@gmail.com} and S. Herrera
+
+S. Herrera and J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
 Other loading.grid: \code{\link{interpGridData}};
