@@ -9,8 +9,9 @@
 #' 
 #' @return Prints the graphical display
 #' 
-#' @importFrom graphics layout
 #' @importFrom abind asub
+#' @importFrom fields image.plot
+#' @importFrom fields world
 #' 
 #' @keywords internal
 #' @author J Bedia \email{joaquin.bedia@@gmail.com}

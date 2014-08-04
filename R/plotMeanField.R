@@ -27,6 +27,7 @@ plotMeanField <- function (gridData, multi.member = FALSE) {
       if (is.na(match("var", dimNames))) {
             aux <- apply(gridData$Data, FUN = mean, MARGIN = mar)
             image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1, horizontal = TRUE, cex.axis = .75)
+            title("")
             mtext(titles)
             world(add = TRUE)
             if (("member" %in% dimNames) & isTRUE(multi.member)) {
