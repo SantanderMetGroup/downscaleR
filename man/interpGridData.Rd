@@ -32,13 +32,15 @@ or nearest-neighbour methods.
 In case of default definition of either x, y or both grid coordinates, the default grid
  is calculated taking the corners of the current grid and assuming x and y resolutions equal to
  the default \code{by} argument value in function \code{\link[base]{seq}}: \emph{by = ((to - from)/(length.out - 1))}.
+
  The output has special attributes in the \code{xyCoords} element that indicate that the object
-  has been interpolated. These attributes are \code{interpolation}, which indicates the method used and
-  \code{resX} and \code{resY}, for the grid-cell resolutions in the X and Y axes respectively. In case
-  the \code{\link{getGrid}} method is used for new grid definition, if the extent of the input grid
+  has been interpolated. These attributes are \code{'interpolation'}, which indicates the method used and
+  \code{'resX'} and \code{'resY'}, for the grid-cell resolutions in the X and Y axes respectively.
+
+   In case the \code{\link{getGrid}} method is used for new grid definition, if the extent of the input grid
   is larger than the dataset to interpolate, the domain will be cropped to its current extent,
   either in X, Y or both dimensions. Note that this behaviour is different than when providing a new grid
-   definiton explicitly, becasue in this latter case, the X and Y limits must be within the dataset extent, otherwise
+   definition explicitly, because in this latter case, the X and Y limits must fall within the dataset extent, otherwise
    raising an error of the type: \dQuote{\emph{...new grid is outside the data extent...}}.
 
  The bilinear interpolator is a wrapper of the \code{\link[fields]{interp.surface.grid}} function

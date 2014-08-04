@@ -10,9 +10,9 @@ getGrid(gridData)
  or the function \code{\link[ecomsUDG.Raccess]{loadECOMS}} of package \pkg{ecomsUDG.Raccess}.}
 }
 \value{
-A list of two named components, emph{x} and \emph{y}, consisting of a vector of length two each one, defining
-the x/y lower and upper bounds. The grid-cell resolution is given by the attributes \sQuote{resX} and
- \sQuote{resY} respectively.
+A list of two named components, \code{x} and \code{y}, consisting of a vector of length two each one, defining
+the x/y lower and upper bounds. The grid-cell resolution is given by the attributes \code{'resX'} and
+ \code{'resY'} respectively.
 }
 \description{
 Get the (regular) grid definition from an existing (gridded) dataset
