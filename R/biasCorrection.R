@@ -4,9 +4,6 @@
 #' @export
 #' 
 
-# ex2.interp <- interpGridData(ex2.obs, new.grid = ex2$xyCoords, method = "nearest")# Obs
-# P<-aperm(ex2$Data[,,,1],c(2,3,1))# Prd
-# F<-aperm(ex2$Data[,,,1],c(2,3,1))# sim
 biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), pr.threshold = 1) {
   
 method<-match.arg(method, choices = c("qqmap", "delta", "unbiasing", "piani"))
