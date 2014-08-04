@@ -16,7 +16,7 @@ Prints the graphical display
 }
 \description{
 Sub-routine of plotMeanField for dividing the graphical window into different subplots,
-for multi-members or multi-variable displays
+for multi-member or multi-variable displays
 }
 \author{
 J Bedia \email{joaquin.bedia@gmail.com}

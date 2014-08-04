@@ -1,15 +1,19 @@
-#' Searches variable string in the dictionary
+#' @title Searches variable string in the dictionary
 #' 
-#' Searches variable string provided in the dictionary to map it in the vocabulary, in order to get
+#' @description Searches variable string provided in the dictionary to map it in the vocabulary, in order to get
 #' all the necessary information for variable homogenization. It also includes a new column specifying the
 #' aggregation function to be applied (if any).
 #' 
 #' @param dicPath Full path to the dictionary file (a csv file with extension \sQuote{.dic}).
 #' @param var Character string with the (standard) name of the variable
 #' @param time Time specification.
+#' 
 #' @return A data.frame of 1 row with the mapping information
+#' 
 #' @references \url{http://meteo.unican.es/ecoms-udg/RPackage/Homogeneization}
+#' 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' 
 #' @keywords internal
 
 dictionaryLookup <- function(dicPath, var, time) {
