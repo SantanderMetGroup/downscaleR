@@ -4,90 +4,62 @@
 #' @export
 #' 
 
-biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "unbiasing", "piani"), varcode = c("tas", "hurs", "pr", "wss"), pr.threshold = 1) {
-	if (varcode == "pr") {
-		threshold<-pr.threshold
-		nP<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
-		Pth<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
-		for (i in 1:dim(pred)[2]){
-			for (j in 1:dim(pred)[3]){
-				nP[i,j]<-sum(as.double(obs[,i,j]<=threshold & !is.na(obs[,i,j])), na.rm = TRUE)
-				if (nP[i,j]>0){
-					ix<-sort(pred[,i,j], decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
-					Ps<-sort(pred[,i,j], decreasing = FALSE, na.last = NA)
-					Pth[i,j]<-Ps[nP[i,j]+1]
-					if (Ps[nP[i,j]+1]<=threshold){
-						ind<-min(which(Ps > threshold & !is.na(Ps)))
-						# [Shape parameter  Scale parameter]
-						Os<-sort(obs[,i,j], decreasing = FALSE, na.last = NA)
-						auxGamma<-fitdistr(Os[(nP[i,j]+1):ind],"gamma")
-						Ps[(nP[i,j]+1):ind]<-rgamma(ind-nP[i,j], auxGamma$estimate[1], rate = auxGamma$estimate[2])
-						Ps<-sort(Ps, decreasing = FALSE, na.last = NA)
-					}
-					ind<-min(nP[i,j],dim(pred)[1])
-					Ps[1:ind]<-0
-					pred[ix,i,j]<-Ps
-				}
-			}
-		}
-	}
-	if (method == "unbiasing") {
-		obsMean <- apply(obs, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
-		prdMean <- apply(pred, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
-		for (k in 1:dim(sim)[1]) {
-			sim[k,,]<-sim[k,,]-prdMean+obsMean
-		}
-	}
-	if (method == "scaling") {
-		obsMean <- apply(obs, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
-		prdMean <- apply(pred, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
-		for (k in 1:dim(sim)[1]) {
-			sim[k,,]<-(sim[k,,]/prdMean)*obsMean
-		}
-	}
-	if (method == "qqmap") {
-		if (varcode != "pr") {	
-			for (i in 1:dim(sim)[2]) {
-				for (j in 1:dim(sim)[3]) {
-					if (any(!is.na(pred[,i,j])) & any(!is.na(obs[,i,j]))) {
-						ePrd<-ecdf(pred[,i,j])
-						sim[,i,j]<-quantile(obs[,i,j], probs = ePrd(sim[,i,j]), na.rm = TRUE, type = 8)
-					}
-				}
-			}
-		} else {
-			for (i in 1:dim(sim)[2]) {
-				for (j in 1:dim(sim)[3]) {
-					if (any(!is.na(pred[,i,j])) & any(!is.na(obs[,i,j]))){
-						ePrd<-ecdf(pred[which(pred[,i,j]>Pth[i,j]),i,j])
-						noRain<-which(sim[,i,j]<=Pth[i,j] & !is.na(sim[,i,j]))
-						rain<-which(sim[,i,j]>Pth[i,j] & !is.na(sim[,i,j]))
-						drizzle<-which(sim[,i,j]>Pth[i,j] & sim[,i,j]<=min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j]))
-						eFrc<-ecdf(sim[rain,i,j])
-						sim[drizzle,i,j]<-quantile(sim[which(sim[,i,j]>min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j])),i,j], probs = eFrc(sim[drizzle,i,j]), na.rm = TRUE, type = 8)
-						sim[rain,i,j]<-quantile(obs[which(obs[,i,j]>threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain,i,j]), na.rm = TRUE, type = 8)
-						sim[noRain,i,j]<-0
-					}
-				}
-			}
-		}
-	}
-	if (method == "piani" & varcode == "pr") {
-		for (i in 1:dim(sim)[2]){
-			for (j in 1:dim(sim)[3]){
-				if (nP[i,j]>0){
-					ind<-which(obs[,i,j]>threshold & !is.na(obs[,i,j]))
-					obsGamma<-fitdistr(obs[ind,i,j],"gamma")
-					ind<-which(pred[,i,j]>0 & !is.na(pred[,i,j]))
-					prdGamma<-fitdistr(pred[ind,i,j],"gamma")
-					rain<-which(sim[,i,j]>Pth[i,j] & !is.na(sim[,i,j]))
-					noRain<-which(sim[,i,j]<=Pth[i,j] & !is.na(sim[,i,j]))
-					auxF<-pgamma(sim[rain,i,j],prdGamma$estimate[1], rate = prdGamma$estimate[2])
-					sim[rain,i,j]<-qgamma(auxF,obsGamma$estimate[1], rate = obsGamma$estimate[2])
-					sim[noRain,i,j]<-0
-				}
-			}
-		}
-	}
-	return(sim)
+# ex2.interp <- interpGridData(ex2.obs, new.grid = ex2$xyCoords, method = "nearest")# Obs
+# P<-aperm(ex2$Data[,,,1],c(2,3,1))# Prd
+# F<-aperm(ex2$Data[,,,1],c(2,3,1))# sim
+biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), pr.threshold = 1) {
+  
+method<-match.arg(method, choices = c("qqmap", "delta", "unbiasing", "piani"))
+  
+dimDiff<-NULL
+dimPerm <- 1:length(attr(pred$Data, "dimensions"))
+if (length(setdiff(attr(pred$Data, "dimensions"),attr(obs$Data, "dimensions")))>0){
+  dimDiff<-setdiff(attr(pred$Data, "dimensions"),attr(obs$Data, "dimensions"))
+  for (k in 1:length(dimDiff)) {
+    dimPerm[which(grepl(dimDiff[k],attr(pred$Data, "dimensions")))]<-length(attr(obs$Data, "dimensions"))+k
+  }
+}
+dimPerm[which(dimPerm<=length(dim(obs$Data)))]<-  match(attr(obs$Data, "dimensions"), attr(pred$Data, "dimensions"))
+
+if (length(dimDiff)==0){
+  F <- calibrateProj(obs$Data, aperm(pred$Data,dimPerm), aperm(sim$Data,dimPerm), method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
+  sim$Data<-aperm(F,c(dimPerm[2:length(dim(obs$Data))],dimPerm[1]))
+}else{
+#  commonIndex<-NULL
+# for (n in 1:length(dim(obs$Data))){
+#    commonIndex<-c(commonIndex,as.list(1:dim(obs$Data)[n]))
+#  }
+  P<-aperm(pred$Data,dimPerm)
+  F<-aperm(sim$Data,dimPerm)
+}
+if (length(dimDiff)==1){
+  for (n in 1:dim(sim$Data)[length(dim(obs$Data))+1]){
+    F1 <- calibrateProj(obs$Data, P[,,,n], F[,,,n], method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
+#    sim$Data[,,,n]<-aperm(F1,c(dimPerm[2:length(dim(obs$Data))],dimPerm[1],dimPerm[(length(dim(obs$Data))+1):length(dim(pred$Data))]))
+    sim$Data[,,,n]<-aperm(F1,c(dimPerm[2:length(dim(obs$Data))],dimPerm[1]))
+  }
+}
+if (length(dimDiff)==2){
+  for (n in 1:dim(sim$Data)[length(dim(obs$Data))+1]){
+    for (m in 1:dim(sim$Data)[length(dim(obs$Data))+2]){
+      F1 <- calibrateProj(obs$Data, P[,,,n,m], F[,,,n,m], method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
+      sim$Data[,,,n,m]<-aperm(F1,c(dimPerm[2:length(dim(obs$Data))],dimPerm[1]))
+    }
+  }
+}
+if (length(dimDiff)==3){
+  for (n in 1:dim(sim$Data)[length(dim(obs$Data))+1]){
+    for (m in 1:dim(sim$Data)[length(dim(obs$Data))+2]){
+      for (t in 1:dim(sim$Data)[length(dim(obs$Data))+3]){
+        F1 <- calibrateProj(obs$Data, P[,,,n,m,t], F[,,,n,m,t], method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
+        sim$Data[,,,n,m,t]<-aperm(F1,c(dimPerm[2:length(dim(obs$Data))],dimPerm[1]))
+      }
+    }
+  }
+}
+if (any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))){
+  attr(sim$Data, "threshold") <-  threshold
+}
+attr(sim$Data, "correction") <-  method
+return(sim)
 }
