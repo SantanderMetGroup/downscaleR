@@ -1,23 +1,25 @@
-#' Determine the geo-location parameters of an arbitrary user selection
+#' @title Determine the geo-location parameters of an arbitrary user selection
 #'
-#' The function uses the \sQuote{GeoGrid} object and the parameters \code{lonLim}
+#' @description The function uses the \sQuote{GeoGrid} object and the parameters \code{lonLim}
 #'  and \code{latLim} passed by \code{loadGridDataset} and calculates the corresponding
 #'  index positions.
 #'
 #' @param grid Java class \sQuote{GeoGrid}
 #' @param lonLim see \code{\link{loadGridDataset}}
 #' @param latLim see \code{\link{loadGridDataset}}
+#' 
 #' @return A list with the following items
-##' \itemize{
-##'  \item{\code{llbbox}} A list of length 1 or two depending on whether the selected domain
-##'  crosses or not the dateline and longitude units go from 0 to 360. See details.
-##'  \item{\code{pointXYindex}} A vector of length two with the index positions of the
-##'  selected XY coordinates -in this order- in case of point selections. See details.
-##'  \item{\code{lonSlice}} The X coordinates of the domain selected
-##'  \item{\code{latSlice}} The Y coordinates of the domain selected
-##'  \item{\code{revLat}} Logical. Whether the order of latitudes should be reversed or
-##'  not in order to map the data properly in the geographical space
-##' }
+#' \itemize{
+#'  \item{\code{llbbox}} A list of length 1 or two depending on whether the selected domain
+#'  crosses or not the dateline and longitude units go from 0 to 360. See details.
+#'  \item{\code{pointXYindex}} A vector of length two with the index positions of the
+#'  selected XY coordinates -in this order- in case of point selections. See details.
+#'  \item{\code{lonSlice}} The X coordinates of the domain selected
+#'  \item{\code{latSlice}} The Y coordinates of the domain selected
+#'  \item{\code{revLat}} Logical. Whether the order of latitudes should be reversed or
+#'  not in order to map the data properly in the geographical space
+#' }
+#' 
 #' @details In order to deal with the problem of dateline crossing, the selection is
 #' partitioned into two, and the part of the domain with negative eastings is put in first
 #' place for consistent spatial mapping.
@@ -26,12 +28,18 @@
 #'  \code{makeSubset}. For single point locations, this is a integer vector of length
 #'   two defining these positions, while in the case of rectangular domains its value is
 #'    c(-1L,-1L).
+#'    
 #' @note The function assumes that datasets have degrees-east and degress-north as units
 #' of the corresponding X and Y axes.
+#' 
 #' @references \url{https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/v4.0/javadocAll/ucar/nc2/dt/GridCoordSystem.html#getRangesFromLatLonRect\%28ucar.unidata.geoloc.LatLonRect\%29}
+#' 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com} and A. Cofin\~no
+#' 
 #' @keywords internal
+#' 
 #' @export
+#' 
 #' @import rJava
 
 getLatLonDomain <- function(grid, lonLim, latLim) {
