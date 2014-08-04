@@ -23,16 +23,21 @@ plotMeanField <- function (gridData, multi.member = FALSE) {
       if (length(mar) != 2) {
             stop("Not a rectangular spatial domain")
       }
+      titles <- gridData$Variable$varName
       if (is.na(match("var", dimNames))) {
             aux <- apply(gridData$Data, FUN = mean, MARGIN = mar)
-            image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1, horizontal = TRUE)
+            image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1, horizontal = TRUE, cex.axis = .75)
+            mtext(titles)
             world(add = TRUE)
             if (("member" %in% dimNames) & isTRUE(multi.member)) {
-                  multiPlot(gridData, "member")
+                  titles <- gridData$Members
+                  multiPlot(gridData, "member", titles)
             }
       } else {
-            multiPlot(gridData, "var")
+            multiPlot(gridData, "var", titles)
       }
 }
 # End
+
+
        
