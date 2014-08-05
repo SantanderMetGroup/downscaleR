@@ -27,7 +27,7 @@ getGrid <- function(gridData) {
       grid.y <- c(gridData$xyCoords$y[1], tail(gridData$xyCoords$y, 1))
       out <- list(x = grid.x, y = grid.y)
       attributes(out) <- attributes(gridData$xyCoords)
-      if (exists("resX", attributes(gridData$xyCoords))) {
+      if (!exists("resX", attributes(gridData$xyCoords))) {
             attr(out, "resX") <- attr(gridData$xyCoords, "resX")
             attr(out, "resY") <- attr(gridData$xyCoords, "resY")      
       }
