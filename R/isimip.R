@@ -38,7 +38,7 @@
 
 #################################################################################################################
 # ISI-MIP Bias correction method (http://www.pik-potsdam.de/research/climate-impacts-and-vulnerabilities/research/rd2-cross-cutting-activities/isi-mip/about/isi-mip-fast-track)
-# Citation: Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F.: A trend-preserving bias correction – the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236, doi:10.5194/esd-4-219-2013, 2013.
+# Citation: Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F.: A trend-preserving bias correction ? the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236, doi:10.5194/esd-4-219-2013, 2013.
 #----------------------------------------------------------------------------------
 #' @title Bias correction methods
 #' @description Implementation of several standard bias correction methods
@@ -52,6 +52,8 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
 
 datesObs <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
 datesObs<-cut(datesObs, "month")
+yearList<-unlist(strsplit(as.character(datesObs), "[-]"))
+months<-unique(unlist(strsplit(as.character(datesObs), "[-]"))[seq(2,length(yearList),3)])
 dimObs<-dim(obs$Data)
 dimObs[which(grepl("^time",attr(obs$Data, "dimensions")))]<-length(unique(datesObs))
 dimPred<-dim(pred$Data)
@@ -59,11 +61,31 @@ dimPred[which(grepl("^time",attr(pred$Data, "dimensions")))]<-length(unique(date
 monthlyObs<- array(data = NA, dim = dimObs)
 monthlyPred<- array(data = NA, dim = dimPred)
 month2dayObs<- array(data = NA, dim = c(length(datesObs),1))
+obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
+pred.time.index <- grep("^time$", attr(pred$Data, "dimensions"))
 for (i in 1:length(unique(datesObs))){
   indMonth<-which(datesObs == unique(datesObs)[i])
   month2dayObs[indMonth]<-i
-  monthlyPred[i,,,] <- apply(pred$Data[indMonth,,,], FUN = mean, MARGIN = setdiff(1:length(dim(pred$Data)),which(grepl("^time",attr(pred$Data, "dimensions")))), na.rm = TRUE)
-  monthlyObs[,,i] <- apply(obs$Data[,,indMonth], FUN = mean, MARGIN = setdiff(1:length(dim(obs$Data)),which(grepl("^time",attr(obs$Data, "dimensions")))), na.rm = TRUE)
+  indTimeObs <- rep(list(bquote()), length(dimObs))
+  for (d in 1:length(dimObs)){
+    indTimeObs[[d]] <- 1:dimObs[d]
+  }
+  indTimeObs[[obs.time.index]] <- i
+  indTimeObs<-as.matrix(expand.grid(indTimeObs))
+  indTimeObs1 <- rep(list(bquote()), length(dimObs))
+  indTimeObs1[[obs.time.index]] <- indMonth
+  callObs <- as.call(c(list(as.name("["),quote(obs$Data)), indTimeObs1))
+  monthlyObs[indTimeObs] <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimObs),obs.time.index), na.rm = TRUE)
+  indTimeObs <- rep(list(bquote()), length(dimPred))
+  for (d in 1:length(dimPred)){
+    indTimeObs[[d]] <- 1:dimPred[d]
+  }
+  indTimeObs[[pred.time.index]] <- i
+  indTimeObs<-as.matrix(expand.grid(indTimeObs))
+  indTimeObs1 <- rep(list(bquote()), length(dimPred))
+  indTimeObs1[[pred.time.index]] <- indMonth
+  callObs <- as.call(c(list(as.name("["),quote(pred$Data)), indTimeObs1))
+  monthlyPred[indTimeObs] <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimPred),pred.time.index), na.rm = TRUE)
 }
 datesFor <- as.POSIXct(sim$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
 datesFor<-cut(datesFor, "month")
@@ -71,24 +93,50 @@ dimFor<-dim(sim$Data)
 dimFor[which(grepl("^time",attr(sim$Data, "dimensions")))]<-length(unique(datesFor))
 monthlyFor<- array(data = NA, dim = dimFor)
 month2dayFor<- array(data = NA, dim = c(length(datesFor),1))
+sim.time.index <- grep("^time$", attr(sim$Data, "dimensions"))
 for (i in 1:length(unique(datesFor))){
   indMonth<-which(datesFor == unique(datesFor)[i])
   month2dayFor[indMonth]<-i
-  monthlyFor[i,,,] <- apply(sim$Data[indMonth,,,], FUN = mean, MARGIN = setdiff(1:length(dim(sim$Data)),which(grepl("^time",attr(sim$Data, "dimensions")))), na.rm = TRUE)
+  indTimeObs <- rep(list(bquote()), length(dimFor))
+  for (d in 1:length(dimFor)){
+    indTimeObs[[d]] <- 1:dimFor[d]
+  }
+  indTimeObs[[sim.time.index]] <- i
+  indTimeObs<-as.matrix(expand.grid(indTimeObs))
+  indTimeObs1 <- rep(list(bquote()), length(dimFor))
+  indTimeObs1[[sim.time.index]] <- indMonth
+  callObs <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeObs1))
+  monthlyFor[indTimeObs] <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimFor),sim.time.index), na.rm = TRUE)
 }
-
-if (obs$Variable$varName == "tas") {
-  dimAux<-dim(pred$Data)
-  dimAux[which(grepl("^time",attr(pred$Data, "dimensions")))]<-length(months)
+if (any(grepl(obs$Variable$varName,c("tas","mean temperature")))){
+  dimAux<-dimPred
+  dimAux[pred.time.index]<-length(months)
   monthlyCorrection<-array(data = NA, dim = dimAux)
   for (i in 1:length(months)){
     indMonth<-which(grepl(paste("-",months[i],"-", sep=""),unique(datesObs)))
-    auxObs<-apply(monthlyObs[,,indMonth], FUN = mean, MARGIN = setdiff(1:length(dim(obs$Data)),which(grepl("^time",attr(obs$Data, "dimensions")))), na.rm = TRUE)
-    for (j in 1:dim(monthlyPred)[4]){
-      auxPrd<-apply(monthlyPred[indMonth,,,j], FUN = mean, MARGIN = setdiff(1:length(dim(pred$Data)),c(4,which(grepl("^time",attr(pred$Data, "dimensions"))))), na.rm = TRUE)
-      monthlyCorrection[i,,,j]<-auxObs-auxPrd
+    indTimeObs <- rep(list(bquote()), length(dimObs))
+    indTimeObs[[obs.time.index]] <- indMonth
+    callObs <- as.call(c(list(as.name("["),quote(monthlyObs)), indTimeObs))
+    auxObs <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimObs),obs.time.index), na.rm = TRUE)
+    indTimeObs <- rep(list(bquote()), length(dimPred))
+    for (d in 1:length(dimPred)){
+      indTimeObs[[d]] <- 1:dimPred[d]
     }
+    indTimeObs<-as.matrix(expand.grid(indTimeObs))
+    indTimeObs1 <- rep(list(bquote()), length(dimPred))
+    indTimeObs1[[pred.time.index]] <- indMonth
+    callObs <- as.call(c(list(as.name("["),quote(monthlyPred)), indTimeObs1))
+    auxPrd <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimPred),pred.time.index), na.rm = TRUE)
+    indTimeObs <- rep(list(bquote()), length(dimPred))
+    for (d in 1:length(dimPred)){
+      indTimeObs[[d]] <- 1:dimPred[d]
+    }
+    indTimeObs[[pred.time.index]] <- i
+    indTimeObs<-as.matrix(expand.grid(indTimeObs))
+    monthlyCorrection[indTimeObs]<-array(auxObs, dim = dim(auxPrd))-auxPrd
   }
+# Replicar lo de los indices para cada una de las opciones  
+  
   pred$Data <- pred$Data-monthlyPred[month2dayObs,,,]
   obs$Data <- obs$Data-monthlyObs[,,month2dayObs]
   sim$Data <- sim$Data-monthlyFor[month2dayFor,,,]
@@ -118,6 +166,11 @@ if (obs$Variable$varName == "tas") {
     }
   }
 }
+if (any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))){
+  attr(sim$Data, "threshold") <-  threshold
+}
+attr(sim$Data, "correction") <-  "ISI-MIP"
+
 return(sim)
 }
 
