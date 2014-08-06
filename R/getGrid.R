@@ -9,7 +9,6 @@
 #' the x/y lower and upper bounds. The grid-cell resolution is given by the attributes \code{'resX'} and
 #'  \code{'resY'} respectively.
 #'  
-#' @author J Bedia \email{joaquin.bedia@@gmail.com} and S. Herrera
 #' 
 #' @details In case of irregular grid definitions, the function forces the grid to regularity.
 #' The returned grid object inherits the attributes from the input \code{xyCoords} definition.
@@ -33,10 +32,6 @@ getGrid <- function(gridData) {
       if (!exists("resY", attributes(gridData$xyCoords))) {
         attr(out, "resY") <- (tail(gridData$xyCoords$y, 1) - gridData$xyCoords$y[1]) / (length(gridData$xyCoords$y) - 1)
       }
-      #      if (!exists("resX", attributes(gridData$xyCoords))) {
-      #             attr(out, "resX") <- attr(gridData$xyCoords, "resX")
-      #             attr(out, "resY") <- attr(gridData$xyCoords, "resY")      
-      #      }
       return(out)
 }
 # End
