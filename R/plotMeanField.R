@@ -13,7 +13,7 @@
 #' @export
 #' @details The function is a wrapper of the \code{\link[fields]{image.plot}} function
 #' in package \pkg{fields}
-#' @author J Bedia joaquin.bedia@@gmail.com
+#' @author J Bedia \email{joaquin.bedia@@gmail.com}
 #' @note The function plots a simple temporal mean of the loaded object in the form of
 #' a map. It does not handle other temporal aggregations. 
 
@@ -25,14 +25,15 @@ plotMeanField <- function (gridData, multi.member = FALSE) {
       }
       titles <- gridData$Variable$varName
       if (is.na(match("var", dimNames))) {
-            aux <- apply(gridData$Data, FUN = mean, MARGIN = mar)
-            image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1, horizontal = TRUE, cex.axis = .75)
-            title("")
-            mtext(titles)
-            world(add = TRUE)
             if (("member" %in% dimNames) & isTRUE(multi.member)) {
                   titles <- gridData$Members
                   multiPlot(gridData, "member", titles)
+            } else {
+                  aux <- apply(gridData$Data, FUN = mean, MARGIN = mar)
+                  image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1, horizontal = TRUE, cex.axis = .75)
+                  title("")
+                  mtext(titles)
+                  world(add = TRUE)
             }
       } else {
             multiPlot(gridData, "var", titles)
