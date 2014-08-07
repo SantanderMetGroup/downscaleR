@@ -274,18 +274,18 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
     }
     ####    
     # Correccion de la frecuencia de días secos y redistribucion de la precipitacion entre el resto de dias:
-    nP=nansum(double(monthlyO<=threshold(1) & ~isnan(monthlyO)).*double(monthlyP<=0 & ~isnan(monthlyP)))# Interpretamos la formula como interseccion
-    Ndry=repmat(NaN,1,Nest);epsM=repmat(NaN,1,Nest);
-    for (i in 1:Nest){
-      auxP=sort(monthlyP(:,i));
-      epsM(i)=auxP(min(nP(i)+1,size(monthlyP,1)));clear auxP
-      indMonth=find(monthlyO(:,i)>threshold(1));
-      if (~isempty(indMonth)){
-        indWetMonth=ismember(month2dayObs,indMonth);
-        Ndry(i)=length(find(O(indWetMonth,i)<threshold(3)));
-      }
-    }
-    epsD=repmat(NaN,1,Nest);
+#     nP=nansum(double(monthlyO<=threshold(1) & ~isnan(monthlyO)).*double(monthlyP<=0 & ~isnan(monthlyP)))# Interpretamos la formula como interseccion
+#     Ndry=repmat(NaN,1,Nest);epsM=repmat(NaN,1,Nest);
+#     for (i in 1:Nest){
+#       auxP=sort(monthlyP(:,i));
+#       epsM(i)=auxP(min(nP(i)+1,size(monthlyP,1)));clear auxP
+#       indMonth=find(monthlyO(:,i)>threshold(1));
+#       if (~isempty(indMonth)){
+#         indWetMonth=ismember(month2dayObs,indMonth);
+#         Ndry(i)=length(find(O(indWetMonth,i)<threshold(3)));
+#       }
+#     }
+#     epsD=repmat(NaN,1,Nest);
 ####    
     
     attr(sim$Data, "threshold") <-  threshold
