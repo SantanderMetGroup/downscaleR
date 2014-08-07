@@ -52,48 +52,78 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
       x <- gridData$xyCoords$x
       y <- gridData$xyCoords$y
       # Definition of new grid
-      if (exists("resX", where = attributes(new.grid))) {
-        if (is.null(new.grid$x)) {
-          new.grid.x <- seq(x[1], tail(x, 1))
-        } else {
+      if (is.null(new.grid$x)) {
+        new.grid.x <- gridData$xyCoords$x
+      }else{
+        if (!exists("resX", where = attributes(new.grid))) {
+          new.grid.x <- new.grid$x
+        }else{
           if (length(new.grid$x) != 2 | new.grid$x[2] < new.grid$x[1]) {
             stop("Invalid grid definition in X")
           }
-          if (new.grid$x[1] < floor(x[1]) & new.grid$x[2] <= ceiling(tail(x, 1))) {
-            stop("The westernmost corner of the new grid is outside the data extent\n Minimum X accepted value: ", floor(x[1]))
-          }
-          if (new.grid$x[2] > ceiling(tail(x, 1)) & new.grid$x[1] >= floor(x[1])) {
-            stop("The easternmost corner of the new grid is outside the data extent\n Maximum X accepted value: ", ceiling(tail(x, 1)))
-          }
-          if (new.grid$x[2] > ceiling(tail(x, 1)) & new.grid$x[1] < floor(x[1])) {
-            stop("The new grid is outside the data extent\n Accepted X values in the range: [", floor(x[1]), ",", ceiling(tail(x, 1)), "]")
+          if (new.grid$x[1] < floor(x[1]) | new.grid$x[2] > ceiling(tail(x, 1))) {
+            warning("The new longitudes are outside the data extent")
           }
           new.grid.x <- do.call("seq", as.list(c(new.grid$x, attr(new.grid, 'resX'))))
         }
-      } else {
-        new.grid.x <- new.grid$x
       }
-      if (exists("resY", where = attributes(new.grid))) {
-        if (is.null(new.grid$y)) {
-          new.grid.y <- seq(y[1], tail(y, 1))
-        } else {
+      if (is.null(new.grid$y)) {
+        new.grid.y <- gridData$xyCoords$y
+      }else{
+        if (!exists("resY", where = attributes(new.grid))) {
+          new.grid.y <- new.grid$y
+        }else{
           if (length(new.grid$y) != 2 | new.grid$y[2] < new.grid$y[1]) {
             stop("Invalid grid definition in Y")
           }
-          if (new.grid$y[1] < floor(y[1]) & new.grid$y[2] <= ceiling(tail(y, 1))) {
-            stop("The southernmost corner of the new grid is outside the data extent\n Minimum Y accepted value: ", floor(y[1]))
-          }
-          if (new.grid$y[2] > ceiling(tail(y, 1)) & new.grid$y[1] >= floor(y[1])) {
-            stop("The northernmost corner of the new grid is outside the data extent\n Maximum Y accepted value: ", ceiling(tail(y, 1)))
-          }
-          if (new.grid$y[2] > ceiling(tail(y, 1)) & new.grid$y[1] < floor(y[1])) {
-            stop("The new grid is outside the data extent\n Accepted Y values in the range: [", floor(y[1]), ",", ceiling(tail(y, 1)), "]")
+          if (new.grid$y[1] < floor(y[1]) | new.grid$y[2] > ceiling(tail(y, 1))) {
+            warning("The new latitudes are outside the data extent")
           }
           new.grid.y <- do.call("seq", as.list(c(new.grid$y, attr(new.grid, 'resY'))))
         }
-      } else {
-        new.grid.y <- new.grid$y
       }
+#       if (exists("resX", where = attributes(new.grid))) {
+#         if (is.null(new.grid$x)) {
+#           new.grid.x <- seq(x[1], tail(x, 1))
+#         } else {
+#           if (length(new.grid$x) != 2 | new.grid$x[2] < new.grid$x[1]) {
+#             stop("Invalid grid definition in X")
+#           }
+#           if (new.grid$x[1] < floor(x[1]) & new.grid$x[2] <= ceiling(tail(x, 1))) {
+#             stop("The westernmost corner of the new grid is outside the data extent\n Minimum X accepted value: ", floor(x[1]))
+#           }
+#           if (new.grid$x[2] > ceiling(tail(x, 1)) & new.grid$x[1] >= floor(x[1])) {
+#             stop("The easternmost corner of the new grid is outside the data extent\n Maximum X accepted value: ", ceiling(tail(x, 1)))
+#           }
+#           if (new.grid$x[2] > ceiling(tail(x, 1)) & new.grid$x[1] < floor(x[1])) {
+#             stop("The new grid is outside the data extent\n Accepted X values in the range: [", floor(x[1]), ",", ceiling(tail(x, 1)), "]")
+#           }
+#           new.grid.x <- do.call("seq", as.list(c(new.grid$x, attr(new.grid, 'resX'))))
+#         }
+#       } else {
+#         new.grid.x <- new.grid$x
+#       }
+#       if (exists("resY", where = attributes(new.grid))) {
+#         if (is.null(new.grid$y)) {
+#           new.grid.y <- seq(y[1], tail(y, 1))
+#         } else {
+#           if (length(new.grid$y) != 2 | new.grid$y[2] < new.grid$y[1]) {
+#             stop("Invalid grid definition in Y")
+#           }
+#           if (new.grid$y[1] < floor(y[1]) & new.grid$y[2] <= ceiling(tail(y, 1))) {
+#             stop("The southernmost corner of the new grid is outside the data extent\n Minimum Y accepted value: ", floor(y[1]))
+#           }
+#           if (new.grid$y[2] > ceiling(tail(y, 1)) & new.grid$y[1] >= floor(y[1])) {
+#             stop("The northernmost corner of the new grid is outside the data extent\n Maximum Y accepted value: ", ceiling(tail(y, 1)))
+#           }
+#           if (new.grid$y[2] > ceiling(tail(y, 1)) & new.grid$y[1] < floor(y[1])) {
+#             stop("The new grid is outside the data extent\n Accepted Y values in the range: [", floor(y[1]), ",", ceiling(tail(y, 1)), "]")
+#           }
+#           new.grid.y <- do.call("seq", as.list(c(new.grid$y, attr(new.grid, 'resY'))))
+#         }
+#       } else {
+#         new.grid.y <- new.grid$y
+#       }
       grid.list <- list("x" = new.grid.x, "y" = new.grid.y)
       new.grid.x <- NULL
       new.grid.y <- NULL
