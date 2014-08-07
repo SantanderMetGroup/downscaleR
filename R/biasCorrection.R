@@ -6,8 +6,9 @@
 
 biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), pr.threshold = 1) {
   
-method<-match.arg(method, choices = c("qqmap", "delta", "unbiasing", "piani"))
-  
+method<-match.arg(method, choices = c("qqmap", "delta", "unbiasing", "piani", "scaling"))
+threshold<-pr.threshold
+
 dimDiff<-NULL
 dimPerm <- 1:length(attr(pred$Data, "dimensions"))
 if (length(setdiff(attr(pred$Data, "dimensions"),attr(obs$Data, "dimensions")))>0){
