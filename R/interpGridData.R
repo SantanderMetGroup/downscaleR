@@ -53,11 +53,11 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
       y <- gridData$xyCoords$y
       # Definition of new grid
       if (is.null(new.grid$x)) {
-        new.grid.x <- gridData$xyCoords$x
-      }else{
+            new.grid.x <- gridData$xyCoords$x
+      } else {
         if (!exists("resX", where = attributes(new.grid))) {
-          new.grid.x <- new.grid$x
-        }else{
+              new.grid.x <- do.call("seq", as.list(new.grid$x))
+        } else {
           if (length(new.grid$x) != 2 | new.grid$x[2] < new.grid$x[1]) {
             stop("Invalid grid definition in X")
           }
@@ -71,7 +71,7 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
         new.grid.y <- gridData$xyCoords$y
       }else{
         if (!exists("resY", where = attributes(new.grid))) {
-          new.grid.y <- new.grid$y
+              new.grid.y <- do.call("seq", as.list(new.grid$y))
         }else{
           if (length(new.grid$y) != 2 | new.grid$y[2] < new.grid$y[1]) {
             stop("Invalid grid definition in Y")
