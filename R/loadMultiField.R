@@ -52,13 +52,9 @@
 #' @family loading
 #' @family loading.grid
 #' @family homogenization
+#' @family multifield
 #' 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-
-
-
-
-
 
 loadMultiField <- function(dataset, vars, dictionary = TRUE, lonLim = NULL, latLim = NULL, season = NULL, years = NULL, time = "none", new.grid = list(x = NULL, y = NULL), interp.method = "bilinear") {
       if (length(vars) == 1) {

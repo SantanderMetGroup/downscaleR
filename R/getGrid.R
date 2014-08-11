@@ -27,10 +27,10 @@ getGrid <- function(gridData) {
       out <- list(x = grid.x, y = grid.y)
       attributes(out) <- attributes(gridData$xyCoords)
       if (!exists("resX", attributes(gridData$xyCoords))) {
-        attr(out, "resX") <- (tail(gridData$xyCoords$x, 1) - gridData$xyCoords$x[1]) / (length(gridData$xyCoords$x) - 1)
+            attr(out, "resX") <- (tail(gridData$xyCoords$x, 1) - gridData$xyCoords$x[1]) / (length(gridData$xyCoords$x) - 1)
       }
       if (!exists("resY", attributes(gridData$xyCoords))) {
-        attr(out, "resY") <- (tail(gridData$xyCoords$y, 1) - gridData$xyCoords$y[1]) / (length(gridData$xyCoords$y) - 1)
+            attr(out, "resY") <- (tail(gridData$xyCoords$y, 1) - gridData$xyCoords$y[1]) / (length(gridData$xyCoords$y) - 1)
       }
       return(out)
 }

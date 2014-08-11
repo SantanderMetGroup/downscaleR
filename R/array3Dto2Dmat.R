@@ -1,4 +1,4 @@
-#'@title Coversion of a 3D array to a 2D matrix
+#'@title Conversion of a 3D array to a 2D matrix
 #'@description Converts 3D arrays of the form [lon,lat,time] -not strictly in this order-,
 #'  to 2D matrices of the form [time, grid-point], in this order. Mainly for PCA analysis.
 #'@param array3D A 3-dimensional array with longitude, latitude and time dimensions
