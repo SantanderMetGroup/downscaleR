@@ -183,8 +183,8 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
     indTimePrd<-as.matrix(expand.grid(indTimePrd))
     indTimeSim<-as.matrix(expand.grid(indTimeSim))
     for (m in 1:length(months)){
-      indMonth<-which(grepl(paste("-",months[m],"-", sep=""),unique(datesObs)))
-      indMonthFor<-which(grepl(paste("-",months[m],"-", sep=""),unique(datesFor)))
+      indMonth<-which(grepl(paste("-",months[m],"-", sep=""),datesObs))
+      indMonthFor<-which(grepl(paste("-",months[m],"-", sep=""),datesFor))
       for (j in 1:dim(indTimeObs)[1]){
         indObs <- as.list(indTimeObs[j,])
         indObs[[obs.time.index]]<-indMonth
@@ -225,7 +225,7 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
     indTimeFor<-as.matrix(expand.grid(indTimeFor))
     sim$Data <- sim$Data+monthlyFor[indTimeFor]
     for (i in 1:length(months)){
-      indMonthFor<-which(grepl(paste("-",months[i],"-", sep=""),unique(datesFor)))
+      indMonthFor<-which(grepl(paste("-",months[i],"-", sep=""),datesFor))
       if (!is.null(indMonthFor)){
         indCorrection <- rep(list(bquote()), length(dim(monthlyCorrection)))
         for (d in 1:length(dimFor)){
