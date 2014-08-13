@@ -8,6 +8,7 @@
 #' would be given by the expression: \emph{expand.grid(rev(gridData$xyCoords$y), gridData$xyCoords$x)[2:1]}. This
 #' is the most convenient format in order to naturally fill a matrix with the adequate number of columns (longitudes) 
 #' and rows (latitudes) given the vectorized value of the output at a given time (or after time-averaging via rowMeans).
+#' The function is insensitive to the dimension ordering of the input data array 
 #'@author J. Bedia \email{joaquin.bedia@@gmail.com}
 #'@keywords internal
 #'@export
@@ -22,7 +23,7 @@ array3Dto2Dmat <- function(array3D) {
       indices <- rep(list(bquote()), length(dimNames))
       for (i in 1:n.lon) {
             indices[[lon.index]] <- i
-            for (j in n.lat:1) { 
+            for (j in 1:n.lat) { 
                   indices[[lat.index]] <- j
                   call <- as.call(c(list(as.name("["), quote(array3D)), indices))
                   aux.list[[length(aux.list) + 1]] <- eval(call)  
