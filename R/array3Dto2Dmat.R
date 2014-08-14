@@ -5,7 +5,7 @@
 #'@return A 2-dimensional matrix with time in rows and grid-points in columns.
 #'@details The function is intended to convert geo-grids to a convenient format for PCA-related analyses.
 #' The columns are ordered in X and Y ascending order, with coordinate Y varying faster. Thus, column coordinates 
-#' would be given by the expression: \emph{expand.grid(rev(gridData$xyCoords$y), gridData$xyCoords$x)[2:1]}. This
+#' would be given by the expression: \emph{expand.grid(gridData$xyCoords$y, gridData$xyCoords$x)[2:1]}. This
 #' is the most convenient format in order to naturally fill a matrix with the adequate number of columns (longitudes) 
 #' and rows (latitudes) given the vectorized value of the output at a given time (or after time-averaging via rowMeans).
 #' The function is insensitive to the dimension ordering of the input data array 
