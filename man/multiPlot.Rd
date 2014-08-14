@@ -3,7 +3,7 @@
 \alias{multiPlot}
 \title{Make multi-panel plots}
 \usage{
-multiPlot(gridData, split.dim.name)
+multiPlot(gridData, split.dim.name, titles)
 }
 \arguments{
 \item{gridData}{a grid dataset as returned by any of the loading functions}

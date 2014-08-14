@@ -118,8 +118,8 @@ Other loading: \code{\link{dataInventory}};
   \code{\link{loadStationData}};
   \code{\link{makeAggregatedDataset}}
 
-Other loading.grid: \code{\link{getGrid}};
-  \code{\link{interpGridData}};
-  \code{\link{loadMultiField}}
+Other loading.grid: \code{\link{fieldFromPCs}};
+  \code{\link{getGrid}}; \code{\link{interpGridData}};
+  \code{\link{loadMultiField}}; \code{\link{prinComp}}
 }
 

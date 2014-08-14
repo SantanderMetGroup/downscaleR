@@ -22,12 +22,11 @@ In case of irregular grid definitions, the function forces the grid to regularit
 The returned grid object inherits the attributes from the input \code{xyCoords} definition.
 }
 \author{
-J Bedia \email{joaquin.bedia@gmail.com} and S. Herrera
-
 S. Herrera and J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
-Other loading.grid: \code{\link{interpGridData}};
-  \code{\link{loadGridData}}; \code{\link{loadMultiField}}
+Other loading.grid: \code{\link{fieldFromPCs}};
+  \code{\link{interpGridData}}; \code{\link{loadGridData}};
+  \code{\link{loadMultiField}}; \code{\link{prinComp}}
 }
 

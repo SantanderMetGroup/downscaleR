@@ -77,7 +77,11 @@ Other loading: \code{\link{dataInventory}};
   \code{\link{loadStationData}};
   \code{\link{makeAggregatedDataset}}
 
-Other loading.grid: \code{\link{getGrid}};
-  \code{\link{interpGridData}}; \code{\link{loadGridData}}
+Other loading.grid: \code{\link{fieldFromPCs}};
+  \code{\link{getGrid}}; \code{\link{interpGridData}};
+  \code{\link{loadGridData}}; \code{\link{prinComp}}
+
+Other multifield: \code{\link{fieldFromPCs}};
+  \code{\link{prinComp}}
 }
 
