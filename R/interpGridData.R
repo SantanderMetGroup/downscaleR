@@ -34,7 +34,7 @@
 #' @export
 #' @examples \dontrun{
 #' # This is the path to the package built-in NCEP dataset (assumes read permission)
-#'  ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+#'  ncep <- system.file(package = "downscaleR", "datasets" , "reanalysis", "Iberia_NCEP", "Iberia_NCEP.ncml") 
 #' # Load air temperature at 1000 mb isobaric pressure level for boreal winter (DJF) 1991-2000
 #' t1000.djf <- loadGridData(ncep, var = "ta@@100000", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 1991:2000)
 #' par(mfrow = c(2,1))
