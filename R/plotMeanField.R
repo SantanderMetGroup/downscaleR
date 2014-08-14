@@ -19,7 +19,7 @@
 
 plotMeanField <- function (gridData, multi.member = FALSE) {
       dimNames <- attr(gridData$Data, "dimensions")
-      mar <- grep("lon|lat", dimNames)
+      mar <- match(c("lon", "lat"), dimNames)
       if (length(mar) != 2) {
             stop("Not a rectangular spatial domain")
       }
