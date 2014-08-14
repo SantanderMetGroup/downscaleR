@@ -26,6 +26,6 @@ The function plots a simple temporal mean of the loaded object in the form of
 a map. It does not handle other temporal aggregations.
 }
 \author{
-J Bedia joaquin.bedia@gmail.com
+J Bedia \email{joaquin.bedia@gmail.com}
 }
 
