@@ -6,10 +6,39 @@
 biasCorrection(obs, pred, sim, method = c("qqmap", "delta", "scaling",
   "unbiasing", "piani"), pr.threshold = 1)
 }
+\arguments{
+\item{obs}{A field or station data containing the observations}
+
+\item{pred}{A field containing the prediction series}
+
+\item{sim}{A field containing the simuation series}
+
+\item{method}{method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
+\code{"scaling"}, \code{"unbiasing"} and \code{"piani"}. See details.}
+
+\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
+ \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
+}
+\value{
+A calibrated object of the same spatio-temporal extent of the input field
+}
 \description{
 Implementation of several standard bias correction methods
 }
+\details{
+~~ Details on the different methods here
+}
 \author{
 S. Herrera \email{sixto@predictia.es}
+}
+\references{
+~References to the different methods
+}
+\seealso{
+Other calibration: \code{\link{calibrateProj}};
+  \code{\link{isimip}}
+
+Other downscaling: \code{\link{calibrateProj}};
+  \code{\link{isimip}}
 }
 

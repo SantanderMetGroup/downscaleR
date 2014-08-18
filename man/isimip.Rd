@@ -5,10 +5,32 @@
 \usage{
 isimip(obs, pred, sim, pr.threshold = 1)
 }
+\arguments{
+\item{obs}{A field or station data containing the observations}
+
+\item{pred}{A field containing the prediction series}
+
+\item{sim}{A field containing the simuation series}
+
+\item{pr.threshold}{pr.threshold}
+}
+\value{
+A field with the corrected data
+}
 \description{
 Implementation of several standard bias correction methods
 }
 \author{
 S. Herrera \email{sixto@predictia.es}
+}
+\references{
+Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F.: A trend-preserving bias correction -- the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236, doi:10.5194/esd-4-219-2013, 2013
+}
+\seealso{
+Other calibration: \code{\link{biasCorrection}};
+  \code{\link{calibrateProj}}
+
+Other downscaling: \code{\link{biasCorrection}};
+  \code{\link{calibrateProj}}
 }
 
