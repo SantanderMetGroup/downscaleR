@@ -13,7 +13,8 @@
 #' @return a list with the following elements:
 #' \itemize{
 #' \item \code{Variable}. Name of the variable
-#' \item \code{Data}. Dates are ordered by rows and Stations in columns. Names are station codes
+#' \item \code{Data}. A 2-D matrix containing the data. Dates are ordered by rows and Stations by columns, 
+#' following the order indicated in the \code{Metadata}.
 #' \item \code{xyCoords}. A 2-D matrix with longitude and latitudes of the stations
 #' \item \code{Dates}. A list with the verification time interval of each record in the time series.
 #'  This is represented by a list with two elements: \code{start} and \code{end}, representing the
@@ -56,6 +57,7 @@ loadStationData <- function(dataset, file.format = "ascii", var,
       dateSliceStart <- as.POSIXct(out$Dates)
       dateSliceEnd <- as.POSIXct(as.POSIXlt(out$Dates + varTimeStep))
       out$Dates <- list("start" = dateSliceStart, "end" = dateSliceEnd)
+      attr(out$Data, "dimensions") <- c("time", "station")
       message(paste("[", Sys.time(), "] Done.", sep = ""))
       return(out)
 }

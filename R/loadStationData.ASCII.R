@@ -71,8 +71,8 @@ loadStationData.ASCII <- function(dataset, var, stationID, lonLim, latLim, seaso
       }
       # Data retrieval
       message("[", Sys.time(), "] Loading data ...", sep = "")
-      Data <- as.data.frame(read.csv(list.files(dataset, full.names = TRUE)[fileInd], na.strings = na.string)[timePars$timeInd, stInd + 1])
-      names(Data) <- stids
+      Data <- unname(as.matrix(read.csv(list.files(dataset, full.names = TRUE)[fileInd], na.strings = na.string)[timePars$timeInd, stInd + 1]))
+#       names(Data) <- stids
 	## Metadata
       message("[", Sys.time(), "] Retrieving metadata ...", sep = "")
       # Assumes that at least station ids must exist, and therefore meta.list is never empty
