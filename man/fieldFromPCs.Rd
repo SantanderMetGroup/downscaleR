@@ -68,9 +68,10 @@ J. Bedia \email{joaquin.bedia@gmail.com}
 \seealso{
 Other loading.grid: \code{\link{getGrid}};
   \code{\link{interpGridData}}; \code{\link{loadGridData}};
-  \code{\link{loadMultiField}}; \code{\link{prinComp}}
+  \code{\link{loadMultiField}}; \code{\link{plotEOF}};
+  \code{\link{prinComp}}
 
 Other multifield: \code{\link{loadMultiField}};
-  \code{\link{prinComp}}
+  \code{\link{plotEOF}}; \code{\link{prinComp}}
 }
 

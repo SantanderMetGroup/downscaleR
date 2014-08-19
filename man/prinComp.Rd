@@ -102,9 +102,10 @@ Guti\'{e}rrez, J.M., R. Ancell, A. S. Cofi\~{n}o and C. Sordo (2004). Redes Prob
 \seealso{
 Other loading.grid: \code{\link{fieldFromPCs}};
   \code{\link{getGrid}}; \code{\link{interpGridData}};
-  \code{\link{loadGridData}}; \code{\link{loadMultiField}}
+  \code{\link{loadGridData}}; \code{\link{loadMultiField}};
+  \code{\link{plotEOF}}
 
 Other multifield: \code{\link{fieldFromPCs}};
-  \code{\link{loadMultiField}}
+  \code{\link{loadMultiField}}; \code{\link{plotEOF}}
 }
 

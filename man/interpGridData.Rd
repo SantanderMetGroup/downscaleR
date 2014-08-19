@@ -65,6 +65,7 @@ J. Bedia \email{joaquin.bedia@gmail.com} and S. Herrera
 \seealso{
 Other loading.grid: \code{\link{fieldFromPCs}};
   \code{\link{getGrid}}; \code{\link{loadGridData}};
-  \code{\link{loadMultiField}}; \code{\link{prinComp}}
+  \code{\link{loadMultiField}}; \code{\link{plotEOF}};
+  \code{\link{prinComp}}
 }
 

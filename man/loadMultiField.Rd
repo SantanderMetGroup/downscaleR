@@ -90,9 +90,10 @@ Other loading: \code{\link{dataInventory}};
 
 Other loading.grid: \code{\link{fieldFromPCs}};
   \code{\link{getGrid}}; \code{\link{interpGridData}};
-  \code{\link{loadGridData}}; \code{\link{prinComp}}
+  \code{\link{loadGridData}}; \code{\link{plotEOF}};
+  \code{\link{prinComp}}
 
 Other multifield: \code{\link{fieldFromPCs}};
-  \code{\link{prinComp}}
+  \code{\link{plotEOF}}; \code{\link{prinComp}}
 }
 

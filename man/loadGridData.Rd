@@ -131,6 +131,7 @@ Other loading: \code{\link{dataInventory}};
 
 Other loading.grid: \code{\link{fieldFromPCs}};
   \code{\link{getGrid}}; \code{\link{interpGridData}};
-  \code{\link{loadMultiField}}; \code{\link{prinComp}}
+  \code{\link{loadMultiField}}; \code{\link{plotEOF}};
+  \code{\link{prinComp}}
 }
 
