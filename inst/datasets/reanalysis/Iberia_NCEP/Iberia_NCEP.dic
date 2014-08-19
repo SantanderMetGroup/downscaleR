@@ -2,6 +2,6 @@ identifier,short_name,time_step,lower_time_bound,upper_time_bound,aggr_fun,offse
 hus,Q,24h,0,24,mean,0,1,0
 psl,SLP,24h,0,24,mean,0,1,0
 ta,T,24h,0,24,mean,-273.15,1,0
-zg,Z,24h,0,24,mean,0,0.1020408,0
+z,Z,24h,0,24,mean,0,0.1020408,0
 tas,2T,24h,0,24,mean,-273.15,1,0
 tp,pr,24h,0,24,sum,0,1000,0
