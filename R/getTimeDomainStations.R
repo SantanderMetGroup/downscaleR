@@ -33,14 +33,22 @@ getTimeDomainStations <- function(timeDates, season, years) {
     }
     # Year-crossing seasons - year to take the initialization
     if (!identical(season, sort(season))) {
-        if (years[1] == startYear) { 
-            warning(paste("First forecast day in dataset: ", timeDates[1], ".\nRequested seasonal data for ", startYear," not available", sep=""))
-            years <- years[-length(years)]
-        } else {
-            years <- years - 1      
-        }
-    }
-    timeInd <- which((timeDates$year + 1900) %in% years & (timeDates$mon + 1) %in% season)
+          if (years[1] == startYear) { 
+                warning(paste("First forecast day in dataset: ", timeDates[1], ".\nRequested seasonal data for ", startYear," not available", sep=""))
+                years <- years[-length(years)]
+          } else {
+                years <- append(years[1] - 1, years)
+          }
+          timeInd <- which((timeDates$year + 1900) %in% years & (timeDates$mon + 1) %in% season)
+          crossSeason <- which(c(1, diff(season)) < 0)
+          rm.ind <- which((timeDates$mon + 1) %in% season[1 : (crossSeason - 1)] & (timeDates$year + 1900) %in% years[length(years)])
+          if (length(years) > 1) {
+                rm.ind <- c(rm.ind, which((timeDates$mon + 1) %in% season[crossSeason : length(season)] & (timeDates$year + 1900) %in% years[1]))
+          }
+          timeInd <- setdiff(timeInd, rm.ind)
+    }else{
+          timeInd <- which((timeDates$year + 1900) %in% years & (timeDates$mon + 1) %in% season)
+    }  
     timeDates <- timeDates[timeInd]
     return(list("timeInd" = timeInd, "timeDates" = timeDates))
 }

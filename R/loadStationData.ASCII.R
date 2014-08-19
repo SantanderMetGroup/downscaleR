@@ -79,7 +79,7 @@ loadStationData.ASCII <- function(dataset, var, stationID, lonLim, latLim, seaso
       ind.meta <- c(1:length(names(aux)))[-pmatch(c("longitude", "latitude"), names(aux))]
       meta.list <- as.list(aux[stInd,ind.meta])
       aux <- NULL  
-      return(list("Variable" = var, "Data" = Data, "xyCoords" = coords, "Dates" = timePars$timeDates, "Metadata" = meta.list))
+      return(list("Variable" = list("varName" = var), "Data" = Data, "xyCoords" = coords, "Dates" = timePars$timeDates, "Metadata" = meta.list))
 }
 # End
 

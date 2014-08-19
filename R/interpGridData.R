@@ -52,15 +52,22 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
             new.grid <- list(x = NULL, y = NULL)
       }
       method <- match.arg(method, choices = c("bilinear", "nearest"))
-      x <- gridData$xyCoords$x
-      y <- gridData$xyCoords$y
+      if (any(attr(gridData$Data, "dimensions") == "station")){
+            x <- as.numeric(gridData$xyCoords[,1])
+            y <- as.numeric(gridData$xyCoords[,2])
+      }else{
+            x <- gridData$xyCoords$x
+            y <- gridData$xyCoords$y
+      }
       names(new.grid) <- c("x", "y")
       # Definition of new grid
       if (is.null(new.grid$x)) {
-            new.grid.x <- gridData$xyCoords$x
+            new.grid.x <- x
+            #             new.grid.x <- gridData$xyCoords$x
       } else {
             if (!exists("resX", where = attributes(new.grid))) {
-                  new.grid.x <- do.call("seq", as.list(new.grid$x))
+#                   new.grid.x <- do.call("seq", as.list(new.grid$x))
+                  new.grid.x <- new.grid$x
             } else {
                   if (length(new.grid$x) != 2 | new.grid$x[2] < new.grid$x[1]) {
                         stop("Invalid grid definition in X")
@@ -72,10 +79,12 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
             }
       }
       if (is.null(new.grid$y)) {
-            new.grid.y <- gridData$xyCoords$y
+            new.grid.y <- y
+            #             new.grid.y <- gridData$xyCoords$y
       } else {
             if (!exists("resY", where = attributes(new.grid))) {
-                  new.grid.y <- do.call("seq", as.list(new.grid$y))
+#                   new.grid.y <- do.call("seq", as.list(new.grid$y))
+                  new.grid.y <- new.grid$y
             } else {
                   if (length(new.grid$y) != 2 | new.grid$y[2] < new.grid$y[1]) {
                         stop("Invalid grid definition in Y")
@@ -96,9 +105,13 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
             n.members <- NULL
       }
       time.ind <- grep("^time", attr(gridData$Data, "dimensions"))
-      # Handles reverse ordering of lon-lat (i.e. lat-lon)
-      ind.order <- match(c("lon", "lat"), attr(gridData$Data, "dimensions"))
-      transpose <- ifelse(!identical(sort(ind.order), ind.order), TRUE, FALSE)
+      if (!any(attr(gridData$Data, "dimensions") == "station")){
+            # Handles reverse ordering of lon-lat (i.e. lat-lon)
+            ind.order <- match(c("lon", "lat"), attr(gridData$Data, "dimensions"))
+            transpose <- ifelse(!identical(sort(ind.order), ind.order), TRUE, FALSE)
+      }else{
+            transpose <- FALSE
+      }
       if (is.null(n.members)) {
             message("[", Sys.time(), "] Performing ", method, " interpolation... may take a while")
             interp.list <- lapply(1:dim(gridData$Data)[time.ind], function(j) {
@@ -110,15 +123,24 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
                         z <- t(z)      
                   }
                   if (method == "bilinear") {
-                        int <- interp.surface.grid(list("x" = x, "y" = y, "z" = z), grid.list)$z
+                        int <- tryCatch({
+                              interp.surface.grid(list("x" = x, "y" = y, "z" = z), grid.list)$z
+                        },finally = {
+                              interp.surface(list("x" = x, "y" = y, "z" = z), array(c(grid.list$x,grid.list$y),dim = c(length(grid.list$x),2)))
+                        })
                   }
                   if (method == "nearest") {
                         int <- matrix(nrow = length(grid.list$x), ncol = length(grid.list$y))
                         for (k in 1:length(grid.list$x)) {
                               for (l in 1:length(grid.list$y)) {
-                                    ind.x <- which.min(abs(x - grid.list$x[k]))
-                                    ind.y <- which.min(abs(y - grid.list$y[l]))
-                                    int[k,l] <- z[ind.x, ind.y]
+                                    if (!any(attr(gridData$Data, "dimensions") == "station")){
+                                          ind.x <- which.min(abs(x - grid.list$x[k]))
+                                          ind.y <- which.min(abs(y - grid.list$y[l]))
+                                          int[k,l] <- z[ind.x, ind.y]
+                                    }else{
+                                          ind.x <- which.min(sqrt((x - grid.list$x[k])^2+(y - grid.list$y[l])^2))
+                                          int[k,l] <- z[ind.x]
+                                    }
                               }
                         }
                   }
@@ -142,16 +164,26 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
                         if (isTRUE(transpose)) {
                               z <- t(z)      
                         }
+                        
                         if (method == "bilinear") {
-                              int <- interp.surface.grid(list("x" = x, "y" = y, "z" = z), grid.list)$z
+                              int <- tryCatch({
+                                    interp.surface.grid(list("x" = x, "y" = y, "z" = z), grid.list)$z
+                              },finally = {
+                                    interp.surface(list("x" = x, "y" = y, "z" = z), array(c(grid.list$x,grid.list$y),dim = c(length(grid.list$x),2)))
+                              })
                         }
                         if (method == "nearest") {
                               int <- matrix(nrow = length(grid.list$x), ncol = length(grid.list$y))
                               for (k in 1:length(grid.list$x)) {
                                     for (l in 1:length(grid.list$y)) {
-                                          ind.x <- which.min(abs(x - grid.list$x[k]))
-                                          ind.y <- which.min(abs(y - grid.list$y[l]))
-                                          int[k,l] <- z[ind.x, ind.y]
+                                          if (!any(attr(gridData$Data, "dimensions") == "station")){
+                                                ind.x <- which.min(abs(x - grid.list$x[k]))
+                                                ind.y <- which.min(abs(y - grid.list$y[l]))
+                                                int[k,l] <- z[ind.x, ind.y]
+                                          }else{
+                                                ind.x <- which.min(sqrt((x - grid.list$x[k])^2+(y - grid.list$y[l])^2))
+                                                int[k,l] <- z[ind.x]
+                                          }
                                     }
                               }
                         }
