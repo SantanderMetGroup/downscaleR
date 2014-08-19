@@ -1,25 +1,24 @@
 #' @title Bias correction methods
 #' @description Implementation of several standard bias correction methods
-#' 
+#'
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"unbiasing"} and \code{"piani"}. See details.
+#' \code{"scaling"}, \code{"unbiasing"} and \code{"piani"}. See details.
 #' @param varcode Variable code. This is not the variable itself to be corrected, but
 #' rather it referes to its nature and distributional properties. For instance, \code{"tas"} applies for
-#'  temperature-like variables (i.e.: unbounded gaussian variables that can take both negative and positive values),
-#'   \code{"hurs"} for relative-humidity-like variables (i.e., bounded by both sides, with a maximum value of 1 -100-
-#'    and a minimum of zero, with no negatives), \code{"wss"} for wind-like variables (no possible values below zero, 
-#'    but without an upper bound) and \code{"pr"}, specifically for precipitation.
+#' temperature-like variables (i.e.: unbounded gaussian variables that can take both negative and positive values),
+#' \code{"hurs"} for relative-humidity-like variables (i.e., bounded by both sides, with a maximum value of 1 -100-
+#' and a minimum of zero, with no negatives), \code{"wss"} for wind-like variables (no possible values below zero,
+#' but without an upper bound) and \code{"pr"}, specifically for precipitation.
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
-#'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).
+#' \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).
 #' @author S. Herrera \email{sixto@@predictia.es}
 #' @export
 #' @family downscaling
 #' @family calibration
 #' @importFrom MASS fitdistr
 #' @keywords internal
-#' 
-
+#'
 calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), varcode = c("tas", "hurs", "pr", "wss"), pr.threshold = 1) {
       if (varcode == "pr") {
             threshold<-pr.threshold
@@ -34,7 +33,7 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
                               Pth[i,j]<-Ps[nP[i,j]+1]
                               if (Ps[nP[i,j]+1]<=threshold){
                                     ind<-min(which(Ps > threshold & !is.na(Ps)))
-                                    # [Shape parameter  Scale parameter]
+                                    # [Shape parameter Scale parameter]
                                     Os<-sort(obs[,i,j], decreasing = FALSE, na.last = NA)
                                     auxGamma<-fitdistr(Os[(nP[i,j]+1):ind],"gamma")
                                     Ps[(nP[i,j]+1):ind]<-rgamma(ind-nP[i,j], auxGamma$estimate[1], rate = auxGamma$estimate[2])
@@ -69,7 +68,7 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
             }
       }
       if (method == "qqmap") {
-            if (varcode != "pr") {	
+            if (varcode != "pr") {      
                   for (i in 1:dim(sim)[2]) {
                         for (j in 1:dim(sim)[3]) {
                               if (any(!is.na(pred[,i,j])) & any(!is.na(obs[,i,j]))) {

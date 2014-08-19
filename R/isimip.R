@@ -1,41 +1,3 @@
-#if (length(dimDiff)==0){
-#  F <- calibrateProj(obs$Data, aperm(pred$Data,dimPerm), aperm(sim$Data,dimPerm), method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
-#  sim$Data<-aperm(F,c(dimPerm[2:length(dim(obs$Data))],dimPerm[1]))
-#}else{
-#  P<-aperm(pred$Data,dimPerm)
-#  F<-aperm(sim$Data,dimPerm)
-#}
-#if (length(dimDiff)==1){
-#  for (n in 1:dim(sim$Data)[length(dim(obs$Data))+1]){
-#    F1 <- calibrateProj(obs$Data, P[,,,n], F[,,,n], method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
-#    sim$Data[,,,n]<-aperm(F1,c(dimPerm[2:length(dim(obs$Data))],dimPerm[1]))
-#  }
-#}
-#if (length(dimDiff)==2){
-#  for (n in 1:dim(sim$Data)[length(dim(obs$Data))+1]){
-#    for (m in 1:dim(sim$Data)[length(dim(obs$Data))+2]){
-#      F1 <- calibrateProj(obs$Data, P[,,,n,m], F[,,,n,m], method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
-#      sim$Data[,,,n,m]<-aperm(F1,c(dimPerm[2:length(dim(obs$Data))],dimPerm[1]))
-#    }
-#  }
-#}
-#if (length(dimDiff)==3){
-#  for (n in 1:dim(sim$Data)[length(dim(obs$Data))+1]){
-#    for (m in 1:dim(sim$Data)[length(dim(obs$Data))+2]){
-#      for (t in 1:dim(sim$Data)[length(dim(obs$Data))+3]){
-#        F1 <- calibrateProj(obs$Data, P[,,,n,m,t], F[,,,n,m,t], method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
-#        sim$Data[,,,n,m,t]<-aperm(F1,c(dimPerm[2:length(dim(obs$Data))],dimPerm[1]))
-#      }
-#    }
-#  }
-#}
-#if (any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))){
-#  attr(sim$Data, "threshold") <-  threshold
-#}
-#attr(sim$Data, "correction") <-  method
-#return(sim)
-#}
-
 #################################################################################################################
 # ISI-MIP Bias correction method (http://www.pik-potsdam.de/research/climate-impacts-and-vulnerabilities/research/rd2-cross-cutting-activities/isi-mip/about/isi-mip-fast-track)
 # Citation: Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F.: A trend-preserving bias correction ? the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236, doi:10.5194/esd-4-219-2013, 2013.
@@ -49,10 +11,9 @@
 #' @family downscaling
 #' @family calibration
 #' @export
-#' @references 
+#' @references
 #' Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F.: A trend-preserving bias correction -- the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236, doi:10.5194/esd-4-219-2013, 2013
 #'
-
 isimip <- function (obs, pred, sim, pr.threshold = 1) {
       datesObs <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
       datesObs<-cut(datesObs, "month")
@@ -491,13 +452,11 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
                   indTimeObs<-as.matrix(expand.grid(indTimeObs))
                   obs$Data[indTimeFor] <- obs$Data[indTimeFor]/monthlyObs[indTimeObs]
             }
-            
             indEstObs <- rep(list(bquote()), length(setdiff(1:length(dimObs),obs.time.index)))
             for (d in 1:length(setdiff(1:length(dimObs),obs.time.index))){
                   indEstObs[[d]] <- 1:dimObs[setdiff(1:length(dimObs),obs.time.index)[d]]
             }
             indEstObs<-as.matrix(expand.grid(indEstObs))
-            
             indEstPrd <- rep(list(bquote()), length(setdiff(1:length(dimPred),pred.time.index)))
             for (d in 1:length(setdiff(1:length(dimPred),pred.time.index))){
                   indEstPrd[[d]] <- 1:dimPred[setdiff(1:length(dimPred),pred.time.index)[d]]
@@ -518,18 +477,18 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
                               indTimePred<-as.matrix(expand.grid(indTimePred))
                               indTimeObs <- rep(list(bquote()), length(dimObs))
                               indTimeObs[[obs.time.index]] <- indMonth
-                              indTimeObs[match(attr(pred$Data, "dimensions")[setdiff(1:length(dimPred),pred.time.index)], attr(obs$Data, "dimensions"))[!is.na(match(attr(pred$Data, "dimensions")[setdiff(1:length(dimPred),pred.time.index)], attr(obs$Data, "dimensions")))]] <-         as.list(indEstPrd[i,match(attr(obs$Data, "dimensions")[setdiff(1:length(dimObs),obs.time.index)], attr(pred$Data, "dimensions")[setdiff(1:length(dimPred),pred.time.index)])])
+                              indTimeObs[match(attr(pred$Data, "dimensions")[setdiff(1:length(dimPred),pred.time.index)], attr(obs$Data, "dimensions"))[!is.na(match(attr(pred$Data, "dimensions")[setdiff(1:length(dimPred),pred.time.index)], attr(obs$Data, "dimensions")))]] <- as.list(indEstPrd[i,match(attr(obs$Data, "dimensions")[setdiff(1:length(dimObs),obs.time.index)], attr(pred$Data, "dimensions")[setdiff(1:length(dimPred),pred.time.index)])])
                               indTimeObs<-as.matrix(expand.grid(indTimeObs))
                               indTimeFor <- rep(list(bquote()), length(dimFor))
                               indTimeFor[[sim.time.index]] <- indMonthFor
                               indTimeFor[setdiff(1:length(dimFor),sim.time.index)] <- as.list(indEstPrd[i,])
                               indTimeFor<-as.matrix(expand.grid(indTimeFor))
                               if (min(c(mean(pred$Data[indTimePred], na.rm = TRUE), mean(obs$Data[indTimeObs], na.rm = TRUE)), na.rm = TRUE)>0.01){
-                                    #          optAdjust=statset('Robust','on');
+                                    # optAdjust=statset('Robust','on');
                                     auxO <- sort(obs$Data[indTimeObs], decreasing = FALSE, na.last = NA)
                                     auxP <- sort(pred$Data[indTimePred], decreasing = FALSE, na.last = NA)
-                                    fit1 = nls(auxO ~ (q1+q2*(auxP-min(auxP, na.rm = TRUE)))*(1-exp(-(auxP-min(auxP, na.rm = TRUE))/q3)),start=list(q1=runif(1, min = 0, max = 1),q2=runif(1, min = 0, max = 1),q3=runif(1, min = 0, max = 1)*(max(auxP, na.rm = TRUE)-min(auxP, na.rm = TRUE))),  na.action = na.omit)
-                                    fit2 = nls(auxO ~ (q1+q2*(auxP-min(auxP, na.rm = TRUE)))*(1-exp(-(auxP-min(auxP, na.rm = TRUE))/q3)),start=list(q1=runif(1, min = 0, max = 1),q2=runif(1, min = 0, max = 1),q3=runif(1, min = 0, max = 1)*(max(auxP, na.rm = TRUE)-min(auxP, na.rm = TRUE))),  na.action = na.omit)
+                                    fit1 = nls(auxO ~ (q1+q2*(auxP-min(auxP, na.rm = TRUE)))*(1-exp(-(auxP-min(auxP, na.rm = TRUE))/q3)),start=list(q1=runif(1, min = 0, max = 1),q2=runif(1, min = 0, max = 1),q3=runif(1, min = 0, max = 1)*(max(auxP, na.rm = TRUE)-min(auxP, na.rm = TRUE))), na.action = na.omit)
+                                    fit2 = nls(auxO ~ (q1+q2*(auxP-min(auxP, na.rm = TRUE)))*(1-exp(-(auxP-min(auxP, na.rm = TRUE))/q3)),start=list(q1=runif(1, min = 0, max = 1),q2=runif(1, min = 0, max = 1),q3=runif(1, min = 0, max = 1)*(max(auxP, na.rm = TRUE)-min(auxP, na.rm = TRUE))), na.action = na.omit)
                                     if (min(c(sum(resid(fit1)^2),sum(resid(fit2)^2)), na.rm = TRUE)<=1e-8){
                                           if (sum(resid(fit1)^2)<=sum(resid(fit2)^2)){
                                                 fit<-fit1
@@ -575,8 +534,8 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
                         }
                   }
             }
-            attr(sim$Data, "threshold") <-  threshold
+            attr(sim$Data, "threshold") <- threshold
       }
-      attr(sim$Data, "correction") <-  "ISI-MIP"
+      attr(sim$Data, "correction") <- "ISI-MIP"
       return(sim)
 }
