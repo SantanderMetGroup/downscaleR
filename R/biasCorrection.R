@@ -87,7 +87,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
       #                   }
       #             }
       #       }
-      if (any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))){
+      if (any(grepl(obs$Variable$varName,c("^pr$","^tp$","precipitation","precip")))){
             attr(sim$Data, "threshold") <-  threshold
       }
       attr(sim$Data, "correction") <-  method
