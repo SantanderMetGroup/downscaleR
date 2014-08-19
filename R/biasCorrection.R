@@ -1,11 +1,24 @@
 #' @title Bias correction methods
 #' @description Implementation of several standard bias correction methods
+#' 
+#' @template templateObsPredSim
+#' @param method method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
+#'  \code{"scaling"}, \code{"unbiasing"} and \code{"piani"}. See details.
+#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
+#'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).
+#'  
+#'  @details ~~ Details on the different methods here
+#'  
+#'  @return A calibrated object of the same spatio-temporal extent of the input field
+
 #' @author S. Herrera \email{sixto@@predictia.es}
 #' @export
+#' @family downscaling
+#' @family calibration
+#' @references ~References to the different methods
 #' 
 
 biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), pr.threshold = 1) {
-      
       method<-match.arg(method, choices = c("qqmap", "delta", "unbiasing", "piani", "scaling"))
       threshold<-pr.threshold
       dimObs<-dim(obs$Data)

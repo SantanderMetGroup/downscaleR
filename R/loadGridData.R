@@ -1,6 +1,6 @@
-#' @title Load a gridded dataset
+#' @title Load a field from a dataset
 #' 
-#' @description Load a user-defined spatio-temporal slice from a gridded dataset
+#' @description Load a user-defined spatio-temporal slice (a field) from a gridded dataset
 #' 
 #' @import rJava
 
@@ -31,6 +31,17 @@
 #' @family loading
 #' @family loading.grid
 #' @family homogenization
+#' 
+#' @examples \dontrun{
+#' # Load air temperature at 850 millibar isobaric surface pressure level from the built-in NCEP dataset,
+#' # for the Iberian Peninsula in summer (JJA):
+#' ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+#' field <- loadGridData(ncep, var = "ta@@85000", dictionary = TRUE, lonLim = c(-10,5),
+#'    latLim = c(35.5, 44.5), season = 6:8, years = 1981:2010)
+#' str(field)   
+#' plotMeanField(field)
+#' }
+#' 
 
 loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
                          latLim = NULL, season = NULL, years = NULL, time = "none") {

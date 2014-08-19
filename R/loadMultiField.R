@@ -55,6 +55,17 @@
 #' @family multifield
 #' 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' 
+#' @examples \dontrun{
+#' # Load three typical predictors for precipitation on the Iberian Peninsula in winter (DJF),
+#' # on a regular squared grid of 0.5 deg (bilinearly interpolated):
+#' ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+#' multifield <- loadMultiField(ncep, vars = c("hus@@85000", "ta@@85000", "psl"), 
+#'          dictionary = TRUE, lonLim = c(-10,5), latLim = c(35.5, 44.5), season = c(12,1,2),
+#'          years = 1991:2010, new.grid = list(x = c(-10,5,.5), y = c(35.5,44.5,.5)))
+#' plotMeanField(multifield)
+#' }
+#'           
 
 loadMultiField <- function(dataset, vars, dictionary = TRUE, lonLim = NULL, latLim = NULL, season = NULL, years = NULL, time = "none", new.grid = list(x = NULL, y = NULL), interp.method = "bilinear") {
       if (length(vars) == 1) {
