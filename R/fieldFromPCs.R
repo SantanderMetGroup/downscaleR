@@ -27,7 +27,7 @@
 #' @examples \dontrun{
 #' # First a multifield containing a set of variables is loaded (e.g. data for spring spanning the 30-year period 1981--2010):
 #' ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-#' multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"), season = c(3:5), years = 1981:2010)
+#' multifield <- loadMultiField(ncep, vars = c("hus@@85000", "ta@@85000", "psl"), season = c(3:5), years = 1981:2010)
 #' # In this example, we retain the first 10 PCs
 #' pca <- prinComp(multifield, n.eofs = 10)
 #' # We now recover the sea-level pressure field from the PCs:
