@@ -21,9 +21,9 @@ Currently accepted choices are \code{"field"} (the default) and \code{"gridbox"}
 }
 \value{
 A list of \emph{N + 1} elements for multifields, where \emph{N} is the number of input variables used
- and the last element contains the results of the combined PCA (See details). In case of single fields
- (1 variable only), a list of length 1. For each element of the list, the following
- objects are returned:
+ and the last element contains the results of the combined PCA (See details). The list is named as the variables,
+ including the last element named \code{"COMBINED"}. In case of single fields (1 variable only), a list of length 1
+  (without the combined element). For each element of the list, the following objects are returned:
 
  \itemize{
  \item \code{PCs}: A matrix of principal components, arranged in columns by decreasing importance order
@@ -67,6 +67,29 @@ The method used is returned as a global attribute of the returned object (\code{
 When dealing with multifield data, apart from the PCA analysis performed on each variable indivisually,
 a combined analysis considering all variables together is done. This is always returned in the last element
 of the output list.
+}
+\examples{
+\dontrun{
+# First a multifield containing a set of variables is loaded (e.g. data for spring spanning the 30-year period 1981--2010):
+ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"), season = c(3:5), years = 1981:2010)
+# In this example, we retain the PCs explaining the 99\\\% of the variance
+pca <- prinComp(multifield, v.exp = .99)
+# Note that, apart from computing the principal components and EOFs for each field, it also returns, in the last element of the output list,
+# the results of a PC analysis of all the variables combined:
+str(pca)
+# The different attributes of the pca object provide information regarding the variables involved and the geo-referencing information
+attributes(pca)
+# In addition, for each variable (and their combination), the scaling and centering parameters are also returned.
+# These are either a single value in case of field scaling (the default), or a vector of values, one for each grid-cell, for the
+# gridbox scaling. For instance, the parameters for the specific humidity field are:
+attributes(pca$hus)$`scaled:center`
+attributes(pca$hus)$`scaled:scale`
+# In addition, the (cumulative) explained variance of each PC is also returned:
+vexp <- attributes(pca$hus)$explained_variance
+# The classical "scree plot":
+barplot(1-vexp, names.arg = paste("PC",1:length(vexp)), las = 2, ylab = "Fraction of explained variance")
+}
 }
 \author{
 J. Bedia \email{joaquin.bedia@gmail.com}
