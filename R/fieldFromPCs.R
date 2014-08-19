@@ -24,14 +24,45 @@
 #' @family loading.grid
 #' @family multifield
 #'  
-
-
-# prinCompObj <- prinComp(gridData.mf, v.exp = .95)
-# str(prinCompObj)
-# var = "q850mb"
+#' @examples \dontrun{
+#' # First a multifield containing a set of variables is loaded (e.g. data for spring spanning the 30-year period 1981--2010):
+#' ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+#' multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"), season = c(3:5), years = 1981:2010)
+#' # In this example, we retain the first 10 PCs
+#' pca <- prinComp(multifield, n.eofs = 10)
+#' # We now recover the sea-level pressure field from the PCs:
+#' names(pca)
+#' psl2 <- fieldFromPCs(pca, "psl")
+#' str(psl2)
+#' # The attributes of psl2 indicate that this is a reconstructed field from 10 PCs, explaining 99\% of the variance:
+#' attributes(psl2)
+#'multifield$Variable$varName
+#'# psl is the 3rd one
+#'# The mean fields of both the original and the reconstructed fields is computed:
+#'psl.orig <- multifield$Data[3,,,]
+#'psl.reconstructed <- psl2$Data
+#'z <- apply(psl.orig, c(3,2), mean)
+#'z1 <- apply(psl.reconstructed, c(3,2), mean)
+#'# These are the spatial coordinates
+#'x <- psl2$xyCoords$x
+#'y <- psl2$xyCoords$y
+#'par(mfrow = c(2,2))
+#'image.plot(x,y,z, asp = 1, horizontal = TRUE)
+#'world(add = TRUE)
+#'title("Original SLP field")
+#'image.plot(x,y,z1, asp = 1, horizontal = TRUE)
+#'world(add = TRUE)
+#'title("Reconstructed SLP field")
+#'mtext("(Using the first 10 PCs)")
+#'image.plot(x,y,z1-z, asp = 1)
+#'world(add = TRUE)
+#'title("Difference (bias)")
+#'par(mfrow = c(1,1))
+#'}
+#'
 
 fieldFromPCs <- function(prinCompObj, var) {
-      varNames <- attributes(prinCompObj)$variables #[1:n.vars]
+      varNames <- attributes(prinCompObj)$names #[1:n.vars]
       if (var == "COMBINED") {
             stop("The combined field cannot be reconstructed (only individual variables)")
       }
@@ -54,11 +85,5 @@ fieldFromPCs <- function(prinCompObj, var) {
       attr(out, "explained_variance") <- round(tail(exv, 1),2)
       return(out)
 }
-
-# a <- fieldFromPCs(prinComp(gridData.mf, v.exp = .99), "q850mb")
-# str(a)
-# plotMeanField(gridData.mf)
-# gridData <- a
-
-# plotMeanField(gridData.mf)
+# End
 
