@@ -27,7 +27,7 @@ multiPlot <- function(gridData, split.dim.name, titles) {
       par(mfrow = dim(mat))
       for (i in 1:n) {
             aux <- asub(gridData$Data, idx = i, dims = index)
-            mar <- grep("lon|lat", dimNames[-index])
+            mar <- match(c("lon", "lat"), dimNames[-index])
             aux <- apply(aux, mar, mean, na.rm = TRUE)
             image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1, horizontal = TRUE, cex.axis = .75) #, axes = axes)
             title("")
