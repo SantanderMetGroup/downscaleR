@@ -44,8 +44,9 @@
 #' plotMeanField(t1000.djf.05)
 #' par(mfrow=c(1,1))
 #' # New attributes "interpolation", "resX" and "resY" indicate that the original data have been interpolated
-#' str(t1000.djf.05$xyCoords)
+#' attributes(t1000.djf.05$xyCoords)
 #' }
+
 
 interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method = c("bilinear", "nearest")) {
       if (is.null(new.grid)) {
@@ -70,6 +71,9 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
                   if (length(new.grid$x) != 2 | new.grid$x[2] < new.grid$x[1]) {
                         stop("Invalid grid definition in X")
                   }
+                  if ((new.grid$x[1] < x[1] & new.grid$x[2] < x[1]) | (new.grid$x[1] > x[1] & new.grid$x[1] > tail(x, 1))) {
+                        stop("The input and output grids do not overlap\nCheck the input and output grid definitions")
+                  }
                   if (new.grid$x[1] < floor(x[1]) | new.grid$x[2] > ceiling(tail(x, 1))) {
                         warning("The new longitudes are outside the data extent")
                   }
@@ -84,6 +88,9 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
             } else {
                   if (length(new.grid$y) != 2 | new.grid$y[2] < new.grid$y[1]) {
                         stop("Invalid grid definition in Y")
+                  }
+                  if ((new.grid$y[1] < y[1] & new.grid$y[2] < y[1]) | (new.grid$y[1] > y[1] & new.grid$y[1] > tail(y, 1))) {
+                        stop("The input and output grids do not overlap\nCheck the input and output grid definitions")
                   }
                   if (new.grid$y[1] < floor(y[1]) | new.grid$y[2] > ceiling(tail(y, 1))) {
                         warning("The new latitudes are outside the data extent")
@@ -188,6 +195,13 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
       attr(gridData$xyCoords, "interpolation") <-  method
       attr(gridData$xyCoords, "resX") <- abs(grid.list$x[2] - grid.list$x[1])
       attr(gridData$xyCoords, "resY") <- abs(grid.list$y[2] - grid.list$y[1]) 
+      # Dimension ordering
+      tab <- c("member", "time", "level", "lat", "lon")
+      x <- attr(gridData$Data, "dimensions")
+      b <- na.exclude(match(tab, x))
+      x <- x[b]
+      gridData$Data <- aperm(gridData$Data, perm = b)    
+      attr(gridData$Data, "dimensions")  <- x
       message("[", Sys.time(), "] Done")
       return(gridData)
 }
