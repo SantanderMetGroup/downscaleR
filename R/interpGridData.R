@@ -63,11 +63,9 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
       # Definition of new grid
       if (is.null(new.grid$x)) {
             new.grid.x <- x
-            #             new.grid.x <- gridData$xyCoords$x
       } else {
             if (!exists("resX", where = attributes(new.grid))) {
-#                   new.grid.x <- do.call("seq", as.list(new.grid$x))
-                  new.grid.x <- new.grid$x
+                  new.grid.x <- do.call("seq", as.list(new.grid$x))
             } else {
                   if (length(new.grid$x) != 2 | new.grid$x[2] < new.grid$x[1]) {
                         stop("Invalid grid definition in X")
@@ -80,11 +78,9 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
       }
       if (is.null(new.grid$y)) {
             new.grid.y <- y
-            #             new.grid.y <- gridData$xyCoords$y
       } else {
             if (!exists("resY", where = attributes(new.grid))) {
-#                   new.grid.y <- do.call("seq", as.list(new.grid$y))
-                  new.grid.y <- new.grid$y
+                  new.grid.y <- do.call("seq", as.list(new.grid$y))
             } else {
                   if (length(new.grid$y) != 2 | new.grid$y[2] < new.grid$y[1]) {
                         stop("Invalid grid definition in Y")
@@ -123,11 +119,7 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
                         z <- t(z)      
                   }
                   if (method == "bilinear") {
-                        int <- tryCatch({
-                              interp.surface.grid(list("x" = x, "y" = y, "z" = z), grid.list)$z
-                        },finally = {
-                              interp.surface(list("x" = x, "y" = y, "z" = z), array(c(grid.list$x,grid.list$y),dim = c(length(grid.list$x),2)))
-                        })
+                        int <- interp.surface.grid(list("x" = x, "y" = y, "z" = z), grid.list)$z
                   }
                   if (method == "nearest") {
                         int <- matrix(nrow = length(grid.list$x), ncol = length(grid.list$y))
@@ -164,13 +156,8 @@ interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method
                         if (isTRUE(transpose)) {
                               z <- t(z)      
                         }
-                        
                         if (method == "bilinear") {
-                              int <- tryCatch({
-                                    interp.surface.grid(list("x" = x, "y" = y, "z" = z), grid.list)$z
-                              },finally = {
-                                    interp.surface(list("x" = x, "y" = y, "z" = z), array(c(grid.list$x,grid.list$y),dim = c(length(grid.list$x),2)))
-                              })
+                              int <- interp.surface.grid(list("x" = x, "y" = y, "z" = z), grid.list)$z
                         }
                         if (method == "nearest") {
                               int <- matrix(nrow = length(grid.list$x), ncol = length(grid.list$y))
