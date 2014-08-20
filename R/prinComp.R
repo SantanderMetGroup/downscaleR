@@ -1,5 +1,5 @@
-#' @title Principal Component Analysis of field/multifield data
-#' @description Performs a Principal Component Analysis of field or multifield data
+#' @title Principal Component Analysis of field/multifield/multimember data
+#' @description Performs a Principal Component Analysis of field, multifield or multi-member data
 #' 
 #' @param gridData A multifield object or a single field as returned by loadGridData
 #' @param n.eofs Number of EOFs to be retained. Default to \code{NULL}, indicating

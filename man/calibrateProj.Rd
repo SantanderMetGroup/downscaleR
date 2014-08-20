@@ -19,10 +19,10 @@ calibrateProj(obs, pred, sim, method = c("qqmap", "delta", "scaling",
 
 \item{varcode}{Variable code. This is not the variable itself to be corrected, but
 rather it referes to its nature and distributional properties. For instance, \code{"tas"} applies for
- temperature-like variables (i.e.: unbounded gaussian variables that can take both negative and positive values),
-  \code{"hurs"} for relative-humidity-like variables (i.e., bounded by both sides, with a maximum value of 1 -100-
-   and a minimum of zero, with no negatives), \code{"wss"} for wind-like variables (no possible values below zero,
-   but without an upper bound) and \code{"pr"}, specifically for precipitation.}
+temperature-like variables (i.e.: unbounded gaussian variables that can take both negative and positive values),
+\code{"hurs"} for relative-humidity-like variables (i.e., bounded by both sides, with a maximum value of 1 -100-
+and a minimum of zero, with no negatives), \code{"wss"} for wind-like variables (no possible values below zero,
+but without an upper bound) and \code{"pr"}, specifically for precipitation.}
 
 \item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
 \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}

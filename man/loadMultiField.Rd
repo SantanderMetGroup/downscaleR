@@ -68,11 +68,11 @@ If only one (either x or y, but not both) of the components of the \code{new.gri
 \examples{
 \dontrun{
 # Load three typical predictors for precipitation on the Iberian Peninsula in winter (DJF),
-# on a regular squared grid of 0.5 deg (bilinearly interpolated):
+# on a regular squared grid of 1 deg (bilinearly interpolated):
 ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"),
          dictionary = TRUE, lonLim = c(-10,5), latLim = c(35.5, 44.5), season = c(12,1,2),
-         years = 1991:2010, new.grid = list(x = c(-10,5,.5), y = c(35.5,44.5,.5)))
+         years = 1991:2010, new.grid = list(x = c(-10,5,1), y = c(35.5,44.5,1)))
 plotMeanField(multifield)
 }
 }
@@ -90,9 +90,10 @@ Other loading: \code{\link{dataInventory}};
 
 Other loading.grid: \code{\link{fieldFromPCs}};
   \code{\link{getGrid}}; \code{\link{interpGridData}};
-  \code{\link{loadGridData}}; \code{\link{prinComp}}
+  \code{\link{loadGridData}}; \code{\link{plotEOF}};
+  \code{\link{prinComp}}
 
 Other multifield: \code{\link{fieldFromPCs}};
-  \code{\link{prinComp}}
+  \code{\link{plotEOF}}; \code{\link{prinComp}}
 }
 
