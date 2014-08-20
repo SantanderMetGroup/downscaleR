@@ -56,7 +56,7 @@ t1000.djf.05 <- interpGridData(t1000.djf, new.grid = list(x = c(-10,5,.5), y = c
 plotMeanField(t1000.djf.05)
 par(mfrow=c(1,1))
 # New attributes "interpolation", "resX" and "resY" indicate that the original data have been interpolated
-str(t1000.djf.05$xyCoords)
+attributes(t1000.djf.05$xyCoords)
 }
 }
 \author{

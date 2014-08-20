@@ -88,7 +88,7 @@ attributes(pca$hus)$`scaled:scale`
 # In addition, the (cumulative) explained variance of each PC is also returned:
 vexp <- attributes(pca$hus)$explained_variance
 # The classical "scree plot":
-barplot(1-vexp, names.arg = paste("PC",1:length(vexp)), las = 2, ylab = "Fraction of explained variance")
+barplot(1-vexp, names.arg = paste("PC",1:length(vexp)), las = 2, ylab = "Fraction of unexplained variance")
 }
 }
 \author{

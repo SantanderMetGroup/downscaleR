@@ -19,6 +19,8 @@
 #' 
 #' @export
 #' 
+#' @importFrom abind abind
+#' 
 #' @author J. bedia \email{joaquin.bedia@@gmail.com}
 #' 
 #' @seealso \code{\link[ecomsUDG.Raccess]{loadECOMS}}, \code{\link{loadMultifield}}
