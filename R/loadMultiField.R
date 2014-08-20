@@ -25,12 +25,13 @@
 #'  Options include one to several (contiguous) months. Default to \code{NULL}, indicating a full year selection (same as \code{season = 1:12}).
 #' @param years Optional vector of years to select. Default (\code{NULL}) to all available years. If the requested variable is static (e.g. orography)
 #'  it will be ignored.  
-#'  @param time A character vector indicating the temporal filtering/aggregation of the output data.
-#'   Default to \code{"none"}, which returns the original time series as stored in the dataset. See \code{\link{loadGridData}}
-#'   for further details.
-#' \code{"00"}, \code{"06"}, \code{"12"} and \code{"18"}. If daily aggregated data are 
-#' required use \code{"DD"}. If the requested variable is static (e.g. orography) it will be ignored. 
-#' See details for time aggregation options
+#'  @param time A character vector indicating the temporal filtering/aggregation of the output data. 
+#'  (See \code{\link{loadGridData}} for further details). This vector should have
+#'  the same length as the number of variables in \code{vars}, each one referring to the temporal aggregation of each one (See details).
+#' . If a single value is assigned (default), then this is assumed to apply for all variables requested. Default to \code{"none"}, 
+#' which returns the original time series as stored in the dataset for all the variables requested, but note that different time
+#'  definitions for different variables may lead to incompatible fields to create a multifield (e.g. 6-hourly data without aggregation
+#'   --\code{time = "none"}-- cannot be combined with daily mean variables because they would lead to time series of differing lengths).
 #' @param new.grid Definition of the new grid, in the form of a list with the x and y components, in this order.
 #' If no \code{new.grid} is introduced, then the grid of the first variable in \code{vars} is taken. See details.
 #' @param interp.method Interpolation method. Currently acceted values are \code{"bilinear"} and \code{"nearest"}. 
@@ -39,13 +40,19 @@
 #' @return A list of components similar to the output of \code{\link{loadGridData}}, excepting for the fact that within the
 #'  \code{Variable} slot, there is more than one variables in the \code{varName} and \code{level} elements. Also, the N-dimensional 
 #'  array of the \code{Data} slot contains one additional dimension, corresponding to each of the variables loaded, following
-#'   the order in the \code{Variable} slot info.
+#'   the order in the \code{Variable} slot info. In addition, the \code{Dates} element is now a list of the same length as the number
+#'    of fields composing the multifield, containing each one the \code{start} and \code{end} dates for each variable (see details).
 #' 
 #' @details In essence, the function does as many calls to \code{\link{loadGridData}} as variables indicated in
 #'  the \code{vars} argument, and then performs the interpolation and/or spatial checks to ensure the spatial consistency, via
 #'  \code{\link{interpGridData}}. See \code{\link{loadGridData}} for details on input parameters for time, geolocation and homogenization parameters.
 #' If only one (either x or y, but not both) of the components of the \code{new.grid} are provided, the missing one will be
 #'  inherited from the grid of the first variable in \code{vars}, via \code{\link{getGrid}}.
+#'  \code{loadMultiField} allows the inclusion of predictors with different verification times and temporal aggregations
+#'  (as often used in downscaling applications). For instance, instantaneous geopotential at 12:00 is compatible with
+#'  mean daily surface temperature, always that both variables correspond to the same days. It is not possible to load
+#'  variables of different time resolutions (for instance, 6-hourly data is incompatible with daily values, because their 
+#'  respective time series have different lengths).
 #' 
 #' @export
 #' 
@@ -69,13 +76,16 @@
 
 loadMultiField <- function(dataset, vars, dictionary = TRUE, lonLim = NULL, latLim = NULL, season = NULL, years = NULL, time = "none", new.grid = list(x = NULL, y = NULL), interp.method = "bilinear") {
       if (length(vars) == 1) {
-            stop("One single variable is not a multi-field.\nUse 'loadGridData' instead")
+            stop("One single variable is not a multifield.\nUse 'loadGridData' instead")
       }
       names(new.grid) <- c("x", "y")
+      if (length(time) == 1) {
+            time <- rep(time, length(vars))
+      }
       # loading vars
       var.list <- lapply (1:length(vars), function(x) {
             message("[", Sys.time(), "] Loading predictor ", x, " (", vars[x], ") out of ", length(vars))
-            suppressMessages(loadGridData(dataset, vars[x], dictionary, lonLim, latLim, season, years, time))
+            suppressMessages(loadGridData(dataset, vars[x], dictionary, lonLim, latLim, season, years, time[x]))
       })
       # re-gridding
       if (is.null(new.grid$x) & !is.null(new.grid$y)) {
@@ -131,12 +141,21 @@ loadMultiField <- function(dataset, vars, dictionary = TRUE, lonLim = NULL, latL
             return(ifelse(is.null(var.list[[x]]$Variable$level), NA, var.list[[x]]$Variable$level))
       }))
       Variable <- list("varName" = varNames, "isStandard" = isStandard, "level" = level)
-      Dates <- var.list[[1]]$Dates
+      # Dates
+      dates.list <- lapply(1:length(var.list), function(x) {
+            var.list[[x]]$Dates
+      })
+#       Dates <- var.list[[1]]$Dates
       xyCoords <- var.list[[1]]$xyCoords
       var.list <- lapply(1:length(var.list), function(x) {
             var.list[[x]] <- var.list[[x]]$Data
       })
       dimNames <- c("var", attr(var.list[[1]], "dimensions"))
+      for (i in 2:length(var.list)) {
+            if (!identical(dim(var.list[[1]])[1], dim(var.list[[i]])[1])) {
+                  stop("The input fields have different temporal dimension length")
+            }
+      }
       Data <- unname(do.call("abind", c(var.list, along = -1)))
       var.list <- NULL
       attr(Data, which = "dimensions") <- dimNames 
@@ -150,9 +169,10 @@ loadMultiField <- function(dataset, vars, dictionary = TRUE, lonLim = NULL, latL
             attr(Data, "dimensions")  <- dimNames
       }
       # Source Dataset and other metadata 
-      out <- list("Variable" = Variable, "xyCoords" = xyCoords, "Data" = Data, "Dates" = Dates)
+      out <- list("Variable" = Variable, "xyCoords" = xyCoords, "Data" = Data, "Dates" = dates.list)
       attr(out, "dataset") <- dataset
       message("[", Sys.time(), "] Done.")
       return(out)
 }
 # End
+
