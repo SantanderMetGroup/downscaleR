@@ -4,7 +4,8 @@
 #' principal components analysis
 #' 
 #' @param prinCompObj A EOF analysis object as returned by \code{\link{prinComp}}
-#' @param var Character string indicating the variable to be re-constructed
+#' @param var Character string indicating the variable to be re-constructed. In case of
+#' PCA analyses performed on a single variable (either multimember or not), this can be omitted.
 #' 
 #' @return A list similar to the \code{\link{loadGridData}} output, but simplified. See details.
 #' 
@@ -21,8 +22,7 @@
 #' 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' 
-#' @family loading.grid
-#' @family multifield
+#' @seealso \code{\link{prinComp}}, \code{\link{plotEOF}}
 #' 
 #' @examples \dontrun{
 #' # First a multifield containing a set of variables is loaded (e.g. data for spring spanning the 30-year period 1981--2010):
@@ -60,31 +60,66 @@
 #' par(mfrow = c(1,1))
 #' }
 #' 
- 
+#' # An example of multimember reconstruction from a multimember PC analysis:
+#' data(tasmax_forecast)
+#' # Note that multimember pca analysis takes some time, depending on the computer
+#' pca2 <- prinComp(tasmax_forecast, n.eofs = 10)
+#' tasmax_recovered <- fieldFromPCs(pca2)
+#' plotMeanField(tasmax_recovered, multi.member = TRUE)
+#' # Also note that now the length of the "nPCs" and "explained_variance" matches the number of members
+#' attributes(tasmax_recovered)
+#' 
+
 fieldFromPCs <- function(prinCompObj, var) {
-      varNames <- attributes(prinCompObj)$variables #[1:n.vars]
-      if (var == "COMBINED") {
-            stop("The combined field cannot be reconstructed (only individual variables)")
-      }
-      var.ind <- match(var, varNames)
-      if(is.na(var.ind)) {
-            stop("Variable not found.\nCheck the 'variables' attribute of the input")
+      varNames <- attributes(prinCompObj)$names #[1:n.vars]
+      if (length(varNames) == 1L) {
+            var <- varNames
+            var.ind <- 1
+      } else {
+            if (var == "COMBINED") {
+                  stop("The combined field can't be reconstructed (only individual variables)")
+            }
+            var.ind <- match(var, varNames)
+            if(is.na(var.ind)) {
+                  stop("Variable not found.\nCheck the 'variables' attribute of the input")
+            }
       }
       scaling <- attributes(prinCompObj)$"scaled:method"
       x <- attributes(prinCompObj)$xCoords
       y <- attributes(prinCompObj)$yCoords
       pco <- prinCompObj[[var.ind]]
       prinCompObj <- NULL
-      scale <- attributes(pco)$"scaled:scale"
-      center <- attributes(pco)$"scaled:center"
-      exv <- attributes(pco)$explained_variance
-      Xhat <- (pco$PCs %*% t(pco$EOFs)) * scale + center
-      Data <- mat2Dto3Darray(Xhat, x, y)
-      out <- list("Variable" = list("varName" = var), "Data" = Data, "xyCoords" = list("x" = x, "y" = y))
-      attr(out, "nPCs") <- length(exv)
-      attr(out, "explained_variance") <- round(tail(exv, 1),2)
+      scale <- lapply(1:length(pco), function(x) attributes(pco[[x]])$"scaled:scale")
+      center <- lapply(1:length(pco), function(x) attributes(pco[[x]])$"scaled:center")
+      exv <- lapply(1:length(pco), function(x) attributes(pco[[x]])$"explained_variance")
+      level <- attributes(pco)$level  
+      Members <- names(pco)
+      aux.list  <- lapply(1:length(pco), function(n) {
+            Xhat <- (pco[[n]]$PCs %*% t(pco[[n]]$EOFs)) * scale[[n]] + center[[n]]
+            out <- mat2Dto3Darray(Xhat, x, y)
+            return(out)
+      })
+      pco <- NULL
+      dimNames <- attr(aux.list[[1]], "dimensions")
+      Data <- unname(do.call("abind", c(aux.list, along = -1)))
+      if (identical(Data, drop(Data))) {
+            dimNames <- append(dimNames, "member", after = 0)
+            mm <- TRUE
+      } else {
+            Data <- drop(Data)
+            mm <- FALSE
+      }
+      attr(Data, "dimensions") <- dimNames
+      out <- list("Variable" = list("varName" = var, "level" = level), "Data" = Data, "xyCoords" = list("x" = x, "y" = y), "Members" = Members)
+      if (!mm) {
+            out <- out[-length(out)]      
+      }
+      attr(out, "nPcs") <- unlist(lapply(1:length(exv), function(x) length(exv[[x]])))
+      attr(out, "explained_variance") <- unlist(lapply(1:length(exv), function(x) round(tail(exv[[x]], 1), 2)))
       return(out)
 }
 # End
+
+
 
 
