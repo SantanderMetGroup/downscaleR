@@ -2,3 +2,4 @@ variable, longname, unit, missing_code, type, source, url
 precip, total precip accumulated in 24 hours, 0.1 mm, NaN, observation, Global Station Network, ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/gsn/
 tmin, minimum daily temperature, 0.1 degC, NaN, observation, Global Station Network, ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/gsn/
 tmax, maximum daily temperature, 0.1 degC, NaN, observation, Global Station Network, ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/gsn/
+tmean, mean daily temperature, 0.1 degC, NaN, observation, Global Station Network, ftp://ftp.ncdc.noaa.gov/pub/data/ghcn/daily/gsn/
