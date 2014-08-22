@@ -95,12 +95,10 @@ Other loading: \code{\link{dataInventory}};
   \code{\link{loadStationData}};
   \code{\link{makeAggregatedDataset}}
 
-Other loading.grid: \code{\link{fieldFromPCs}};
-  \code{\link{getGrid}}; \code{\link{interpGridData}};
-  \code{\link{loadGridData}}; \code{\link{plotEOF}};
-  \code{\link{prinComp}}
+Other loading.grid: \code{\link{getGrid}};
+  \code{\link{interpGridData}}; \code{\link{loadGridData}};
+  \code{\link{plotEOF}}
 
-Other multifield: \code{\link{fieldFromPCs}};
-  \code{\link{plotEOF}}; \code{\link{prinComp}}
+Other multifield: \code{\link{plotEOF}}
 }
 

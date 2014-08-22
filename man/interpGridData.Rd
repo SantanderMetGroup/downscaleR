@@ -63,9 +63,8 @@ attributes(t1000.djf.05$xyCoords)
 J. Bedia \email{joaquin.bedia@gmail.com} and S. Herrera
 }
 \seealso{
-Other loading.grid: \code{\link{fieldFromPCs}};
-  \code{\link{getGrid}}; \code{\link{loadGridData}};
-  \code{\link{loadMultiField}}; \code{\link{plotEOF}};
-  \code{\link{prinComp}}
+Other loading.grid: \code{\link{getGrid}};
+  \code{\link{loadGridData}}; \code{\link{loadMultiField}};
+  \code{\link{plotEOF}}
 }
 

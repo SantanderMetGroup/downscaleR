@@ -8,7 +8,8 @@ fieldFromPCs(prinCompObj, var)
 \arguments{
 \item{prinCompObj}{A EOF analysis object as returned by \code{\link{prinComp}}}
 
-\item{var}{Character string indicating the variable to be re-constructed}
+\item{var}{Character string indicating the variable to be re-constructed. In case of
+PCA analyses performed on a single variable (either multimember or not), this can be omitted.}
 }
 \value{
 A list similar to the \code{\link{loadGridData}} output, but simplified. See details.
@@ -61,17 +62,20 @@ world(add = TRUE)
 title("Difference (bias)")
 par(mfrow = c(1,1))
 }
+
+# An example of multimember reconstruction from a multimember PC analysis:
+data(tasmax_forecast)
+# Note that multimember pca analysis takes some time, depending on the computer
+pca2 <- prinComp(tasmax_forecast, n.eofs = 10)
+tasmax_recovered <- fieldFromPCs(pca2)
+plotMeanField(tasmax_recovered, multi.member = TRUE)
+# Also note that now the length of the "nPCs" and "explained_variance" matches the number of members
+attributes(tasmax_recovered)
 }
 \author{
 J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
-Other loading.grid: \code{\link{getGrid}};
-  \code{\link{interpGridData}}; \code{\link{loadGridData}};
-  \code{\link{loadMultiField}}; \code{\link{plotEOF}};
-  \code{\link{prinComp}}
-
-Other multifield: \code{\link{loadMultiField}};
-  \code{\link{plotEOF}}; \code{\link{prinComp}}
+\code{\link{prinComp}}, \code{\link{plotEOF}}
 }
 

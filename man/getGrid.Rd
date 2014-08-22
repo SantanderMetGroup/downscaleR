@@ -25,9 +25,8 @@ The returned grid object inherits the attributes from the input \code{xyCoords} 
 S. Herrera and J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
-Other loading.grid: \code{\link{fieldFromPCs}};
-  \code{\link{interpGridData}}; \code{\link{loadGridData}};
-  \code{\link{loadMultiField}}; \code{\link{plotEOF}};
-  \code{\link{prinComp}}
+Other loading.grid: \code{\link{interpGridData}};
+  \code{\link{loadGridData}}; \code{\link{loadMultiField}};
+  \code{\link{plotEOF}}
 }
 

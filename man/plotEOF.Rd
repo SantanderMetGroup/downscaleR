@@ -13,9 +13,13 @@ been applied to 1 single field, this argument can be omitted.}
 
 \item{n.eofs}{Number of EOFs to be displayed. Default to NULL, indicating that all computed EOFS
 will be represented}
+
+\item{member}{Default to NULL, indicating that the multimember mean will be represented. Otherwise,
+this is an integer indicating the position of the member whose EOFs are to be displayed}
 }
 \value{
 A plot with as many panels as EOFs requested, in the original units of the variable
+#
 }
 \description{
 Plots an arbitrary number of EOFs. Useful to have a quick overview of the main spatial modes
@@ -49,12 +53,10 @@ plotEOF(pca2, "psl", n.eofs = 2)
 J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
-Other loading.grid: \code{\link{fieldFromPCs}};
-  \code{\link{getGrid}}; \code{\link{interpGridData}};
-  \code{\link{loadGridData}}; \code{\link{loadMultiField}};
-  \code{\link{prinComp}}
+Other loading.grid: \code{\link{getGrid}};
+  \code{\link{interpGridData}}; \code{\link{loadGridData}};
+  \code{\link{loadMultiField}}
 
-Other multifield: \code{\link{fieldFromPCs}};
-  \code{\link{loadMultiField}}; \code{\link{prinComp}}
+Other multifield: \code{\link{loadMultiField}}
 }
 

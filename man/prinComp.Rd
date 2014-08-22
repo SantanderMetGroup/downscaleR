@@ -7,7 +7,7 @@ prinComp(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field",
   "gridbox"))
 }
 \arguments{
-\item{gridData}{A multifield object or a single field as returned by loadGridData}
+\item{gridData}{A field, multifield, multimember field or multimember multifield object}
 
 \item{n.eofs}{Number of EOFs to be retained. Default to \code{NULL}, indicating
 that either all EOFs are kept, or that the next argument will be used as criterion
@@ -23,7 +23,8 @@ Currently accepted choices are \code{"field"} (the default) and \code{"gridbox"}
 A list of \emph{N + 1} elements for multifields, where \emph{N} is the number of input variables used
  and the last element contains the results of the combined PCA (See details). The list is named as the variables,
  including the last element named \code{"COMBINED"}. In case of single fields (1 variable only), a list of length 1
-  (without the combined element). For each element of the list, the following objects are returned:
+  (without the combined element). For each element of the list, the following objects are returned, either in the form of
+  another list (1 element for each member) for multimembers, or not in the case of non multimember inputs:
 
  \itemize{
  \item \code{PCs}: A matrix of principal components, arranged in columns by decreasing importance order
@@ -68,6 +69,11 @@ When dealing with multifield data, apart from the PCA analysis performed on each
 a combined analysis considering all variables together is done. This is always returned in the last element
 of the output list.
 }
+\note{
+Performing PCA analysis on multimember multifields may become time-consuming and computationally expensive.
+It is therefore advisable to avoid the use of this option for large datasets, and iterate over single
+multimember fields instead.
+}
 \examples{
 \dontrun{
 # First a multifield containing a set of variables is loaded (e.g. data for spring spanning the 30-year period 1981--2010):
@@ -76,7 +82,8 @@ multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"), sea
 # In this example, we retain the PCs explaining the 99\\\% of the variance
 pca <- prinComp(multifield, v.exp = .99)
 # Note that, apart from computing the principal components and EOFs for each field, it also returns, in the last element of the output list,
-# the results of a PC analysis of all the variables combined:
+# the results of a PC analysis of all the variables combined (named "COMBINED"):
+names(pca)
 str(pca)
 # The different attributes of the pca object provide information regarding the variables involved and the geo-referencing information
 attributes(pca)
@@ -90,6 +97,27 @@ vexp <- attributes(pca$hus)$explained_variance
 # The classical "scree plot":
 barplot(1-vexp, names.arg = paste("PC",1:length(vexp)), las = 2, ylab = "Fraction of unexplained variance")
 }
+
+# This is an example using a multimember object:
+data(tasmax_forecast)
+# In order make the computation faster, we interpolate to a coarser grid of 2.5 deg
+range(tasmax_forecast$xyCoords$x)
+range(tasmax_forecast$xyCoords$y)
+multimember <- interpGridData(tasmax_forecast, new.grid = list(c(-10,29.5, 2.5), c(35.5, 64.5, 2.5)))
+# In this case we retain the first 15 EOFs:
+pca.mm <- prinComp(multimember, n.eofs = 15)
+# Note that now the results of the PCA for the variable are a list, with the results for each member sepparately considered
+str(pca.mm)
+
+# The most complex situation comes from multimember multifields:
+data(tasmin_forecast)
+# We interpolate using an identical grid than the previous example:
+multimember2 <- interpGridData(tasmin_forecast, new.grid = getGrid(multimember))
+# Now the multimember multifield is constructed
+mm.multifield <- mm2mm.mf(list(multimember, multimember2))
+pca.mm.mf <- prinComp(mm.multifield, n.eofs = 10)
+# Now there is a "COMBINED" element at the end of the output list
+str(pca.mm.mf)
 }
 \author{
 J. Bedia \email{joaquin.bedia@gmail.com}
@@ -100,12 +128,6 @@ Guti\'{e}rrez, J.M., R. Ancell, A. S. Cofi\~{n}o and C. Sordo (2004). Redes Prob
   \url{http://www.meteo.unican.es/en/books/dataMiningMeteo}
 }
 \seealso{
-Other loading.grid: \code{\link{fieldFromPCs}};
-  \code{\link{getGrid}}; \code{\link{interpGridData}};
-  \code{\link{loadGridData}}; \code{\link{loadMultiField}};
-  \code{\link{plotEOF}}
-
-Other multifield: \code{\link{fieldFromPCs}};
-  \code{\link{loadMultiField}}; \code{\link{plotEOF}}
+\code{\link{fieldFromPCs}}, \code{\link{plotEOF}}
 }
 

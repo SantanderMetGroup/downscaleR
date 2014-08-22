@@ -2,18 +2,18 @@
 #' 
 #' @description Constructs a (possibly multimember) multifield from different (multimember) fields.
 #' 
-#' @param field.list A list containing the different input fields, euther multimember or not.
+#' @param field.list A list containing the different input fields, either multimember or not.
 #' 
-#' @return A multimember multifield object encompassing the different input fields
+#' @return A (multimember) multifield object encompassing the different input (multimember) fields
 #' 
 #' @details The function makes a number of checks in order to test the spatiotemporal compatibility of the input multi-member fields.
 #'  Regarding the temporal concordance, it is implicitly assumed that all temporal data from the different
 #'  multimember fields correspond to the same time zone ("GMT"). The time zone itself is not important, as long as it is the
-#'  same across datasets, because temporal consistency is checked on a daily basis, allowing the inclusion of predictors with
-#'  different verification times and temporal aggregations. For instance, instantaneous geopotential at 12:00 is compatible with
-#'  mean daily surface temperature, always that both variables correspond to the same days. Different time resolutions are not
-#'  compatible and will return an error (for instance, 6-hourly data is incompatible with daily values, because their 
-#'  respective time series for a given season have different lengths).
+#'  same across datasets, because temporal consistency is checked on a daily basis (not hourly), allowing the inclusion of 
+#'  predictors with different verification times and temporal aggregations. For instance, instantaneous geopotential at 12:00 
+#'  is compatible with mean daily surface temperature, always that both variables correspond to the same days. Different time 
+#'  resolutions are not compatible and will return an error (for instance, 6-hourly data is incompatible with daily values, 
+#'  because their respective time series for a given season have different lengths).
 #'  
 #'  The spatial consistency of the input fields is also checked. In order to avoid possible errors from the user, the spatial
 #'   consistency (i.e., equal XY coordinates) of the input fields must be ensured before attempting the creation of the multifield,
@@ -36,18 +36,35 @@
 #' for spatial consistency of input fields.
 #' 
 #' @examples
+#' 
+#' # Creation of a multifield from three different fields:
+#' data(iberia_ncep_ta850)
+#' data(iberia_ncep_hus850)
+#' data(iberia_ncep_psl)
+#' # An example of different temporal aggregations, temporally compatible: sea-level pressure is a daily mean,
+#' # while specific humidity and air temperature (850 mb surface isobaric pressure level) are instantaneous data verifying at
+#' # 12:00 UTC:
+#' # air temperature
+#' range(iberia_ncep_ta850$Dates$start)
+#' range(iberia_ncep_ta850$Dates$end) # start and end are identical (instantaneous)
+#' # sea-level pressure
+#' range(iberia_ncep_psl$Dates$start)
+#' range(iberia_ncep_psl$Dates$end) # start and end differ in 24 h (daily mean)
+#' mf <- makeMultifield(list(iberia_ncep_hus850, iberia_ncep_psl, iberia_ncep_ta850))
+#' # The new object inherits the global attributes from the first field, as it is assumed
+#' # that all input fields come from the same data source:
+#' attributes(mf)
+#' # The data structure has now one additional dimension ("var"), along which the data arrays have been binded:
+#' str(mf$Data)
+#' plotMeanField(mf)
+#' 
+#' # Example of multimember multifield creation from several multimember fields:
 #' # Load three different multimember fields with the same spatiotemporal ranges:
 #' data(tasmax_forecast)
 #' data(tasmin_forecast)
 #' data(tp_forecast)
-#' # They are unified by creating a multimember multifield:
-#' mm.mf <- makeMultifield(mm.list = list(tasmax_forecast, tasmin_forecast, tp_forecast))
-#' # The new object inherits the global attributes from the first multimember field, as it is assumed
-#' # that all input multimember fields come from the same data source
-#' attributes(mm.mf)
-#' # The data structure has now one additional dimension ("var"), along which the data arrays have been binded:
-#' str(mm.mf$Data)
-#' # 'plotMeanField' can just handle the multi-member mean for each variable:
+#' mm.mf <- makeMultifield(field.list = list(tasmax_forecast, tasmin_forecast, tp_forecast))
+#' # 'plotMeanField' can just handle the multi-member mean for each variable in this case:
 #' plotMeanField(mm.mf)
 #' 
 
