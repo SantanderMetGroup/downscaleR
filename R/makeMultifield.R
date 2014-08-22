@@ -1,0 +1,90 @@
+#' @title Constructor of a multifield from various fields, supporting multimember fields.
+#' 
+#' @description Constructs a (possibly multimember) multifield from different (multimember) fields.
+#' 
+#' @param field.list A list containing the different input fields, euther multimember or not.
+#' 
+#' @return A multimember multifield object encompassing the different input fields
+#' 
+#' @details The function makes a number of checks in order to test the spatiotemporal compatibility of the input multi-member fields.
+#'  Regarding the temporal concordance, it is implicitly assumed that all temporal data from the different
+#'  multimember fields correspond to the same time zone ("GMT"). The time zone itself is not important, as long as it is the
+#'  same across datasets, because temporal consistency is checked on a daily basis, allowing the inclusion of predictors with
+#'  different verification times and temporal aggregations. For instance, instantaneous geopotential at 12:00 is compatible with
+#'  mean daily surface temperature, always that both variables correspond to the same days. Different time resolutions are not
+#'  compatible and will return an error (for instance, 6-hourly data is incompatible with daily values, because their 
+#'  respective time series for a given season have different lengths).
+#'  
+#'  The spatial consistency of the input fields is also checked. In order to avoid possible errors from the user, the spatial
+#'   consistency (i.e., equal XY coordinates) of the input fields must be ensured before attempting the creation of the multifield,
+#'   otherwise giving an error. This can be achieved either through the specification of the same 'lonLim' and 'latLim' argument
+#'   values when loading the fields, or using the \code{\link{interpGridData}} interpolator in conjuntion with the \code{\link{getGrid}}
+#'   method.
+#'  
+#'  
+#' @note Multifield can not be passed to the interpolator \code{\link{interpGridData}} directly. Instead, the 
+#' multimember fields should be interpolated individually prior to multifield construction. 
+#' 
+#' @export
+#' 
+#' @importFrom abind abind
+#' 
+#' @author J. bedia \email{joaquin.bedia@@gmail.com}
+#' 
+#' @seealso \code{\link{loadGridData}} and \code{\link[ecomsUDG.Raccess]{loadECOMS}} for loading fields (the latter also for loading
+#' multimember fields), \code{\link{loadMultifield}}, which directly loads a multifield. \code{\link{interpGridData}} and \code{\link{getGrid}}
+#' for spatial consistency of input fields.
+#' 
+#' @examples
+#' # Load three different multimember fields with the same spatiotemporal ranges:
+#' data(tasmax_forecast)
+#' data(tasmin_forecast)
+#' data(tp_forecast)
+#' # They are unified by creating a multimember multifield:
+#' mm.mf <- makeMultifield(mm.list = list(tasmax_forecast, tasmin_forecast, tp_forecast))
+#' # The new object inherits the global attributes from the first multimember field, as it is assumed
+#' # that all input multimember fields come from the same data source
+#' attributes(mm.mf)
+#' # The data structure has now one additional dimension ("var"), along which the data arrays have been binded:
+#' str(mm.mf$Data)
+#' # 'plotMeanField' can just handle the multi-member mean for each variable:
+#' plotMeanField(mm.mf)
+#' 
+
+makeMultifield <- function(field.list) {
+      if (length(field.list) < 2) {
+            stop("The input must be a list of at least two multimember fields")
+      }
+      for (i in 2:length(field.list)) {
+            # Spatial test
+            if (!identical(field.list[[1]]$xyCoords, field.list[[i]]$xyCoords)) {
+                  stop("Input data is not spatially consistent")
+            }
+            # temporal test
+            if (!identical(as.POSIXlt(field.list[[1]]$Dates$start)$yday, as.POSIXlt(field.list[[i]]$Dates$start)$yday) | !identical(as.POSIXlt(field.list[[1]]$Dates$start)$year, as.POSIXlt(field.list[[i]]$Dates$start)$year)) {
+                  stop("Input data is not temporally consistent")
+            }
+            # data dimensionality
+            if (!identical(dim(field.list[[1]]$Data), dim(field.list[[i]]$Data))) {
+                  stop("Incompatible data array dimensions")
+            }
+            if (!identical(attr(field.list[[1]]$Data, "dimensions"), attr(field.list[[i]]$Data, "dimensions"))) {
+                  stop("Inconsistent 'dimensions' attribute")
+            }
+      }
+      aux.list <- lapply(1:length(field.list), function(x) {field.list[[x]]$Variable})
+      varName <- unlist(lapply(1:length(aux.list), function(x) aux.list[[x]]$varName))      
+      isStandard <- unlist(lapply(1:length(aux.list), function(x) aux.list[[x]]$isStandard))      
+      level <- unlist(lapply(1:length(aux.list), function(x) ifelse(is.null(aux.list[[x]]$level), NA, aux.list[[x]]$level)))      
+      aux.list <- NULL
+      field.list[[1]]$Variable <- list("varName" = varName, "isStandard" = isStandard, "level" = level)      
+      field.list[[1]]$Dates <- lapply(1:length(field.list), function(x) {field.list[[x]]$Dates})
+      dimNames <- attr(field.list[[1]]$Data, "dimensions")
+      field.list[[1]]$Data <- unname(do.call("abind", c(lapply(1:length(field.list), function(x) {field.list[[x]]$Data}), along = -1))) 
+      attr(field.list[[1]]$Data, "dimensions") <- c("var", dimNames)
+      return(field.list[[1]])
+}
+# End
+
+
+
