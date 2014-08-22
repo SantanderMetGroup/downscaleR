@@ -32,7 +32,7 @@
 #' @author J. bedia \email{joaquin.bedia@@gmail.com}
 #' 
 #' @seealso \code{\link{loadGridData}} and \code{\link[ecomsUDG.Raccess]{loadECOMS}} for loading fields (the latter also for loading
-#' multimember fields), \code{\link{loadMultifield}}, which directly loads a multifield. \code{\link{interpGridData}} and \code{\link{getGrid}}
+#' multimember fields), \code{\link{loadMultiField}}, which directly loads a multifield. \code{\link{interpGridData}} and \code{\link{getGrid}}
 #' for spatial consistency of input fields.
 #' 
 #' @examples
@@ -50,7 +50,7 @@
 #' # sea-level pressure
 #' range(iberia_ncep_psl$Dates$start)
 #' range(iberia_ncep_psl$Dates$end) # start and end differ in 24 h (daily mean)
-#' mf <- makeMultifield(list(iberia_ncep_hus850, iberia_ncep_psl, iberia_ncep_ta850))
+#' mf <- makeMultiField(list(iberia_ncep_hus850, iberia_ncep_psl, iberia_ncep_ta850))
 #' # The new object inherits the global attributes from the first field, as it is assumed
 #' # that all input fields come from the same data source:
 #' attributes(mf)
@@ -63,12 +63,12 @@
 #' data(tasmax_forecast)
 #' data(tasmin_forecast)
 #' data(tp_forecast)
-#' mm.mf <- makeMultifield(field.list = list(tasmax_forecast, tasmin_forecast, tp_forecast))
+#' mm.mf <- makeMultiField(field.list = list(tasmax_forecast, tasmin_forecast, tp_forecast))
 #' # 'plotMeanField' can just handle the multi-member mean for each variable in this case:
 #' plotMeanField(mm.mf)
 #' 
 
-makeMultifield <- function(field.list) {
+makeMultiField <- function(field.list) {
       if (length(field.list) < 2) {
             stop("The input must be a list of at least two multimember fields")
       }
