@@ -3,7 +3,7 @@
 \alias{plotEOF}
 \title{Plot an arbitrary number of EOFs}
 \usage{
-plotEOF(prinCompObj, var = NULL, n.eofs = NULL)
+plotEOF(prinCompObj, var = NULL, member = 1, n.eofs = NULL)
 }
 \arguments{
 \item{prinCompObj}{A PCA object as returned by \code{\link{prinComp}}}
@@ -14,8 +14,8 @@ been applied to 1 single field, this argument can be omitted.}
 \item{n.eofs}{Number of EOFs to be displayed. Default to NULL, indicating that all computed EOFS
 will be represented}
 
-\item{member}{Default to NULL, indicating that the multimember mean will be represented. Otherwise,
-this is an integer indicating the position of the member whose EOFs are to be displayed}
+\item{member}{An integer indicating the position of the member whose EOFs are to be displayed. Default 1,
+corresponding to the first member. Ignored for non multimember fields.}
 }
 \value{
 A plot with as many panels as EOFs requested, in the original units of the variable
@@ -23,15 +23,14 @@ A plot with as many panels as EOFs requested, in the original units of the varia
 }
 \description{
 Plots an arbitrary number of EOFs. Useful to have a quick overview of the main spatial modes
- of a field.
+ of a (possibly multimember) field.
 }
 \examples{
 \dontrun{
 # Winter temperature at 850 mb isobaric surface pressure level is loaded (period 1981--2010):
-ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-field <- loadGridData(ncep, var = "ta@85000", season = c(12,1,2), years = 1981:2010)
+data(iberia_ncep_ta850)
 # PCA analysis, retaining the PCs that explain 95\\\% of the total variance:
-pca <- prinComp(field, v.exp = .95)
+pca <- prinComp(iberia_ncep_ta850, v.exp = .95)
 # Plot of all EOFs
 plotEOF(pca)
 # Plot the first 4 EOFs:
@@ -39,6 +38,7 @@ plotEOF(pca, n.eofs = 4)
 
 # Example with PCA analysis of a multifield (multiple variables)
 load geopotential heigth at 500 mb, temperature at 1000 mb and sea-level pressure
+ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 multifield <- loadMultiField(ncep, vars = c("z@50000", "ta@100000", "psl"), season = c(12,1,2), years = 1981:2010)
 # PCA analysis, retaining the first 9 PCs of each variable:
 pca2 <- prinComp(multifield, n.eofs = 9)
@@ -53,10 +53,6 @@ plotEOF(pca2, "psl", n.eofs = 2)
 J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
-Other loading.grid: \code{\link{getGrid}};
-  \code{\link{interpGridData}}; \code{\link{loadGridData}};
-  \code{\link{loadMultiField}}
-
-Other multifield: \code{\link{loadMultiField}}
+\code{\link{prinComp}}
 }
 

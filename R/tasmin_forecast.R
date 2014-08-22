@@ -8,8 +8,7 @@
 #' Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
 
 #' @name tasmin_forecast
-#' @export
-#' @seealso \code{\link{mm2mm.mf}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
 #' @examples
 #' data(tasmin_forecast)
 #' plotMeanField(tasmin_forecast, multi.member = TRUE)

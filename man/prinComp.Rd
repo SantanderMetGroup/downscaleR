@@ -114,7 +114,7 @@ data(tasmin_forecast)
 # We interpolate using an identical grid than the previous example:
 multimember2 <- interpGridData(tasmin_forecast, new.grid = getGrid(multimember))
 # Now the multimember multifield is constructed
-mm.multifield <- mm2mm.mf(list(multimember, multimember2))
+mm.multifield <- makeMultiField(list(multimember, multimember2))
 pca.mm.mf <- prinComp(mm.multifield, n.eofs = 10)
 # Now there is a "COMBINED" element at the end of the output list
 str(pca.mm.mf)

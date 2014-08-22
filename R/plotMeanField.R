@@ -3,8 +3,8 @@
 #' @description Plot the spatial mean of a gridded variable, or variables in the case of multi-fields.
 #' 
 #' @importFrom fields image.plot
+#' @import maps 
 #' @importFrom fields world
-#' 
 #' @param gridData A grid dataset
 #' @param multi.member Should members be plotted sepparately (TRUE), or just a plot
 #'  of the multi-member mean (FALSE, default)?. Ignored if the dataset has no members.

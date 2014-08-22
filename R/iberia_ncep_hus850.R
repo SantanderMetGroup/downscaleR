@@ -5,8 +5,7 @@
 #' @format A field
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @name iberia_ncep_hus850
-#' @export
-#' @seealso \code{\link{makeMultifield}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
 #' @examples
 #' data(iberia_ncep_hus850)
 #' plotMeanField(iberia_ncep_hus850)

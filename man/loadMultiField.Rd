@@ -96,9 +96,6 @@ Other loading: \code{\link{dataInventory}};
   \code{\link{makeAggregatedDataset}}
 
 Other loading.grid: \code{\link{getGrid}};
-  \code{\link{interpGridData}}; \code{\link{loadGridData}};
-  \code{\link{plotEOF}}
-
-Other multifield: \code{\link{plotEOF}}
+  \code{\link{interpGridData}}; \code{\link{loadGridData}}
 }
 

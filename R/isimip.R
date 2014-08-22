@@ -215,7 +215,7 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
       if (any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))){
             threshold<-pr.threshold
             if (length(threshold)==1){
-                  threshold<-array(dat = threshold, dim = 3)
+                  threshold<-array(data = threshold, dim = 3)
             }
             # First Step: Monthly Correction
             dimAux<-dimPred
