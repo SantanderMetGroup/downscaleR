@@ -13,7 +13,8 @@
 #' @return A list of \emph{N + 1} elements for multifields, where \emph{N} is the number of input variables used
 #'  and the last element contains the results of the combined PCA (See details). The list is named as the variables,
 #'  including the last element named \code{"COMBINED"}. In case of single fields (1 variable only), a list of length 1
-#'   (without the combined element). For each element of the list, the following objects are returned:
+#'   (without the combined element). For each element of the list, the following objects are returned, either in the form of
+#'   another list (1 element for each member) for multimembers, or not in the case of non multimember inputs:
 #'  
 #'  \itemize{
 #'  \item \code{PCs}: A matrix of principal components, arranged in columns by decreasing importance order 
@@ -62,7 +63,7 @@
 #'
 #' @export
 #' 
-#' @seealso \code{link{fieldFromPCs}}, \code{link{plotEOF}}
+#' @seealso \code{\link{fieldFromPCs}}, \code{\link{plotEOF}}
 #'  
 #' @references
 #' Guti\'{e}rrez, J.M., R. Ancell, A. S. Cofi\~{n}o and C. Sordo (2004). Redes Probabil\'{i}sticas
@@ -74,7 +75,7 @@
 #' @examples \dontrun{
 #' # First a multifield containing a set of variables is loaded (e.g. data for spring spanning the 30-year period 1981--2010):
 #' ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-#' multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"), season = c(3:5), years = 1981:2010)
+#' multifield <- loadMultiField(ncep, vars = c("hus@@85000", "ta@@85000", "psl"), season = c(3:5), years = 1981:2010)
 #' # In this example, we retain the PCs explaining the 99\% of the variance
 #' pca <- prinComp(multifield, v.exp = .99)
 #' # Note that, apart from computing the principal components and EOFs for each field, it also returns, in the last element of the output list,
@@ -115,7 +116,6 @@
 #' # Now there is a "COMBINED" element at the end of the output list
 #' str(pca.mm.mf)
 #'
-
 
 prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field", "gridbox")) {
       if (!is.null(n.eofs) & !is.null(v.exp)) {
@@ -270,6 +270,7 @@ prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field",
                   attr(out, "explained_variance") <- explvar
                   return(out)
             })
+            attr(pca.list[[i]], "level") <- gridData$Variable$level[i]
       }
       Xsc.list <- NULL
 #       # Recover field
@@ -279,7 +280,8 @@ prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field",
 #       image.plot(Xsc.list[[x]])
 #       image.plot(Xhat)
       if(length(pca.list) > 1) {
-            names(pca.list) <- c(gridData$Variable$varName, "COMBINED")   
+            names(pca.list) <- c(gridData$Variable$varName, "COMBINED")
+            attr(pca.list[[length(pca.list)]], "level") <- NULL
       } else {
             names(pca.list) <- gridData$Variable$varName 
       }
@@ -287,11 +289,7 @@ prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field",
             for (i in 1:length(pca.list)) {
                   names(pca.list[[i]]) <- gridData$Members
             }
-      } else {
-            for (i in 1:length(pca.list)) {
-                  pca.list[[i]] <- pca.list[[i]][[1]]
-            }
-      }
+      } 
       attr(pca.list, "scaled:method") <- scaling
       attr(pca.list, "xCoords") <- gridData$xyCoords$x
       attr(pca.list, "yCoords") <- gridData$xyCoords$y
