@@ -14,7 +14,7 @@
 #'  westernmost, easternmost and grid cell width in the X axis and, in the same way,
 #'  the southernmost, northernmost and grid cell resolution in the Y axis. See details.
 #' @param method Method for interpolation. Currently implemented methods are either \code{bilinear},
-#' for bilinear interpolation, and \code{nearest}, for nearest-neighbor interpolation.
+#' for bilinear interpolation, and \code{nearest}, for nearest-neighbor interpolation (default).
 #' @return An interpolated object preserving the output structure of the input
 #'  (See e.g. \code{\link{loadGridData}}) for details on the output structure. 
 #' @details  In case of default definition of either x, y or both grid coordinates, the default grid
@@ -48,11 +48,11 @@
 #' }
 
 
-interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method = c("bilinear", "nearest")) {
+interpGridData <- function(gridData, new.grid = list(x = NULL, y = NULL), method = c("nearest", "bilinear")) {
       if (is.null(new.grid)) {
             new.grid <- list(x = NULL, y = NULL)
       }
-      method <- match.arg(method, choices = c("bilinear", "nearest"))
+      method <- match.arg(method, choices = c("nearest", "bilinear"))
       if (any(attr(gridData$Data, "dimensions") == "station")){
             x <- as.numeric(gridData$xyCoords[,1])
             y <- as.numeric(gridData$xyCoords[,2])
