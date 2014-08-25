@@ -3,6 +3,9 @@
 #' @description Constructs a (possibly multimember) multifield from different (multimember) fields.
 #' 
 #' @param field.list A list containing the different input fields, either multimember or not.
+#' @param spatial.tolerance numeric. Coordinate differences smaller than this value will be considered equal coordinates.
+#' Dfeault to 0.001 --assuming that degrees are being used it seems a reasonable rounding error after interpolation--.
+#'  This value is passed to the \code{\link{all.equal}} method to check for spatial consistency of the input fields.
 #' 
 #' @return A (multimember) multifield object encompassing the different input (multimember) fields
 #' 
@@ -68,13 +71,14 @@
 #' plotMeanField(mm.mf)
 #' 
 
-makeMultiField <- function(field.list) {
+makeMultiField <- function(field.list, spatial.tolerance = 1e-3) {
       if (length(field.list) < 2) {
             stop("The input must be a list of at least two multimember fields")
       }
+      tol <- spatial.tolerance
       for (i in 2:length(field.list)) {
             # Spatial test
-            if (!identical(field.list[[1]]$xyCoords, field.list[[i]]$xyCoords)) {
+            if (!all.equal(field.list[[1]]$xyCoords, field.list[[2]]$xyCoords, check.attributes = FALSE, tolerance = tol)) {
                   stop("Input data is not spatially consistent")
             }
             # temporal test
