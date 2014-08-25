@@ -22,7 +22,7 @@
 #'  }
 #'  The \dQuote{order of importance} is given by the explained variance of each PC, as indicated
 #'  in the attribute \code{"explained_variance"} as a cumulative vector.
-#'  Additional information is returned via the remaining attributes (see Details).
+#'  Additional information is returned via the remaining attributes (see details), including geo-referencing and time.
 #' 
 #' @note Performing PCA analysis on multimember multifields may become time-consuming and computationally expensive. 
 #' It is therefore advisable to avoid the use of this option for large datasets, and iterate over single
@@ -289,7 +289,12 @@ prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field",
             for (i in 1:length(pca.list)) {
                   names(pca.list[[i]]) <- gridData$Members
             }
-      } 
+      }
+      if (is.null(names(gridData$Dates))) {
+            attr(pca.list, "dates_start") <- gridData$Dates[[1]]$start   
+      } else {
+            attr(pca.list, "dates_start") <- gridData$Dates$start 
+      }
       attr(pca.list, "scaled:method") <- scaling
       attr(pca.list, "xCoords") <- gridData$xyCoords$x
       attr(pca.list, "yCoords") <- gridData$xyCoords$y
@@ -298,3 +303,7 @@ prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field",
 }
 # End      
      
+     
+
+
+
