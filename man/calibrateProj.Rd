@@ -37,8 +37,8 @@ S. Herrera \email{sixto@predictia.es}
 Other calibration: \code{\link{biasCorrection}};
   \code{\link{isimip}}
 
-Other downscaling: \code{\link{biasCorrection}};
-  \code{\link{isimip}}
+Other downscaling: \code{\link{analogs}};
+  \code{\link{biasCorrection}}; \code{\link{isimip}}
 }
 \keyword{internal}
 

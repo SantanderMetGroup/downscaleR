@@ -30,7 +30,7 @@ Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F.: A trend-pr
 Other calibration: \code{\link{biasCorrection}};
   \code{\link{calibrateProj}}
 
-Other downscaling: \code{\link{biasCorrection}};
-  \code{\link{calibrateProj}}
+Other downscaling: \code{\link{analogs}};
+  \code{\link{biasCorrection}}; \code{\link{calibrateProj}}
 }
 

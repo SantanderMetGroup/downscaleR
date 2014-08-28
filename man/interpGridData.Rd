@@ -4,7 +4,7 @@
 \title{Interpolate a dataset to a grid}
 \usage{
 interpGridData(gridData, new.grid = list(x = NULL, y = NULL),
-  method = c("bilinear", "nearest"))
+  method = c("nearest", "bilinear"))
 }
 \arguments{
 \item{gridData}{A grid data object coming from \code{\link{loadGridData}} or the \pkg{ecomsUDG.Raccess}
@@ -17,7 +17,7 @@ Each component consists of a vector of length three with components \emph{from},
  the southernmost, northernmost and grid cell resolution in the Y axis. See details.}
 
 \item{method}{Method for interpolation. Currently implemented methods are either \code{bilinear},
-for bilinear interpolation, and \code{nearest}, for nearest-neighbor interpolation.}
+for bilinear interpolation, and \code{nearest}, for nearest-neighbor interpolation (default).}
 }
 \value{
 An interpolated object preserving the output structure of the input

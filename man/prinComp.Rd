@@ -32,7 +32,7 @@ A list of \emph{N + 1} elements for multifields, where \emph{N} is the number of
  }
  The \dQuote{order of importance} is given by the explained variance of each PC, as indicated
  in the attribute \code{"explained_variance"} as a cumulative vector.
- Additional information is returned via the remaining attributes (see Details).
+ Additional information is returned via the remaining attributes (see details), including geo-referencing and time.
 }
 \description{
 Performs a Principal Component Analysis of field, multifield or multi-member data

@@ -38,7 +38,7 @@ S. Herrera \email{sixto@predictia.es}
 Other calibration: \code{\link{calibrateProj}};
   \code{\link{isimip}}
 
-Other downscaling: \code{\link{calibrateProj}};
-  \code{\link{isimip}}
+Other downscaling: \code{\link{analogs}};
+  \code{\link{calibrateProj}}; \code{\link{isimip}}
 }
 

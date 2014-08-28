@@ -3,10 +3,14 @@
 \alias{makeMultiField}
 \title{Constructor of a multifield from various fields, supporting multimember fields.}
 \usage{
-makeMultiField(field.list)
+makeMultiField(field.list, spatial.tolerance = 0.001)
 }
 \arguments{
 \item{field.list}{A list containing the different input fields, either multimember or not.}
+
+\item{spatial.tolerance}{numeric. Coordinate differences smaller than this value will be considered equal coordinates.
+Dfeault to 0.001 --assuming that degrees are being used it seems a reasonable rounding error after interpolation--.
+ This value is passed to the \code{\link{all.equal}} method to check for spatial consistency of the input fields.}
 }
 \value{
 A (multimember) multifield object encompassing the different input (multimember) fields

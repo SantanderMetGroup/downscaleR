@@ -44,6 +44,19 @@
 #' @importFrom fields rdist
 #' @importFrom abind abind
 #' 
+#' @family downscaling
+#' 
+#' @references 
+#' 
+#' \itemize{
+#' \item Benestad, R.E., Hanssen-Bauer, I. and Chen, D., 2008. Empirical-Statistical Downscaling,
+#'  1st ed. World Scientific Publishing, Singapore
+#' \item Gutierrez, J.M. \emph{et al.}, 2013. Reassessing Statistical downscaling techniques for
+#'  their robust application under climate change conditions. J. Clim. 26, 171-188
+#' \item
+#' Bedia, J. \emph{et al.}, 2013. Robust projections of Fire Weather Index in the Mediterranean
+#'  using statistical downscaling. Clim. Change 120, 229–247.
+#' }
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com} 
 #'
 
