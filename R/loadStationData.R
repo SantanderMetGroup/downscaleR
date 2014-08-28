@@ -7,8 +7,7 @@
 #' @param stationID Optional. A character vector indicating the code names of the stations to be loaded.
 #' @param tz A time zone specification to be used for the conversion of dates, if one is required
 #' (i.e., if the time zone of the dataset does not correspond to the system-specific one; see
-#' \code{\link[base]{timezones}} for details). The default assumes "GMT" (UTC, Universal Time, Coordinated),
-#' but be very careful as station datasets are quite heterogeneous.
+#' \code{\link[base]{timezones}} for details). Default to unspecified (i.e. \code{tz = ""}).
 #' 
 #' @return a list with the following elements:
 #' \itemize{
@@ -38,7 +37,7 @@
 
 loadStationData <- function(dataset, file.format = "ascii", var, 
             stationID = NULL, lonLim = NULL, latLim = NULL, season = NULL,
-            years = NULL, tz = "GMT") {
+            years = NULL, tz = "") {
             file.format <- match.arg(file.format, choices = c("ascii", "netcdf"))
       if ((!is.null(lonLim) | !is.null(latLim)) & !is.null(stationID)) { 
             lonLim <- NULL 
@@ -56,6 +55,9 @@ loadStationData <- function(dataset, file.format = "ascii", var,
       varTimeStep <- difftime(out$Dates[2], out$Dates[1])
       dateSliceStart <- as.POSIXct(out$Dates)
       dateSliceEnd <- as.POSIXct(as.POSIXlt(out$Dates + varTimeStep))
+      usetz <- ifelse(identical(tz, ""), FALSE, TRUE)
+      dateSliceStart <- format.POSIXct(dateSliceStart, "%Y-%m-%d %H:%M:%S", usetz = usetz)
+      dateSliceEnd <- format.POSIXct(dateSliceEnd, "%Y-%m-%d %H:%M:%S", usetz = usetz)
       out$Dates <- list("start" = dateSliceStart, "end" = dateSliceEnd)
       attr(out$Data, "dimensions") <- c("time", "station")
       message(paste("[", Sys.time(), "] Done.", sep = ""))
