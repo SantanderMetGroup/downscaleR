@@ -106,7 +106,7 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean")) 
             stop("'pred' and 'sim' datasets are not spatially consistent")
       }
       # Temporal matching check (obs-pred)
-      if (!(identical(as.POSIXlt(obs$Dates$start)$yday, as.POSIXlt(time.pred)$yday) | identical(as.POSIXlt(obs$Dates$start)$year, as.POSIXlt(time.pred)$year))) {
+      if (!identical(as.POSIXlt(obs$Dates$start)$yday, as.POSIXlt(time.pred)$yday) || !identical(as.POSIXlt(obs$Dates$start)$year, as.POSIXlt(time.pred)$year)) {
             stop("Observed and predicted time series should match in start/end and length")
       }     
       time.pred <- NULL
