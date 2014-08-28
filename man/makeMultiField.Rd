@@ -3,10 +3,10 @@
 \alias{makeMultiField}
 \title{Constructor of a multifield from various fields, supporting multimember fields.}
 \usage{
-makeMultiField(field.list, spatial.tolerance = 0.001)
+makeMultiField(..., spatial.tolerance = 0.001)
 }
 \arguments{
-\item{field.list}{A list containing the different input fields, either multimember or not.}
+\item{...}{Input fields to form the multifield. These must be compatible in time and space (see details).}
 
 \item{spatial.tolerance}{numeric. Coordinate differences smaller than this value will be considered equal coordinates.
 Dfeault to 0.001 --assuming that degrees are being used it seems a reasonable rounding error after interpolation--.
@@ -52,7 +52,7 @@ range(iberia_ncep_ta850$Dates$end) # start and end are identical (instantaneous)
 # sea-level pressure
 range(iberia_ncep_psl$Dates$start)
 range(iberia_ncep_psl$Dates$end) # start and end differ in 24 h (daily mean)
-mf <- makeMultiField(list(iberia_ncep_hus850, iberia_ncep_psl, iberia_ncep_ta850))
+mf <- makeMultiField(iberia_ncep_hus850, iberia_ncep_psl, iberia_ncep_ta850)
 # The new object inherits the global attributes from the first field, as it is assumed
 # that all input fields come from the same data source:
 attributes(mf)
@@ -65,7 +65,7 @@ plotMeanField(mf)
 data(tasmax_forecast)
 data(tasmin_forecast)
 data(tp_forecast)
-mm.mf <- makeMultiField(field.list = list(tasmax_forecast, tasmin_forecast, tp_forecast))
+mm.mf <- makeMultiField(tasmax_forecast, tasmin_forecast, tp_forecast)
 # 'plotMeanField' can just handle the multi-member mean for each variable in this case:
 plotMeanField(mm.mf)
 }
