@@ -34,16 +34,13 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                   dimPerm[length(attr(obs$Data, "dimensions"))+k] <- indDiff
             }
       }
-#       if (length(setdiff(attr(pred$Data, "dimensions"),attr(obs$Data, "dimensions")))>0){
-#             dimDiff<-setdiff(attr(pred$Data, "dimensions"),attr(obs$Data, "dimensions"))
-#             for (k in 1:length(dimDiff)) {
-#                   dimPerm[which(grepl(dimDiff[k],attr(pred$Data, "dimensions")))]<-length(attr(obs$Data, "dimensions"))+k
-#             }
-#       }
-#       dimPerm[which(dimPerm<=length(dim(obs$Data)))]<- match(attr(obs$Data, "dimensions"), attr(pred$Data, "dimensions"))
       if (length(dimDiff)==0){
             F <- calibrateProj(obs$Data, aperm(pred$Data,dimPerm), aperm(sim$Data,dimPerm), method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
-            sim$Data<-aperm(F,c(dimPerm[2:length(dim(obs$Data))],dimPerm[1]))
+            if (!any(dimPerm != 1:length(attr(pred$Data, "dimensions")))){
+                  sim$Data<-F
+            }else{
+                  sim$Data<-aperm(F,c(dimPerm[2:length(dim(obs$Data))],dimPerm[1]))
+            }
       }else{
             indDimDiff <- rep(list(bquote()), length(dimDiff))
             for (d in 1:length(dimDiff)){

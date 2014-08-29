@@ -47,10 +47,15 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
             }
       }
       if (method == "delta") {
-            simMean <- apply(sim, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
-            prdMean <- apply(pred, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
-            for (k in 1:dim(obs)[1]) {
-                  obs[k,,]<-obs[k,,]-prdMean+simMean
+            if (dim(sim)[1]!=dim(obs)[1]){
+                  stop("sim and obs should have the same dimensions")
+            }else{
+                  
+                  simMean <- apply(sim, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
+                  prdMean <- apply(pred, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
+                  for (k in 1:min(c(dim(sim)[1],dim(obs)[1]))) {
+                        sim[k,,]<-obs[k,,]-prdMean+simMean
+                  }
             }
       }
       if (method == "unbiasing") {

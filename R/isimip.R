@@ -77,7 +77,7 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
             callObs <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeObs1))
             monthlyFor[indTimeObs] <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimFor),sim.time.index), na.rm = TRUE)
       }
-      if (any(grepl(obs$Variable$varName,c("tas","mean temperature")))){
+      if (any(grepl(obs$Variable$varName,c("tas","mean temperature","tmean")))){
             # First Step: Monthly Correction
             dimAux<-dimPred
             dimAux[pred.time.index]<-length(months)
@@ -99,7 +99,7 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
                   indTimeObs[[pred.time.index]] <- i
                   indTimeObs<-as.matrix(expand.grid(indTimeObs))
                   auxObs <- array(auxObs, dim = c(dim(auxObs),dimPred[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))]))
-                  monthlyCorrection[indTimeObs]<-aperm(auxObs,match(dim(auxPrd),dim(auxObs)))-auxPrd
+                  monthlyCorrection[indTimeObs]<-aperm(auxObs,match(attr(prd$Data,"dimensions")[setdiff(1:length(dimPred),pred.time.index)],c(attr(obs$Data,"dimensions")[setdiff(1:length(dimObs),obs.time.index)],attr(pred$Data,"dimensions")[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))])))-auxPrd
             }
             indTimeObs <- rep(list(bquote()), length(dimPred))
             for (d in 1:length(dimPred)){
@@ -173,8 +173,13 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
                                           indSim1 <- as.list(indSim[i,])
                                           indSim1[[sim.time.index]]<-indMonthFor
                                           indSim1<-as.matrix(expand.grid(indSim1))
-                                          lmAdjust<-lm(sort(pred$Data[indPrd1], decreasing = FALSE, na.last = NA) ~ sort(obs$Data[indObs], decreasing = FALSE, na.last = NA)-1)
-                                          sim$Data[indSim1]<-coef(lmAdjust)[1]*sim$Data[indSim1]
+                                          auxlmPrd <- pred$Data[indPrd1]
+                                          auxlmObs <- obs$Data[indObs]
+                                          indLM <- which(!is.na(auxlmPrd) & !is.na(auxlmObs))
+                                          if (length(indLM)>0){
+                                                lmAdjust<-lm(sort(auxlmPrd[indLM], decreasing = FALSE, na.last = NA) ~ sort(auxlmObs[indLM], decreasing = FALSE, na.last = NA)-1)
+                                                sim$Data[indSim1]<-coef(lmAdjust)[1]*sim$Data[indSim1]
+                                          }
                                     }
                               }
                         }
