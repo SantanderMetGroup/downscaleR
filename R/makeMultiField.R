@@ -79,7 +79,7 @@ makeMultiField <- function(..., spatial.tolerance = 1e-3) {
       tol <- spatial.tolerance
       for (i in 2:length(field.list)) {
             # Spatial test
-            if (!all.equal(field.list[[1]]$xyCoords, field.list[[i]]$xyCoords, check.attributes = FALSE, tolerance = tol)) {
+            if (!isTRUE(all.equal(field.list[[1]]$xyCoords, field.list[[i]]$xyCoords, check.attributes = FALSE, tolerance = tol))) {
                   stop("Input data is not spatially consistent")
             }
             # temporal test
