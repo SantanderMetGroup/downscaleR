@@ -99,7 +99,7 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
                   indTimeObs[[pred.time.index]] <- i
                   indTimeObs<-as.matrix(expand.grid(indTimeObs))
                   auxObs <- array(auxObs, dim = c(dim(auxObs),dimPred[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))]))
-                  monthlyCorrection[indTimeObs]<-aperm(auxObs,match(attr(prd$Data,"dimensions")[setdiff(1:length(dimPred),pred.time.index)],c(attr(obs$Data,"dimensions")[setdiff(1:length(dimObs),obs.time.index)],attr(pred$Data,"dimensions")[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))])))-auxPrd
+                  monthlyCorrection[indTimeObs]<-aperm(auxObs,match(attr(pred$Data,"dimensions")[setdiff(1:length(dimPred),pred.time.index)],c(attr(obs$Data,"dimensions")[setdiff(1:length(dimObs),obs.time.index)],attr(pred$Data,"dimensions")[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))])))-auxPrd
             }
             indTimeObs <- rep(list(bquote()), length(dimPred))
             for (d in 1:length(dimPred)){

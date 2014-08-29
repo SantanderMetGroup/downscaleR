@@ -58,8 +58,7 @@
 #' world(add = TRUE)
 #' title("Difference (bias)")
 #' par(mfrow = c(1,1))
-#' }
-#' 
+#'  
 #' # An example of multimember reconstruction from a multimember PC analysis:
 #' data(tasmax_forecast)
 #' # Note that multimember pca analysis takes some time, depending on the computer
@@ -68,10 +67,10 @@
 #' plotMeanField(tasmax_recovered, multi.member = TRUE)
 #' # Also note that now the length of the "nPCs" and "explained_variance" matches the number of members
 #' attributes(tasmax_recovered)
-#' 
+#' }
 
 fieldFromPCs <- function(prinCompObj, var) {
-      varNames <- attributes(prinCompObj)$names #[1:n.vars]
+      varNames <- attributes(prinCompObj)$names 
       if (length(varNames) == 1L) {
             var <- varNames
             var.ind <- 1

@@ -15,10 +15,13 @@
 #'  @export
 #' 
 
-dateReplacement <- function(obs.dates, sim.dates) { 
-      time.step <- diff(as.POSIXlt(obs.dates$start))[1]
+
+obs.dates
+sim.dates
+
+dateReplacement <- function(obs.dates, sim.dates) {
       time.res <- difftime(as.POSIXlt(obs.dates$end[1]), as.POSIXlt(obs.dates$start[1]))
-      start.hour <- as.POSIXlt(obs.dates$start)[1]$hour
+      hours <- as.POSIXlt(obs.dates$start)$hour
       tz <- tryCatch(unlist(strsplit(obs.dates$start[1], split = "\\s"))[3], error = function(er) {er <- ""})
       if (is.null(names(sim.dates))) {
             tz.sim <- unlist(strsplit(sim.dates[[1]]$start[1], split = "\\s"))[3]
@@ -27,9 +30,11 @@ dateReplacement <- function(obs.dates, sim.dates) {
             tz.sim <- unlist(strsplit(sim.dates$start[1], split = "\\s"))[3]
             sim.dates.ref <- as.POSIXlt(sim.dates$start, tz = tz.sim)
       }
-      aux.string <- paste(sim.dates.ref[1]$year + 1900, sim.dates.ref[1]$mon + 1, sim.dates.ref[1]$mday, start.hour, sep = "-")
-      start <- seq(strptime(aux.string, "%Y-%m-%d-%H", tz), by = time.step, length.out = length(sim.dates.ref))
-      end <- start + time.res
+      aux.string <- paste(sim.dates.ref$year + 1900, sim.dates.ref$mon + 1, sim.dates.ref$mday, hours, sep = "-")
+      start <- strptime(aux.string, "%Y-%m-%d-%H", tz)
+      aux.string <- NULL
+      end <- as.POSIXct(start + time.res)
+      start <- as.POSIXct(start)
       usetz <- ifelse(identical(tz, ""), FALSE, TRUE)
       start <- format.POSIXct(start, "%Y-%m-%d %H:%M:%S", usetz = usetz)
       end <- format.POSIXct(end, "%Y-%m-%d %H:%M:%S", usetz = usetz)

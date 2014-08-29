@@ -61,7 +61,6 @@ image.plot(x,y,z1-z, asp = 1)
 world(add = TRUE)
 title("Difference (bias)")
 par(mfrow = c(1,1))
-}
 
 # An example of multimember reconstruction from a multimember PC analysis:
 data(tasmax_forecast)
@@ -71,6 +70,7 @@ tasmax_recovered <- fieldFromPCs(pca2)
 plotMeanField(tasmax_recovered, multi.member = TRUE)
 # Also note that now the length of the "nPCs" and "explained_variance" matches the number of members
 attributes(tasmax_recovered)
+}
 }
 \author{
 J. Bedia \email{joaquin.bedia@gmail.com}

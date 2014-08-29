@@ -55,7 +55,7 @@ J. Bedia \email{joaquin.bedia@gmail.com}
  their robust application under climate change conditions. J. Clim. 26, 171-188
 \item
 Bedia, J. \emph{et al.}, 2013. Robust projections of Fire Weather Index in the Mediterranean
- using statistical downscaling. Clim. Change 120, 229–247.
+ using statistical downscaling. Clim. Change 120, 229-247.
 }
 }
 \seealso{

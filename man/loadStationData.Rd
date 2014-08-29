@@ -4,8 +4,7 @@
 \title{Load station data}
 \usage{
 loadStationData(dataset, file.format = "ascii", var, stationID = NULL,
-  lonLim = NULL, latLim = NULL, season = NULL, years = NULL,
-  tz = "GMT")
+  lonLim = NULL, latLim = NULL, season = NULL, years = NULL, tz = "")
 }
 \arguments{
 \item{dataset}{A character string indicating the database to be accessed. This is usually a path to a local file or a URL
@@ -36,8 +35,7 @@ Currently only the standard \dQuote{ASCII} format supported. See references for 
 
 \item{tz}{A time zone specification to be used for the conversion of dates, if one is required
 (i.e., if the time zone of the dataset does not correspond to the system-specific one; see
-\code{\link[base]{timezones}} for details). The default assumes "GMT" (UTC, Universal Time, Coordinated),
-but be very careful as station datasets are quite heterogeneous.}
+\code{\link[base]{timezones}} for details). Default to unspecified (i.e. \code{tz = ""}).}
 }
 \value{
 a list with the following elements:

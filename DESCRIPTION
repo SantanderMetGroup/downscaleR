@@ -9,11 +9,12 @@ Imports:
     RCurl,
     abind,
     fields,
-    MASS
+    MASS,
+    verification
 Type: Package
 Title: R package for climate data analysis and downscaling
-Version: 0.3-0
-Date: 22-Aug-2014
+Version: 0.4-0
+Date: 29-Aug-2014
 Author: Santander Meteorology Group <http://www.meteo.unican.es>
 Maintainer: Joaquin Bedia <bediaj@unican.es>
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
