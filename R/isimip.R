@@ -25,8 +25,8 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
       dimPred<-dim(pred$Data)
       dimMonthlyPred<-dim(pred$Data)
       dimMonthlyPred[which(grepl("^time",attr(pred$Data, "dimensions")))]<-length(unique(datesObs))
-      monthlyObs<- array(data = NA, dim = dimObs)
-      monthlyPred<- array(data = NA, dim = dimPred)
+      monthlyObs<- array(data = NA, dim = dimMonthlyObs)
+      monthlyPred<- array(data = NA, dim = dimMonthlyPred)
       month2dayObs<- array(data = NA, dim = c(length(datesObs),1))
       obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
       pred.time.index <- grep("^time$", attr(pred$Data, "dimensions"))
@@ -83,19 +83,14 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
             dimAux[pred.time.index]<-length(months)
             monthlyCorrection<-array(data = NA, dim = dimAux)
             for (i in 1:length(months)){
-                  indMonth<-which(grepl(paste("-",months[i],"-", sep=""),unique(datesObs)))
+                  indMonth <- which(grepl(paste("-",months[i],"-", sep=""),unique(datesObs)))
                   indTimeObs <- rep(list(bquote()), length(dimObs))
                   indTimeObs[[obs.time.index]] <- indMonth
                   callObs <- as.call(c(list(as.name("["),quote(monthlyObs)), indTimeObs))
                   auxObs <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimObs),obs.time.index), na.rm = TRUE)
                   indTimeObs <- rep(list(bquote()), length(dimPred))
-                  for (d in 1:length(dimPred)){
-                        indTimeObs[[d]] <- 1:dimPred[d]
-                  }
-                  indTimeObs<-as.matrix(expand.grid(indTimeObs))
-                  indTimeObs1 <- rep(list(bquote()), length(dimPred))
-                  indTimeObs1[[pred.time.index]] <- indMonth
-                  callObs <- as.call(c(list(as.name("["),quote(monthlyPred)), indTimeObs1))
+                  indTimeObs[[pred.time.index]] <- indMonth
+                  callObs <- as.call(c(list(as.name("["),quote(monthlyPred)), indTimeObs))
                   auxPrd <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimPred),pred.time.index), na.rm = TRUE)
                   indTimeObs <- rep(list(bquote()), length(dimPred))
                   for (d in 1:length(dimPred)){
@@ -103,7 +98,8 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
                   }
                   indTimeObs[[pred.time.index]] <- i
                   indTimeObs<-as.matrix(expand.grid(indTimeObs))
-                  monthlyCorrection[indTimeObs]<-array(auxObs, dim = dim(auxPrd))-auxPrd
+                  auxObs <- array(auxObs, dim = c(dim(auxObs),dimPred[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))]))
+                  monthlyCorrection[indTimeObs]<-aperm(auxObs,match(dim(auxPrd),dim(auxObs)))-auxPrd
             }
             indTimeObs <- rep(list(bquote()), length(dimPred))
             for (d in 1:length(dimPred)){
@@ -111,21 +107,21 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
             }
             indTimeObs[[pred.time.index]] <- month2dayObs
             indTimeObs<-as.matrix(expand.grid(indTimeObs))
-            pred$Data <- pred$Data-monthlyPred[indTimeObs]
+            pred$Data <- pred$Data-array(monthlyPred[indTimeObs], dim = dimPred)
             indTimeObs <- rep(list(bquote()), length(dimObs))
             for (d in 1:length(dimObs)){
                   indTimeObs[[d]] <- 1:dimObs[d]
             }
             indTimeObs[[obs.time.index]] <- month2dayObs
             indTimeObs<-as.matrix(expand.grid(indTimeObs))
-            obs$Data <- obs$Data-monthlyObs[indTimeObs]
+            obs$Data <- obs$Data-array(monthlyObs[indTimeObs], dim = dimObs)
             indTimeObs <- rep(list(bquote()), length(dimFor))
             for (d in 1:length(dimFor)){
                   indTimeObs[[d]] <- 1:dimFor[d]
             }
             indTimeObs[[sim.time.index]] <- month2dayFor
             indTimeObs<-as.matrix(expand.grid(indTimeObs))
-            sim$Data <- sim$Data-monthlyFor[indTimeObs]
+            sim$Data <- sim$Data-array(monthlyFor[indTimeObs], dim = dimFor)      
             indTimeObs <- rep(list(bquote()), length(dimObs))
             indTimePrd <- rep(list(bquote()), length(dimPred))
             indTimeSim <- rep(list(bquote()), length(dimFor))
@@ -190,7 +186,7 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
             }
             indTimeFor[[sim.time.index]] <- month2dayFor
             indTimeFor<-as.matrix(expand.grid(indTimeFor))
-            sim$Data <- sim$Data+monthlyFor[indTimeFor]
+            sim$Data <- sim$Data+array(monthlyFor[indTimeFor], dim = dimFor)      
             for (i in 1:length(months)){
                   indMonthFor<-which(grepl(paste("-",months[i],"-", sep=""),datesFor))
                   if (!is.null(indMonthFor)){
@@ -222,19 +218,14 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
             dimAux[pred.time.index]<-length(months)
             monthlyCorrection<-array(data = NA, dim = dimAux)
             for (i in 1:length(months)){
-                  indMonth<-which(grepl(paste("-",months[i],"-", sep=""),dimMonthlyObs[obs.time.index]))
+                  indMonth<-which(grepl(paste("-",months[i],"-", sep=""),unique(datesObs)))
                   indTimeObs <- rep(list(bquote()), length(dimObs))
                   indTimeObs[[obs.time.index]] <- indMonth
                   callObs <- as.call(c(list(as.name("["),quote(monthlyObs)), indTimeObs))
                   auxObs <- apply(eval(callObs), FUN = sum, MARGIN = setdiff(1:length(dimObs),obs.time.index), na.rm = TRUE)
                   indTimeObs <- rep(list(bquote()), length(dimPred))
-                  for (d in 1:length(dimPred)){
-                        indTimeObs[[d]] <- 1:dimPred[d]
-                  }
-                  indTimeObs<-as.matrix(expand.grid(indTimeObs))
-                  indTimeObs1 <- rep(list(bquote()), length(dimPred))
-                  indTimeObs1[[pred.time.index]] <- indMonth
-                  callObs <- as.call(c(list(as.name("["),quote(monthlyPred)), indTimeObs1))
+                  indTimeObs[[pred.time.index]] <- indMonth
+                  callObs <- as.call(c(list(as.name("["),quote(monthlyPred)), indTimeObs))
                   auxPrd <- apply(eval(callObs), FUN = sum, MARGIN = setdiff(1:length(dimPred),pred.time.index), na.rm = TRUE)
                   indTimeObs <- rep(list(bquote()), length(dimPred))
                   for (d in 1:length(dimPred)){
@@ -242,11 +233,16 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
                   }
                   indTimeObs[[pred.time.index]] <- i
                   indTimeObs<-as.matrix(expand.grid(indTimeObs))
-                  monthlyCorrection[indTimeObs]<-array(auxObs, dim = dim(auxPrd))/auxPrd
+                  auxObs <- array(auxObs, dim = c(dim(auxObs),dimPred[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))]))
+                  monthlyCorrection[indTimeObs]<-aperm(auxObs,match(dim(auxPrd),dim(auxObs)))/auxPrd
             }
-            # Correccion de la frecuencia de días secos y redistribucion de la precipitacion entre el resto de dias:
+            # Wet/dry days frequency correction:
             obs2perm <- match(attr(pred$Data, "dimensions"),attr(obs$Data, "dimensions"))[which(!is.na(match(attr(pred$Data, "dimensions"),attr(obs$Data, "dimensions"))))]
-            nP <- apply(array(as.array(aperm(monthlyObs, obs2perm)<=threshold[1] & !is.na(aperm(monthlyObs, obs2perm))), dim = dim(monthlyPred))*as.array(monthlyPred<=0 & !is.na(monthlyPred)), FUN = sum, MARGIN = setdiff(1:length(dimPred),pred.time.index))# Interpretamos la formula como interseccion
+            auxPermObs <- 1:length(dimPred)
+            auxPermObs[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))] <- length(dimObs)+1:length(setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions"))))
+            auxPermObs[match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions"))] <- obs2perm
+            auxObs <- aperm(array(monthlyObs, dim = c(dim(monthlyObs),dimPred[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))])),auxPermObs)
+            nP <- apply(as.array(auxObs<=threshold[1] & !is.na(auxObs))*as.array(monthlyPred<=0 & !is.na(monthlyPred)), FUN = sum, MARGIN = setdiff(1:length(dimPred),pred.time.index))# Interpretamos la formula como interseccion
             Ndry <- array(data = NA, dim = dimObs[setdiff(1:length(dimObs), obs.time.index)])
             epsM <- array(data = NA, dim = dimPred[setdiff(1:length(dimPred), pred.time.index)])
             indTimePrd <- rep(list(bquote()), length(setdiff(1:length(dimPred),pred.time.index)))
@@ -308,7 +304,7 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
                         indWet[[pred.time.index]] <- indWetMonth
                         indWet[setdiff(1:length(dimPred),pred.time.index)] <- as.list(indTimePrd[i,])
                         indWet <- as.matrix(expand.grid(indWet))
-                        indNdry <- as.list(indTimePrd[i,which(match(attr(pred$Data, "dimensions"),attr(obs$Data, "dimensions")[setdiff(1:length(dimObs),obs.time.index)], nomatch = 0)>0)])
+                        indNdry <- as.list(indTimePrd[i,which(match(attr(pred$Data, "dimensions")[setdiff(1:length(dimPred),pred.time.index)],attr(obs$Data, "dimensions")[setdiff(1:length(dimObs),obs.time.index)], nomatch = 0)>0)])
                         indNdry <- as.matrix(expand.grid(indNdry))
                         auxP <- sort(pred$Data[indWet], decreasing = FALSE, na.last = NA)
                         if (is.na(Ndry[indNdry]) | Ndry[indNdry]==length(indWetMonth)){
@@ -388,8 +384,14 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
             }
             indTimeFor[[sim.time.index]] <- month2dayFor
             indTimeFor<-as.matrix(expand.grid(indTimeFor))
-            wetDaysObs <- as.array(!is.na(pred$Data) & pred$Data>aperm(array(epsD, dim = c(dim(epsD),dimPred[pred.time.index])), c(length(dimPred),1:(length(dimPred)-1))))*as.array(monthlyPred[indTimePrd]>aperm(array(epsM, dim = c(dim(epsD),dimPred[pred.time.index])), c(length(dimPred),1:(length(dimPred)-1))))*array(as.array(aperm(obs$Data, obs2perm)> threshold[3] & !is.na(as.array(aperm(obs$Data, obs2perm)))), dim = dimPred)*array(as.array(aperm(array(monthlyObs[indTimeObs], dim = dimObs), obs2perm)> threshold[1] & !is.na(as.array(aperm(array(monthlyObs[indTimeObs], dim = dimObs), obs2perm)))), dim = dimPred)
-            wetDaysFor <- as.array(!is.na(sim$Data) & sim$Data>aperm(array(epsD, dim = c(dim(epsD),dimFor[sim.time.index])), c(length(dimFor),1:(length(dimFor)-1))))*as.array(monthlyFor[indTimeFor]>aperm(array(epsM, dim = c(dim(epsD),dimFor[sim.time.index])), c(length(dimFor),1:(length(dimFor)-1))))
+            auxPerm <- 1:length(dimPred)
+            auxPerm[pred.time.index] <- length(dim(epsD))+1
+            auxPerm[setdiff(1:length(dimPred),pred.time.index)] <- 1:length(dim(epsD))
+            auxPermObs <- 1:length(dimPred)
+            auxPermObs[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))] <- length(dimObs)+1:length(setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions"))))
+            auxPermObs[match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions"))] <- obs2perm
+            wetDaysObs <- as.array(!is.na(pred$Data) & pred$Data>aperm(array(epsD, dim = c(dim(epsD),dimPred[pred.time.index])), auxPerm))*as.array(monthlyPred[indTimePrd]>aperm(array(epsM, dim = c(dim(epsD),dimPred[pred.time.index])), auxPerm))*aperm(array(as.array(obs$Data> threshold[3] & !is.na(obs$Data)), dim = c(dimPred[match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions"))],dimPred[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))])),auxPermObs)*aperm(array(as.array(array(monthlyObs[indTimeObs], dim = dimObs)> threshold[1] & !is.na(as.array(array(monthlyObs[indTimeObs], dim = dimObs)))), dim = c(dimPred[match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions"))],dimPred[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))])),auxPermObs)
+            wetDaysFor <- as.array(!is.na(sim$Data) & sim$Data>aperm(array(epsD, dim = c(dim(epsD),dimFor[sim.time.index])), auxPerm))*as.array(monthlyFor[indTimeFor]>aperm(array(epsM, dim = c(dim(epsD),dimFor[sim.time.index])), auxPerm))
             indTime <- rep(list(bquote()), length(setdiff(1:length(dimFor),sim.time.index)))
             for (d in 1:length(setdiff(1:length(dimFor),sim.time.index))){
                   indTime[[d]] <- 1:dimFor[setdiff(1:length(dimFor),sim.time.index)[d]]
@@ -462,14 +464,18 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
                   indEstPrd[[d]] <- 1:dimPred[setdiff(1:length(dimPred),pred.time.index)[d]]
             }
             indEstPrd<-as.matrix(expand.grid(indEstPrd))
-            for (i in 1:dim(indEstPrd[1])){
+            for (i in 1:dim(indEstPrd)[1]){
                   indTime <- rep(list(bquote()), length(dimPred))
                   indTime[[pred.time.index]] <- 1:dimPred[pred.time.index]
                   indTime[setdiff(1:length(dimPred),pred.time.index)] <- as.list(indEstPrd[i,])
                   indTime<-as.matrix(expand.grid(indTime))
+                  indTimeSim <- rep(list(bquote()), length(dimFor))
+                  indTimeSim[[sim.time.index]] <- 1:dimFor[sim.time.index]
+                  indTimeSim[setdiff(1:length(dimFor),sim.time.index)] <- as.list(indEstPrd[i,])
+                  indTimeSim<-as.matrix(expand.grid(indTimeSim))
                   for (j in 1:length(months)){
                         indMonth <- which(unlist(strsplit(as.character(datesObs), "[-]"))[seq(2,length(yearList),3)] == months[j] & wetDaysObs[indTime] == 1)
-                        indMonthFor <- which(unlist(strsplit(as.character(datesFor), "[-]"))[seq(2,length(yearListFor),3)] == months[j] & wetDaysFor[indTime] == 1)
+                        indMonthFor <- which(unlist(strsplit(as.character(datesFor), "[-]"))[seq(2,length(yearListFor),3)] == months[j] & wetDaysFor[indTimeSim] == 1)
                         if (length(indMonth)>80 & length(indMonthFor)>0){
                               indTimePred <- rep(list(bquote()), length(dimPred))
                               indTimePred[[pred.time.index]] <- indMonth
@@ -484,25 +490,21 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
                               indTimeFor[setdiff(1:length(dimFor),sim.time.index)] <- as.list(indEstPrd[i,])
                               indTimeFor<-as.matrix(expand.grid(indTimeFor))
                               if (min(c(mean(pred$Data[indTimePred], na.rm = TRUE), mean(obs$Data[indTimeObs], na.rm = TRUE)), na.rm = TRUE)>0.01){
-                                    # optAdjust=statset('Robust','on');
                                     auxO <- sort(obs$Data[indTimeObs], decreasing = FALSE, na.last = NA)
                                     auxP <- sort(pred$Data[indTimePred], decreasing = FALSE, na.last = NA)
-                                    fit1 = nls(auxO ~ (q1+q2*(auxP-min(auxP, na.rm = TRUE)))*(1-exp(-(auxP-min(auxP, na.rm = TRUE))/q3)),start=list(q1=runif(1, min = 0, max = 1),q2=runif(1, min = 0, max = 1),q3=runif(1, min = 0, max = 1)*(max(auxP, na.rm = TRUE)-min(auxP, na.rm = TRUE))), na.action = na.omit)
-                                    fit2 = nls(auxO ~ (q1+q2*(auxP-min(auxP, na.rm = TRUE)))*(1-exp(-(auxP-min(auxP, na.rm = TRUE))/q3)),start=list(q1=runif(1, min = 0, max = 1),q2=runif(1, min = 0, max = 1),q3=runif(1, min = 0, max = 1)*(max(auxP, na.rm = TRUE)-min(auxP, na.rm = TRUE))), na.action = na.omit)
-                                    if (min(c(sum(resid(fit1)^2),sum(resid(fit2)^2)), na.rm = TRUE)<=1e-8){
-                                          if (sum(resid(fit1)^2)<=sum(resid(fit2)^2)){
-                                                fit<-fit1
+                                    tryCatch({
+                                          fit <- nls(auxO ~ (q1+q2*(auxP-min(auxP, na.rm = TRUE)))*(1-exp(-(auxP-min(auxP, na.rm = TRUE))/q3)),start=list(q1=runif(1, min = 0, max = 1),q2=runif(1, min = 0, max = 1),q3=runif(1, min = 0, max = 1)*(max(auxP, na.rm = TRUE)-min(auxP, na.rm = TRUE))), na.action = na.omit)
+                                          if (sum(resid(fit)^2)<=1e-8 & length(auxP)>3){
+                                                auxS <- abs(predict(fit,sim$Data[indTimeFor]))
                                           }else{
-                                                fit<-fit2
+                                                lmAdjust<-lm(auxP ~ auxO)
+                                                auxS <- abs(coef(lmAdjust)[1]+coef(lmAdjust)[2]*as.numeric(sim$Data[indTimeFor]))
                                           }
-                                          if (length(auxP)>3){
-                                                sim$Data[indTimeFor] <- abs(predict(fit,sim$Data[indTimeFor]))
-                                          }
-                                    }
-                                    else{
+                                    }, error = function(e) e, finally = {
                                           lmAdjust<-lm(auxP ~ auxO)
-                                          sim$Data[indTimeFor] <- abs(coef(lmAdjust)[1]+coef(lmAdjust)[2]*sim$Data[indTimeFor])
-                                    }
+                                          auxS <- abs(coef(lmAdjust)[1]+coef(lmAdjust)[2]*as.numeric(sim$Data[indTimeFor]))
+                                    })
+                                    sim$Data[indTimeFor] <- auxS
                               }
                         }
                   }
@@ -513,9 +515,9 @@ isimip <- function (obs, pred, sim, pr.threshold = 1) {
             }
             indTimeFor[[sim.time.index]] <- month2dayFor
             indTimeFor<-as.matrix(expand.grid(indTimeFor))
-            sim$Data <- sim$Data*monthlyFor[indTimeFor]
+            sim$Data <- sim$Data*array(monthlyFor[indTimeFor], dim = dimFor)      
             for (i in 1:length(months)){
-                  indMonthFor<-which(grepl(paste("-",months[i],"-", sep=""),unique(datesFor)))
+                  indMonthFor<-which(grepl(paste("-",months[i],"-", sep=""),datesFor))
                   if (!is.null(indMonthFor)){
                         indCorrection <- rep(list(bquote()), length(dim(monthlyCorrection)))
                         for (d in 1:length(dimFor)){
