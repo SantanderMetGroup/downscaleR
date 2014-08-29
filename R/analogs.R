@@ -55,7 +55,7 @@
 #'  their robust application under climate change conditions. J. Clim. 26, 171-188
 #' \item
 #' Bedia, J. \emph{et al.}, 2013. Robust projections of Fire Weather Index in the Mediterranean
-#'  using statistical downscaling. Clim. Change 120, 229–247.
+#'  using statistical downscaling. Clim. Change 120, 229-247.
 #' }
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com} 
 #'
@@ -102,7 +102,7 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean")) 
       x.sim <- sim$xyCoords$x
       y.sim <- sim$xyCoords$y
       # Spatial consistency check pred-sim
-      if (!all.equal(x.pred, x.sim, tolerance = 1e-03) || !all.equal(y.pred, y.sim, tolerance = 1e-03)) {
+      if (!isTRUE(all.equal(x.pred, x.sim, tolerance = 1e-03)) || !isTRUE(all.equal(y.pred, y.sim, tolerance = 1e-03))) {
             stop("'pred' and 'sim' datasets are not spatially consistent")
       }
       # Temporal matching check (obs-pred)
@@ -285,6 +285,14 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean")) 
       d.list <- NULL
       # Data array
       dimNames <- attr(obs$Data, "dimensions")
+      # Remove "station" from dimensions for single-station objects
+      st.dim.index <- grep("station", dimNames)
+      if (!identical(st.dim.index, integer(0))) {
+            dim.st <- dim(obs$Data)[st.dim.index]
+            if (identical(dim.st, 1L)) {
+                  dimNames <- dimNames[-st.dim.index]
+            }
+      }
       obs$Data <- drop(unname(do.call("abind", c(out.list, along = -1))))
       out.list <- NULL
       if ("member" %in% attr(sim$Data, "dimensions")) {
@@ -300,3 +308,4 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean")) 
       return(obs)
 }
 # End
+
