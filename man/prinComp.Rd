@@ -75,7 +75,7 @@ It is therefore advisable to avoid the use of this option for large datasets, an
 multimember fields instead.
 }
 \examples{
-\dontrun{
+\donttest{
 # First a multifield containing a set of variables is loaded (e.g. data for spring spanning the 30-year period 1981--2010):
 ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"), season = c(3:5), years = 1981:2010)
@@ -96,7 +96,6 @@ attributes(pca$hus)$`scaled:scale`
 vexp <- attributes(pca$hus)$explained_variance
 # The classical "scree plot":
 barplot(1-vexp, names.arg = paste("PC",1:length(vexp)), las = 2, ylab = "Fraction of unexplained variance")
-}
 
 # This is an example using a multimember object:
 data(tasmax_forecast)
@@ -118,6 +117,7 @@ mm.multifield <- makeMultiField(multimember, multimember2)
 pca.mm.mf <- prinComp(mm.multifield, n.eofs = 10)
 # Now there is a "COMBINED" element at the end of the output list
 str(pca.mm.mf)
+}
 }
 \author{
 J. Bedia \email{joaquin.bedia@gmail.com}

@@ -72,7 +72,7 @@
 #'  
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' 
-#' @examples \dontrun{
+#' @examples \donttest{
 #' # First a multifield containing a set of variables is loaded (e.g. data for spring spanning the 30-year period 1981--2010):
 #' ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 #' multifield <- loadMultiField(ncep, vars = c("hus@@85000", "ta@@85000", "psl"), season = c(3:5), years = 1981:2010)
@@ -93,8 +93,7 @@
 #' vexp <- attributes(pca$hus)$explained_variance
 #' # The classical "scree plot":
 #' barplot(1-vexp, names.arg = paste("PC",1:length(vexp)), las = 2, ylab = "Fraction of unexplained variance")
-#' }
-#' 
+#'  
 #' # This is an example using a multimember object:
 #' data(tasmax_forecast)
 #' # In order make the computation faster, we interpolate to a coarser grid of 2.5 deg
@@ -115,7 +114,7 @@
 #' pca.mm.mf <- prinComp(mm.multifield, n.eofs = 10)
 #' # Now there is a "COMBINED" element at the end of the output list
 #' str(pca.mm.mf)
-#'
+#' }
 
 prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field", "gridbox")) {
       if (!is.null(n.eofs) & !is.null(v.exp)) {
