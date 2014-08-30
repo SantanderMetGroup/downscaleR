@@ -52,6 +52,10 @@
 #'  Atmospheric Science, Wiley, NY
 #'  
 
+
+
+
+
 tercilePlot <- function(mm.obj, obs, stationId = NULL, color.pal = c("ypb", "reds")) {
       color.pal <- match.arg(color.pal, c("ypb", "reds"))
       mm.dimNames <- attr(mm.obj$Data, "dimensions")
@@ -150,20 +154,7 @@ tercilePlot <- function(mm.obj, obs, stationId = NULL, color.pal = c("ypb", "red
             stop("Forecast and verifying observations are not coincident in time")
       }
       mm.dates <- NULL
-      yrs <- obs.dates$year + 1900
-      # Adjustment of year-crossing seasons to adequately handle annual aggregation
-      season <- getSeason(obs)      
-      if (!identical(season, sort(season))) {
-            yy <- unique(yrs)[-1]
-            aux <- match(obs.dates$mon + 1, season)
-            aux
-            brks <- c(1, which(diff(aux) < 0) + 1, length(aux)+1)
-            l <- lapply(1:(length(brks) - 1), function(x) {
-                  a <- yrs[brks[x]:(brks[x+1]-1)]
-                  return(rep(yy[x], length(a)))
-            })
-            yrs  <- do.call("c", l)
-      }
+      yrs <- getYearsAsINDEX(obs)
       yy <- unique(yrs)
       # Computation of terciles and exceedance probabilities
       n.mem <- dim(arr)[1]
