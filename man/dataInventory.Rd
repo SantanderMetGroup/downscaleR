@@ -25,16 +25,20 @@ Function to provide a quick overview of a climate dataset
 The variable names returned correspond to the original names of the variables as stored in the dataset,
 and not to the standard naming convention defined in the vocabulary.
 }
+\examples{
+\donttest{
+gsn <- file.path(find.package("downscaleR"), "datasets/observations/GSN_Iberia")
+di <- dataInventory(gsn)
+str(di)
+# To obtain summary statistics of the variables stored:
+di.stats <- dataInventory(gsn, return.stats = TRUE)
+print(di.stats$Summary.stats)
+}
+}
 \author{
 J Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
-Other homogenization: \code{\link{loadGridData}};
-  \code{\link{loadMultiField}}; \code{\link{vocabulary}}
-
-Other loading: \code{\link{loadGridData}};
-  \code{\link{loadMultiField}};
-  \code{\link{loadStationData}};
-  \code{\link{makeAggregatedDataset}}
+\code{\link{stationInfo}} for a quick overview of available stations in station datasets.
 }
 

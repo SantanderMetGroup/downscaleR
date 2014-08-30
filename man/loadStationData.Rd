@@ -80,8 +80,8 @@ J. Bedia \email{joaquin.bedia@gmail.com}
 \url{https://github.com/SantanderMetGroup/downscaleR/wiki/Observation-Data-format}
 }
 \seealso{
-Other loading: \code{\link{dataInventory}};
-  \code{\link{loadGridData}}; \code{\link{loadMultiField}};
+Other loading: \code{\link{loadGridData}};
+  \code{\link{loadMultiField}};
   \code{\link{makeAggregatedDataset}}
 }
 

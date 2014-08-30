@@ -41,8 +41,8 @@ data(vocabulary)
 print(vocabulary)
 }
 \seealso{
-Other homogenization: \code{\link{dataInventory}};
-  \code{\link{loadGridData}}; \code{\link{loadMultiField}}
+Other homogenization: \code{\link{loadGridData}};
+  \code{\link{loadMultiField}}
 }
 \keyword{datasets}
 

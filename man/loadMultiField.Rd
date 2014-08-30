@@ -87,11 +87,10 @@ plotMeanField(multifield)
 J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
-Other homogenization: \code{\link{dataInventory}};
-  \code{\link{loadGridData}}; \code{\link{vocabulary}}
+Other homogenization: \code{\link{loadGridData}};
+  \code{\link{vocabulary}}
 
-Other loading: \code{\link{dataInventory}};
-  \code{\link{loadGridData}};
+Other loading: \code{\link{loadGridData}};
   \code{\link{loadStationData}};
   \code{\link{makeAggregatedDataset}}
 
