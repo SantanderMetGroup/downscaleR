@@ -56,28 +56,28 @@
 #' 
 #' @export
 #' 
-#' @family loading
-#' @family loading.grid
-#' @family homogenization
-#' @family multifield
+#' @seealso \code{\link{loadGridData}} for loading fields. \code{\link{makeMultiField}} for constructing multifields from 
+#' fields. \code{\link{interGridData}} for details on interpolation.
+
 #' 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' 
-#' @examples \dontrun{
+#' @examples \donttest{
 #' # Load three typical predictors for precipitation on the Iberian Peninsula in winter (DJF),
 #' # on a regular squared grid of 1 deg (bilinearly interpolated):
 #' ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 #' multifield <- loadMultiField(ncep, vars = c("hus@@85000", "ta@@85000", "psl"), 
 #'          dictionary = TRUE, lonLim = c(-10,5), latLim = c(35.5, 44.5), season = c(12,1,2),
-#'          years = 1991:2010, new.grid = list(x = c(-10,5,1), y = c(35.5,44.5,1)))
+#'          years = 1991:2010, new.grid = list(x = c(-10,5,1), y = c(35.5,44.5,1)), interp.method = "bilinear")
 #' plotMeanField(multifield)
 #' }
 #'           
 
-loadMultiField <- function(dataset, vars, dictionary = TRUE, lonLim = NULL, latLim = NULL, season = NULL, years = NULL, time = "none", new.grid = list(x = NULL, y = NULL), interp.method = "bilinear") {
+loadMultiField <- function(dataset, vars, dictionary = TRUE, lonLim = NULL, latLim = NULL, season = NULL, years = NULL, time = "none", new.grid = list(x = NULL, y = NULL), interp.method = c("nearest", "bilinear")) {
       if (length(vars) == 1) {
             stop("One single variable is not a multifield.\nUse 'loadGridData' instead")
       }
+      interp.method <- match.arg(interp.method, choices = c("nearest", "bilinear"))
       names(new.grid) <- c("x", "y")
       if (length(time) == 1) {
             time <- rep(time, length(vars))
