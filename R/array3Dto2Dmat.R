@@ -3,7 +3,7 @@
 #'  to 2D matrices of the form [time, grid-point], in this order. Mainly for PCA analysis.
 #'@param array3D A 3-dimensional array with longitude, latitude and time dimensions
 #'@return A 2-dimensional matrix with time in rows and grid-points in columns.
-#'@details The function is intended to convert geo-grids to a convenient format for PCA-related analyses.
+#'@details The function is intended to convert fields to a convenient format for PCA-related analyses.
 #' The columns are ordered in X and Y ascending order, with coordinate Y varying faster. Thus, column coordinates 
 #' would be given by the expression: \emph{expand.grid(gridData$xyCoords$y, gridData$xyCoords$x)[2:1]}. This
 #' is the most convenient format in order to naturally fill a matrix with the adequate number of columns (longitudes) 

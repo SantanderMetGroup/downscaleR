@@ -12,8 +12,8 @@ this is the path to the directory the dataset lives in.}
 \item{plot}{Logical indicating if a map displaying the station locations should be displayed. Default to TRUE.}
 }
 \value{
-A data.frame with the station codes in its first column, and the rest of metadata
- in the following columns. If \code{plot = TRUE}, a map of the station locations.
+A data.frame with the station codes in its first column, followed by longitude and latitude,
+ and the rest of metadata (if any) in the following columns. If \code{plot = TRUE}, also a map of the station locations.
 }
 \description{
 Get a quick overview of the stations contained in a stations dataset
