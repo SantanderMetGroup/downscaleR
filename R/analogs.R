@@ -2,13 +2,7 @@
 #' 
 #' @description Implementation of the downscaling analogs method
 #' 
-#' @param obs Predictand correpsonding to an observational dataset. This could be either an stations object as
-#'  returned by \code{\link{loadStationData}} or a field.
-#' @param pred Predictor(s) dataset, i.e., explanatory variables used to build the model (typically reanalysis data).
-#'   This can be a single field, or more often a multifield, if several variables are to be used as predictors or their
-#'   principal components (as returned by \code{\link{prinComp}}).
-#' @param sim Simulation data. Field/multifield (possibly also multi-member) data providing the model simulations to be
-#'  downscaled.
+#' @template templateObsPredSim
 #' @param n.neigh Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.
 #' @param sel.fun Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n.neig = 1}.
 #' Current values are \code{"random"} (the default) and \code{"mean"}. See details.

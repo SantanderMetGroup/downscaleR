@@ -7,11 +7,14 @@ biasCorrection(obs, pred, sim, method = c("qqmap", "delta", "scaling",
   "unbiasing", "piani"), pr.threshold = 1)
 }
 \arguments{
-\item{obs}{A field or station data containing the observations}
+\item{obs}{A field or station data containing the observed climate data for the training period}
 
-\item{pred}{A field containing the prediction series}
+\item{pred}{A field containing the simulated climate by the model for the training period. This can be either
+the same variable as \code{obs}, in the case of model calibration (bias correction and related techniques) or MOS (model
+ output statistics) approaches, or a set of predictors in the case of \emph{perfect prog} downscaling approaches (possibly
+ after principal component analysis via the \code{\link{prinComp}} output).}
 
-\item{sim}{A field containing the simuation series}
+\item{sim}{A field containing the simulated climate for the variables used in \code{pred}, but considering the test period.}
 
 \item{method}{method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
 \code{"scaling"}, \code{"unbiasing"} and \code{"piani"}. See details.}
@@ -32,12 +35,13 @@ Implementation of several standard bias correction methods
 S. Herrera \email{sixto@predictia.es}
 }
 \references{
-~References to the different methods
+R.A.I. Wilcke, T. Mendlik and A. Gobiet (2013) Multi-variable error correction of regional climate models. Climatic Change, 120, 871-887
+
+A. Amengual, V. Homar, R. Romero, S. Alonso, and C. Ramis (2012) A Statistical Adjustment of Regional Climate Model Outputs to Local Scales: Application to Platja de Palma, Spain. J. Clim., 25, 939-957
+
+C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
 }
 \seealso{
-Other calibration: \code{\link{calibrateProj}};
-  \code{\link{isimip}}
-
 Other downscaling: \code{\link{analogs}};
   \code{\link{calibrateProj}}; \code{\link{isimip}}
 }

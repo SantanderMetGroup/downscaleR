@@ -6,13 +6,17 @@
 isimip(obs, pred, sim, pr.threshold = 1)
 }
 \arguments{
-\item{obs}{A field or station data containing the observations}
+\item{obs}{A field or station data containing the observed climate data for the training period}
 
-\item{pred}{A field containing the prediction series}
+\item{pred}{A field containing the simulated climate by the model for the training period. This can be either
+the same variable as \code{obs}, in the case of model calibration (bias correction and related techniques) or MOS (model
+ output statistics) approaches, or a set of predictors in the case of \emph{perfect prog} downscaling approaches (possibly
+ after principal component analysis via the \code{\link{prinComp}} output).}
 
-\item{sim}{A field containing the simuation series}
+\item{sim}{A field containing the simulated climate for the variables used in \code{pred}, but considering the test period.}
 
-\item{pr.threshold}{pr.threshold}
+\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
+\code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
 }
 \value{
 A field with the corrected data
@@ -27,9 +31,6 @@ S. Herrera \email{sixto@predictia.es}
 Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F.: A trend-preserving bias correction -- the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236, doi:10.5194/esd-4-219-2013, 2013
 }
 \seealso{
-Other calibration: \code{\link{biasCorrection}};
-  \code{\link{calibrateProj}}
-
 Other downscaling: \code{\link{analogs}};
   \code{\link{biasCorrection}}; \code{\link{calibrateProj}}
 }

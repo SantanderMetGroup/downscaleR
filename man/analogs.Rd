@@ -6,15 +6,14 @@
 analogs(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean"))
 }
 \arguments{
-\item{obs}{Predictand correpsonding to an observational dataset. This could be either an stations object as
-returned by \code{\link{loadStationData}} or a field.}
+\item{obs}{A field or station data containing the observed climate data for the training period}
 
-\item{pred}{Predictor(s) dataset, i.e., explanatory variables used to build the model (typically reanalysis data).
-This can be a single field, or more often a multifield, if several variables are to be used as predictors or their
-principal components (as returned by \code{\link{prinComp}}).}
+\item{pred}{A field containing the simulated climate by the model for the training period. This can be either
+the same variable as \code{obs}, in the case of model calibration (bias correction and related techniques) or MOS (model
+ output statistics) approaches, or a set of predictors in the case of \emph{perfect prog} downscaling approaches (possibly
+ after principal component analysis via the \code{\link{prinComp}} output).}
 
-\item{sim}{Simulation data. Field/multifield (possibly also multi-member) data providing the model simulations to be
-downscaled.}
+\item{sim}{A field containing the simulated climate for the variables used in \code{pred}, but considering the test period.}
 
 \item{n.neigh}{Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.}
 

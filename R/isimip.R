@@ -6,10 +6,10 @@
 #' @description Implementation of several standard bias correction methods
 #' @author S. Herrera \email{sixto@@predictia.es}
 #' @template templateObsPredSim
-#' @param pr.threshold pr.threshold
+#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
+#'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).
 #' @return A field with the corrected data
 #' @family downscaling
-#' @family calibration
 #' @export
 #' @references
 #' Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F.: A trend-preserving bias correction -- the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236, doi:10.5194/esd-4-219-2013, 2013
