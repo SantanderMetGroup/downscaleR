@@ -3,9 +3,9 @@
 #' @description Constructs a (possibly multimember) multifield from different (multimember) fields.
 #' 
 #' @param ... Input fields to form the multifield. These must be compatible in time and space (see details).
-#' @param spatial.tolerance numeric. Coordinate differences smaller than this value will be considered equal coordinates.
-#' Dfeault to 0.001 --assuming that degrees are being used it seems a reasonable rounding error after interpolation--.
-#'  This value is passed to the \code{\link{all.equal}} method to check for spatial consistency of the input fields.
+#' @param spatial.tolerance numeric. Coordinate differences smaller than \code{spatial.tolerance} will be considered equal 
+#' coordinates. Default to 0.001 --assuming that degrees are being used it seems a reasonable rounding error after interpolation--.
+#' This value is passed to the \code{\link{identical}} function to check for spatial consistency of the input fields.
 #' 
 #' @return A (multimember) multifield object encompassing the different input (multimember) fields
 #' 

@@ -81,7 +81,6 @@ J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
 Other loading: \code{\link{loadGridData}};
-  \code{\link{loadMultiField}};
   \code{\link{makeAggregatedDataset}}
 }
 

@@ -11,10 +11,12 @@ Imports:
     fields,
     MASS,
     verification
+Suggests:
+    ecomsUDG.Raccess
 Type: Package
 Title: R package for climate data analysis and downscaling
 Version: 0.4-0
-Date: 29-Aug-2014
+Date: 03-Sep-2014
 Author: Santander Meteorology Group <http://www.meteo.unican.es>
 Maintainer: Joaquin Bedia <bediaj@unican.es>
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues

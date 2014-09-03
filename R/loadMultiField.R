@@ -57,7 +57,7 @@
 #' @export
 #' 
 #' @seealso \code{\link{loadGridData}} for loading fields. \code{\link{makeMultiField}} for constructing multifields from 
-#' fields. \code{\link{interGridData}} for details on interpolation.
+#' fields. \code{\link{interpGridData}} for details on interpolation.
 
 #' 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}

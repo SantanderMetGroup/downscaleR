@@ -5,7 +5,8 @@
 \usage{
 loadMultiField(dataset, vars, dictionary = TRUE, lonLim = NULL,
   latLim = NULL, season = NULL, years = NULL, time = "none",
-  new.grid = list(x = NULL, y = NULL), interp.method = "bilinear")
+  new.grid = list(x = NULL, y = NULL), interp.method = c("nearest",
+  "bilinear"))
 }
 \arguments{
 \item{dataset}{A character string indicating the database to be accessed. This is usually a path to a local file or a URL
@@ -73,13 +74,13 @@ If only one (either x or y, but not both) of the components of the \code{new.gri
  respective time series have different lengths).
 }
 \examples{
-\dontrun{
+\donttest{
 # Load three typical predictors for precipitation on the Iberian Peninsula in winter (DJF),
 # on a regular squared grid of 1 deg (bilinearly interpolated):
 ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"),
          dictionary = TRUE, lonLim = c(-10,5), latLim = c(35.5, 44.5), season = c(12,1,2),
-         years = 1991:2010, new.grid = list(x = c(-10,5,1), y = c(35.5,44.5,1)))
+         years = 1991:2010, new.grid = list(x = c(-10,5,1), y = c(35.5,44.5,1)), interp.method = "bilinear")
 plotMeanField(multifield)
 }
 }
@@ -87,14 +88,7 @@ plotMeanField(multifield)
 J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
-Other homogenization: \code{\link{loadGridData}};
-  \code{\link{vocabulary}}
-
-Other loading: \code{\link{loadGridData}};
-  \code{\link{loadStationData}};
-  \code{\link{makeAggregatedDataset}}
-
-Other loading.grid: \code{\link{getGrid}};
-  \code{\link{interpGridData}}; \code{\link{loadGridData}}
+\code{\link{loadGridData}} for loading fields. \code{\link{makeMultiField}} for constructing multifields from
+fields. \code{\link{interpGridData}} for details on interpolation.
 }
 

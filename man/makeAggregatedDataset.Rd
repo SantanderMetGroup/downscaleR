@@ -65,7 +65,6 @@ NcML Tutorial \url{http://www.unidata.ucar.edu/software/thredds/current/netcdf-j
 }
 \seealso{
 Other loading: \code{\link{loadGridData}};
-  \code{\link{loadMultiField}};
   \code{\link{loadStationData}}
 }
 

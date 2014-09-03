@@ -121,15 +121,12 @@ plotMeanField(field)
 J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
-Other homogenization: \code{\link{loadMultiField}};
-  \code{\link{vocabulary}}
+Other homogenization: \code{\link{vocabulary}}
 
-Other loading: \code{\link{loadMultiField}};
-  \code{\link{loadStationData}};
+Other loading: \code{\link{loadStationData}};
   \code{\link{makeAggregatedDataset}}
 
 Other loading.grid: \code{\link{getGrid}};
-  \code{\link{interpGridData}};
-  \code{\link{loadMultiField}}
+  \code{\link{interpGridData}}
 }
 

@@ -26,6 +26,6 @@ S. Herrera and J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
 Other loading.grid: \code{\link{interpGridData}};
-  \code{\link{loadGridData}}; \code{\link{loadMultiField}}
+  \code{\link{loadGridData}}
 }
 
