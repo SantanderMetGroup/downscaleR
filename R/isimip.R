@@ -1,19 +1,45 @@
-#################################################################################################################
-# ISI-MIP Bias correction method (http://www.pik-potsdam.de/research/climate-impacts-and-vulnerabilities/research/rd2-cross-cutting-activities/isi-mip/about/isi-mip-fast-track)
-# Citation: Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F.: A trend-preserving bias correction ? the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236, doi:10.5194/esd-4-219-2013, 2013.
-#----------------------------------------------------------------------------------
-#' @title Bias correction methods
-#' @description Implementation of several standard bias correction methods
-#' @author S. Herrera \email{sixto@@predictia.es}
+#' @title Bias correction ISI-MIP method
+#' @description Implementation of the ISI-MIP methodology
+#'
 #' @template templateObsPredSim
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).
-#' @return A field with the corrected data
-#' @family downscaling
-#' @export
-#' @references
-#' Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F.: A trend-preserving bias correction -- the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236, doi:10.5194/esd-4-219-2013, 2013
+#' @details
+#' 
+#' The methods available are qqmap, delta, unbiasing, scaling and Piani (only precipitation).
+#' 
+#' \strong{ISI-MIP}
+#' 
+#' Recently, Hempel et al.2013 proposed a new bias correction methodology within the ISI-MIP Project, 
+#' the first Inter-Sectoral Impact Model Intercomparison Project, funded by the German Federal Ministry 
+#' of Education and Research (BMBF). This method has been developed to preserve the change signal (trend, 
+#' climate change signal, etc.) and can be applied to several variables (precipitation, mean, maximum and 
+#' minimum temperature, windspeed and eastward/northward components, radiation, pressure and humidity). 
+#' The main difference with the rest of bias correction methods included in the \code{\link{biasCorrection}} 
+#' function is that the ISI-MIP method includes dependencies between some variables. That is, to correct some 
+#' of the variables (maximum/minimum temperatures and eastward/northward wind components) others are needed 
+#' (mean temperature and windspeed).
+#' 
+#' sim <- isimip(obs, pred, sim) # Temperature or other variable
 #'
+#' sim <- isimip(obs, pred, sim, pr.threshold = threshold) # In the case of precipitation we should include the threshold considered of wet/dry days
+#'
+#' @seealso \code{\link{biasCorrection}} for details on other standard methods for bias correction
+#'  
+#' @return A calibrated object of the same spatio-temporal extent of the input field
+#'  
+#' @export
+#' 
+#' @family downscaling
+#' 
+#' @references
+#' 
+#' \itemize{
+#' \item Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F. (2013) A trend-preserving bias correction: the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236
+#' }
+#' @author S. Herrera \email{sixto@@predictia.es}
+#' 
+
 isimip <- function (obs, pred, sim, pr.threshold = 1) {
       datesObs <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
       datesObs<-cut(datesObs, "month")

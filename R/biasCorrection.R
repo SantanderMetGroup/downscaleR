@@ -7,20 +7,71 @@
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).
 #'  
-#'  @details ~~ Details on the different methods here
+#' @details
+#' 
+#' The methods available are qqmap, delta, unbiasing, scaling and Piani (only precipitation).
+#' 
+#' \strong{Delta}
+#' 
+#' This method consists on adding to the observations the mean change signal (delta method).
+#' This method is applicable to any kind of variable but it is preferable to not apply it to 
+#' bounded variables (e.g. precipitation, wind speed, etc.) because values out of range could 
+#' be obtained.
+#' 
+#' sim <- biasCorrection (obs, pred, sim, method = "delta")
+#'
+#' \strong{Unbiasing}
+#' 
+#' This correction consists on adding to the simulation the mean diference between the observations 
+#' and the simulation in the train period. 
+#' This method is preferably applicable to unbounded variables (e.g. temperature).
+#' 
+#' sim <- biasCorrection (obs, pred, sim, method = "unbiasing")
+#'
+#' \strong{Scaling}
+#' 
+#' This method consists on scaling the simulation by the quotient of the mean observed and simulated in the train period. 
+#' This method is preferably applicable to variables with a lower bound, such as precipitation, because it preserves the 
+#' frequency also.
+#' 
+#' sim <- biasCorrection (obs, pred, sim, method = "scaling", pr.threshold = 1)
+#'
+#' \strong{Quantile-Quantile Mapping (qqmap)}
+#' 
+#' This is a very extended bias correction method which consists on calibrating the simulated Cumulative Distribution Function (CDF) 
+#' by adding to the observed quantiles both the mean delta change and the individual delta changes in the corresponding quantiles. 
+#' This method is applicable to any kind of variable.
+#' 
+#' sim <- biasCorrection (obs, pred, pred, method = "qqmap") # Temperature or other variable
+#' 
+#' sim <- biasCorrection (obs, pred, pred, method = "qqmap", pr.threshold = 1) # In the case of precipitation we should include the threshold considered of wet/dry days
+#' 
+#' \strong{Piani}
+#' 
+#' This method is based on the initial assumption that both observed and simulated intensity distributions are well approximated 
+#' by the gamma distribution, therefore is a parametric q-q map that uses the theorical instead of the empirical distribution. 
+#' It is described in Piani et al. 2010 and is only applicable to precipitation.
+#' 
+#' sim <- biasCorrection (obs, prd, sim, method = "piani", pr.threshold = 1)
+#' 
+#' @seealso \code{\link{isimip}} for details on other method for bias correction
 #'  
-#'  @return A calibrated object of the same spatio-temporal extent of the input field
-
-#' @author S. Herrera \email{sixto@@predictia.es}
+#' @return A calibrated object of the same spatio-temporal extent of the input field
+#'  
 #' @export
+#' 
 #' @family downscaling
+#' 
 #' @references
-#' R.A.I. Wilcke, T. Mendlik and A. Gobiet (2013) Multi-variable error correction of regional climate models. Climatic Change, 120, 871-887
 #' 
-#' A. Amengual, V. Homar, R. Romero, S. Alonso, and C. Ramis (2012) A Statistical Adjustment of Regional Climate Model Outputs to Local Scales: Application to Platja de Palma, Spain. J. Clim., 25, 939-957
+#' \itemize{
+#' \item R.A.I. Wilcke, T. Mendlik and A. Gobiet (2013) Multi-variable error correction of regional climate models. Climatic Change, 120, 871-887
 #' 
-#' C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
+#' \item A. Amengual, V. Homar, R. Romero, S. Alonso, and C. Ramis (2012) A Statistical Adjustment of Regional Climate Model Outputs to Local Scales: Application to Platja de Palma, Spain. J. Clim., 25, 939-957
 #' 
+#' \item C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
+#' }
+#' @author S. Herrera \email{sixto@@predictia.es}
 #' 
 
 biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), pr.threshold = 1) {
