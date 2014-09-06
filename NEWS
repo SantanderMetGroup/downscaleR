@@ -1,0 +1,11 @@
+downscaleR 0.4-0
+================
+
+* Implementation of analog method for perfect prog statistical
+  downscaling: function `analogs`
+
+* Forecast validation visualization tool: function `tercileValidation`
+
+* Quick summary of available stations in station datasets using `stationInfo`
+
+* Other minor bug fixes and enhancements
