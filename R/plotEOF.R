@@ -28,7 +28,7 @@
 #' plotEOF(pca, n.eofs = 4)
 #' 
 #' # Example with PCA analysis of a multifield (multiple variables)
-#' load geopotential heigth at 500 mb, temperature at 1000 mb and sea-level pressure
+#' # load geopotential heigth at 500 mb, temperature at 1000 mb and sea-level pressure
 #' ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 #' multifield <- loadMultiField(ncep, vars = c("z@@50000", "ta@@100000", "psl"), season = c(12,1,2), years = 1981:2010)
 #' # PCA analysis, retaining the first 9 PCs of each variable:

@@ -8,4 +8,6 @@ downscaleR 0.4-0
 
 * Quick summary of available stations in station datasets using `stationInfo`
 
+* New example datasets (reanalysis and seasonal forecast)
+
 * Other minor bug fixes and enhancements

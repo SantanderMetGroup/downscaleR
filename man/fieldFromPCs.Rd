@@ -49,6 +49,7 @@ z1 <- apply(psl.reconstructed, c(3,2), mean)
 # These are the spatial coordinates
 x <- psl2$xyCoords$x
 y <- psl2$xyCoords$y
+require(fields)
 par(mfrow = c(2,2))
 image.plot(x,y,z, asp = 1, horizontal = TRUE)
 world(add = TRUE)

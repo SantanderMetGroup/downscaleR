@@ -21,6 +21,25 @@ Get the (regular) grid definition from an existing (gridded) dataset
 In case of irregular grid definitions, the function forces the grid to regularity.
 The returned grid object inherits the attributes from the input \code{xyCoords} definition.
 }
+\examples{
+\donttest{
+# Iberia domain
+data(iberia_ncep_hus850)
+getGrid(iberia_ncep_hus850)
+# Europe domain
+data(tasmin_forecast)
+getGrid(tasmin_forecast)
+plotMeanField(tasmin_forecast)
+# Interpolate NCEP onto the System4 grid:
+int <- interpGridData(iberia_ncep_hus850, getGrid(tasmin_forecast), "bilinear")
+# Note the warnings because of the non-overlapping domain extents
+plotMeanField(int)
+# The other way round, using nearest neighbour interpolation:
+int2 <- interpGridData(tasmin_forecast, getGrid(iberia_ncep_hus850))
+plotMeanField(int2)
+#' # In this case, the mismatch in domain extent occurs only in the longitudes (to the west)
+}
+}
 \author{
 S. Herrera and J. Bedia \email{joaquin.bedia@gmail.com}
 }

@@ -86,14 +86,14 @@ pca <- prinComp(multifield, v.exp = .99)
 names(pca)
 str(pca)
 # The different attributes of the pca object provide information regarding the variables involved and the geo-referencing information
-attributes(pca)
+str(attributes(pca))
 # In addition, for each variable (and their combination), the scaling and centering parameters are also returned.
 # These are either a single value in case of field scaling (the default), or a vector of values, one for each grid-cell, for the
 # gridbox scaling. For instance, the parameters for the specific humidity field are:
-attributes(pca$hus)$`scaled:center`
-attributes(pca$hus)$`scaled:scale`
+attributes(pca$hus[[1]])$`scaled:center`
+attributes(pca$hus[[1]])$`scaled:scale`
 # In addition, the (cumulative) explained variance of each PC is also returned:
-vexp <- attributes(pca$hus)$explained_variance
+vexp <- attributes(pca$hus[[1]])$explained_variance
 # The classical "scree plot":
 barplot(1-vexp, names.arg = paste("PC",1:length(vexp)), las = 2, ylab = "Fraction of unexplained variance")
 

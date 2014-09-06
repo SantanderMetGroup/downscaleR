@@ -25,6 +25,23 @@ in package \pkg{fields}
 The function plots a simple temporal mean of the loaded object in the form of
 a map. It does not handle other temporal aggregations.
 }
+\examples{
+# A field
+data(iberia_ncep_ta850)
+plotMeanField(iberia_ncep_ta850)
+# A multifield
+data(iberia_ncep_hus850)
+mf <- makeMultiField(iberia_ncep_ta850, iberia_ncep_hus850)
+plotMeanField(mf)
+# A multimember field
+data(tasmax_forecast)
+plotMeanField(tasmax_forecast) # multimember mean
+plotMeanField(tasmax_forecast, multi.member = TRUE) # by members
+# A multimember multifield
+data(tasmin_forecast)
+mm.mf <- makeMultiField(tasmax_forecast, tasmin_forecast)
+plotMeanField(mm.mf) # Note: multi-member not supported in this case
+}
 \author{
 J Bedia \email{joaquin.bedia@gmail.com}
 }
