@@ -52,11 +52,7 @@
 #'  Atmospheric Science, Wiley, NY
 #'  
 
-
-
-
-
-tercilePlot <- function(mm.obj, obs, stationId = NULL, color.pal = c("ypb", "reds")) {
+tercileValidation <- function(mm.obj, obs, stationId = NULL, color.pal = c("ypb", "reds")) {
       color.pal <- match.arg(color.pal, c("ypb", "reds"))
       mm.dimNames <- attr(mm.obj$Data, "dimensions")
       obs.dimNames <- attr(obs$Data, "dimensions")
