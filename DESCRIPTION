@@ -15,7 +15,7 @@ Suggests:
     ecomsUDG.Raccess
 Type: Package
 Title: R package for climate data analysis and statistical downscaling
-Version: 0.4-0
+Version: 0.4-1
 Date: 06-Sep-2014
 Authors@R: as.person(c(
     "Joaquin Bedia <bediaj@unican.es> [aut, cre]",
@@ -25,7 +25,6 @@ Authors@R: as.person(c(
     "Max Tuni <max@predictia.es> [ctb]",
     "Antonio Cofino <antonio.cofino@unican.es> [ctb]",
     "Santander Meteorology Group <http://meteo.unican.es> [cph]"))
-Maintainer: Joaquin Bedia <bediaj@unican.es>
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
 Description: Load climate and weather data into R and performs climate data
