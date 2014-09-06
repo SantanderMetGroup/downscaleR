@@ -9,52 +9,40 @@
 #'  
 #' @details
 #' 
-#' The methods available are qqmap, delta, unbiasing, scaling and Piani (only precipitation).
+#' The methods available are \code{"qqmap"}, \code{"delta"}, \code{"unbiasing"}, 
+#' \code{"scaling"} and \code{"Piani"} (the latter used only for precipitation).
+#' Next we make a brief description of each method:
 #' 
 #' \strong{Delta}
 #' 
 #' This method consists on adding to the observations the mean change signal (delta method).
-#' This method is applicable to any kind of variable but it is preferable to not apply it to 
-#' bounded variables (e.g. precipitation, wind speed, etc.) because values out of range could 
-#' be obtained.
+#' This method is applicable to any kind of variable but it is preferable to avoid it for bounded variables
+#'  (e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained (e.g. negative wind speeds...).
 #' 
-#' sim <- biasCorrection (obs, pred, sim, method = "delta")
-#'
 #' \strong{Unbiasing}
 #' 
 #' This correction consists on adding to the simulation the mean diference between the observations 
-#' and the simulation in the train period. 
-#' This method is preferably applicable to unbounded variables (e.g. temperature).
+#' and the simulation in the train period. This method is preferably applicable to unbounded variables (e.g. temperature).
 #' 
-#' sim <- biasCorrection (obs, pred, sim, method = "unbiasing")
-#'
 #' \strong{Scaling}
 #' 
 #' This method consists on scaling the simulation by the quotient of the mean observed and simulated in the train period. 
 #' This method is preferably applicable to variables with a lower bound, such as precipitation, because it preserves the 
 #' frequency also.
 #' 
-#' sim <- biasCorrection (obs, pred, sim, method = "scaling", pr.threshold = 1)
-#'
 #' \strong{Quantile-Quantile Mapping (qqmap)}
 #' 
 #' This is a very extended bias correction method which consists on calibrating the simulated Cumulative Distribution Function (CDF) 
 #' by adding to the observed quantiles both the mean delta change and the individual delta changes in the corresponding quantiles. 
 #' This method is applicable to any kind of variable.
 #' 
-#' sim <- biasCorrection (obs, pred, pred, method = "qqmap") # Temperature or other variable
-#' 
-#' sim <- biasCorrection (obs, pred, pred, method = "qqmap", pr.threshold = 1) # In the case of precipitation we should include the threshold considered of wet/dry days
-#' 
 #' \strong{Piani}
 #' 
-#' This method is based on the initial assumption that both observed and simulated intensity distributions are well approximated 
-#' by the gamma distribution, therefore is a parametric q-q map that uses the theorical instead of the empirical distribution. 
-#' It is described in Piani et al. 2010 and is only applicable to precipitation.
+#' This method is described in Piani et al. 2010 and is applicable only to precipitation. It is based on the initial assumption that both observed
+#'  and simulated intensity distributions are well approximated by the gamma distribution, therefore is a parametric q-q map 
+#'  that uses the theorical instead of the empirical distribution. 
 #' 
-#' sim <- biasCorrection (obs, prd, sim, method = "piani", pr.threshold = 1)
-#' 
-#' @seealso \code{\link{isimip}} for details on other method for bias correction
+#' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration
 #'  
 #' @return A calibrated object of the same spatio-temporal extent of the input field
 #'  
@@ -72,22 +60,21 @@
 #' @author S. Herrera \email{sixto@@predictia.es}
 #' @export
 #' @examples \dontrun{
-#' # These are the paths to the package built-in GSN and NCEP datasets (assumes read permission)
+#' # These are the paths to the package built-in GSN and NCEP datasets 
 #' gsn.data.dir <- file.path(find.package("downscaleR"), "datasets/observations/GSN_Iberia")
 #' ncep.data.dir <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 #' gsn.inv <- dataInventory(gsn.data.dir)
 #' ncep.inv <- dataInventory(ncep.data.dir)
 #' str(gsn.inv)
 #' str(ncep.inv)
-#' # Load precipitation for boreal winter (DJF) in the train (1991-2000) and test (2001-2010) periods,
-#' # for the observations (GSN_Iberia) and the Iberia_NCEP datasets
-#' obs <- loadStationData(dataset = gsn.data.dir, file.format = "ascii", var="precip", lonLim = c(-12,10), latLim = c(33,47), season=c(12,1,2), years = 1991:2000)
+#' # Load precipitation for boreal winter (DJF) in the train (1991-2000) and test (2001-2010) periods, for the observations (GSN_Iberia) and the Iberia_NCEP datasets
+#' obs <- loadStationData(dataset = gsn.data.dir, var="precip", lonLim = c(-12,10), latLim = c(33,47), season=c(12,1,2), years = 1991:2000)
 #' prd <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 1991:2000)
 #' sim <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 2001:2010)
-#' # Should interpolate the observations to the grid of model: we use the method "nearest" and the getGrid function to ensure spatial consistency:
+#' # Interpolation of the observations onto the grid of model: we use the method "nearest" and the getGrid function to ensure spatial consistency:
 #' obs <- interpGridData(obs, new.grid = getGrid(prd), method = "nearest")
 #' # Apply the bias correction method:
-#' simBC <- biasCorrection (obs, prd, sim, method = "qqmap", pr.threshold = 1)# qq-mapping
+#' simBC <- biasCorrection (obs, prd, sim, method = "qqmap", pr.threshold = 1) # qq-mapping
 #' par(mfrow = c(1,2))
 #' plotMeanField(sim)
 #' plotMeanField(simBC)

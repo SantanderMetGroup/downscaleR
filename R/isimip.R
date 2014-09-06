@@ -38,25 +38,27 @@
 #' @author S. Herrera \email{sixto@@predictia.es}
 #' @export
 #' @examples \dontrun{
-#' # These are the paths to the package built-in GSN and NCEP datasets (assumes read permission)
+#' # These are the paths to the package built-in GSN and NCEP datasets 
 #' gsn.data.dir <- file.path(find.package("downscaleR"), "datasets/observations/GSN_Iberia")
 #' ncep.data.dir <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+#' # Data inventories provides a quick overview of the available data
 #' gsn.inv <- dataInventory(gsn.data.dir)
 #' ncep.inv <- dataInventory(ncep.data.dir)
 #' str(gsn.inv)
 #' str(ncep.inv)
 #' # Load precipitation for boreal winter (DJF) in the train (1991-2000) and test (2001-2010) periods,
 #' # for the observations (GSN_Iberia) and the Iberia_NCEP datasets
-#' obs <- loadStationData(dataset = gsn.data.dir, file.format = "ascii", var="precip", lonLim = c(-12,10), latLim = c(33,47), season=c(12,1,2), years = 1991:2000)
+#' obs <- loadStationData(dataset = gsn.data.dir, var="precip", lonLim = c(-12,10), latLim = c(33,47), season=c(12,1,2), years = 1991:2000)
 #' prd <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 1991:2000)
 #' sim <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 2001:2010)
-#' # Should interpolate the observations to the grid of model: we use the method "nearest" and the getGrid function to ensure spatial consistency:
+#' # Interpolate the observations onto the model's grid. We use the method "nearest" and the getGrid function to ensure spatial consistency:
 #' obs <- interpGridData(obs, new.grid = getGrid(prd), method = "nearest")
 #' # Apply the bias correction method:
-#' simBC <- isimip (obs, prd, sim, pr.threshold = 1)# ISI-MIP
+#' simBC <- isimip (obs, prd, sim, pr.threshold = 1) # ISI-MIP Method
 #' par(mfrow = c(1,2))
 #' plotMeanField(sim)
 #' plotMeanField(simBC)
+#' par(mfrow = c(1,1))
 #' }
 
 isimip <- function (obs, pred, sim, pr.threshold = 1) {

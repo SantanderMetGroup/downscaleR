@@ -29,19 +29,76 @@ A calibrated object of the same spatio-temporal extent of the input field
 Implementation of several standard bias correction methods
 }
 \details{
-~~ Details on the different methods here
+The methods available are \code{"qqmap"}, \code{"delta"}, \code{"unbiasing"},
+\code{"scaling"} and \code{"Piani"} (the latter used only for precipitation).
+Next we make a brief description of each method:
+
+\strong{Delta}
+
+This method consists on adding to the observations the mean change signal (delta method).
+This method is applicable to any kind of variable but it is preferable to avoid it for bounded variables
+ (e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained (e.g. negative wind speeds...).
+
+\strong{Unbiasing}
+
+This correction consists on adding to the simulation the mean diference between the observations
+and the simulation in the train period. This method is preferably applicable to unbounded variables (e.g. temperature).
+
+\strong{Scaling}
+
+This method consists on scaling the simulation by the quotient of the mean observed and simulated in the train period.
+This method is preferably applicable to variables with a lower bound, such as precipitation, because it preserves the
+frequency also.
+
+\strong{Quantile-Quantile Mapping (qqmap)}
+
+This is a very extended bias correction method which consists on calibrating the simulated Cumulative Distribution Function (CDF)
+by adding to the observed quantiles both the mean delta change and the individual delta changes in the corresponding quantiles.
+This method is applicable to any kind of variable.
+
+\strong{Piani}
+
+This method is described in Piani et al. 2010 and is applicable only to precipitation. It is based on the initial assumption that both observed
+ and simulated intensity distributions are well approximated by the gamma distribution, therefore is a parametric q-q map
+ that uses the theorical instead of the empirical distribution.
+}
+\examples{
+\dontrun{
+# These are the paths to the package built-in GSN and NCEP datasets
+gsn.data.dir <- file.path(find.package("downscaleR"), "datasets/observations/GSN_Iberia")
+ncep.data.dir <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+gsn.inv <- dataInventory(gsn.data.dir)
+ncep.inv <- dataInventory(ncep.data.dir)
+str(gsn.inv)
+str(ncep.inv)
+# Load precipitation for boreal winter (DJF) in the train (1991-2000) and test (2001-2010) periods, for the observations (GSN_Iberia) and the Iberia_NCEP datasets
+obs <- loadStationData(dataset = gsn.data.dir, var="precip", lonLim = c(-12,10), latLim = c(33,47), season=c(12,1,2), years = 1991:2000)
+prd <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 1991:2000)
+sim <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 2001:2010)
+# Interpolation of the observations onto the grid of model: we use the method "nearest" and the getGrid function to ensure spatial consistency:
+obs <- interpGridData(obs, new.grid = getGrid(prd), method = "nearest")
+# Apply the bias correction method:
+simBC <- biasCorrection (obs, prd, sim, method = "qqmap", pr.threshold = 1) # qq-mapping
+par(mfrow = c(1,2))
+plotMeanField(sim)
+plotMeanField(simBC)
+}
 }
 \author{
 S. Herrera \email{sixto@predictia.es}
 }
 \references{
-R.A.I. Wilcke, T. Mendlik and A. Gobiet (2013) Multi-variable error correction of regional climate models. Climatic Change, 120, 871-887
+\itemize{
+\item R.A.I. Wilcke, T. Mendlik and A. Gobiet (2013) Multi-variable error correction of regional climate models. Climatic Change, 120, 871-887
 
-A. Amengual, V. Homar, R. Romero, S. Alonso, and C. Ramis (2012) A Statistical Adjustment of Regional Climate Model Outputs to Local Scales: Application to Platja de Palma, Spain. J. Clim., 25, 939-957
+\item A. Amengual, V. Homar, R. Romero, S. Alonso, and C. Ramis (2012) A Statistical Adjustment of Regional Climate Model Outputs to Local Scales: Application to Platja de Palma, Spain. J. Clim., 25, 939-957
 
-C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
+\item C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
+}
 }
 \seealso{
+\code{\link{isimip}} for a trend-preserving method of model calibration
+
 Other downscaling: \code{\link{analogs}};
   \code{\link{calibrateProj}}; \code{\link{isimip}}
 }
