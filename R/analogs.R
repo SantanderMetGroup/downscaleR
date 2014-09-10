@@ -26,7 +26,8 @@
 #' \strong{Construction of analogs using multiple neighbours}
 #' 
 #' The argument \code{sel.fun} controls how the analogs are constructed when considering more than the first neighbour (argument
-#' \code{n.neigh} > 1). In this case the \code{"random"} choice randomly selects one of the \code{n.neigh} neighbours, while 
+#' \code{n.neigh} > 1). In this case the \code{"random"} choice randomly selects one of the \code{n.neigh} neighbours,
+#'  while the \code{"mean"} choice will compute their average.
 #' 
 #' @seealso \code{\link{prinComp}} for details on principal component/EOF analysis
 #' \code{\link{loadMultiField}}, \code{\link{makeMultiField}} for multifield creation
