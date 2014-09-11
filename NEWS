@@ -1,4 +1,7 @@
-downscaleR 0.4-1
+downscaleR 0.4-2
 ================
 
-* New and improved function examples
+* Enhancement in plotMeanField to account for missing values
+* Bug fix in quantile algorithm selection for qqmap adjustment 
+* Fixed errors in documentation
+* Acknowledgements: Wietse Franssen (WUR), Jonas Bhend (MeteoSwiss) and Laurent Dubus (EDF)

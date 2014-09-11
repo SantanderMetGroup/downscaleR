@@ -15,8 +15,8 @@ Suggests:
     ecomsUDG.Raccess
 Type: Package
 Title: R package for climate data analysis and statistical downscaling
-Version: 0.4-1
-Date: 06-Sep-2014
+Version: 0.4-2
+Date: 11-Sep-2014
 Authors@R: as.person(c(
     "Joaquin Bedia <bediaj@unican.es> [aut, cre]",
     "Sixto Herrera <sixto@predictia.es> [aut]",
