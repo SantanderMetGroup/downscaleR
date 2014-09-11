@@ -219,7 +219,7 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
                         for (j in 1:dim(sim)[3]) {
                               if (any(!is.na(pred[,i,j])) & any(!is.na(obs[,i,j]))) {
                                     ePrd<-ecdf(pred[,i,j])
-                                    sim[,i,j]<-quantile(obs[,i,j], probs = ePrd(sim[,i,j]), na.rm = TRUE, type = 8)
+                                    sim[,i,j]<-quantile(obs[,i,j], probs = ePrd(sim[,i,j]), na.rm = TRUE, type = 4)
                               }
                         }
                   }
@@ -232,8 +232,8 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
                                     rain<-which(sim[,i,j]>Pth[i,j] & !is.na(sim[,i,j]))
                                     drizzle<-which(sim[,i,j]>Pth[i,j] & sim[,i,j]<=min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j]))
                                     eFrc<-ecdf(sim[rain,i,j])
-                                    sim[drizzle,i,j]<-quantile(sim[which(sim[,i,j]>min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j])),i,j], probs = eFrc(sim[drizzle,i,j]), na.rm = TRUE, type = 8)
-                                    sim[rain,i,j]<-quantile(obs[which(obs[,i,j]>threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain,i,j]), na.rm = TRUE, type = 8)
+                                    sim[drizzle,i,j]<-quantile(sim[which(sim[,i,j]>min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j])),i,j], probs = eFrc(sim[drizzle,i,j]), na.rm = TRUE, type = 4)
+                                    sim[rain,i,j]<-quantile(obs[which(obs[,i,j]>threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain,i,j]), na.rm = TRUE, type = 4)
                                     sim[noRain,i,j]<-0
                               }
                         }
