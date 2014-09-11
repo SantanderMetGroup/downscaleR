@@ -47,7 +47,7 @@ plotMeanField <- function (gridData, multi.member = FALSE) {
                   titles <- gridData$Members
                   multiPlot(gridData, "member", titles)
             } else {
-                  aux <- apply(gridData$Data, FUN = mean, MARGIN = mar)
+                  aux <- apply(gridData$Data, FUN = mean, MARGIN = mar, na.rm = TRUE)
                   image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1, horizontal = TRUE, cex.axis = .75)
                   title("")
                   mtext(titles)
