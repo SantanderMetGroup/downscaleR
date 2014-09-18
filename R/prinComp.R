@@ -134,7 +134,7 @@ prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field",
                   stop("The explained variance threshold must be in the range (0,1]")
             }
       }
-      if (anyNA(gridData$Data)) {
+      if (any(is.na(gridData$Data))) {
             stop("There are missing values in the input data array")
       }
       scaling <- match.arg(scaling, choices = c("field", "gridbox"))
