@@ -1,7 +1,5 @@
-downscaleR 0.4-2
+downscaleR 0.4-3
 ================
 
-* Enhancement in plotMeanField to account for missing values
-* Bug fix in quantile algorithm selection for qqmap adjustment 
-* Fixed errors in documentation
-* Acknowledgements: Wietse Franssen (WUR), Jonas Bhend (MeteoSwiss) and Laurent Dubus (EDF)
+* Enhancement: Support for combined-member bias correction (formerly this was done only member by member separately)
+* Bug fix: anyNA(foo) replaced by older any(is.na(foo)) for backwards compatibility until R 3.0.0
