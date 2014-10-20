@@ -7,7 +7,7 @@ tercileValidation(mm.obj, obs, stationId = NULL, color.pal = c("ypb",
   "reds"))
 }
 \arguments{
-\item{mm.obj}{A multi-member object, either a field or a multi-member station object as a result of
+\item{mm.obj}{A multi-member object with predictions, either a field or a multi-member station object as a result of
 downscaling of a forecast using station data. See details.}
 
 \item{obs}{The benchmarking observations for forecast verification}
@@ -54,5 +54,8 @@ Downscaling ECMWF seasonal precipitation forecasts in Europe using the RCA model
 
  Jolliffe, I. T. and Stephenson, D. B. 2003. Forecast Verification: A Practitioner's Guide in
  Atmospheric Science, Wiley, NY
+}
+\seealso{
+Other visualization: \code{\link{bubbleValidation}}
 }
 

@@ -2,7 +2,7 @@
 #' 
 #' @description Tercile plot for the visualization of the skill of an ensemble forecast prediction.
 #' 
-#' @param mm.obj A multi-member object, either a field or a multi-member station object as a result of
+#' @param mm.obj A multi-member object with predictions, either a field or a multi-member station object as a result of
 #' downscaling of a forecast using station data. See details.
 #' @param obs The benchmarking observations for forecast verification
 #' @param stationId In case of multimember multistation objects, one station can be selected to plot

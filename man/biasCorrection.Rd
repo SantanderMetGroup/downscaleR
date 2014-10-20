@@ -4,7 +4,7 @@
 \title{Bias correction methods}
 \usage{
 biasCorrection(obs, pred, sim, method = c("qqmap", "delta", "scaling",
-  "unbiasing", "piani"), pr.threshold = 1)
+  "unbiasing", "piani"), pr.threshold = 1, multi.member = TRUE)
 }
 \arguments{
 \item{obs}{A field or station data containing the observed climate data for the training period}
@@ -18,6 +18,9 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 
 \item{method}{method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
 \code{"scaling"}, \code{"unbiasing"} and \code{"piani"}. See details.}
+
+\item{multi.member}{Should members be adjusted sepparately (TRUE, default), or jointly (FALSE)?.
+Ignored if the dataset has no members.}
 
 \item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
