@@ -44,6 +44,7 @@ dateReplacement <- function(obs.dates, sim.dates) {
             sim.dates.ref <- as.POSIXlt(sim.dates$start, tz = tz.sim)
       }
       aux.string <- paste(sim.dates.ref$year + 1900, sim.dates.ref$mon + 1, sim.dates.ref$mday, hours, sep = "-")
+      length(aux.string) <- length(sim.dates.ref)
       start <- strptime(aux.string, "%Y-%m-%d-%H", tz)
       aux.string <- NULL
       end <- as.POSIXct(start + time.res)
@@ -111,3 +112,32 @@ getYearsAsINDEX <- function(obj) {
       return(yrs)
 }
 # End
+
+
+#' @title Get geographical coordinates of a climate data object
+#' @description Returns the coordinates of a climate data object, either stations
+#'  or field
+#' @param obj Any object extending the station or field classes
+#' @return A list with x and y components
+#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @export
+#' 
+
+getCoordinates <- function(obj) {
+      if ("station" %in% attr(obj$Data, "dimensions")) {
+            x <- obj$xyCoords[ ,1]
+            y <- obj$xyCoords[ ,2]
+      } else {
+            x <- obj$xyCoords$x
+            y <- obj$xyCoords$y
+      }
+      return(list("x" = x, "y" = y))
+}
+# End
+
+
+
+
+
+
+
