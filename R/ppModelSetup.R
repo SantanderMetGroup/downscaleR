@@ -22,17 +22,7 @@
 #' @importFrom abind asub
 
 ppModelSetUp <- function(obs, pred, sim) {
-      # Georef predictand
-      if ("station" %in% attr(obs$Data, "dimensions")) {
-            stations <- TRUE
-            x.obs <- obs$xyCoords[ ,1]
-            y.obs <- obs$xyCoords[ ,2]
-      } else {
-            stations <- FALSE
-            x.obs <- obs$xyCoords$x
-            y.obs <- obs$xyCoords$y
-      }
-      # Georef predictors
+      stations <- ifelse ("station" %in% attr(obs$Data, "dimensions"), TRUE, FALSE)
       if ("scaled:method" %in% names(attributes(pred))) {
             use.PCs <- TRUE
             x.pred <- attr(pred, "xCoords")
@@ -65,6 +55,9 @@ ppModelSetUp <- function(obs, pred, sim) {
       if (!identical(as.POSIXlt(obs$Dates$start)$yday, as.POSIXlt(time.pred)$yday) || !identical(as.POSIXlt(obs$Dates$start)$year, as.POSIXlt(time.pred)$year)) {
             stop("Observed and predicted time series should match in start/end and length")
       }     
+      # Date replacement
+      new.dates <- dateReplacement(obs$Dates, sim$Dates) 
+      obs <- NULL
       time.pred <- NULL
       # Number of variables pred-sim
       if (isTRUE(use.PCs)) {
@@ -195,6 +188,6 @@ ppModelSetUp <- function(obs, pred, sim) {
             })
       }
       pred <- NULL
-      return(list("stations" = stations, "multi.member" = multi.member, "pred.mat" = pred.mat, "sim.mat" = sim.mat, "sim.dates" = sim.dates))
+      return(list("stations" = stations, "multi.member" = multi.member, "pred.mat" = pred.mat, "sim.mat" = sim.mat, "sim.dates" = new.dates))
 }
 # End      
