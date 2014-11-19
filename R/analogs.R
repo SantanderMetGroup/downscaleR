@@ -90,6 +90,7 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean")) 
             }
       } else {
             obs.mat <- array3Dto2Dmat(obs$Data)
+            obs.coords <- getCoordinates(obs)
             if (n.neigh > 1) {
                   out.list <- lapply(1:length(d.list), function(x) {
                         aux.mat <- matrix(nrow = ncol(d.list[[x]]), ncol = ncol(obs.mat))
@@ -99,13 +100,13 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean")) 
                                                      "random" = aux[sample(1:nrow(aux), 1), ],
                                                      "mean" = apply(aux, 2, mean, na.rm = TRUE))
                         }
-                        aux.mat <- mat2Dto3Darray(aux.mat, x.obs, y.obs)
+                        aux.mat <- mat2Dto3Darray(aux.mat, obs.coords$x, obs.coords$y)
                         return(aux.mat)
                   })
                   message("[", Sys.time(), "] Done.")   
             } else {
                   out.list <- lapply(1:length(d.list), function(x) {
-                        mat2Dto3Darray(obs.mat[d.list[[x]], ], x.obs, y.obs)
+                        mat2Dto3Darray(obs.mat[d.list[[x]], ], obs.coords$x, obs.coords$y)
                   })
                   message("[", Sys.time(), "] Done.")   
             }
@@ -134,9 +135,8 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean")) 
       attr(obs$Data, "downscaling:method") <- "analogs"
       attr(obs$Data, "downscaling:simulation_data") <- attr(modelPars$sim.mat, "dataset")
       # Date replacement
-      obs$Dates <- dateReplacement(obs$Dates, modelPars$sim.dates) 
+      obs$Dates <- modelPars$sim.dates 
       return(obs)
 }
-# End
 # End
 
