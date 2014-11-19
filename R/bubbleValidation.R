@@ -7,7 +7,7 @@
 #' @param mm.obj A multi-member object with predictions, either a field or a multi-member station object as a result of
 #' downscaling of a forecast using station data. See details.
 #' @param obs The benchmarking observations for forecast verification. 
-#' @param year Year within the whole verification period to display the results for.
+#' @param select.year Year within the whole verification period to display the results for.
 #' @param score Logical. Whether to include or not the relative operating characteristic skill score (ROCSS). See details.
 #' @param size.as.probability Logical. Whether to include the tercile probabilities (magnitude proportional to bubble radius)
 #'  in the plot. See details. 
@@ -166,14 +166,12 @@ bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.pro
       # Bubble plot
       par(bg = "white", mar = c(3, 3, 1, 5))
       if (score) {
-      library(scales)
             plot(nn.yx[pos.val, 2], nn.yx[pos.val, 1], cex = df$max.prob[pos.val] * 3, col = alpha(df$color[pos.val], v.score[pos.val]), pch = 19, xlab = "", ylab = "")
             points(nn.yx[neg.val, 2], nn.yx[neg.val, 1], pch=4, cex=0.75)
       } else {
             plot(nn.yx[ , 2], nn.yx[ , 1], cex=df$max.prob * 3, col = df$color, pch = 19, xlab = "", ylab = "")
       }
       world(add = TRUE, interior = FALSE)      
-#       map("world", ylim = range(y.mm), xlim = range(x.mm), col = "black", lwd = 1, interior = FALSE, add = TRUE)
       par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
       plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
       if (score){

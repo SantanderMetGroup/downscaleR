@@ -8,8 +8,8 @@
 #' \item \code{multi.member} Logical indicating whether the simulation data is multi-member or not
 # #' \item \code{obs} Same as input parameter of the same name
 #' \item \code{pred.mat} 2D matrix of predictors. Predictors are arranged in columns and time in rows
-#' \item \code{sim.mat} Either a single 2D matrix or a list of them in case of multi-member predictions,
-#' containing the simulation data to compute the downscaling predictions.
+#' \item \code{sim.mat} A list of 2D matrices containing the prediction data. The list is of length \emph{n},
+#' being \emph{n} the number of members considered (n = 1 for deterministic/single member predictions).
 #' \item \code{sim.dates} The Dates element of the simulation data (either a list of start/end lists for
 #' several predictors or a list of two with the estart/end of a single predictor. See \code{\link{dateReplacement}}
 #' for details).
@@ -21,7 +21,7 @@
 #' @export
 #' @importFrom abind asub
 
-ppModelSetUp <- function(obs, pred, sim) {
+ppModelSetup <- function(obs, pred, sim) {
       stations <- ifelse ("station" %in% attr(obs$Data, "dimensions"), TRUE, FALSE)
       if ("scaled:method" %in% names(attributes(pred))) {
             use.PCs <- TRUE

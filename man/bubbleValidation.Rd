@@ -12,7 +12,7 @@ downscaling of a forecast using station data. See details.}
 
 \item{obs}{The benchmarking observations for forecast verification.}
 
-\item{year}{Year within the whole verification period to display the results for.}
+\item{select.year}{Year within the whole verification period to display the results for.}
 
 \item{score}{Logical. Whether to include or not the relative operating characteristic skill score (ROCSS). See details.}
 
