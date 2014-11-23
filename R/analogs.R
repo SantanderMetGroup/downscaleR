@@ -54,7 +54,7 @@
 #'
 
 analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean")) {
-      modelPars <- ppModelSetUp(obs, pred, sim)
+      modelPars <- ppModelSetup(obs, pred, sim)
       pred <- NULL
       sim <- NULL
       n.neigh <- as.integer(n.neigh)
@@ -114,26 +114,13 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean")) 
       }
       d.list <- NULL
       # Data array
-      dimNames <- attr(obs$Data, "dimensions")
-      # Remove "station" from dimensions for single-station objects
-      st.dim.index <- grep("station", dimNames)
-      if (!identical(st.dim.index, integer(0))) {
-            dim.st <- dim(obs$Data)[st.dim.index]
-            if (identical(dim.st, 1L)) {
-                  dimNames <- dimNames[-st.dim.index]
-            }
-      }
+      dimNames <- renameDims(obs, modelPars$multi.member)
       obs$Data <- drop(unname(do.call("abind", c(out.list, along = -1))))
       out.list <- NULL
-      # if ("member" %in% attr(sim$Data, "dimensions")) {
-      if (isTRUE(modelPars$multi.member)) {
-            attr(obs$Data, "dimensions") <- c("member", dimNames)
-      } else {
-            attr(obs$Data, "dimensions") <- dimNames
-      }
-      # New data attributes      
+      # New data attributes
+      attr(obs$Data, "dimensions") <- dimNames
       attr(obs$Data, "downscaling:method") <- "analogs"
-      attr(obs$Data, "downscaling:simulation_data") <- attr(modelPars$sim.mat, "dataset")
+      attr(obs$Data, "downscaling:simulation_data") <- modelPars$sim.dataset
       # Date replacement
       obs$Dates <- modelPars$sim.dates 
       return(obs)

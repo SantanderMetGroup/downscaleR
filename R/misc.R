@@ -137,7 +137,29 @@ getCoordinates <- function(obj) {
 
 
 
+#' @title Set the 'dimensions' attribute 
+#' @description Sets the 'dimensions' attribute of model out Data objects after downscaling
+#' @param obs A observations object
+#' @param multi.member Logical indicating if simulation data is a multimember
+#' @return A character vector indicating the dimensions of the output object
+#' @keywords internal
+#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @export
 
+renameDims <- function(obs, multi.member) {
+      dimNames <- attr(obs$Data, "dimensions")
+      # Remove "station" from dimensions for single-station objects
+      st.dim.index <- grep("station", dimNames)
+      if (!identical(st.dim.index, integer(0))) {
+            dim.st <- dim(obs$Data)[st.dim.index]
+            if (identical(dim.st, 1L)) {
+                  dimNames <- dimNames[-st.dim.index]
+            }
+      }
+      dimNames <- if (isTRUE(multi.member)) c("member", dimNames)
+      return(dimNames)
+}
+# End
 
 
 

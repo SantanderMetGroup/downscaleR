@@ -38,7 +38,8 @@ S. Herrera \email{sixto@predictia.es}
 }
 \seealso{
 Other downscaling: \code{\link{analogs}};
-  \code{\link{biasCorrection}}; \code{\link{isimip}}
+  \code{\link{biasCorrection}}; \code{\link{glimpr}};
+  \code{\link{isimip}}
 }
 \keyword{internal}
 

@@ -21,6 +21,7 @@
 #' @export
 #' @importFrom abind asub
 
+
 ppModelSetup <- function(obs, pred, sim) {
       stations <- ifelse ("station" %in% attr(obs$Data, "dimensions"), TRUE, FALSE)
       if ("scaled:method" %in% names(attributes(pred))) {
@@ -175,7 +176,7 @@ ppModelSetup <- function(obs, pred, sim) {
             sim.mat <- simsc.list
       }
       simsc.list <- NULL
-      attr(sim.mat, "dataset") <- attributes(sim)$"dataset"
+      sim.dataset <- attr(sim, "dataset")
       sim.dates <- sim$Dates
       sim <- NULL
       # Projection of simulated field onto the predictor EOFs       
@@ -188,6 +189,6 @@ ppModelSetup <- function(obs, pred, sim) {
             })
       }
       pred <- NULL
-      return(list("stations" = stations, "multi.member" = multi.member, "pred.mat" = pred.mat, "sim.mat" = sim.mat, "sim.dates" = new.dates))
+      return(list("stations" = stations, "multi.member" = multi.member, "pred.mat" = pred.mat, "sim.mat" = sim.mat, "sim.dates" = new.dates, "sim.dataset" = sim.dataset))
 }
 # End      

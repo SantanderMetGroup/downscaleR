@@ -10,21 +10,22 @@ Imports:
     abind,
     fields,
     MASS,
-    verification
+    verification,
+    scales
 Suggests:
     ecomsUDG.Raccess
 Type: Package
 Title: R package for climate data analysis and statistical downscaling
-Version: 0.4-3
-Date: 11-Sep-2014
+Version: 0.5-0
+Date: 23-Nov-2014
 Authors@R: as.person(c(
-    "Joaquin Bedia <bediaj@unican.es> [aut, cre]",
-    "Sixto Herrera <sixto@predictia.es> [aut]",
+    "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
+    "Sixto Herrera <sixto@predictia.es> [ctb]",
     "Maria Dolores Frias <friasmd@unican.es> [ctb]",
     "Jesus Fernandez <fernandej@unican.es> [ctb]",
     "Max Tuni <max@predictia.es> [ctb]",
     "Antonio Cofino <antonio.cofino@unican.es> [ctb]",
-    "Santander Meteorology Group <http://meteo.unican.es> [cph]"))
+    "Santander Meteorology Group <http://meteo.unican.es> [aut]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
 Description: Load climate and weather data into R and performs climate data

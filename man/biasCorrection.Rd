@@ -103,6 +103,7 @@ S. Herrera \email{sixto@predictia.es}
 \code{\link{isimip}} for a trend-preserving method of model calibration
 
 Other downscaling: \code{\link{analogs}};
-  \code{\link{calibrateProj}}; \code{\link{isimip}}
+  \code{\link{calibrateProj}}; \code{\link{glimpr}};
+  \code{\link{isimip}}
 }
 

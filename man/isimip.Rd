@@ -80,6 +80,7 @@ S. Herrera \email{sixto@predictia.es}
 \code{\link{biasCorrection}} for details on other standard methods for bias correction
 
 Other downscaling: \code{\link{analogs}};
-  \code{\link{biasCorrection}}; \code{\link{calibrateProj}}
+  \code{\link{biasCorrection}};
+  \code{\link{calibrateProj}}; \code{\link{glimpr}}
 }
 
