@@ -62,15 +62,18 @@ dataInventory.ASCII <- function(dataset, rs) {
       } else {
             timeDates <- strptime(timeString, "%Y%m%d%H")
       }
-      rm(timeString)
+      timeString <- NULL
       timeAxis <- list("startDate" = min(timeDates), "endDate" = max(timeDates), "timeStep" = difftime(timeDates[2], timeDates[1], units = "h"))    
-      rm(timeDates)
-      station_id <- as.character(stations[ ,grep("station_id", names(stations), ignore.case = TRUE)])
+      timeDates <- NULL
+      # station_id <- as.character(stations[ ,grep("station_id", names(stations), ignore.case = TRUE)])
+      aux <- read.csv(lf[grep("stations", lf, ignore.case = TRUE)], strip.white = TRUE, stringsAsFactors = FALSE, colClasses = "character")
+      station_id <- aux[ ,grep("station_id", names(aux), ignore.case = TRUE)]
+      aux <- NULL
       lon <- stations[ ,grep("^longitude$", names(stations), ignore.case = TRUE)]
       lat <- stations[ ,grep("^latitude$", names(stations), ignore.case = TRUE)]
       LonLatCoords <- cbind(lon, lat)
       rownames(LonLatCoords) <- station_id
-      rm(lon, lat)
+      rm(list = c("lon", "lat"))
       other.metadata <- as.list(stations[ ,-pmatch(c("station_id", "longitude", "latitude"), names(stations))])
       station.info <- list("station_id" = station_id, "LonLatCoords" = LonLatCoords, "times" = timeAxis, "other.metadata" = other.metadata)
       rm(station_id, timeAxis, LonLatCoords, other.metadata)
