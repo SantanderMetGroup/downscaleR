@@ -1,4 +1,4 @@
-#' @title Login to the Santander Met Group Data Server
+#' @title Login to the Santander Met Group Thredds Data Server
 #' @description Provides HTTP authentication for accessing the Santander Met Group's THREDDS Data Server
 #' @param username A character string with a valid user ID. See details.
 #' @param password Character string. Authorized password. See details.
@@ -16,7 +16,7 @@
 #' @export
 
 
-login_SMG <- function(username, password, proxy.host = NULL, proxy.port = NULL) {
+login_TAP <- function(username, password, proxy.host = NULL, proxy.port = NULL) {
       proxy.port <- as.integer(proxy.port)
       if (!is.character(username) | !is.character(password)) {
             stop("\'username\' and \'password\' must be character strings")
