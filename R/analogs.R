@@ -6,6 +6,11 @@
 #' @param n.neigh Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.
 #' @param sel.fun Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n.neig = 1}.
 #' Current values are \code{"random"} (the default) and \code{"mean"}. See details.
+#' @param analog.dates Logical flag indicating whether the dates of the analogs should be returned. If set to TRUE,
+#'  the analog dates will be returned as a global attribute named \code{"analog.dates"}. The analog
+#'   dates can be only returned for one single neighbour selections (argument \code{n.neigh = 1}),
+#'    otherwise it will give an error. Note that the analog dates are different for each member in case of 
+#'    multimember downscaling, and are returned as a list, each element of the list corresponding to one member. 
 #' 
 #' @details 
 #' 
@@ -53,13 +58,16 @@
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com} 
 #'
 
-analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean")) {
+analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean"), analog.dates = FALSE) {
       modelPars <- ppModelSetup(obs, pred, sim)
       pred <- NULL
       sim <- NULL
       n.neigh <- as.integer(n.neigh)
       if (n.neigh < 1) {
             stop("A minimum of 1 nearest neighbour must be selected in 'n.neigh'")
+      }
+      if (isTRUE(analog.dates) & n.neigh > 1) {
+            stop("Analog dates are only returned for 1-neighbour analogs\n Set argument 'n.neigh = 1'")
       }
       sel.fun <- match.arg(sel.fun, choices = c("random", "mean"))
       # Analog search      
@@ -70,6 +78,12 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean")) 
             return(aux)
       })
       modelPars$pred.mat <- NULL
+      # Analog dates
+      if (isTRUE(analog.dates)) {
+            analog.date.list <- lapply(1:length(d.list), function(x) obs$Dates$start[d.list[[x]]])
+      }
+      attr(obs, "analog.dates") <- analog.date.list
+      analog.date.list <- NULL
       # Analog assignation
       if (isTRUE(modelPars$stations)) {
             if (n.neigh > 1) {
