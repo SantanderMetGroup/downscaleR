@@ -81,9 +81,9 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean"), 
       # Analog dates
       if (isTRUE(analog.dates)) {
             analog.date.list <- lapply(1:length(d.list), function(x) obs$Dates$start[d.list[[x]]])
+            attr(obs, "analog.dates") <- analog.date.list
+            analog.date.list <- NULL
       }
-      attr(obs, "analog.dates") <- analog.date.list
-      analog.date.list <- NULL
       # Analog assignation
       if (isTRUE(modelPars$stations)) {
             if (n.neigh > 1) {
