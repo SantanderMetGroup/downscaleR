@@ -15,9 +15,9 @@ Imports:
 Suggests:
     ecomsUDG.Raccess
 Type: Package
-Title: R package for climate data analysis and statistical downscaling
-Version: 0.5-0
-Date: 23-Nov-2014
+Title: Climate data manipulation and statistical downscaling
+Version: 0.5-1
+Date: 29-Dec-2014
 Authors@R: as.person(c(
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
     "Sixto Herrera <sixto@predictia.es> [ctb]",
@@ -30,7 +30,7 @@ BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
 Description: Load climate and weather data into R and performs climate data
     analysis and visualization, including model calibration (bias correction,
-    qq-mapping...), Perfect-prog statistical downscaling. The package is
-    specially conceived for dealing with seasonal forecast data.
+    qq-mapping...), and perfect-prog statistical downscaling. The package is
+    conceived for dealing also with forecast (multi-member) data.
 License: GPL (>= 3)
 LazyData: true
