@@ -1,8 +1,4 @@
-downscaleR 0.5-0
+downscaleR 0.5-1
 ================
 
-* Enhancement: Support for combined-member bias correction (formerly this was done only member by member separately)
-* Minor bug fix: anyNA(foo) replaced by older any(is.na(foo)) for backwards compatibility until R 3.0.0
-* New features:
-  * Bubble validation plot for forecast skill visualization
-  * Implementation of GLM downscaling method for precipitation
+* Bug fix in the retrieval of coordinates from 2D X-Y horizontal coordinate axes 
