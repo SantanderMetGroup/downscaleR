@@ -82,12 +82,14 @@
 #' plotMeanField(simBC)
 #' }
 
-biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), pr.threshold = 1, multi.member = TRUE) {
+biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), pr.threshold = 1, multi.member = TRUE, window = NULL) {
       method <- match.arg(method, choices = c("qqmap", "delta", "unbiasing", "piani", "scaling"))
       threshold <- pr.threshold
       dimObs <- dim(obs$Data)
+      obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
       dimPred <- dim(pred$Data)
       dimFor <- dim(sim$Data)
+      pred.time.index <- grep("^time$", attr(pred$Data, "dimensions"))
       dimDiff <- NULL
       dimPerm <- 1:length(attr(pred$Data, "dimensions"))
       dimPerm[which(dimPerm<=length(dim(obs$Data)))] <- match(attr(obs$Data, "dimensions"), attr(pred$Data, "dimensions"))
@@ -97,6 +99,21 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                   indDiff <- which(grepl(dimDiff[k],attr(pred$Data, "dimensions")))
                   dimPerm[length(attr(obs$Data, "dimensions"))+k] <- indDiff
             }
+      }
+      datesList <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
+      yearList<-unlist(strsplit(as.character(datesList), "[-]"))
+      dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
+      dayList <- unique(dayListObs,index.return = datesList)
+      indDays <- array(data = NaN, dim = c(length(datesList),1))
+      for (d in 1:dim(dayList)[1]){
+            indDays[which(sqrt((dayListObs[,1]-dayList[d,1])^2+(dayListObs[,2]-dayList[d,2])^2)==0)] <- d
+      }
+      datesList <- as.POSIXct(sim$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
+      yearList<-unlist(strsplit(as.character(datesList), "[-]"))
+      dayListSim <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
+      indDaysSim <- array(data = NaN, dim = c(length(datesList),1))
+      for (d in 1:dim(dayList)[1]){
+            indDaysSim[which(sqrt((dayListSim[,1]-dayList[d,1])^2+(dayListSim[,2]-dayList[d,2])^2)==0)] <- d
       }
       if (length(dimDiff)==0){
             F <- calibrateProj(obs$Data, aperm(pred$Data,dimPerm), aperm(sim$Data,dimPerm), method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
@@ -114,36 +131,120 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                   indDimDiff<-as.matrix(expand.grid(indDimDiff))
                   dimPermI <- match(attr(pred$Data, "dimensions")[setdiff(1:length(dimPred),match(dimDiff, attr(pred$Data, "dimensions")))],attr(obs$Data, "dimensions"))
                   for (i in 1:dim(indDimDiff)[1]){
-                        indTimePrd <- rep(list(bquote()), length(dimPred))
-                        indTimeSim <- rep(list(bquote()), length(dimFor))
-                        indTimePrd[match(dimDiff, attr(pred$Data, "dimensions"))] <- as.list(indDimDiff[i,])
-                        indTimeSim[match(dimDiff, attr(sim$Data, "dimensions"))] <- as.list(indDimDiff[i,])
-                        callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
-                        callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
-                        F <- calibrateProj(aperm(obs$Data, dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
-                        indTimeSim <- rep(list(bquote()), length(dimFor))
-                        for (d in 1:length(dimFor)){
-                              indTimeSim[[d]] <- 1:dimFor[d]
+                        if (is.null(window)){
+                              indTimePrd <- rep(list(bquote()), length(dimPred))
+                              indTimeSim <- rep(list(bquote()), length(dimFor))
+                              indTimePrd[match(dimDiff, attr(pred$Data, "dimensions"))] <- as.list(indDimDiff[i,])
+                              indTimeSim[match(dimDiff, attr(sim$Data, "dimensions"))] <- as.list(indDimDiff[i,])
+                              callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
+                              callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
+                              F <- calibrateProj(aperm(obs$Data, dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
+                              indTimeSim <- rep(list(bquote()), length(dimFor))
+                              for (d in 1:length(dimFor)){
+                                    indTimeSim[[d]] <- 1:dimFor[d]
+                              }
+                              indTimeSim[match(dimDiff, attr(sim$Data, "dimensions"))] <- as.list(indDimDiff[i,])
+                              indTimeSim<-as.matrix(expand.grid(indTimeSim))
+                              sim$Data[indTimeSim] <- F
+                        }else{
+                              for (j in 1:dim(dayList)[1]){
+                                    indObs <- which(indDays == j)
+                                    indObsWindow <- array(data = NaN, dim = c(window*length(indObs),1))
+                                    for (d in 1:length(indObs)){
+                                          indObsWindow[((d-1)*window+1):(d*window)] <- (indObs[d]-floor(window/2)):(indObs[d]+floor(window/2))
+                                    }
+                                    indObsWindow[which(indObsWindow <= 0)] <- 1
+                                    indObsWindow[which(indObsWindow >  length(indDays))] <- length(indDays)
+                                    indObsWindow <- unique(indObsWindow)
+                                    indSim <- which(indDaysSim == j)
+                                    indTimeObs <- rep(list(bquote()), length(dimObs))
+                                    indTimePrd <- rep(list(bquote()), length(dimPred))
+                                    indTimeSim <- rep(list(bquote()), length(dimFor))
+                                    # Consideramos solo la ventana temporal
+                                    indTimeObs[[obs.time.index]] <- indObsWindow
+                                    indTimePrd[[pred.time.index]] <- indObsWindow
+                                    indTimeSim[[pred.time.index]] <- indSim
+                                    indTimePrd[match(dimDiff, attr(pred$Data, "dimensions"))] <- as.list(indDimDiff[i,])
+                                    indTimeSim[match(dimDiff, attr(sim$Data, "dimensions"))] <- as.list(indDimDiff[i,])
+                                    callObs <- as.call(c(list(as.name("["),quote(obs$Data)), indTimeObs))
+                                    callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
+                                    callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
+                                    F <- calibrateProj(aperm(eval(callObs), dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
+                                    indTimeSim <- rep(list(bquote()), length(dimFor))
+                                    for (d in 1:length(dimFor)){
+                                          indTimeSim[[d]] <- 1:dimFor[d]
+                                    }
+                                    indTimeSim[[pred.time.index]] <- indSim
+                                    indTimeSim[match(dimDiff, attr(sim$Data, "dimensions"))] <- as.list(indDimDiff[i,])
+                                    indTimeSim<-as.matrix(expand.grid(indTimeSim))
+                                    sim$Data[indTimeSim] <- F
+                              }
                         }
-                        indTimeSim[match(dimDiff, attr(sim$Data, "dimensions"))] <- as.list(indDimDiff[i,])
-                        indTimeSim<-as.matrix(expand.grid(indTimeSim))
-                        sim$Data[indTimeSim] <- F
                   }
             }else{
-                  #                   if (length(dimDiff) > 1){
-                  #                         dimDiff <- setdiff(dimDiff,"member")
-                  #                   }else{
-                  obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
-                  pred.time.index <- grep("^time$", attr(pred$Data, "dimensions"))
-                  pred.member.index <- grep("^member$", attr(pred$Data, "dimensions"))
-                  auxPerm <- c(pred.time.index, pred.member.index,setdiff(1:length(dimPred),c(pred.time.index, pred.member.index)))
-                  dimPermI <- match(attr(pred$Data, "dimensions")[setdiff(1:length(dimPred),match(dimDiff, attr(pred$Data, "dimensions")))],attr(obs$Data, "dimensions"))
-                  auxPrd <- array(data = rep(aperm(pred$Data, auxPerm),1), dim = c(dimPred[pred.member.index]*dimPred[pred.time.index],dimPred[setdiff(1:length(dimPred),c(pred.time.index, pred.member.index))]))
-                  auxSim <- array(data = rep(aperm(sim$Data, auxPerm),1), dim = c(dimPred[pred.member.index]*dimPred[pred.time.index],dimPred[setdiff(1:length(dimPred),c(pred.time.index, pred.member.index))]))
-                  auxObs <- array(data = rep(aperm(obs$Data, dimPermI),dimPred[pred.member.index]), dim = c(dimPred[pred.member.index]*dimPred[pred.time.index],dimPred[setdiff(1:length(dimPred),c(pred.time.index, pred.member.index))]))
-                  F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
-                  sim$Data <- aperm(array(data = rep(F,1), dim = c(dimPred[pred.time.index],dimPred[pred.member.index],dimPred[setdiff(1:length(dimPred),c(pred.time.index, pred.member.index))])), auxPerm)
-                  #                   }
+                  if (is.null(window)){
+                        obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
+                        pred.time.index <- grep("^time$", attr(pred$Data, "dimensions"))
+                        pred.member.index <- grep("^member$", attr(pred$Data, "dimensions"))
+                        auxPerm <- c(pred.time.index, pred.member.index,setdiff(1:length(dimPred),c(pred.time.index, pred.member.index)))
+                        dimPermI <- match(attr(pred$Data, "dimensions")[setdiff(1:length(dimPred),match(dimDiff, attr(pred$Data, "dimensions")))],attr(obs$Data, "dimensions"))
+                        auxPrd <- array(data = rep(aperm(pred$Data, auxPerm),1), dim = c(dimPred[pred.member.index]*dimPred[pred.time.index],dimPred[setdiff(1:length(dimPred),c(pred.time.index, pred.member.index))]))
+                        auxSim <- array(data = rep(aperm(sim$Data, auxPerm),1), dim = c(dimFor[pred.member.index]*dimFor[pred.time.index],dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))]))
+                        auxObs <- array(data = NaN, dim = c(dimPred[pred.member.index]*dimPred[pred.time.index],dimPred[setdiff(1:length(dimPred),c(pred.time.index, pred.member.index))]))
+                        for (i in 1:dimPred[pred.member.index]){
+                              indMember <- ((i-1)*dimPred[pred.time.index]+1):(i*dimPred[pred.time.index])
+                              auxObs[indMember,,] <- aperm(obs$Data, dimPermI)
+                        }
+                        attrSim <- attr(sim$Data, "dimensions")
+                        F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
+                        sim$Data <- aperm(array(data = rep(F,1), dim = c(dimFor[pred.time.index],dimFor[pred.member.index],dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))])), auxPerm)
+                        attr(sim$Data, "dimensions") <- attrSim
+                  }else{
+                        obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
+                        pred.time.index <- grep("^time$", attr(pred$Data, "dimensions"))
+                        pred.member.index <- grep("^member$", attr(pred$Data, "dimensions"))
+                        auxPerm <- c(pred.time.index, pred.member.index,setdiff(1:length(dimPred),c(pred.time.index, pred.member.index)))
+                        dimPermI <- match(attr(pred$Data, "dimensions")[setdiff(1:length(dimPred),match(dimDiff, attr(pred$Data, "dimensions")))],attr(obs$Data, "dimensions"))
+                        for (j in 1:dim(dayList)[1]){
+                              indObs <- which(indDays == j)
+                              indObsWindow <- array(data = NaN, dim = c(window*length(indObs),1))
+                              for (d in 1:length(indObs)){
+                                    indObsWindow[((d-1)*window+1):(d*window)] <- (indObs[d]-floor(window/2)):(indObs[d]+floor(window/2))
+                              }
+                              indObsWindow[which(indObsWindow <= 0)] <- 1
+                              indObsWindow[which(indObsWindow >  length(indDays))] <- length(indDays)
+                              indObsWindow <- unique(indObsWindow)
+                              indSim <- which(indDaysSim == j)
+                              indTimeObs <- rep(list(bquote()), length(dimObs))
+                              indTimePrd <- rep(list(bquote()), length(dimPred))
+                              indTimeSim <- rep(list(bquote()), length(dimFor))
+                              # Consideramos solo la ventana temporal
+                              indTimeObs[[obs.time.index]] <- indObsWindow
+                              indTimePrd[[pred.time.index]] <- indObsWindow
+                              indTimeSim[[pred.time.index]] <- indSim
+                              callObs <- as.call(c(list(as.name("["),quote(obs$Data)), indTimeObs))
+                              callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
+                              callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
+                              auxPrd <- array(data = rep(aperm(eval(callPrd), auxPerm),1), dim = c(dimPred[pred.member.index]*length(indObsWindow),dimPred[setdiff(1:length(dimPred),c(pred.time.index, pred.member.index))]))
+                              auxSim <- array(data = rep(aperm(eval(callSim), auxPerm),1), dim = c(dimFor[pred.member.index]*length(indSim),dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))]))
+                              auxObs <- array(data = NaN, dim = c(dimPred[pred.member.index]*length(indObsWindow),dimPred[setdiff(1:length(dimPred),c(pred.time.index, pred.member.index))]))
+                              for (i in 1:dimPred[pred.member.index]){
+                                    indMember <- ((i-1)*length(indObsWindow)+1):(i*length(indObsWindow))
+                                    auxObs[indMember,,] <- aperm(eval(callObs), dimPermI)
+                              }
+                              attrSim <- attr(sim$Data, "dimensions")
+                              F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
+                              F <- aperm(array(data = rep(F,1), dim = c(length(indSim),dimFor[pred.member.index],dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))])), auxPerm)
+                              indTimeSim <- rep(list(bquote()), length(dimFor))
+                              for (d in 1:length(dimFor)){
+                                    indTimeSim[[d]] <- 1:dimFor[d]
+                              }
+                              indTimeSim[[pred.time.index]] <- indSim
+                              indTimeSim<-as.matrix(expand.grid(indTimeSim))
+                              sim$Data[indTimeSim] <- F
+                              attr(sim$Data, "dimensions") <- attrSim
+                        }
+                  }
             }
       }
       if (any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))){
@@ -177,8 +278,8 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
 #' @importFrom MASS fitdistr
 #' @keywords internal
 #'
-calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), varcode = c("tas", "hurs", "pr", "wss"), pr.threshold = 1) {
-      if (varcode == "pr") {
+calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), varcode = c("tas", "hurs", "tp", "pr", "wss"), pr.threshold = 1) {
+      if (any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
             threshold<-pr.threshold
             nP<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
             Pth<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
@@ -208,7 +309,6 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
             if (dim(sim)[1]!=dim(obs)[1]){
                   stop("sim and obs should have the same dimensions")
             }else{
-                  
                   simMean <- apply(sim, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
                   prdMean <- apply(pred, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
                   for (k in 1:min(c(dim(sim)[1],dim(obs)[1]))) {
@@ -231,7 +331,7 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
             }
       }
       if (method == "qqmap") {
-            if (varcode != "pr") {      
+            if (!any(grepl(varcode,c("pr","tp","precipitation","precip")))){
                   for (i in 1:dim(sim)[2]) {
                         for (j in 1:dim(sim)[3]) {
                               if (any(!is.na(pred[,i,j])) & any(!is.na(obs[,i,j]))) {
@@ -257,7 +357,7 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
                   }
             }
       }
-      if (method == "piani" & varcode == "pr") {
+      if (method == "piani" & any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
             for (i in 1:dim(sim)[2]){
                   for (j in 1:dim(sim)[3]){
                         if (nP[i,j]>0){
@@ -277,4 +377,3 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
       return(sim)
 }
 # End
-
