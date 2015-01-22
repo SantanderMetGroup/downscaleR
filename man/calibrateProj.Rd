@@ -4,7 +4,7 @@
 \title{Bias correction methods}
 \usage{
 calibrateProj(obs, pred, sim, method = c("qqmap", "delta", "scaling",
-  "unbiasing", "piani"), varcode = c("tas", "hurs", "pr", "wss"),
+  "unbiasing", "piani"), varcode = c("tas", "hurs", "tp", "pr", "wss"),
   pr.threshold = 1)
 }
 \arguments{

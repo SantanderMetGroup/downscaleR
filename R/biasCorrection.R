@@ -8,6 +8,8 @@
 #' Ignored if the dataset has no members.
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).
+#' @param window Numeric value specifying the time window width used to calibrate. The window is centered on the target day. 
+#' Default to \code{NULL}, which considers the whole period available.
 #'  
 #' @details
 #' 

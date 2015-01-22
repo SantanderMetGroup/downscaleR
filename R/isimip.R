@@ -3,6 +3,8 @@
 #'
 #' @template templateObsPredSim
 #' @param threshold The minimum value that is considered as a non-occurrence (e.g. precipitation). Default to 1.
+#' @param type Type of bias correction approach, either multiplicative (e.g. precipitation, \code{type = "multiplicative"})
+#'  or additive (e.g. temperature, \code{type = "additive"}, the default).
 #' @details
 #' 
 #' The methods available are qqmap, delta, unbiasing, scaling and Piani (only precipitation).
@@ -60,7 +62,7 @@
 #' par(mfrow = c(1,1))
 #' }
 
-isimip <- function (obs, pred, sim, threshold = 1, type = "additive") {
+isimip <- function (obs, pred, sim, threshold = 1, type = c("additive", "multiplicative")) {
       datesObs <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
       datesObs<-cut(datesObs, "month")
       yearList<-unlist(strsplit(as.character(datesObs), "[-]"))
@@ -1184,10 +1186,10 @@ isimip <- function (obs, pred, sim, threshold = 1, type = "additive") {
             }
       }
       
-      case {'uas';'vas';'ua';'va';'eastward wind component';'northward wind component'},
-      if isempty(Ws),error('Wind speed is necessary for the correction of the eastward and northward wind component');end
-      wsC=isimip(Ws.O,Ws.P,Ws.F,'variable','windspeed','datesobs',datesObs,'datesfor',datesFor);
-      indC=find(~isnan(Ws.F) & Ws.F>0);F(indC)=(F(indC).*wsC(indC))./Ws.F(indC);
+#       case {'uas';'vas';'ua';'va';'eastward wind component';'northward wind component'},
+#       if isempty(Ws),error('Wind speed is necessary for the correction of the eastward and northward wind component');end
+#       wsC=isimip(Ws.O,Ws.P,Ws.F,'variable','windspeed','datesobs',datesObs,'datesfor',datesFor);
+#       indC=find(~isnan(Ws.F) & Ws.F>0);F(indC)=(F(indC).*wsC(indC))./Ws.F(indC);
       
       attr(sim$Data, "correction") <- "ISI-MIP"
       return(sim)

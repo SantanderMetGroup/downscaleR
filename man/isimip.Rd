@@ -3,7 +3,8 @@
 \alias{isimip}
 \title{Bias correction ISI-MIP method}
 \usage{
-isimip(obs, pred, sim, pr.threshold = 1)
+isimip(obs, pred, sim, threshold = 1, type = c("additive",
+  "multiplicative"))
 }
 \arguments{
 \item{obs}{A field or station data containing the observed climate data for the training period}
@@ -15,8 +16,10 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 
 \item{sim}{A field containing the simulated climate for the variables used in \code{pred}, but considering the test period.}
 
-\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
-\code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
+\item{threshold}{The minimum value that is considered as a non-occurrence (e.g. precipitation). Default to 1.}
+
+\item{type}{Type of bias correction approach, either multiplicative (e.g. precipitation, \code{type = "multiplicative"})
+or additive (e.g. temperature, \code{type = "additive"}, the default).}
 }
 \value{
 A calibrated object of the same spatio-temporal extent of the input field
@@ -61,7 +64,7 @@ sim <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33
 # Interpolate the observations onto the model's grid. We use the method "nearest" and the getGrid function to ensure spatial consistency:
 obs <- interpGridData(obs, new.grid = getGrid(prd), method = "nearest")
 # Apply the bias correction method:
-simBC <- isimip (obs, prd, sim, pr.threshold = 1) # ISI-MIP Method
+simBC <- isimip (obs, prd, sim, threshold = 1) # ISI-MIP Method
 par(mfrow = c(1,2))
 plotMeanField(sim)
 plotMeanField(simBC)
