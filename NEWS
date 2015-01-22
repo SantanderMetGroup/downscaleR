@@ -1,4 +1,6 @@
-downscaleR 0.5-1
+downscaleR 0.5-2
 ================
 
-* Bug fix in the retrieval of coordinates from 2D X-Y horizontal coordinate axes 
+* New features for bias correction:
+   * New options for multimember corrections
+   * New moving-window option for reference period definition

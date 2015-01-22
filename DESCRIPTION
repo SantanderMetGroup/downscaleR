@@ -17,8 +17,8 @@ Suggests:
     R.VALUE
 Type: Package
 Title: Climate data manipulation and statistical downscaling
-Version: 0.5-1
-Date: 29-Dec-2014
+Version: 0.5-2
+Date: 22-Jan-2015
 Authors@R: as.person(c(
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
     "Sixto Herrera <sixto@predictia.es> [ctb]",
