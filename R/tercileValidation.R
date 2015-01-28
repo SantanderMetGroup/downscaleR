@@ -12,6 +12,7 @@
 #' 
 #' @importFrom abind asub
 #' @importFrom verification roc.area
+#' @importFrom fields image.plot
 #' 
 #' @export
 #' 
