@@ -39,7 +39,7 @@
 #' @export
 #' @note The current implementation of the function only considers datasets in which each file stores
 #' one single variable. For other dataset configurations, please refer to the NcML tutorial.
-#' @references NcML Tutorial \url{http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/ncml/v2.2/Tutorial.html}. Accessed 19 May 2014.).
+#' @references NcML Tutorial \url{http://www.unidata.ucar.edu/software/thredds/current/netcdf-java/ncml/Tutorial.html}. Accessed 28 Feb 2015.).
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @family loading
 
