@@ -4,7 +4,8 @@
 \title{Bias correction methods}
 \usage{
 biasCorrection(obs, pred, sim, method = c("qqmap", "delta", "scaling",
-  "unbiasing", "piani"), pr.threshold = 1, multi.member = TRUE)
+  "unbiasing", "piani"), pr.threshold = 1, multi.member = TRUE,
+  window = NULL)
 }
 \arguments{
 \item{obs}{A field or station data containing the observed climate data for the training period}
@@ -20,10 +21,13 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 \code{"scaling"}, \code{"unbiasing"} and \code{"piani"}. See details.}
 
 \item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
- \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
+\code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
 
 \item{multi.member}{Should members be adjusted sepparately (TRUE, default), or jointly (FALSE)?.
 Ignored if the dataset has no members.}
+
+\item{window}{Numeric value specifying the time window width used to calibrate. The window is centered on the target day.
+Default to \code{NULL}, which considers the whole period available.}
 }
 \value{
 A calibrated object of the same spatio-temporal extent of the input field

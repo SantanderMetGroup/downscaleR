@@ -3,6 +3,8 @@
 #'
 #' @template templateObsPredSim
 #' @param threshold The minimum value that is considered as a non-occurrence (e.g. precipitation). Default to 1.
+#' @param type Type of bias correction approach, either multiplicative (e.g. precipitation, \code{type = "multiplicative"})
+#'  or additive (e.g. temperature, \code{type = "additive"}, the default).
 #' @details
 #' 
 #' The methods available are qqmap, delta, unbiasing, scaling and Piani (only precipitation).
@@ -60,7 +62,7 @@
 #' par(mfrow = c(1,1))
 #' }
 
-isimip <- function (obs, pred, sim, threshold = 1, type = "additive") {
+isimip <- function (obs, pred, sim, threshold = 1, type = c("additive", "multiplicative")) {
       datesObs <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
       datesObs<-cut(datesObs, "month")
       yearList<-unlist(strsplit(as.character(datesObs), "[-]"))
@@ -914,76 +916,76 @@ isimip <- function (obs, pred, sim, threshold = 1, type = "additive") {
             }
             attr(sim$Data, "threshold") <- threshold
       }
-      if ((any(grepl(obs$Variable$varName,c("maximum temperature","temperatura maxima","tasmax","tmax"))))){
-            indTas <- which(!is.na(match(obs$Variable$varName,c("tas","temperatura media","mean temperature"))))
-            if (length(indTas) == 0){
-                  stop("Mean temperature is needed to correct the Maximum Temperature")
-            }else{
-                  indTasMax <- which(!is.na(match(obs$Variable$varName,c("maximum temperature","temperatura maxima","tasmax","tmax"))))
-                  obsTas <- obs
-                  indTasAux <- rep(list(bquote()), length(dimObs))
-                  indTasAux[[1]] <- indTas
-                  callTas <- as.call(c(list(as.name("["),quote(obs$Data)), indTasAux))
-                  obsTas$Data <- eval(callTas)
-                  attr(obsTas$Data, "dimensions") <- attributes(obs$Data)$dimensions[2:length(attributes(obs$Data)$dimensions)]
-                  obsTas$Variable$varName <- obs$Variable$varName[indTas]
-                  obsTas$Dates$start <- obs$Dates[[indTas]]$start
-                  obsTas$Dates$end <- obs$Dates[[indTas]]$end
-
-                  prdTas <- pred
-                  indTasAux <- rep(list(bquote()), length(dimPred))
-                  indTasAux[[1]] <- indTas
-                  callTas <- as.call(c(list(as.name("["),quote(pred$Data)), indTasAux))
-                  prdTas$Data <- eval(callTas)
-                  attr(prdTas$Data, "dimensions") <- attributes(pred$Data)$dimensions[2:length(attributes(pred$Data)$dimensions)]
-                  prdTas$Variable$varName <- pred$Variable$varName[indTas]
-                  prdTas$Dates$start <- pred$Dates[[indTas]]$start
-                  prdTas$Dates$end <- pred$Dates[[indTas]]$end
-
-                  simTas <- sim
-                  indTasAux <- rep(list(bquote()), length(dimFor))
-                  indTasAux[[1]] <- indTas
-                  callTas <- as.call(c(list(as.name("["),quote(sim$Data)), indTasAux))
-                  simTas$Data <- eval(callTas)
-                  attr(simTas$Data, "dimensions") <- attributes(sim$Data)$dimensions[2:length(attributes(sim$Data)$dimensions)]
-                  simTas$Variable$varName <- sim$Variable$varName[indTas]
-                  simTas$Dates$start <- sim$Dates[[indTas]]$start
-                  simTas$Dates$end <- sim$Dates[[indTas]]$end
-
-                  simTas <- isimip(obsTas, prdTas, simTas)# isimip
-                  
-                  indTasAux <- rep(list(bquote()), length(dimObs))
-                  indTasAux[[1]] <- indTas
-                  indTasAux <- as.matrix(expand.grid(indTasAux))
-                  
-                  [daysObs,Idays,Jdays]=unique(datesVecObs(:,2:3),'rows');ndaysObs=size(daysObs,1);
-                  k=repmat(NaN,ndaysObs,Nest);
-                  for nd=1:ndaysObs
-                  indDaysObs=find(Jdays==nd);
-                  if ~isempty(indDaysObs)
-                  k=nansum(P(indDaysObs,:)-Tg.P(indDaysObs,:))./nansum(O(indDaysObs,:)-Tg.O(indDaysObs,:));
-                  indDaysFor=find(abs(datesVecFor(:,2)-daysObs(nd,2))+abs(datesVecFor(:,3)-daysObs(nd,3))==0);
-                  if ~isempty(indDaysFor)
-                  F(indDaysFor,:)=repmat(k,size(indDaysFor,1),1).*(F(indDaysFor,:)-Tg.F(indDaysFor,:))+tgC(indDaysFor,:);
-                  k(nd,:)=nansum(P(indDaysObs,:)-Tg.P(indDaysObs,:))./nansum(O(indDaysObs,:)-Tg.O(indDaysObs,:));
-                  end
-                  end
-                  end
-                  case {'uas';'vas';'ua';'va';'eastward wind component';'northward wind component'},
-                  if isempty(Ws),error('Wind speed is necessary for the correction of the eastward and northward wind component');end
-                  wsC=isimip(Ws.O,Ws.P,Ws.F,'variable','windspeed','datesobs',datesObs,'datesfor',datesFor);
-                  indC=find(~isnan(Ws.F) & Ws.F>0);F(indC)=(F(indC).*wsC(indC))./Ws.F(indC);
-                  case {'prsn';'snowfall';'nieve'},
-                  if isempty(Pr),error('Precipitation is necessary for the correction of the snowfall');end
-                  prC=isimip(Pr.O,Pr.P,Pr.F,'variable','precipitation','datesobs',datesObs,'datesfor',datesFor,'threshold', threshold);
-                  indC=find(~isnan(Pr.F) & Pr.F>0);F(indC)=(F(indC).*prC(indC))./Pr.F(indC);
-            }
-            
-      }
-      if ((any(grepl(obs$Variable$varName,c("minimum temperature","temperatura minima","tasmin","tmin"))))){
-            
-      }
-                  
+#       if ((any(grepl(obs$Variable$varName,c("maximum temperature","temperatura maxima","tasmax","tmax"))))){
+#             indTas <- which(!is.na(match(obs$Variable$varName,c("tas","temperatura media","mean temperature"))))
+#             if (length(indTas) == 0){
+#                   stop("Mean temperature is needed to correct the Maximum Temperature")
+#             }else{
+#                   indTasMax <- which(!is.na(match(obs$Variable$varName,c("maximum temperature","temperatura maxima","tasmax","tmax"))))
+#                   obsTas <- obs
+#                   indTasAux <- rep(list(bquote()), length(dimObs))
+#                   indTasAux[[1]] <- indTas
+#                   callTas <- as.call(c(list(as.name("["),quote(obs$Data)), indTasAux))
+#                   obsTas$Data <- eval(callTas)
+#                   attr(obsTas$Data, "dimensions") <- attributes(obs$Data)$dimensions[2:length(attributes(obs$Data)$dimensions)]
+#                   obsTas$Variable$varName <- obs$Variable$varName[indTas]
+#                   obsTas$Dates$start <- obs$Dates[[indTas]]$start
+#                   obsTas$Dates$end <- obs$Dates[[indTas]]$end
+# 
+#                   prdTas <- pred
+#                   indTasAux <- rep(list(bquote()), length(dimPred))
+#                   indTasAux[[1]] <- indTas
+#                   callTas <- as.call(c(list(as.name("["),quote(pred$Data)), indTasAux))
+#                   prdTas$Data <- eval(callTas)
+#                   attr(prdTas$Data, "dimensions") <- attributes(pred$Data)$dimensions[2:length(attributes(pred$Data)$dimensions)]
+#                   prdTas$Variable$varName <- pred$Variable$varName[indTas]
+#                   prdTas$Dates$start <- pred$Dates[[indTas]]$start
+#                   prdTas$Dates$end <- pred$Dates[[indTas]]$end
+# 
+#                   simTas <- sim
+#                   indTasAux <- rep(list(bquote()), length(dimFor))
+#                   indTasAux[[1]] <- indTas
+#                   callTas <- as.call(c(list(as.name("["),quote(sim$Data)), indTasAux))
+#                   simTas$Data <- eval(callTas)
+#                   attr(simTas$Data, "dimensions") <- attributes(sim$Data)$dimensions[2:length(attributes(sim$Data)$dimensions)]
+#                   simTas$Variable$varName <- sim$Variable$varName[indTas]
+#                   simTas$Dates$start <- sim$Dates[[indTas]]$start
+#                   simTas$Dates$end <- sim$Dates[[indTas]]$end
+# 
+#                   simTas <- isimip(obsTas, prdTas, simTas)# isimip
+#                   
+#                   indTasAux <- rep(list(bquote()), length(dimObs))
+#                   indTasAux[[1]] <- indTas
+#                   indTasAux <- as.matrix(expand.grid(indTasAux))
+#                   
+#                   [daysObs,Idays,Jdays]=unique(datesVecObs(:,2:3),'rows');ndaysObs=size(daysObs,1);
+#                   k=repmat(NaN,ndaysObs,Nest);
+#                   for nd=1:ndaysObs
+#                   indDaysObs=find(Jdays==nd);
+#                   if ~isempty(indDaysObs)
+#                   k=nansum(P(indDaysObs,:)-Tg.P(indDaysObs,:))./nansum(O(indDaysObs,:)-Tg.O(indDaysObs,:));
+#                   indDaysFor=find(abs(datesVecFor(:,2)-daysObs(nd,2))+abs(datesVecFor(:,3)-daysObs(nd,3))==0);
+#                   if ~isempty(indDaysFor)
+#                   F(indDaysFor,:)=repmat(k,size(indDaysFor,1),1).*(F(indDaysFor,:)-Tg.F(indDaysFor,:))+tgC(indDaysFor,:);
+#                   k(nd,:)=nansum(P(indDaysObs,:)-Tg.P(indDaysObs,:))./nansum(O(indDaysObs,:)-Tg.O(indDaysObs,:));
+#                   end
+#                   end
+#                   end
+#                   case {'uas';'vas';'ua';'va';'eastward wind component';'northward wind component'},
+#                   if isempty(Ws),error('Wind speed is necessary for the correction of the eastward and northward wind component');end
+#                   wsC=isimip(Ws.O,Ws.P,Ws.F,'variable','windspeed','datesobs',datesObs,'datesfor',datesFor);
+#                   indC=find(~isnan(Ws.F) & Ws.F>0);F(indC)=(F(indC).*wsC(indC))./Ws.F(indC);
+#                   case {'prsn';'snowfall';'nieve'},
+#                   if isempty(Pr),error('Precipitation is necessary for the correction of the snowfall');end
+#                   prC=isimip(Pr.O,Pr.P,Pr.F,'variable','precipitation','datesobs',datesObs,'datesfor',datesFor,'threshold', threshold);
+#                   indC=find(~isnan(Pr.F) & Pr.F>0);F(indC)=(F(indC).*prC(indC))./Pr.F(indC);
+#             }
+#             
+#       }
+#       if ((any(grepl(obs$Variable$varName,c("minimum temperature","temperatura minima","tasmin","tmin"))))){
+#             
+#       }
+#                   
 
       datesObs <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
       datesObs<-cut(datesObs, "month")
@@ -1184,10 +1186,10 @@ isimip <- function (obs, pred, sim, threshold = 1, type = "additive") {
             }
       }
       
-      case {'uas';'vas';'ua';'va';'eastward wind component';'northward wind component'},
-      if isempty(Ws),error('Wind speed is necessary for the correction of the eastward and northward wind component');end
-      wsC=isimip(Ws.O,Ws.P,Ws.F,'variable','windspeed','datesobs',datesObs,'datesfor',datesFor);
-      indC=find(~isnan(Ws.F) & Ws.F>0);F(indC)=(F(indC).*wsC(indC))./Ws.F(indC);
+#       case {'uas';'vas';'ua';'va';'eastward wind component';'northward wind component'},
+#       if isempty(Ws),error('Wind speed is necessary for the correction of the eastward and northward wind component');end
+#       wsC=isimip(Ws.O,Ws.P,Ws.F,'variable','windspeed','datesobs',datesObs,'datesfor',datesFor);
+#       indC=find(~isnan(Ws.F) & Ws.F>0);F(indC)=(F(indC).*wsC(indC))./Ws.F(indC);
       
       attr(sim$Data, "correction") <- "ISI-MIP"
       return(sim)
