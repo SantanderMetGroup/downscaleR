@@ -281,33 +281,52 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
 #' @keywords internal
 #'
 calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), varcode = c("tas", "hurs", "tp", "pr", "wss"), pr.threshold = 1) {
-      if (any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
-            threshold<-pr.threshold
-            nP<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
-            Pth<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
-            for (i in 1:dim(pred)[2]){
-                  for (j in 1:dim(pred)[3]){
-                        nP[i,j]<-sum(as.double(obs[,i,j]<=threshold & !is.na(obs[,i,j])), na.rm = TRUE)
-                        if (nP[i,j]>0){
-                              ix<-sort(pred[,i,j], decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
-                              Ps<-sort(pred[,i,j], decreasing = FALSE, na.last = NA)
-                              Pth[i,j]<-Ps[nP[i,j]+1]
-                              if (Ps[nP[i,j]+1]<=threshold){
-                                    ind<-min(which(Ps > threshold & !is.na(Ps)))
-                                    # [Shape parameter Scale parameter]
-                                    Os<-sort(obs[,i,j], decreasing = FALSE, na.last = NA)
-                                    auxGamma<-fitdistr(Os[(nP[i,j]+1):ind],"gamma")
-                                    Ps[(nP[i,j]+1):ind]<-rgamma(ind-nP[i,j], auxGamma$estimate[1], rate = auxGamma$estimate[2])
-                                    Ps<-sort(Ps, decreasing = FALSE, na.last = NA)
-                              }
-                              ind<-min(nP[i,j],dim(pred)[1])
-                              Ps[1:ind]<-0
-                              pred[ix,i,j]<-Ps
-                        }
-                  }
+  if (any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
+    threshold<-pr.threshold
+    nP<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
+    Pth<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
+    for (i in 1:dim(pred)[2]){
+      for (j in 1:dim(pred)[3]){
+        nP[i,j]<-sum(as.double(obs[,i,j]<=threshold & !is.na(obs[,i,j])), na.rm = TRUE)
+        if (nP[i,j]>0 & nP[i,j]<dim(obs)[1]){
+          ix<-sort(pred[,i,j], decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
+          Ps<-sort(pred[,i,j], decreasing = FALSE, na.last = NA)
+          Pth[i,j]<-Ps[nP[i,j]+1]
+          if (Ps[nP[i,j]+1]<=threshold){
+            Os<-sort(obs[,i,j], decreasing = FALSE, na.last = NA)
+            ind<-which(Ps > threshold & !is.na(Ps))
+            if (length(ind)==0){
+                  ind <- max(which(!is.na(Ps)))
+                  ind <- min(c(length(Os),ind))
+            }else{
+                  ind<-min(which(Ps > threshold & !is.na(Ps)))
             }
+            # [Shape parameter Scale parameter]
+            if (length(unique(Os[(nP[i,j]+1):ind]))<6){
+              Ps[(nP[i,j]+1):ind] <- mean(Os[(nP[i,j]+1):ind], na.rm = TRUE)
+            }else{
+              auxGamma<-fitdistr(Os[(nP[i,j]+1):ind],"gamma")
+              Ps[(nP[i,j]+1):ind]<-rgamma(ind-nP[i,j], auxGamma$estimate[1], rate = auxGamma$estimate[2])
+            }
+            Ps<-sort(Ps, decreasing = FALSE, na.last = NA)
+          }
+          ind<-min(nP[i,j],dim(pred)[1])
+          Ps[1:ind]<-0
+          pred[ix,i,j]<-Ps
+        }else{
+          if (nP[i,j]==dim(obs)[1]){
+            ix<-sort(pred[,i,j], decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
+            Ps<-sort(pred[,i,j], decreasing = FALSE, na.last = NA)
+            Pth[i,j]<-Ps[nP[i,j]]
+            ind<-min(nP[i,j],dim(pred)[1])
+            Ps[1:ind]<-0
+            pred[ix,i,j]<-Ps
+          }
+        }
       }
-      if (method == "delta") {
+    }
+  }
+  if (method == "delta") {
             if (dim(sim)[1]!=dim(obs)[1]){
                   stop("sim and obs should have the same dimensions")
             }else{
@@ -346,14 +365,28 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
                   for (i in 1:dim(sim)[2]) {
                         for (j in 1:dim(sim)[3]) {
                               if (any(!is.na(pred[,i,j])) & any(!is.na(obs[,i,j]))){
+                                  if (length(which(pred[,i,j]>Pth[i,j]))>0){
                                     ePrd<-ecdf(pred[which(pred[,i,j]>Pth[i,j]),i,j])
                                     noRain<-which(sim[,i,j]<=Pth[i,j] & !is.na(sim[,i,j]))
                                     rain<-which(sim[,i,j]>Pth[i,j] & !is.na(sim[,i,j]))
                                     drizzle<-which(sim[,i,j]>Pth[i,j] & sim[,i,j]<=min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j]))
-                                    eFrc<-ecdf(sim[rain,i,j])
-                                    sim[drizzle,i,j]<-quantile(sim[which(sim[,i,j]>min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j])),i,j], probs = eFrc(sim[drizzle,i,j]), na.rm = TRUE, type = 4)
-                                    sim[rain,i,j]<-quantile(obs[which(obs[,i,j]>threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain,i,j]), na.rm = TRUE, type = 4)
+                                    if (length(rain)>0){
+                                      eFrc<-ecdf(sim[rain,i,j])
+                                      sim[rain,i,j]<-quantile(obs[which(obs[,i,j]>threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain,i,j]), na.rm = TRUE, type = 4)
+                                    }
+                                    if (length(drizzle)>0){
+                                      sim[drizzle,i,j]<-quantile(sim[which(sim[,i,j]>min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j])),i,j], probs = eFrc(sim[drizzle,i,j]), na.rm = TRUE, type = 4)
+                                    }
                                     sim[noRain,i,j]<-0
+                                  }else{
+                                    noRain<-which(sim[,i,j]<=Pth[i,j] & !is.na(sim[,i,j]))
+                                    rain<-which(sim[,i,j]>Pth[i,j] & !is.na(sim[,i,j]))
+                                    if (length(rain)>0){
+                                      eFrc<-ecdf(sim[rain,i,j])
+                                      sim[rain,i,j]<-quantile(obs[which(obs[,i,j]>threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain,i,j]), na.rm = TRUE, type = 4)
+                                    }
+                                    sim[noRain,i,j]<-0
+                                  }
                               }
                         }
                   }
