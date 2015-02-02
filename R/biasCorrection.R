@@ -293,9 +293,15 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
           Ps<-sort(pred[,i,j], decreasing = FALSE, na.last = NA)
           Pth[i,j]<-Ps[nP[i,j]+1]
           if (Ps[nP[i,j]+1]<=threshold){
-            ind<-min(which(Ps > threshold & !is.na(Ps)))
-            # [Shape parameter Scale parameter]
             Os<-sort(obs[,i,j], decreasing = FALSE, na.last = NA)
+            ind<-which(Ps > threshold & !is.na(Ps))
+            if (length(ind)==0){
+                  ind <- max(which(!is.na(Ps)))
+                  ind <- min(c(length(Os),ind))
+            }else{
+                  ind<-min(which(Ps > threshold & !is.na(Ps)))
+            }
+            # [Shape parameter Scale parameter]
             if (length(unique(Os[(nP[i,j]+1):ind]))<6){
               Ps[(nP[i,j]+1):ind] <- mean(Os[(nP[i,j]+1):ind], na.rm = TRUE)
             }else{
@@ -317,7 +323,6 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
             pred[ix,i,j]<-Ps
           }
         }
-        
       }
     }
   }
