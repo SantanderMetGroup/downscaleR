@@ -7,5 +7,5 @@ The recommended installation procedure is to use the install_github command from
 ```R
 ￼devtools::install_github(c("SantanderMetGroup/downscaleR@stable","SantanderMetGroup/downscaleR.java@stable"))
 ```
-Note that apart from the downscaleR package, a dependent package (downscaleR.java) is installed, containing the netCDF Java API internally used by downscaleR.
+Note that a dependent package (downscaleR.java) is also installed, containing the netCDF Java API internally used by downscaleR.
 
