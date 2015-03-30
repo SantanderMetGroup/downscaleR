@@ -117,6 +117,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
       for (d in 1:dim(dayList)[1]){
             indDaysSim[which(sqrt((dayListSim[,1]-dayList[d,1])^2+(dayListSim[,2]-dayList[d,2])^2)==0)] <- d
       }
+      attrSim <- attr(sim$Data, "dimensions")
       if (length(dimDiff)==0){
             F <- calibrateProj(obs$Data, aperm(pred$Data,dimPerm), aperm(sim$Data,dimPerm), method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
             if (!any(dimPerm != 1:length(attr(pred$Data, "dimensions")))){
@@ -140,6 +141,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                               indTimeSim[match(dimDiff, attr(sim$Data, "dimensions"))] <- as.list(indDimDiff[i,])
                               callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
                               callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
+#                              attrSim <- attr(sim$Data, "dimensions")
                               F <- calibrateProj(aperm(obs$Data, dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
                               indTimeSim <- rep(list(bquote()), length(dimFor))
                               for (d in 1:length(dimFor)){
@@ -148,6 +150,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                               indTimeSim[match(dimDiff, attr(sim$Data, "dimensions"))] <- as.list(indDimDiff[i,])
                               indTimeSim<-as.matrix(expand.grid(indTimeSim))
                               sim$Data[indTimeSim] <- F
+#                              attr(sim$Data, "dimensions") <- attrSim
                         }else{
                               for (j in 1:dim(dayList)[1]){
                                     indObs <- which(indDays == j)
@@ -181,6 +184,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                                     indTimeSim<-as.matrix(expand.grid(indTimeSim))
                                     sim$Data[indTimeSim] <- F
                               }
+#                              attr(sim$Data, "dimensions") <- attrSim
                         }
                   }
             }else{
@@ -197,10 +201,10 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                               indMember <- ((i-1)*dimPred[pred.time.index]+1):(i*dimPred[pred.time.index])
                               auxObs[indMember,,] <- aperm(obs$Data, dimPermI)
                         }
-                        attrSim <- attr(sim$Data, "dimensions")
+ #                       attrSim <- attr(sim$Data, "dimensions")
                         F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
                         sim$Data <- aperm(array(data = rep(F,1), dim = c(dimFor[pred.time.index],dimFor[pred.member.index],dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))])), auxPerm)
-                        attr(sim$Data, "dimensions") <- attrSim
+#                        attr(sim$Data, "dimensions") <- attrSim
                   }else{
                         obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
                         pred.time.index <- grep("^time$", attr(pred$Data, "dimensions"))
@@ -234,7 +238,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                                     indMember <- ((i-1)*length(indObsWindow)+1):(i*length(indObsWindow))
                                     auxObs[indMember,,] <- aperm(eval(callObs), dimPermI)
                               }
-                              attrSim <- attr(sim$Data, "dimensions")
+ #                             attrSim <- attr(sim$Data, "dimensions")
                               F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
                               F <- aperm(array(data = rep(F,1), dim = c(length(indSim),dimFor[pred.member.index],dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))])), auxPerm)
                               indTimeSim <- rep(list(bquote()), length(dimFor))
@@ -244,7 +248,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                               indTimeSim[[pred.time.index]] <- indSim
                               indTimeSim<-as.matrix(expand.grid(indTimeSim))
                               sim$Data[indTimeSim] <- F
-                              attr(sim$Data, "dimensions") <- attrSim
+#                              attr(sim$Data, "dimensions") <- attrSim
                         }
                   }
             }
@@ -252,6 +256,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
       if (any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))){
             attr(sim$Data, "threshold") <-  threshold
       }
+      attr(sim$Data, "dimensions") <- attrSim
       attr(sim$Data, "correction") <-  method
       return(sim)
 }
