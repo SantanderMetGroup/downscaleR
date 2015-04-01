@@ -1,6 +1,6 @@
-downscaleR 0.5-2
+downscaleR 0.6-0
 ================
 
-* New features for bias correction:
-   * New options for multimember corrections
-   * New moving-window option for reference period definition
+* Several improvements in bias correction methods
+* New netCDF-4 export feature
+* Minor bug fixes
