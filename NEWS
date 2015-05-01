@@ -1,6 +1,6 @@
-downscaleR 0.6-0
+downscaleR 0.7-0
 ================
 
-* Several improvements in bias correction methods
-* New netCDF-4 export feature
+* netCDF-4 export removed from package
 * Minor bug fixes
+* Added on-the-fly monthly aggregation (time = "MM")
