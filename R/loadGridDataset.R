@@ -9,7 +9,7 @@
 loadGridDataset <- function(var, grid, dic, level, season, years, time, latLon) {
       timePars <- getTimeDomain(grid, dic, season, years, time)
       levelPars <- getVerticalLevelPars(grid, level)
-      mdArray <- makeSubset(grid, timePars, levelPars$zRange, latLon)
+      mdArray <- makeSubset(grid, timePars, levelPars, latLon)
       if (!is.null(dic)) {
             isStandard <- TRUE
             mdArray <- dictionaryTransformGrid(dic, timePars, mdArray)
