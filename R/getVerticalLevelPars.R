@@ -27,7 +27,7 @@ getVerticalLevelPars <- function(grid, level) {
                               levelInd <- gcs$getVerticalAxis()$findCoordElement(0)
                         }
                   } else {
-                        stop("Variable with vertical levels: '@level' following the variable name is required\nPossible values: ", levels)
+                        stop("Variable with vertical levels: '@level' following the variable name is required\nPossible values: ", paste(levels, collapse = ", "))
                   }
             } else {
                   if (level %in% levels) {
