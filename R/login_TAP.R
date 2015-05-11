@@ -9,10 +9,7 @@
 #' Prior to data access, users must log in. Registration can be obtained via the THREDDS Administration Panel (\href{http://www.meteo.unican.es/tap}{TAP}),
 #'  indicating the group (Project) you belong to (e.g. CORDEX, SPECS ...), which will grant access to certain databases.
 #'  Further details on registration for data access can be viewed in this \href{http://meteo.unican.es/ecoms-udg/DataServer/Registration}{example link}.
-#' @note For the users of the ECOMS User Data Gateway via the \pkg{ecomsUDG.Raccess} package it is not necessary
-#' to do the login via this function, as authorization is previously obtained via the \code{\link[ecomsUDG.Raccess]{loginECOMS_UDG}}
-#'  interface.
-#' @author J Bedia \email{joaquin.bedia@@gmail.com}
+#' @author J Bedia \email{joaquin.bedia@@gmail.com}, M. Vega.
 #' @export
 
 
@@ -24,7 +21,7 @@ login_TAP <- function(username, password, proxy.host = NULL, proxy.port = NULL) 
       if (!is.null(proxy.host)) {
             J("ucar.nc2.util.net.HTTPSession")$setGlobalProxy(proxy.host, proxy.port)
       }
-      aux <- .jnew("ucar/nc2/util/net/HTTPBasicProvider", username, password)
-      J("ucar.nc2.util.net.HTTPSession")$setGlobalCredentialsProvider(aux)
+      J("ucar.httpservices.MyHTTPFactory")$setCredentials(username, password)
 }
 # End
+
