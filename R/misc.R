@@ -162,4 +162,38 @@ renameDims <- function(obs, multi.member) {
 # End
 
 
+#' Calculate the number of days of the current month
+#' @param d A date (character) in format YYYY-MM-DD...
+#' @return The number of days of the current month
+#' @references 
+#' \url{http://stackoverflow.com/questions/6243088/find-out-the-number-of-days-of-a-month-in-r}
+
+ndays <- function(d) {
+      as.difftime(tail((28:31)[which(!is.na(as.Date(paste0(substr(d, 1, 8), 28:31), '%Y-%m-%d')))], 1), units = "days")
+}
+#End
+
+#' Adjust time/start dates of a loaded object
+#' @param timePars Object containing the relevant time parameters
+#' @return A list with dates (POSIXct) start and end, defining the interval [start, end)
+#' @details Sub-daily information is displayed only in case of subdaily data
+#' @author J Bedia \email{joaquin.bedia@@gmail.com}
+#' @keywords internal
+
+# timePars <- cube$timePars
+adjustDates <- function(timePars) {
+      interval <- 0
+      if (timePars$aggr.m != "none") {
+            mon.len <- sapply(timePars$dateSliceList, ndays)
+            interval <- mon.len * 86400
+      } else if (timePars$aggr.d != "none") {
+            timePars$dateSliceList <- format(as.Date(substr(timePars$dateSliceList, 1, 10)), format = "%Y-%m-%d %H:%M:%S", usetz = TRUE) 
+            interval <- 86400
+      }
+      formato <- ifelse(interval[1] == 0, "%Y-%m-%d %H:%M:%S", "%Y-%m-%d")
+      dates.end <- format(as.POSIXct(as.POSIXlt(timePars$dateSliceList, tz = "GMT") + interval), format = formato, usetz = TRUE)
+      dates.start <- format(as.POSIXct(as.POSIXlt(timePars$dateSliceList, tz = "GMT"), tz = "GMT"), format = formato, usetz = TRUE)
+      return(list("start" = dates.start, "end" = dates.end))
+}
+# End
 
