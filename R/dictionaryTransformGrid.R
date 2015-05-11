@@ -4,7 +4,7 @@
 #' Sub-routine of \code{loadGridDataset}.
 #'
 #' @param dic Dictionary line for the variable, as returned by \code{dictionaryLookup} or \code{dictionaryLookup.ECOMS}
-#' @param foreTimePars A list of time selection parameters, as returned by \code{getTimeDomain}
+#' @param timePars A list of time selection parameters, as returned by \code{getTimeDomain}
 #' @param mdArray A n-dimensional array, as returned by \code{makeSubset}
 #' @return The transformed n dimensional array of data. See details.
 #' @details When performing deaccumulation, the shape of the output array may change. This is due to the re-ordering
@@ -18,7 +18,8 @@
 dictionaryTransformGrid <- function(dic, timePars, mdArray) {
       dimNames <- attr(mdArray, "dimensions")
       mdArray <- mdArray * dic$scale + dic$offset
-	if (dic$deaccum != 0) {
+	# Deaccumulation sub-routine
+      if (dic$deaccum != 0) {
 	      t.ranges <- c(0, cumsum(sapply(1:length(timePars$tRanges), function(x) {
 	            timePars$tRanges[[x]]$length()})))
             dff <- timePars$deaccumFromFirst

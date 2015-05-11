@@ -8,8 +8,8 @@
 #' 
 #' @param A grid of the java class \sQuote{ucar.nc2.dt.grid.GeoGrid}
 #' @param timePars A list of time parameters as returnde by \code{getTimeDomain}.
-#' @param zRange A \sQuote{ucar.ma2.Range} or a null reference, as returned by
-#'  \code{getVerticalLevelPars}
+#' @param levelPars Vertical level parameters, as returned by \code{getVerticalLevelPars}.
+#' The element \code{zRange} is a \sQuote{ucar.ma2.Range} or a null reference.
 #' @param latLon A list of geospatial parameters, as returned by
 #' \code{getLatLonDomain}.
 #' @return A n-dimensional array with the selected subset data.
@@ -26,16 +26,17 @@
 #' @keywords internal
 #' @export
 
-makeSubset <- function(grid, timePars, zRange, latLon) {
+makeSubset <- function(grid, timePars, levelPars, latLon) {
       message("[", Sys.time(), "] Retrieving data subset ..." )
       gcs <- grid$getCoordinateSystem()
       dimNames <- rev(names(scanVarDimensions(grid)))
-      aux.list <- list()
-      for (i in 1:length(timePars$tRanges)) {
+      aux.list <- rep(list(bquote()), length(timePars$tRanges))
+      do.aggr <- ifelse((timePars$aggr.d != "none") | (timePars$aggr.m != "none"), TRUE, FALSE)
+      for (i in 1:length(aux.list)) {
             dimNamesRef <- dimNames
-            aux.list2 <- list()    
-            for (j in 1:length(latLon$llbbox)) {
-                  subSet <- grid$makeSubset(timePars$tRanges[[i]], zRange, latLon$llbbox[[j]], 1L, 1L, 1L)
+            aux.list2 <- rep(list(bquote()), length(latLon$llbbox))
+            for (j in 1:length(aux.list2)) {
+                  subSet <- grid$makeSubset(timePars$tRanges[[i]], levelPars$zRange, latLon$llbbox[[j]], 1L, 1L, 1L)
                   shapeArray <- rev(subSet$getShape()) # Reversed!!
                   # shape of the output depending on spatial selection
                   if (latLon$pointXYindex[1] >= 0) {
@@ -50,17 +51,35 @@ makeSubset <- function(grid, timePars, zRange, latLon) {
                   }        
                   aux.list2[[j]] <- array(subSet$readDataSlice(-1L, -1L, latLon$pointXYindex[2], latLon$pointXYindex[1])$copyTo1DJavaArray(), dim = shapeArray)
             }
-            # Sub-routine for daily aggregation from 6h data
-            if (!is.na(timePars$dailyAggr)) {
-                  aux.list[[i]] <- toDD(do.call("abind", c(aux.list2, along = 1)), dimNamesRef, timePars$dailyAggr)
-                  dimNamesRef <- attr(aux.list[[i]], "dimensions")
-            } else {
-                  aux.list[[i]] <- do.call("abind", c(aux.list2, along = 1))
-            }
+            aux.list[[i]] <- do.call("abind", c(aux.list2, along = 1))
             aux.list2 <- NULL
+            # Daily aggregator 
+            if (timePars$aggr.d != "none") {
+                  aux.string <- paste(as.POSIXlt(timePars$dateSliceList[[i]])$mon, as.POSIXlt(timePars$dateSliceList[[i]])$mday, sep = "-")
+                  aux.factor <- factor(aux.string, levels = unique(aux.string))
+                  mar <- grep("^time", dimNamesRef, invert = TRUE)
+                  aux.list[[i]] <- apply(aux.list[[i]], MARGIN = mar, FUN = function(x) {
+                        tapply(x, INDEX = aux.factor, FUN = timePars$aggr.d, na.rm = TRUE)
+                  })
+                  dimNamesRef <- c("time", dimNamesRef[mar])
+                  # Convert dates to daily:
+                  nhours <- length(aux.factor) / nlevels(aux.factor)
+                  timePars$dateSliceList[[i]] <- timePars$dateSliceList[[i]][seq(1, by = nhours, length.out = nlevels(aux.factor))]
+            }
+            # Monthly aggregator
+            if (timePars$aggr.m != "none") {
+                  mes <- as.POSIXlt(timePars$dateSliceList[[i]])$mon
+                  day <- as.POSIXlt(timePars$dateSliceList[[i]])$mday
+                  mar <- grep("^time", dimNamesRef, invert = TRUE)
+                  aux.list[[i]] <- apply(aux.list[[i]], MARGIN = mar, FUN = function(x) {
+                        tapply(x, INDEX = mes, FUN = timePars$aggr.m)
+                  })
+                  dimNamesRef <- c("time", dimNamesRef[mar])
+                  timePars$dateSliceList[[i]] <- timePars$dateSliceList[[i]][which(day == 1)]
+            }
       }
       mdArray <- do.call("abind", c(aux.list, along = grep("^time", dimNamesRef)))
-      aux.list <- NULL
+      aux.list <- timePars$tRanges <- NULL
       if (any(dim(mdArray) == 1)) {
             dimNames <- dimNamesRef[-which(dim(mdArray) == 1)]    
             mdArray <- drop(mdArray)
@@ -69,6 +88,8 @@ makeSubset <- function(grid, timePars, zRange, latLon) {
       }
       mdArray <- unname(mdArray)
       attr(mdArray, "dimensions") <- dimNames
-      return(mdArray)
+      # if (do.aggr) format <- ifelse(timePars$aggr.m == "none", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d")
+      timePars$dateSliceList <- as.POSIXct(do.call("c", timePars$dateSliceList), tz = "GMT")#, format = format, tz = "GMT", usetz = TRUE)      
+      return(list("timePars" = timePars, "mdArray" = mdArray))
 }
 # End

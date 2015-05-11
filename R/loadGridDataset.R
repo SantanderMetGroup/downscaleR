@@ -6,23 +6,34 @@
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @keywords internal
 
-loadGridDataset <- function(var, grid, dic, level, season, years, time, latLon) {
-      timePars <- getTimeDomain(grid, dic, season, years, time)
+loadGridDataset <- function(var, grid, dic, level, season, years, time, latLon, aggr.d, aggr.m) {
+      timePars <- getTimeDomain(grid, dic, season, years, time, aggr.d, aggr.m)
       levelPars <- getVerticalLevelPars(grid, level)
-      mdArray <- makeSubset(grid, timePars, levelPars, latLon)
+      cube <- makeSubset(grid, timePars, levelPars, latLon)
+      timePars <- NULL
       if (!is.null(dic)) {
             isStandard <- TRUE
-            mdArray <- dictionaryTransformGrid(dic, timePars, mdArray)
+            cube$mdArray <- dictionaryTransformGrid(dic, cube$timePars, cube$mdArray)
       } else {
             isStandard <- FALSE
       }
       if (isTRUE(latLon$revLat)) {
-            mdArray <- revArrayLatDim(mdArray, grid)
+            cube$mdArray <- revArrayLatDim(cube$mdArray, grid)
       }
-      return(list("Variable" = list("varName" = var, "isStandard" = isStandard, "level" = levelPars$level),
-            "Data" = mdArray,
-            "xyCoords" = latLon$xyCoords, 
-            "Dates" = timePars$dateSlice))
+      Variable <- list("varName" = var, "level" = levelPars$level)
+      attr(Variable, "is_standard") <- isStandard
+      if (isStandard) {
+            data(vocabulary)
+            attr(Variable, "units") <- as.character(vocabulary[grep(paste0("^", var, "$"), vocabulary$identifier,),3])
+      } else {
+            attr(Variable, "units") <- "undefined"
+      }
+      attr(Variable, "daily_agg_cellfun") <- cube$timePars$aggr.d
+      attr(Variable, "monthly_agg_cellfun") <- cube$timePars$aggr.m
+      attr(Variable, "verification_time") <- time
+      out <- list("Variable" = Variable, "Data" = cube$mdArray, "xyCoords" = latLon$xyCoords, "Dates" = adjustDates(cube$timePars))
+      return(out)
+      
 }
 # End
     

@@ -10,7 +10,7 @@
 #' 
 #' @return A data.frame of 1 row with the mapping information
 #' 
-#' @references \url{http://meteo.unican.es/ecoms-udg/RPackage/Homogeneization}
+#' @references \url{http://meteo.unican.es/trac/wiki/udg/ecoms/RPackage/homogeneization}
 #' 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' 
@@ -23,22 +23,21 @@ dictionaryLookup <- function(dicPath, var, time) {
       if (length(dicRow) == 0) {
             stop("Variable requested does not match any identifier in the dictionary\nType 'help(vocabulary)' for help on standard variable naming")
       }
-      dailyAggr <- NA
       if (length(dicRow) > 1) {
             if (time == "DD") {
                   dicRow <- dicRow[dictionary$time_step[dicRow] == "24h"]
                   if (length(dicRow) == 0) {
                         dicRow <- grep(paste("^", var, "$", sep = ""), dictionary$identifier)                  
-                        dicRow <- dicRow[dictionary$time_step[dicRow] == "6h"]
+                        dicRow <- dicRow[dictionary$time_step[dicRow] == "6h" | dictionary$time_step[dicRow] == "3h"]
                   }
             } else {
-                  dicRow <- dicRow[dictionary$time_step[dicRow] == "6h"]
+                  dicRow <- dicRow[dictionary$time_step[dicRow] == "6h"| dictionary$time_step[dicRow] == "3h"]
             }
       } else {
             if (dictionary$time_step[dicRow] == "12h" & time == "DD") {
                   stop("Cannot compute daily mean from 12-h data")
             }
-            if ((time == "06" | time == "18") & dictionary$time_step[dicRow] == "12h") {
+            if ((time %in% c("03","06","09","15","18","21")) & dictionary$time_step[dicRow] == "12h") {
                   stop("Requested 'time' value (\"", time, "\") not available for 12-h data")
             }
             if ((time != "none" & time != "DD") & (dictionary$time_step[dicRow] == "24h")) {
@@ -47,17 +46,8 @@ dictionaryLookup <- function(dicPath, var, time) {
             if (time == "DD" & dictionary$time_step[dicRow] == "24h") {
                   time <- "none"
             }
-            if (time == "DD") {
-                  dailyAggr <- "mean"
-                  if (var == "tp" | var == "rlds" | var == "rsds") {
-                        dailyAggr <- "sum"
-                        message("NOTE: daily accumulated will be calculated from the 6-h model output")
-                  } else {
-                        message("NOTE: daily mean will be calculated from the 6-h model output")
-                  }
-            }
       }
-      dic <- cbind.data.frame(dictionary[dicRow, ], "dailyAggr" = I(dailyAggr))
+      dic <- cbind.data.frame(dictionary[dicRow, ])
       return(dic)
 }
 # End

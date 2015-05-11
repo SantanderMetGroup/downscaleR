@@ -3,7 +3,7 @@
 #' @description Load a user-defined spatio-temporal slice (a field) from a gridded dataset
 #' 
 #' @import rJava
-
+#' 
 #' @template templateParams
 #' @param dictionary Default to TRUE, indicating that a dictionary is used and the .dic file is stored in the same path than the
 #' dataset. If the .dic file is stored elsewhere, then the argument is the full path to the .dic file (including the extension,
@@ -17,6 +17,10 @@
 #' \code{"00"}, \code{"06"}, \code{"12"} and \code{"18"}. If daily aggregated data are 
 #' required use \code{"DD"}. If the requested variable is static (e.g. orography) it will be ignored. 
 #' See details for time aggregation options
+#' @param aggr.d Character string. Function of aggregation of sub-daily data for daily data calculation. 
+#' Currently accepted values are \code{"none"}, \code{"mean"}, \code{"min"} and \code{"max"}.
+#' @param aggr.m Same as \code{aggr.d}, bun indicating the aggregation function to compute monthly from daily data.
+#' If \code{aggr.m = "none"} (the default), no monthly aggregation is undertaken.
 #' 
 #' @template templateReturnGridData
 #' @template templateDicDetails  
@@ -35,7 +39,7 @@
 #' @examples \dontrun{
 #' # Load air temperature at 850 millibar isobaric surface pressure level from the built-in NCEP dataset,
 #' # for the Iberian Peninsula in summer (JJA):
-#' ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+#' ncep <- file.path(find.package("downscaleR.java"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 #' field <- loadGridData(ncep, var = "ta@@85000", dictionary = TRUE, lonLim = c(-10,5),
 #'    latLim = c(35.5, 44.5), season = 6:8, years = 1981:2010)
 #' str(field)   
@@ -44,8 +48,15 @@
 #' 
 
 loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
-                         latLim = NULL, season = NULL, years = NULL, time = "none") {
-      time <- match.arg(time, choices = c("none", "00", "06", "12", "18", "DD"))
+                         latLim = NULL, season = NULL, years = NULL, time = "none",
+                         aggr.d = "none", aggr.m = "none") {
+      time <- match.arg(time, choices = c("none","00","03","06","09","12","15","18","21","DD"))
+      aggr.d <- match.arg(aggr.d, choices = c("none", "mean", "min", "max"))
+      if (time != "DD") {
+            aggr.d <- "none"
+            message("NOTE: Argument 'aggr.d' ignored as 'time' was set to ", time)
+      }
+      aggr.m <- match.arg(aggr.m, choices = c("none", "mean", "min", "max"))
       aux.level <- findVerticalLevel(var)
       var <- aux.level$var
       level <- aux.level$level
@@ -63,9 +74,6 @@ loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
             dic <- dictionaryLookup(dicPath, var, time)
             shortName <- dic$short_name          
       }
-      if (is.null(season)) {
-            season <- 1:12
-      }
       if (min(season) < 1 | max(season) > 12) {
             stop("Invalid season definition")
       }
@@ -75,7 +83,7 @@ loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
             stop("Variable '", shortName, "' not found\nCheck variable names using 'datasetInventory' and/or dictionary 'identifiers'")
       }
       latLon <- getLatLonDomain(grid, lonLim, latLim)
-      out <- loadGridDataset(var, grid, dic, level, season, years, time, latLon)
+      out <- loadGridDataset(var, grid, dic, level, season, years, time, latLon, aggr.d, aggr.m)
       # Definition of projection
       proj <- grid$getCoordinateSystem()$getProjection()$toString()
       attr(out$xyCoords, which = "projection") <- proj
@@ -93,4 +101,5 @@ loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
       gds$close()
       message("[",Sys.time(),"]", " Done")
       return(out)
-}      
+}     
+# End

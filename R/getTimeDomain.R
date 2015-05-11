@@ -10,23 +10,42 @@
 #' @param years Vector of selected years. Passed by \code{loadGridDataset}.
 #' @param time Verification time defined as a character string (e.g. \dQuote{06} for data
 #' verifying at 06:00:00). Only applies for sub-daily datasets.
-#' @return A list of length two with the selected verification dates and a list
+#' @param aggr.d
+#' @param aggr.m
+#' @return A list with the selected verification dates and a list
 #'  with the index values defined as java objects of the class \sQuote{ucar.ma2.Range}.
 #'  Output passed to \code{loadGridDataset}.
 #' @details The indices of time positions are returned as a list, in order to read 
 #' discontinuous data in the time dimension from NetCDF files in a more efficient way
-#' (i.e. seasons for different years). 
+#' (i.e. seasons for different years). The corresponding calendar dates (as POSIXct), are returned
+#' in the \code{dateSliceList} element.
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @keywords internal
 #' @export
 #' @import rJava
 #' @importFrom downscaleR.java javaCalendarDate2rPOSIXlt
 
-getTimeDomain <- function(grid, dic, season, years, time) {
+getTimeDomain <- function(grid, dic, season, years, time, aggr.d, aggr.m) {
       message("[", Sys.time(), "] Defining time selection parameters")
       gcs <- grid$getCoordinateSystem()
       timeDates <- javaCalendarDate2rPOSIXlt(gcs$getTimeAxis()$getCalendarDates())
       timeResInSeconds <- gcs$getTimeAxis()$getTimeResolution()$getValueInSeconds()
+      if ((aggr.d == "none") & (time == "DD") & ((timeResInSeconds / 3600) < 24)) {
+            stop("Data is sub-daily:\nA daily aggregation function must be indicated to perform daily aggregation")
+      }
+      # Si es MM hay que asegurarse de que se calcula sobre dato diario
+      if ((aggr.m != "none") & ((timeResInSeconds / 3600) < 24) & (time == "none")) {
+            stop("Data is sub-daily:\nA daily aggregation function must be indicated first to perform monthly aggregation")
+      }
+      if ((timeResInSeconds / 3600) == 24) {
+            time <- "DD"
+            if (aggr.d != "none") {
+                  aggr.d <- "none"
+                  message("NOTE: The original data is daily: argument 'aggr.d' ignored")
+            }
+      }
+      if (aggr.d != "none") message("NOTE: Daily aggregation will be computed from ", timeResInSeconds/3600, "-hourly data")
+      if (aggr.m != "none") message("NOTE: Daily data will be monthly aggregated")
       startDay <- timeDates[1]
       endDay <- timeDates[length(timeDates)]
 	startYear <- startDay$year + 1900
@@ -89,37 +108,22 @@ getTimeDomain <- function(grid, dic, season, years, time) {
 	      timeIndList[[1]] <- timeInd - 1
 	      dateSliceList[[1]] <- dateSlice
       }
-      # Sub-routine for setting stride and shift along time dimension    
-      if (is.null(dic) & time != "none") {
-            stop("Time resolution especification incompatible with non-standard variable requests\nUse the dictionary or set the 'time' argument to NULL")
-      }
-      if (is.null(dic)) {
+      if (time == "DD" | time == "none") {
             timeStride <- 1L
             for (x in 1:length(dateSliceList)) {
                   dateSliceList[[x]] <- as.POSIXct(dateSliceList[[x]], tz = "GMT")
             }
       } else {
-            if (time == "DD" | time == "none") {
-                  timeStride <- 1L
-                  for (x in 1:length(dateSliceList)) {
-                        dateSliceList[[x]] <- as.POSIXct(dateSliceList[[x]], tz = "GMT")
-                  }
-            } else {
-                  time <- as.integer(time)
-                  for (x in 1:length(timeIndList)) {
-                        timeIndList[[x]] <- timeIndList[[x]][which(dateSliceList[[x]]$hour == time)]
-                        dateSliceList[[x]] <- as.POSIXct(dateSliceList[[x]][which(dateSliceList[[x]]$hour == time)], tz = "GMT")
-                  }
-                  if (length(timeIndList[[1]]) == 0) {
-                        stop("Non-existing verification time selected.\nCheck value of argument 'time'")
-                  }
-                  timeStride <- as.integer(diff(timeIndList[[1]])[1])
-                  
+            time <- as.integer(time)
+            for (x in 1:length(timeIndList)) {
+                  timeIndList[[x]] <- timeIndList[[x]][which(dateSliceList[[x]]$hour == time)]
+                  dateSliceList[[x]] <- as.POSIXct(dateSliceList[[x]][which(dateSliceList[[x]]$hour == time)], tz = "GMT")
             }
+            if (length(timeIndList[[1]]) == 0) {
+                  stop("Non-existing verification time selected.\nCheck value of argument 'time'")
+            }
+            timeStride <- as.integer(diff(timeIndList[[1]])[1])
       }
-      dateSlice <- do.call("c", dateSliceList)
-      dateSliceList <- NULL
-      # Sub-routine for adjusting times in case of deaccumulation
       deaccumFromFirst <- NULL
       if (!is.null(dic)) {
             if (dic$deaccum == 1) {
@@ -133,16 +137,13 @@ getTimeDomain <- function(grid, dic, season, years, time) {
                   }
             }
       }
-      # Sub-routine for calculation of time bounds
-      dateSlice <- timeBounds(dic, dateSlice)
       tRanges <- lapply(1:length(timeIndList), function(j) .jnew("ucar/ma2/Range", as.integer(timeIndList[[j]][1]), as.integer(tail(timeIndList[[j]], 1L)), timeStride))# $shiftOrigin(timeShift))
       timeIndList <- NULL
-      if (is.null(dic)) {
-            dailyAggr <- NA
-      } else {
-            dailyAggr <- dic$dailyAggr
-      }
-      return(list("dateSlice" = dateSlice, "timeResInSeconds" = timeResInSeconds, "tRanges" = tRanges, "deaccumFromFirst" = deaccumFromFirst, "dailyAggr" = dailyAggr))
+      return(list("dateSliceList" = dateSliceList, "timeResInSeconds" = timeResInSeconds,
+                  "tRanges" = tRanges, "deaccumFromFirst" = deaccumFromFirst,
+                  "aggr.d" = aggr.d, "aggr.m" = aggr.m))
 }
 # End
 
+
+   
