@@ -46,7 +46,7 @@ required use \code{"DD"}. If the requested variable is static (e.g. orography) i
 See the next arguments for time aggregation options.}
 
 \item{aggr.d}{Character string. Function of aggregation of sub-daily data for daily data calculation.
-Currently accepted values are \code{"none"}, \code{"mean"}, \code{"min"} and \code{"max"}.}
+Currently accepted values are \code{"none"}, \code{"mean"}, \code{"min"}, \code{"max"} and \code{"sum"}.}
 
 \item{aggr.m}{Same as \code{aggr.d}, bun indicating the aggregation function to compute monthly from daily data.
 If \code{aggr.m = "none"} (the default), no monthly aggregation is undertaken.}
