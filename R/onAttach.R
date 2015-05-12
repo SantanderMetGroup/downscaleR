@@ -8,7 +8,7 @@
       builddate <- packageDescription(pkgname)$Date
       mess <- paste(pkgname, " version ", ver, " (", builddate,") is loaded", sep = "")
       packageStartupMessage(mess)
-      url <- "https://raw.githubusercontent.com/SantanderMetGroup/downscaleR/stable/DESCRIPTION"
+      url <- "https://raw.githubusercontent.com/SantanderMetGroup/downscaleR/master/DESCRIPTION"
       con <- tryCatch(getURL(url, ssl.verifypeer = FALSE), error = function(er) {
             er <- NULL
             return(er)
