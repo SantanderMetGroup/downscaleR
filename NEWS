@@ -1,8 +1,11 @@
 downscaleR 0.7-0
 ================
 
-* netCDF-4 export removed from package
-* Minor bug fixes
 * Improved time aggregation capabilities
   * Added on-the-fly monthly aggregation (time = "MM")
   * Aggregation functions can be indicated for both daily and mnonthly aggregations
+* netCDF-4 export removed from package
+* Built-in datasets removed and moved to "downscaleR.java" package
+* New variable metadata included (units, temporal aggregation info...)
+* Minor bug fixes and documentation improvements
+
