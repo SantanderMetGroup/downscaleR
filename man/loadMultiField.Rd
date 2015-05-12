@@ -78,10 +78,12 @@ If only one (either x or y, but not both) of the components of the \code{new.gri
 \donttest{
 # Load three typical predictors for precipitation on the Iberian Peninsula in winter (DJF),
 # on a regular squared grid of 1 deg (bilinearly interpolated):
-ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+ncep <- file.path(find.package("downscaleR.java"),
+                  "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"),
          dictionary = TRUE, lonLim = c(-10,5), latLim = c(35.5, 44.5), season = c(12,1,2),
-         years = 1991:2010, new.grid = list(x = c(-10,5,1), y = c(35.5,44.5,1)), interp.method = "bilinear")
+         years = 1991:2010, new.grid = list(x = c(-10,5,1), y = c(35.5,44.5,1)),
+         interp.method = "bilinear")
 plotMeanField(multifield)
 }
 }

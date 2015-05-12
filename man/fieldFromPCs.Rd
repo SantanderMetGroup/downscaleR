@@ -29,16 +29,19 @@ The output of this function returns the minimum required information to use the
 }
 \examples{
 \dontrun{
-# First a multifield containing a set of variables is loaded (e.g. data for spring spanning the 30-year period 1981--2010):
-ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"), season = c(3:5), years = 1981:2010)
+# First a multifield containing a set of variables is loaded (e.g. data for spring spanning the
+# 30-year period 1981--2010):
+ncep <- file.path(find.package("downscaleR.java"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"),
+                             season = c(3:5), years = 1981:2010)
 # In this example, we retain the first 10 PCs
 pca <- prinComp(multifield, n.eofs = 10)
 # We now recover the sea-level pressure field from the PCs:
 names(pca)
 psl2 <- fieldFromPCs(pca, "psl")
 str(psl2)
-# The attributes of psl2 indicate that this is a reconstructed field from 10 PCs, explaining 99\\\% of the variance:
+# The attributes of psl2 indicate that this is a reconstructed field from 10 PCs,
+# explaining 99\\\% of the variance:
 attributes(psl2)
 multifield$Variable$varName
 # psl is the 3rd one

@@ -77,36 +77,45 @@ multimember fields instead.
 }
 \examples{
 \donttest{
-# First a multifield containing a set of variables is loaded (e.g. data for spring spanning the 30-year period 1981--2010):
-ncep <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"), season = c(3:5), years = 1981:2010)
+# First a multifield containing a set of variables is loaded (e.g. data for spring spanning the
+# 30-year period 1981--2010):
+ncep <- file.path(find.package("downscaleR.java"),
+                  "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"),
+                             season = c(3:5), years = 1981:2010)
 # In this example, we retain the PCs explaining the 99\\\% of the variance
 pca <- prinComp(multifield, v.exp = .99)
-# Note that, apart from computing the principal components and EOFs for each field, it also returns, in the last element of the output list,
+# Note that, apart from computing the principal components and EOFs for each field,
+# it also returns, in the last element of the output list,
 # the results of a PC analysis of all the variables combined (named "COMBINED"):
 names(pca)
 str(pca)
-# The different attributes of the pca object provide information regarding the variables involved and the geo-referencing information
+# The different attributes of the pca object provide information regarding the variables involved
+# and the geo-referencing information
 str(attributes(pca))
-# In addition, for each variable (and their combination), the scaling and centering parameters are also returned.
-# These are either a single value in case of field scaling (the default), or a vector of values, one for each grid-cell, for the
-# gridbox scaling. For instance, the parameters for the specific humidity field are:
+# In addition, for each variable (and their combination), the scaling and centering parameters
+# are also returned. These are either a single value in case of field scaling (the default), or a
+# vector of values, one for each grid-cell, for the gridbox scaling. For instance, the parameters
+# for the specific humidity field are:
 attributes(pca$hus[[1]])$`scaled:center`
 attributes(pca$hus[[1]])$`scaled:scale`
 # In addition, the (cumulative) explained variance of each PC is also returned:
 vexp <- attributes(pca$hus[[1]])$explained_variance
 # The classical "scree plot":
-barplot(1-vexp, names.arg = paste("PC",1:length(vexp)), las = 2, ylab = "Fraction of unexplained variance")
+barplot(1-vexp, names.arg = paste("PC",1:length(vexp)), las = 2,
+        ylab = "Fraction of unexplained variance")
 
 # This is an example using a multimember object:
 data(tasmax_forecast)
 # In order make the computation faster, we interpolate to a coarser grid of 2.5 deg
 range(tasmax_forecast$xyCoords$x)
 range(tasmax_forecast$xyCoords$y)
-multimember <- interpGridData(tasmax_forecast, new.grid = list(c(-10,29.5, 2.5), c(35.5, 64.5, 2.5)))
+multimember <- interpGridData(tasmax_forecast,
+                              new.grid = list(c(-10,29.5, 2.5), c(35.5, 64.5, 2.5)))
 # In this case we retain the first 15 EOFs:
 pca.mm <- prinComp(multimember, n.eofs = 15)
-# Note that now the results of the PCA for the variable are a list, with the results for each member sepparately considered
+# Note that now the results of the PCA for the variable are a list, with the results
+# for each member sepparately considered
 str(pca.mm)
 
 # The most complex situation comes from multimember multifields:

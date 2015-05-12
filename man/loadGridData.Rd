@@ -40,9 +40,10 @@ it will be ignored.}
 of the output data. Default to \code{"none"}, which returns the original time
 series as stored in the dataset. For sub-daily variables, instantantaneous data at
 selected verification times can be filtered using one of the character strings
-\code{"00"}, \code{"06"}, \code{"12"} and \code{"18"}. If daily aggregated data are
+\code{"00"}, \code{"03"}, \code{"06"}, \code{"09"}, \code{"12"}, \code{"15"},
+ \code{"18"}, \code{"21"},and \code{"00"} when applicable. If daily aggregated data are
 required use \code{"DD"}. If the requested variable is static (e.g. orography) it will be ignored.
-See details for time aggregation options}
+See the next arguments for time aggregation options.}
 
 \item{aggr.d}{Character string. Function of aggregation of sub-daily data for daily data calculation.
 Currently accepted values are \code{"none"}, \code{"mean"}, \code{"min"} and \code{"max"}.}
@@ -123,6 +124,25 @@ field <- loadGridData(ncep, var = "ta@85000", dictionary = TRUE, lonLim = c(-10,
    latLim = c(35.5, 44.5), season = 6:8, years = 1981:2010)
 str(field)
 plotMeanField(field)
+# Calculation of monthly mean temperature:
+field.mm <- loadGridData(ncep, var = "ta@85000", dictionary = TRUE, lonLim = c(-10,5),
+                         latLim = c(35.5, 44.5), season = 6:8,
+                         years = 1981:2010, aggr.m = "mean")
+str(field.mm)
+
+# Same but using the original variable (not homogenized via dictionary):
+di <- dataInventory(ncep)
+names(di)
+data(vocabulary)
+vocabulary
+# Variable is named 'T', instead of the standard name 'ta' in the vocabulary
+# Vertical level is indicated using the '@' symbol:
+non.standard.field <- loadGridData(ncep, var = "T@85000", dictionary = FALSE, lonLim = c(-10,5),
+                                  latLim = c(35.5, 44.5), season = 6:8,
+                                  years = 1981:2010, aggr.m = "mean")
+str(non.standard.field$Variable)
+# Note the units are now in Kelvin, as originally stored
+plotMeanField(non.standard.field)
 }
 }
 \author{

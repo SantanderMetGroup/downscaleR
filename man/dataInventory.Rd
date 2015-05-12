@@ -28,7 +28,7 @@ and not to the standard naming convention defined in the vocabulary.
 }
 \examples{
 \donttest{
-gsn <- file.path(find.package("downscaleR"), "datasets/observations/GSN_Iberia")
+gsn <- file.path(find.package("downscaleR.java"), "datasets/observations/GSN_Iberia")
 di <- dataInventory(gsn)
 str(di)
 # To obtain summary statistics of the variables stored:

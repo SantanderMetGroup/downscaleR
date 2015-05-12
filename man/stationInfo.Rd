@@ -24,7 +24,7 @@ For an adequate map display the station coordinates must be in decimal degrees.
 }
 \examples{
 \donttest{
-gsn <- file.path(find.package("downscaleR"), "datasets/observations/GSN_Iberia")
+gsn <- file.path(find.package("downscaleR.java"), "datasets/observations/GSN_Iberia")
 print(stationInfo(gsn))
 }
 }
