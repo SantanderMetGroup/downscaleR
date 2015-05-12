@@ -47,8 +47,7 @@ dictionaryLookup <- function(dicPath, var, time) {
                   time <- "none"
             }
       }
-      dic <- cbind.data.frame(dictionary[dicRow, ])
-      return(dic)
+      return(dictionary[dicRow, ])
 }
 # End
 
