@@ -12,14 +12,12 @@ Imports:
     MASS,
     verification,
     scales,
-    ncdf4
 Suggests:
     ecomsUDG.Raccess,
-    R.VALUE
 Type: Package
 Title: Climate data manipulation and statistical downscaling
-Version: 0.6-0
-Date: 01-Apr-2015
+Version: 0.7-0
+Date: 12-May-2015
 Authors@R: as.person(c(
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
     "Sixto Herrera <sixto@predictia.es> [ctb]",
