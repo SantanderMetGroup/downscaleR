@@ -167,6 +167,7 @@ renameDims <- function(obs, multi.member) {
 #' @return The number of days of the current month
 #' @references 
 #' \url{http://stackoverflow.com/questions/6243088/find-out-the-number-of-days-of-a-month-in-r}
+#' @export
 
 ndays <- function(d) {
       as.difftime(tail((28:31)[which(!is.na(as.Date(paste0(substr(d, 1, 8), 28:31), '%Y-%m-%d')))], 1), units = "days")
