@@ -52,7 +52,7 @@ loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
                          aggr.d = "none", aggr.m = "none") {
       time <- match.arg(time, choices = c("none","00","03","06","09","12","15","18","21","DD"))
       aggr.d <- match.arg(aggr.d, choices = c("none", "mean", "min", "max"))
-      if (time != "DD") {
+      if (time != "DD" & aggr.d != "none") {
             aggr.d <- "none"
             message("NOTE: Argument 'aggr.d' ignored as 'time' was set to ", time)
       }
