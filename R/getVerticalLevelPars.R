@@ -33,7 +33,7 @@ getVerticalLevelPars <- function(grid, level) {
                   if (level %in% levels) {
                         levelInd <- gcs$getVerticalAxis()$findCoordElement(level)
                   } else {
-                        stop("Vertical level not found\nPossible values: ", levels)
+                        stop("Vertical level not found\nPossible values: ", paste(levels, collapse = ", "))
                   }
             }
             zRange <- .jnew("ucar/ma2/Range", levelInd, levelInd)
