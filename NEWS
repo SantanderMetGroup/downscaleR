@@ -3,4 +3,6 @@ downscaleR 0.7-0
 
 * netCDF-4 export removed from package
 * Minor bug fixes
-* Added on-the-fly monthly aggregation (time = "MM")
+* Improved time aggregation capabilities
+  * Added on-the-fly monthly aggregation (time = "MM")
+  * Aggregation functions can be indicated for both daily and mnonthly aggregations
