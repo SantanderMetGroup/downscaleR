@@ -24,7 +24,8 @@ loadGridDataset <- function(var, grid, dic, level, season, years, time, latLon, 
       attr(Variable, "is_standard") <- isStandard
       if (isStandard) {
             data(vocabulary, envir = environment())
-            attr(Variable, "units") <- as.character(vocabulary[grep(paste0("^", var, "$"), vocabulary$identifier,),3])
+            attr(Variable, "units") <- as.character(vocabulary[grep(paste0("^", var, "$"), vocabulary$identifier,), 3])
+            attr(Variable, "longname") <- as.character(vocabulary[grep(paste0("^", var, "$"), vocabulary$identifier,), 2])
       } else {
             attr(Variable, "units") <- "undefined"
       }
