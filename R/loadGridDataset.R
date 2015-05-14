@@ -28,6 +28,7 @@ loadGridDataset <- function(var, grid, dic, level, season, years, time, latLon, 
             attr(Variable, "longname") <- as.character(vocabulary[grep(paste0("^", var, "$"), vocabulary$identifier,), 2])
       } else {
             attr(Variable, "units") <- "undefined"
+            attr(Variable, "longname") <- "undefined"
       }
       attr(Variable, "daily_agg_cellfun") <- cube$timePars$aggr.d
       attr(Variable, "monthly_agg_cellfun") <- cube$timePars$aggr.m
