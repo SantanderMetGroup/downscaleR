@@ -44,9 +44,9 @@ multimember fields should be interpolated individually prior to multifield const
 data(iberia_ncep_ta850)
 data(iberia_ncep_hus850)
 data(iberia_ncep_psl)
-# An example of different temporal aggregations, temporally compatible: sea-level pressure is a daily mean,
-# while specific humidity and air temperature (850 mb surface isobaric pressure level) are instantaneous data verifying at
-# 12:00 UTC:
+# An example of different temporal aggregations, temporally compatible:
+# sea-level pressure is a daily mean, while specific humidity and air temperature
+# (850 mb surface isobaric pressure level) are instantaneous data verifying at 12:00 UTC:
 # air temperature
 range(iberia_ncep_ta850$Dates$start)
 range(iberia_ncep_ta850$Dates$end) # start and end are identical (instantaneous)
@@ -57,7 +57,8 @@ mf <- makeMultiField(iberia_ncep_hus850, iberia_ncep_psl, iberia_ncep_ta850)
 # The new object inherits the global attributes from the first field, as it is assumed
 # that all input fields come from the same data source:
 attributes(mf)
-# The data structure has now one additional dimension ("var"), along which the data arrays have been binded:
+# The data structure has now one additional dimension ("var"), along which the data arrays
+# have been binded:
 str(mf$Data)
 plotMeanField(mf)
 

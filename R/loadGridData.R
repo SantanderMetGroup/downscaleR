@@ -38,9 +38,10 @@
 #' @family homogenization
 #' 
 #' @examples \dontrun{
-#' # Load air temperature at 850 millibar isobaric surface pressure level from the built-in NCEP dataset,
-#' # for the Iberian Peninsula in summer (JJA):
-#' ncep <- file.path(find.package("downscaleR.java"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+#' # Load air temperature at 850 millibar isobaric surface pressure level from the built-in
+#' # NCEP dataset, for the Iberian Peninsula in summer (JJA):
+#' ncep <- file.path(find.package("downscaleR.java"), 
+#'                   "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 #' field <- loadGridData(ncep, var = "ta@@85000", dictionary = TRUE, lonLim = c(-10,5),
 #'    latLim = c(35.5, 44.5), season = 6:8, years = 1981:2010)
 #' str(field)   

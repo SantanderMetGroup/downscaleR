@@ -31,7 +31,8 @@ The output of this function returns the minimum required information to use the
 \dontrun{
 # First a multifield containing a set of variables is loaded (e.g. data for spring spanning the
 # 30-year period 1981--2010):
-ncep <- file.path(find.package("downscaleR.java"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+ncep <- file.path(find.package("downscaleR.java"),
+                  "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"),
                              season = c(3:5), years = 1981:2010)
 # In this example, we retain the first 10 PCs
@@ -73,7 +74,8 @@ data(tasmax_forecast)
 pca2 <- prinComp(tasmax_forecast, n.eofs = 10)
 tasmax_recovered <- fieldFromPCs(pca2)
 plotMeanField(tasmax_recovered, multi.member = TRUE)
-# Also note that now the length of the "nPCs" and "explained_variance" matches the number of members
+# Also note that now the length of the "nPCs" and "explained_variance" matches
+# the number of members:
 attributes(tasmax_recovered)
 }
 }
