@@ -4,6 +4,7 @@
 #'  Data Model interface
 #' 
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @export
 #' @keywords internal
 
 loadGridDataset <- function(var, grid, dic, level, season, years, time, latLon, aggr.d, aggr.m) {
