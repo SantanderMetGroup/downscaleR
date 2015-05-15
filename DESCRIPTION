@@ -1,7 +1,7 @@
 Package: downscaleR
 Depends:
     rJava,
-    downscaleR.java,
+    downscaleR.java(>= 1.0.0),
     maps,
     R(>= 3.0.0)
 Imports:
@@ -17,7 +17,7 @@ Suggests:
 Type: Package
 Title: Climate data manipulation and statistical downscaling
 Version: 0.7-0
-Date: 12-May-2015
+Date: 15-May-2015
 Authors@R: as.person(c(
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
     "Sixto Herrera <sixto@predictia.es> [ctb]",
