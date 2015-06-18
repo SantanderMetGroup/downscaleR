@@ -3,7 +3,7 @@
 #' 
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"unbiasing"} and \code{"piani"}. See details.
+#'  \code{"scaling"}, \code{"unbiasing"}, \code{"piani"} and \code{"gqm"}. See details.
 #' @param multi.member Should members be adjusted sepparately (TRUE, default), or jointly (FALSE)?. 
 #' Ignored if the dataset has no members.
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
@@ -14,7 +14,7 @@
 #' @details
 #' 
 #' The methods available are \code{"qqmap"}, \code{"delta"}, \code{"unbiasing"}, 
-#' \code{"scaling"} and \code{"Piani"} (the latter used only for precipitation).
+#' \code{"scaling"}, \code{"Piani"}, \code{"gqm"} (the two latter used only for precipitation).
 #' Next we make a brief description of each method:
 #' 
 #' \strong{Delta}
@@ -45,6 +45,12 @@
 #' This method is described in Piani et al. 2010 and is applicable only to precipitation. It is based on the initial assumption that both observed
 #'  and simulated intensity distributions are well approximated by the gamma distribution, therefore is a parametric q-q map 
 #'  that uses the theorical instead of the empirical distribution. 
+#'  
+#'\strong{Generalized Quantile Mapping (gqm)}
+#'  
+#' This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a 
+#' gamma distribution to values under the threshold given by the 95th percentile (proosed by Yang et al. 2010) and a general Pareto 
+#' distribution (GPD) to values above the threshold.  
 #' 
 #' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration
 #'  
@@ -60,29 +66,26 @@
 #' \item A. Amengual, V. Homar, R. Romero, S. Alonso, and C. Ramis (2012) A Statistical Adjustment of Regional Climate Model Outputs to Local Scales: Application to Platja de Palma, Spain. J. Clim., 25, 939-957
 #' 
 #' \item C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
+#' 
+#' \item O. Gutjahr and G. Heinemann (2013) Comparing precipitation bias correction methods for high-resolution regional climate simulations using COSMO-CLM, Theoretical and Applied Climatology, 114, 511-529
 #' }
-#' @author S. Herrera \email{sixto@@predictia.es}
+#' 
+#' 
+#' @author S. Herrera \email{herreras@@unican.es} and M. Iturbide
 #' @export
 #' @examples \dontrun{
 #' # These are the paths to the package built-in GSN and NCEP datasets 
-#' gsn.data.dir <- file.path(find.package("downscaleR.java"),
-#'                           "datasets/observations/GSN_Iberia")
-#' ncep.data.dir <- file.path(find.package("downscaleR.java"),
-#'                           "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+#' gsn.data.dir <- file.path(find.package("downscaleR"), "datasets/observations/GSN_Iberia")
+#' ncep.data.dir <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 #' gsn.inv <- dataInventory(gsn.data.dir)
 #' ncep.inv <- dataInventory(ncep.data.dir)
 #' str(gsn.inv)
 #' str(ncep.inv)
-#' # Load precipitation for boreal winter (DJF) in the train (1991-2000) and test (2001-2010) periods,
-#' # for the observations (GSN_Iberia) and the Iberia_NCEP datasets
-#' obs <- loadStationData(dataset = gsn.data.dir, var="precip", lonLim = c(-12,10), latLim = c(33,47),
-#'                        season=c(12,1,2), years = 1991:2000)
-#' prd <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47),
-#'                        season = c(12,1,2), years = 1991:2000)
-#' sim <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47),
-#'                        season = c(12,1,2), years = 2001:2010)
-#' # Interpolation of the observations onto the grid of model: we use the method "nearest" 
-#' # and the getGrid function to ensure spatial consistency:
+#' # Load precipitation for boreal winter (DJF) in the train (1991-2000) and test (2001-2010) periods, for the observations (GSN_Iberia) and the Iberia_NCEP datasets
+#' obs <- loadStationData(dataset = gsn.data.dir, var="precip", lonLim = c(-12,10), latLim = c(33,47), season=c(12,1,2), years = 1991:2000)
+#' prd <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 1991:2000)
+#' sim <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 2001:2010)
+#' # Interpolation of the observations onto the grid of model: we use the method "nearest" and the getGrid function to ensure spatial consistency:
 #' obs <- interpGridData(obs, new.grid = getGrid(prd), method = "nearest")
 #' # Apply the bias correction method:
 #' simBC <- biasCorrection (obs, prd, sim, method = "qqmap", pr.threshold = 1) # qq-mapping
@@ -91,8 +94,8 @@
 #' plotMeanField(simBC)
 #' }
 
-biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), pr.threshold = 1, multi.member = TRUE, window = NULL) {
-      method <- match.arg(method, choices = c("qqmap", "delta", "unbiasing", "piani", "scaling"))
+biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani", "gqm"), pr.threshold = 1, multi.member = TRUE, window = NULL) {
+      method <- match.arg(method, choices = c("qqmap", "delta", "unbiasing", "piani", "scaling", "gqm"))
       threshold <- pr.threshold
       dimObs <- dim(obs$Data)
       obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
@@ -125,6 +128,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
             indDaysSim[which(sqrt((dayListSim[,1]-dayList[d,1])^2+(dayListSim[,2]-dayList[d,2])^2)==0)] <- d
       }
       attrSim <- attr(sim$Data, "dimensions")
+      #apply function of calibration
       if (length(dimDiff)==0){
             F <- calibrateProj(obs$Data, aperm(pred$Data,dimPerm), aperm(sim$Data,dimPerm), method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
             if (!any(dimPerm != 1:length(attr(pred$Data, "dimensions")))){
@@ -148,7 +152,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                               indTimeSim[match(dimDiff, attr(sim$Data, "dimensions"))] <- as.list(indDimDiff[i,])
                               callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
                               callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
-#                              attrSim <- attr(sim$Data, "dimensions")
+                              #                              attrSim <- attr(sim$Data, "dimensions")
                               F <- calibrateProj(aperm(obs$Data, dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
                               indTimeSim <- rep(list(bquote()), length(dimFor))
                               for (d in 1:length(dimFor)){
@@ -157,7 +161,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                               indTimeSim[match(dimDiff, attr(sim$Data, "dimensions"))] <- as.list(indDimDiff[i,])
                               indTimeSim<-as.matrix(expand.grid(indTimeSim))
                               sim$Data[indTimeSim] <- F
-#                              attr(sim$Data, "dimensions") <- attrSim
+                              #                              attr(sim$Data, "dimensions") <- attrSim
                         }else{
                               for (j in 1:dim(dayList)[1]){
                                     indObs <- which(indDays == j)
@@ -191,7 +195,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                                     indTimeSim<-as.matrix(expand.grid(indTimeSim))
                                     sim$Data[indTimeSim] <- F
                               }
-#                              attr(sim$Data, "dimensions") <- attrSim
+                              #                              attr(sim$Data, "dimensions") <- attrSim
                         }
                   }
             }else{
@@ -208,10 +212,10 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                               indMember <- ((i-1)*dimPred[pred.time.index]+1):(i*dimPred[pred.time.index])
                               auxObs[indMember,,] <- aperm(obs$Data, dimPermI)
                         }
- #                       attrSim <- attr(sim$Data, "dimensions")
+                        #                       attrSim <- attr(sim$Data, "dimensions")
                         F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
                         sim$Data <- aperm(array(data = rep(F,1), dim = c(dimFor[pred.time.index],dimFor[pred.member.index],dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))])), auxPerm)
-#                        attr(sim$Data, "dimensions") <- attrSim
+                        #                        attr(sim$Data, "dimensions") <- attrSim
                   }else{
                         obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
                         pred.time.index <- grep("^time$", attr(pred$Data, "dimensions"))
@@ -245,7 +249,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                                     indMember <- ((i-1)*length(indObsWindow)+1):(i*length(indObsWindow))
                                     auxObs[indMember,,] <- aperm(eval(callObs), dimPermI)
                               }
- #                             attrSim <- attr(sim$Data, "dimensions")
+                              #                             attrSim <- attr(sim$Data, "dimensions")
                               F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold)
                               F <- aperm(array(data = rep(F,1), dim = c(length(indSim),dimFor[pred.member.index],dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))])), auxPerm)
                               indTimeSim <- rep(list(bquote()), length(dimFor))
@@ -255,7 +259,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                               indTimeSim[[pred.time.index]] <- indSim
                               indTimeSim<-as.matrix(expand.grid(indTimeSim))
                               sim$Data[indTimeSim] <- F
-#                              attr(sim$Data, "dimensions") <- attrSim
+                              #                              attr(sim$Data, "dimensions") <- attrSim
                         }
                   }
             }
@@ -276,7 +280,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
 #'
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
-#' \code{"scaling"}, \code{"unbiasing"} and \code{"piani"}. See details.
+#' \code{"scaling"}, \code{"unbiasing"}, \code{"piani"} and \code{"gqm"}. See details.
 #' @param varcode Variable code. This is not the variable itself to be corrected, but
 #' rather it referes to its nature and distributional properties. For instance, \code{"tas"} applies for
 #' temperature-like variables (i.e.: unbounded gaussian variables that can take both negative and positive values),
@@ -290,55 +294,58 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
 #' @family downscaling
 #' @family calibration
 #' @importFrom MASS fitdistr
+#' @importFrom evd fpot
+#' @importFrom evd qgpd
+#' @importFrom evd pgpd
 #' @keywords internal
 #'
-calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani"), varcode = c("tas", "hurs", "tp", "pr", "wss"), pr.threshold = 1) {
-  if (any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
-    threshold<-pr.threshold
-    nP<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
-    Pth<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
-    for (i in 1:dim(pred)[2]){
-      for (j in 1:dim(pred)[3]){
-        nP[i,j]<-sum(as.double(obs[,i,j]<=threshold & !is.na(obs[,i,j])), na.rm = TRUE)
-        if (nP[i,j]>0 & nP[i,j]<dim(obs)[1]){
-          ix<-sort(pred[,i,j], decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
-          Ps<-sort(pred[,i,j], decreasing = FALSE, na.last = NA)
-          Pth[i,j]<-Ps[nP[i,j]+1]
-          if (Ps[nP[i,j]+1]<=threshold){
-            Os<-sort(obs[,i,j], decreasing = FALSE, na.last = NA)
-            ind<-which(Ps > threshold & !is.na(Ps))
-            if (length(ind)==0){
-                  ind <- max(which(!is.na(Ps)))
-                  ind <- min(c(length(Os),ind))
-            }else{
-                  ind<-min(which(Ps > threshold & !is.na(Ps)))
+calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani", "gqm"), varcode = c("tas", "hurs", "tp", "pr", "wss"), pr.threshold = 1) {
+      if (any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
+            threshold<-pr.threshold
+            nP<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
+            Pth<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
+            for (i in 1:dim(pred)[2]){
+                  for (j in 1:dim(pred)[3]){
+                        nP[i,j]<-sum(as.double(obs[,i,j]<=threshold & !is.na(obs[,i,j])), na.rm = TRUE)
+                        if (nP[i,j]>0 & nP[i,j]<dim(obs)[1]){
+                              ix<-sort(pred[,i,j], decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
+                              Ps<-sort(pred[,i,j], decreasing = FALSE, na.last = NA)
+                              Pth[i,j]<-Ps[nP[i,j]+1]
+                              if (Ps[nP[i,j]+1]<=threshold){
+                                    Os<-sort(obs[,i,j], decreasing = FALSE, na.last = NA)
+                                    ind<-which(Ps > threshold & !is.na(Ps))
+                                    if (length(ind)==0){
+                                          ind <- max(which(!is.na(Ps)))
+                                          ind <- min(c(length(Os),ind))
+                                    }else{
+                                          ind<-min(which(Ps > threshold & !is.na(Ps)))
+                                    }
+                                    # [Shape parameter Scale parameter]
+                                    if (length(unique(Os[(nP[i,j]+1):ind]))<6){
+                                          Ps[(nP[i,j]+1):ind] <- mean(Os[(nP[i,j]+1):ind], na.rm = TRUE)
+                                    }else{
+                                          auxGamma<-fitdistr(Os[(nP[i,j]+1):ind],"gamma")
+                                          Ps[(nP[i,j]+1):ind]<-rgamma(ind-nP[i,j], auxGamma$estimate[1], rate = auxGamma$estimate[2])
+                                    }
+                                    Ps<-sort(Ps, decreasing = FALSE, na.last = NA)
+                              }
+                              ind<-min(nP[i,j],dim(pred)[1])
+                              Ps[1:ind]<-0
+                              pred[ix,i,j]<-Ps
+                        }else{
+                              if (nP[i,j]==dim(obs)[1]){
+                                    ix<-sort(pred[,i,j], decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
+                                    Ps<-sort(pred[,i,j], decreasing = FALSE, na.last = NA)
+                                    Pth[i,j]<-Ps[nP[i,j]]
+                                    ind<-min(nP[i,j],dim(pred)[1])
+                                    Ps[1:ind]<-0
+                                    pred[ix,i,j]<-Ps
+                              }
+                        }
+                  }
             }
-            # [Shape parameter Scale parameter]
-            if (length(unique(Os[(nP[i,j]+1):ind]))<6){
-              Ps[(nP[i,j]+1):ind] <- mean(Os[(nP[i,j]+1):ind], na.rm = TRUE)
-            }else{
-              auxGamma<-fitdistr(Os[(nP[i,j]+1):ind],"gamma")
-              Ps[(nP[i,j]+1):ind]<-rgamma(ind-nP[i,j], auxGamma$estimate[1], rate = auxGamma$estimate[2])
-            }
-            Ps<-sort(Ps, decreasing = FALSE, na.last = NA)
-          }
-          ind<-min(nP[i,j],dim(pred)[1])
-          Ps[1:ind]<-0
-          pred[ix,i,j]<-Ps
-        }else{
-          if (nP[i,j]==dim(obs)[1]){
-            ix<-sort(pred[,i,j], decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
-            Ps<-sort(pred[,i,j], decreasing = FALSE, na.last = NA)
-            Pth[i,j]<-Ps[nP[i,j]]
-            ind<-min(nP[i,j],dim(pred)[1])
-            Ps[1:ind]<-0
-            pred[ix,i,j]<-Ps
-          }
-        }
       }
-    }
-  }
-  if (method == "delta") {
+      if (method == "delta") {
             if (dim(sim)[1]!=dim(obs)[1]){
                   stop("sim and obs should have the same dimensions")
             }else{
@@ -377,28 +384,28 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
                   for (i in 1:dim(sim)[2]) {
                         for (j in 1:dim(sim)[3]) {
                               if (any(!is.na(pred[,i,j])) & any(!is.na(obs[,i,j]))){
-                                  if (length(which(pred[,i,j]>Pth[i,j]))>0){
-                                    ePrd<-ecdf(pred[which(pred[,i,j]>Pth[i,j]),i,j])
-                                    noRain<-which(sim[,i,j]<=Pth[i,j] & !is.na(sim[,i,j]))
-                                    rain<-which(sim[,i,j]>Pth[i,j] & !is.na(sim[,i,j]))
-                                    drizzle<-which(sim[,i,j]>Pth[i,j] & sim[,i,j]<=min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j]))
-                                    if (length(rain)>0){
-                                      eFrc<-ecdf(sim[rain,i,j])
-                                      sim[rain,i,j]<-quantile(obs[which(obs[,i,j]>threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain,i,j]), na.rm = TRUE, type = 4)
+                                    if (length(which(pred[,i,j]>Pth[i,j]))>0){
+                                          ePrd<-ecdf(pred[which(pred[,i,j]>Pth[i,j]),i,j])
+                                          noRain<-which(sim[,i,j]<=Pth[i,j] & !is.na(sim[,i,j]))
+                                          rain<-which(sim[,i,j]>Pth[i,j] & !is.na(sim[,i,j]))
+                                          drizzle<-which(sim[,i,j]>Pth[i,j] & sim[,i,j]<=min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j]))
+                                          if (length(rain)>0){
+                                                eFrc<-ecdf(sim[rain,i,j])
+                                                sim[rain,i,j]<-quantile(obs[which(obs[,i,j]>threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain,i,j]), na.rm = TRUE, type = 4)
+                                          }
+                                          if (length(drizzle)>0){
+                                                sim[drizzle,i,j]<-quantile(sim[which(sim[,i,j]>min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j])),i,j], probs = eFrc(sim[drizzle,i,j]), na.rm = TRUE, type = 4)
+                                          }
+                                          sim[noRain,i,j]<-0
+                                    }else{
+                                          noRain<-which(sim[,i,j]<=Pth[i,j] & !is.na(sim[,i,j]))
+                                          rain<-which(sim[,i,j]>Pth[i,j] & !is.na(sim[,i,j]))
+                                          if (length(rain)>0){
+                                                eFrc<-ecdf(sim[rain,i,j])
+                                                sim[rain,i,j]<-quantile(obs[which(obs[,i,j]>threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain,i,j]), na.rm = TRUE, type = 4)
+                                          }
+                                          sim[noRain,i,j]<-0
                                     }
-                                    if (length(drizzle)>0){
-                                      sim[drizzle,i,j]<-quantile(sim[which(sim[,i,j]>min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j])),i,j], probs = eFrc(sim[drizzle,i,j]), na.rm = TRUE, type = 4)
-                                    }
-                                    sim[noRain,i,j]<-0
-                                  }else{
-                                    noRain<-which(sim[,i,j]<=Pth[i,j] & !is.na(sim[,i,j]))
-                                    rain<-which(sim[,i,j]>Pth[i,j] & !is.na(sim[,i,j]))
-                                    if (length(rain)>0){
-                                      eFrc<-ecdf(sim[rain,i,j])
-                                      sim[rain,i,j]<-quantile(obs[which(obs[,i,j]>threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain,i,j]), na.rm = TRUE, type = 4)
-                                    }
-                                    sim[noRain,i,j]<-0
-                                  }
                               }
                         }
                   }
@@ -416,6 +423,43 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
                               noRain<-which(sim[,i,j]<=Pth[i,j] & !is.na(sim[,i,j]))
                               auxF<-pgamma(sim[rain,i,j],prdGamma$estimate[1], rate = prdGamma$estimate[2])
                               sim[rain,i,j]<-qgamma(auxF,obsGamma$estimate[1], rate = obsGamma$estimate[2])
+                              sim[noRain,i,j]<-0
+                        }
+                  }
+            }
+      }
+      if (method == "gqm" & any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
+            for (i in 1:dim(sim)[2]){
+                  for (j in 1:dim(sim)[3]){
+                        if (nP[i,j]>0){
+                              
+                              ind<-which(obs[,i,j]>threshold & !is.na(obs[,i,j]))
+                              
+                              indgamma <- ind[which(obs[ind,i,j] < quantile(obs[ind,i,j], 0.95))]
+                              indpareto <- ind[which(obs[ind,i,j] >= quantile(obs[ind,i,j], 0.95))]
+                              
+                              obsGQM <- fitdistr(obs[indgamma,i,j],"gamma")
+                              obsGQM2 <- fpot(obs[indpareto,i,j], quantile(obs[ind,i,j], 0.95), "gpd", std.err = FALSE)
+                              
+                              ind <- which(pred[,i,j] > 0 & !is.na(pred[,i,j]))
+                              indgamma <- ind[which(pred[ind,i,j]<quantile(pred[ind,i,j], 0.95))]
+                              indpareto <-ind[which(pred[ind,i,j]>=quantile(pred[ind,i,j], 0.95))]
+                              
+                              prdGQM <- fitdistr(pred[indgamma,i,j], "gamma")
+                              prdGQM2 <- fpot(pred[indpareto,i,j], quantile(pred[ind,i,j], 0.95), "gpd", std.err = FALSE)
+                              
+                              rain <- which(sim[,i,j] > Pth[i,j] & !is.na(sim[,i,j]))
+                              noRain<-which(sim[,i,j] <= Pth[i,j] & !is.na(sim[,i,j]))
+                              indgammasim <- rain[which(sim[rain,i,j] < quantile(pred[ind,i,j], 0.95))]
+                              indparetosim <- rain[which(sim[rain,i,j] >= quantile(pred[ind,i,j], 0.95))]
+                              
+                              auxF <- pgamma(sim[indgammasim,i,j],prdGQM$estimate[1], rate = prdGQM$estimate[2])
+                              auxF2 <- pgpd(sim[indparetosim,i,j],loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
+                              
+                              sim[indgammasim,i,j] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
+                              sim[indparetosim[which(auxF2<1)],i,j] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
+                              sim[indparetosim[which(auxF2==1)],i,j] <- max(obs[indpareto,i,j], na.rm = TRUE)
+                              
                               sim[noRain,i,j]<-0
                         }
                   }
