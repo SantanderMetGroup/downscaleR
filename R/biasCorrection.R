@@ -109,7 +109,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
                   dimPerm[length(attr(obs$Data, "dimensions"))+k] <- indDiff
             }
       }
-      datesList <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
+      datesList <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d")
       yearList<-unlist(strsplit(as.character(datesList), "[-]"))
       dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
       dayList <- unique(dayListObs,index.return = datesList)
@@ -117,7 +117,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
       for (d in 1:dim(dayList)[1]){
             indDays[which(sqrt((dayListObs[,1]-dayList[d,1])^2+(dayListObs[,2]-dayList[d,2])^2)==0)] <- d
       }
-      datesList <- as.POSIXct(sim$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
+      datesList <- as.POSIXct(sim$Dates$start, tz="GMT", format="%Y-%m-%d")
       yearList<-unlist(strsplit(as.character(datesList), "[-]"))
       dayListSim <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
       indDaysSim <- array(data = NaN, dim = c(length(datesList),1))
