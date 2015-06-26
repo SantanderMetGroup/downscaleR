@@ -86,27 +86,32 @@ getTimeDomain <- function(grid, dic, season, years, time, aggr.d, aggr.m) {
       } else {
 		timeInd <- which((timeDates$year + 1900) %in% years & (timeDates$mon + 1) %in% season)
 	}
-      dateSlice <- timeDates[timeInd]
+      timeDates <- timeDates[timeInd]
       timeIndList <- list()
       dateSliceList <- list()
-      if (length(dateSlice) > 1) {
+      if (length(timeDates) > 1) {
             brkInd <- rep(1, length(timeInd))
             for (i in 2:length(timeInd)) {
 		      brkInd[i] <- timeInd[i] - timeInd[i-1]
 	      }
-	      brkInd <- c(1, which(brkInd > 1), length(timeInd) + 1)
-            if (length(brkInd) == 0) { 
-		      timeIndList[[1]] <- timeInd - 1
-                  dateSliceList[[1]] <- dateSlice
-	      } else {
-		      for (i in 2:length(brkInd)) {
-		            timeIndList[[i - 1]] <- timeInd[brkInd[i - 1] : (brkInd[i] - 1)] - 1
-                        dateSliceList[[i - 1]] <- dateSlice[brkInd[i - 1] : (brkInd[i] - 1)]
-		      }
-	      }
-	} else {
+	      if (length(which(brkInd > 1)) != 0) {
+                  brkInd <- c(1, which(brkInd > 1), length(timeInd) + 1)
+                  if (length(brkInd) == 0) { 
+		            timeIndList[[1]] <- timeInd - 1
+                        dateSliceList[[1]] <- timeDates
+	            } else {
+		            for (i in 2:length(brkInd)) {
+		                  timeIndList[[i - 1]] <- timeInd[brkInd[i - 1] : (brkInd[i] - 1)] - 1
+                              dateSliceList[[i - 1]] <- timeDates[brkInd[i - 1] : (brkInd[i] - 1)]
+		            }
+	            }
+            } else {
+                  dateSliceList <- lapply(unique(timeDates$year), function(x) timeDates[which(timeDates$year == x)])
+                  timeIndList <- lapply(unique(timeDates$year), function(x) timeInd[which(timeDates$year == x)])
+            }	     
+      } else {
 	      timeIndList[[1]] <- timeInd - 1
-	      dateSliceList[[1]] <- dateSlice
+	      dateSliceList[[1]] <- timeDates
       }
       if (time == "DD" | time == "none") {
             timeStride <- 1L
