@@ -12,26 +12,28 @@ Imports:
     MASS,
     verification,
     scales,
+    evd
 Suggests:
     ecomsUDG.Raccess,
 Type: Package
 Title: Climate data manipulation and statistical downscaling
-Version: 0.7-0
-Date: 15-May-2015
+Version: 0.8-0
+Date: 26-Jun-2015
 Authors@R: as.person(c(
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
+    "Antonio Cofino <antonio.cofino@unican.es> [ctb]",
     "Sixto Herrera <sixto@predictia.es> [ctb]",
-    "Maria Dolores Frias <friasmd@unican.es> [ctb]",
     "Jesus Fernandez <fernandej@unican.es> [ctb]",
     "Wietse Franssen <wietse.franssen@wur.nl> [ctb]",
+    "Maria Dolores Frias <friasmd@unican.es> [ctb]",
+    "Maialen Iturbide <miturbide@ifca.unican.es> [ctb]",
     "Max Tuni <max@predictia.es> [ctb]",
-    "Antonio Cofino <antonio.cofino@unican.es> [ctb]",
     "Santander Meteorology Group <http://meteo.unican.es> [aut]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
 Description: Load climate and weather data into R and performs climate data
     analysis and visualization, including model calibration (bias correction,
-    qq-mapping...), and perfect-prog statistical downscaling. The package is
-    conceived for dealing also with forecast (multi-member) data.
+    qq-mapping...), and perfect-prog statistical downscaling. Focused on daily data,
+    the package is conceived for dealing also with forecast (multi-member) data.
 License: GPL (>= 3)
 LazyData: true
