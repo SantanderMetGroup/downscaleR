@@ -80,17 +80,33 @@
 #' @export
 #' @examples \dontrun{
 #' # These are the paths to the package built-in GSN and NCEP datasets 
-#' gsn.data.dir <- file.path(find.package("downscaleR"), "datasets/observations/GSN_Iberia")
-#' ncep.data.dir <- file.path(find.package("downscaleR"), "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+#' gsn.data.dir <- file.path(find.package("downscaleR.java"),
+#'                            "datasets/observations/GSN_Iberia")
+#' ncep.data.dir <- file.path(find.package("downscaleR.java"), 
+#'                            "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 #' gsn.inv <- dataInventory(gsn.data.dir)
 #' ncep.inv <- dataInventory(ncep.data.dir)
 #' str(gsn.inv)
 #' str(ncep.inv)
-#' # Load precipitation for boreal winter (DJF) in the train (1991-2000) and test (2001-2010) periods, for the observations (GSN_Iberia) and the Iberia_NCEP datasets
-#' obs <- loadStationData(dataset = gsn.data.dir, var="precip", lonLim = c(-12,10), latLim = c(33,47), season=c(12,1,2), years = 1991:2000)
-#' prd <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 1991:2000)
-#' sim <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47), season = c(12,1,2), years = 2001:2010)
-#' # Interpolation of the observations onto the grid of model: we use the method "nearest" and the getGrid function to ensure spatial consistency:
+#' # Load precipitation for boreal winter (DJF) in the train (1991-2000) and test (2001-2010) periods,
+#' # for the observations (GSN_Iberia) and the Iberia_NCEP datasets
+#' obs <- loadStationData(dataset = gsn.data.dir,
+#'                        var="precip",
+#'                        lonLim = c(-12,10), latLim = c(33,47),
+#'                        season = c(12,1,2),
+#'                        years = 1991:2000)
+#' prd <- loadGridData(dataset = ncep.data.dir,
+#'                     var = "tp",
+#'                     lonLim = c(-12,10), latLim = c(33,47),
+#'                     season = c(12,1,2),
+#'                     years = 1991:2000)
+#' sim <- loadGridData(dataset = ncep.data.dir,
+#'                     var = "tp",
+#'                     lonLim = c(-12,10), latLim = c(33,47),
+#'                     season = c(12,1,2),
+#'                     years = 2001:2010)
+#' # Interpolation of the observations onto the grid of model: we use the method "nearest" and the
+#' # 'getGrid' function to ensure spatial consistency:
 #' obs <- interpGridData(obs, new.grid = getGrid(prd), method = "nearest")
 #' # Apply the bias correction method:
 #' simBC <- biasCorrection (obs, prd, sim, method = "qqmap", pr.threshold = 1) # qq-mapping
@@ -304,6 +320,8 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
 #' @family calibration
 #' @importFrom MASS fitdistr
 #' @importFrom evd fpot
+#' @importFrom evd qgpd
+#' @importFrom evd pgpd
 #' @keywords internal
 #'
 
