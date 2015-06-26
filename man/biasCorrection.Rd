@@ -5,8 +5,8 @@
 \title{Bias correction methods}
 \usage{
 biasCorrection(obs, pred, sim, method = c("qqmap", "delta", "scaling",
-  "unbiasing", "piani"), pr.threshold = 1, multi.member = TRUE,
-  window = NULL)
+  "unbiasing", "piani", "gqm"), pr.threshold = 1, multi.member = TRUE,
+  window = NULL, extrapolation = c("no", "constant"))
 }
 \arguments{
 \item{obs}{A field or station data containing the observed climate data for the training period}
@@ -19,7 +19,7 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 \item{sim}{A field containing the simulated climate for the variables used in \code{pred}, but considering the test period.}
 
 \item{method}{method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
-\code{"scaling"}, \code{"unbiasing"} and \code{"piani"}. See details.}
+\code{"scaling"}, \code{"unbiasing"}, \code{"piani"} and \code{"gqm"}. See details.}
 
 \item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
 \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
@@ -29,6 +29,10 @@ Ignored if the dataset has no members.}
 
 \item{window}{Numeric value specifying the time window width used to calibrate. The window is centered on the target day.
 Default to \code{NULL}, which considers the whole period available.}
+
+\item{extrapolation}{Character indicating the extrapolation method to be applied to correct values in
+\code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"qqmap"} method,
+thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).}
 }
 \value{
 A calibrated object of the same spatio-temporal extent of the input field
@@ -38,7 +42,7 @@ Implementation of several standard bias correction methods
 }
 \details{
 The methods available are \code{"qqmap"}, \code{"delta"}, \code{"unbiasing"},
-\code{"scaling"} and \code{"Piani"} (the latter used only for precipitation).
+\code{"scaling"}, \code{"Piani"}, \code{"gqm"} (the two latter used only for precipitation).
 Next we make a brief description of each method:
 
 \strong{Delta}
@@ -69,28 +73,43 @@ This method is applicable to any kind of variable.
 This method is described in Piani et al. 2010 and is applicable only to precipitation. It is based on the initial assumption that both observed
  and simulated intensity distributions are well approximated by the gamma distribution, therefore is a parametric q-q map
  that uses the theorical instead of the empirical distribution.
+
+\strong{Generalized Quantile Mapping (gqm)}
+
+This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a
+gamma distribution to values under the threshold given by the 95th percentile (proosed by Yang et al. 2010) and a general Pareto
+distribution (GPD) to values above the threshold.
 }
 \examples{
 \dontrun{
 # These are the paths to the package built-in GSN and NCEP datasets
 gsn.data.dir <- file.path(find.package("downscaleR.java"),
-                          "datasets/observations/GSN_Iberia")
+                           "datasets/observations/GSN_Iberia")
 ncep.data.dir <- file.path(find.package("downscaleR.java"),
-                          "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
+                           "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
 gsn.inv <- dataInventory(gsn.data.dir)
 ncep.inv <- dataInventory(ncep.data.dir)
 str(gsn.inv)
 str(ncep.inv)
 # Load precipitation for boreal winter (DJF) in the train (1991-2000) and test (2001-2010) periods,
 # for the observations (GSN_Iberia) and the Iberia_NCEP datasets
-obs <- loadStationData(dataset = gsn.data.dir, var="precip", lonLim = c(-12,10), latLim = c(33,47),
-                       season=c(12,1,2), years = 1991:2000)
-prd <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47),
-                       season = c(12,1,2), years = 1991:2000)
-sim <- loadGridData(ncep.data.dir, var = "tp", lonLim = c(-12,10), latLim = c(33,47),
-                       season = c(12,1,2), years = 2001:2010)
-# Interpolation of the observations onto the grid of model: we use the method "nearest"
-# and the getGrid function to ensure spatial consistency:
+obs <- loadStationData(dataset = gsn.data.dir,
+                       var="precip",
+                       lonLim = c(-12,10), latLim = c(33,47),
+                       season = c(12,1,2),
+                       years = 1991:2000)
+prd <- loadGridData(dataset = ncep.data.dir,
+                    var = "tp",
+                    lonLim = c(-12,10), latLim = c(33,47),
+                    season = c(12,1,2),
+                    years = 1991:2000)
+sim <- loadGridData(dataset = ncep.data.dir,
+                    var = "tp",
+                    lonLim = c(-12,10), latLim = c(33,47),
+                    season = c(12,1,2),
+                    years = 2001:2010)
+# Interpolation of the observations onto the grid of model: we use the method "nearest" and the
+# 'getGrid' function to ensure spatial consistency:
 obs <- interpGridData(obs, new.grid = getGrid(prd), method = "nearest")
 # Apply the bias correction method:
 simBC <- biasCorrection (obs, prd, sim, method = "qqmap", pr.threshold = 1) # qq-mapping
@@ -109,6 +128,8 @@ S. Herrera \email{sixto@predictia.es}
 \item A. Amengual, V. Homar, R. Romero, S. Alonso, and C. Ramis (2012) A Statistical Adjustment of Regional Climate Model Outputs to Local Scales: Application to Platja de Palma, Spain. J. Clim., 25, 939-957
 
 \item C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
+
+\item O. Gutjahr and G. Heinemann (2013) Comparing precipitation bias correction methods for high-resolution regional climate simulations using COSMO-CLM, Theoretical and Applied Climatology, 114, 511-529
 }
 }
 \seealso{
