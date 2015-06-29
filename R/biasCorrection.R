@@ -26,12 +26,14 @@
 #' 
 #' This method consists on adding to the observations the mean change signal (delta method).
 #' This method is applicable to any kind of variable but it is preferable to avoid it for bounded variables
-#'  (e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained (e.g. negative wind speeds...).
+#'  (e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained
+#'   (e.g. negative wind speeds...).
 #' 
 #' \strong{Unbiasing}
 #' 
 #' This correction consists on adding to the simulation the mean diference between the observations 
-#' and the simulation in the train period. This method is preferably applicable to unbounded variables (e.g. temperature).
+#' and the simulation in the train period. This method is preferably applicable to unbounded
+#'  variables (e.g. temperature).
 #' 
 #' \strong{Scaling}
 #' 
@@ -54,7 +56,7 @@
 #'\strong{Generalized Quantile Mapping (gqm)}
 #'  
 #' This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a 
-#' gamma distribution to values under the threshold given by the 95th percentile (proosed by Yang et al. 2010) and a general Pareto 
+#' gamma distribution to values under the threshold given by the 95th percentile (following Yang et al. 2010) and a general Pareto 
 #' distribution (GPD) to values above the threshold.  
 #' 
 #' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration
