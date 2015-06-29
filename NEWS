@@ -1,6 +1,6 @@
-downscaleR 0.8-1
+downscaleR 0.8-2
 ================
 
-* Bug fix in retrieval of annual seasons (Jan-Dec)
-* Other minor bug fixes and documentation improvements
+* Fixed internal error with biasCorrection version
+
 
