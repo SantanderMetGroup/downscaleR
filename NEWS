@@ -1,7 +1,6 @@
-downscaleR 0.8-0
+downscaleR 0.8-1
 ================
 
-* New Generalized Quantile Mapping method (Gutjahr and Heinemann 2013)
-* New extrapolation feature of Quantile-quantile mapping method for unprecedent values in the simulation period
-* Minor bug fixes and documentation improvements
+* Bug fix in retrieval of annual seasons (Jan-Dec)
+* Other minor bug fixes and documentation improvements
 

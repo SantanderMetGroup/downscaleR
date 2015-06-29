@@ -107,7 +107,7 @@ getTimeDomain <- function(grid, dic, season, years, time, aggr.d, aggr.m) {
 	            }
             } else {
                   dateSliceList <- lapply(unique(timeDates$year), function(x) timeDates[which(timeDates$year == x)])
-                  timeIndList <- lapply(unique(timeDates$year), function(x) timeInd[which(timeDates$year == x)])
+                  timeIndList <- lapply(unique(timeDates$year), function(x) timeInd[which(timeDates$year == x)] - 1)
             }	     
       } else {
 	      timeIndList[[1]] <- timeInd - 1

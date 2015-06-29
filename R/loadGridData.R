@@ -95,7 +95,7 @@ loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
             dic <- dictionaryLookup(dicPath, var, time)
             shortName <- dic$short_name          
       }
-      if (min(season) < 1 | max(season) > 12) {
+      if (!is.null(season) & (min(season) < 1 | max(season) > 12)) {
             stop("Invalid season definition")
       }
       gds <- J("ucar.nc2.dt.grid.GridDataset")$open(dataset)
