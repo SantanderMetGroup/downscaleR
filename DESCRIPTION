@@ -17,7 +17,7 @@ Suggests:
     ecomsUDG.Raccess,
 Type: Package
 Title: Climate data manipulation and statistical downscaling
-Version: 0.8-1
+Version: 0.8-2
 Date: 29-Jun-2015
 Authors@R: as.person(c(
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
