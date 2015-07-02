@@ -353,7 +353,11 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
             if (length(unique(Os[(nP[i,j]+1):ind]))<6){
               Ps[(nP[i,j]+1):ind] <- mean(Os[(nP[i,j]+1):ind], na.rm = TRUE)
             }else{
-              auxGamma<-fitdistr(Os[(nP[i,j]+1):ind],"gamma")
+              
+              auxOs <- Os[(nP[i,j]+1):ind]
+              auxOs <- auxOs[which(!is.na(auxOs))]
+              auxGamma <- fitdistr(auxOs,"gamma")
+              
               Ps[(nP[i,j]+1):ind]<-rgamma(ind-nP[i,j], auxGamma$estimate[1], rate = auxGamma$estimate[2])
             }
             Ps<-sort(Ps, decreasing = FALSE, na.last = NA)
