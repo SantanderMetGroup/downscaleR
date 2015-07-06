@@ -2,5 +2,8 @@ downscaleR 0.8-2
 ================
 
 * Fixed internal error with biasCorrection version
-
+* Get the common period of the obs and pred object in the biasCorrection
+ function to calibrate the bias correction method.
+* Included a new miscelaneous function getIntersect which obtain the common
+ period of two downscaleR objects.
 
