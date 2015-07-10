@@ -198,3 +198,40 @@ adjustDates <- function(timePars) {
 }
 # End
 
+#' @title getIntersect
+#' @description Get the common period of the objects obs and prd
+#' @author S. Herrera
+#' @export
+#' @keywords internal
+
+getIntersect <- function(obs,prd){
+  obj <- list(obs = obs, prd = prd)
+  obj$Dates$start <- intersect(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"),as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
+  obj$Dates$end <- intersect(as.POSIXct(obs$Dates$end, tz="GMT", format="%Y-%m-%d"),as.POSIXct(prd$Dates$end, tz="GMT", format="%Y-%m-%d"))
+  dimObs <- dim(obs$Data)
+  obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
+  indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"), obj$Dates$start))
+  indVal <- rep(list(bquote()), length(dimObs))
+  for (d in 1:length(dimObs)){
+    indVal[[d]] <- 1:dimObs[d]
+  }
+  indVal[[obs.time.index]] <- indObs
+  callObs <- as.call(c(list(as.name("["),quote(obs$Data)), indVal))
+  obj$obs$Data <- eval(callObs)
+  attr(obj$obs$Data, "dimensions") <- attr(obs$Data, "dimensions")
+  obj$obs$xyCoords <- obs$xyCoords
+  
+  dimPrd <- dim(prd$Data)
+  prd.time.index <- grep("^time$", attr(prd$Data, "dimensions"))
+  indPrd <- which(is.element(as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"), obj$Dates$start))
+  indVal <- rep(list(bquote()), length(dimPrd))
+  for (d in 1:length(dimPrd)){
+    indVal[[d]] <- 1:dimPrd[d]
+  }
+  indVal[[prd.time.index]] <- indPrd
+  callPrd <- as.call(c(list(as.name("["),quote(prd$Data)), indVal))
+  obj$prd$Data <- eval(callPrd)
+  attr(obj$prd$Data, "dimensions") <- attr(prd$Data, "dimensions")
+  obj$prd$xyCoords <- prd$xyCoords
+  return(obj)
+}

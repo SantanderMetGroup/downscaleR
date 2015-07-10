@@ -1,6 +1,7 @@
 downscaleR 0.8-3
 ================
-
 * Bug fix in bias correction of precipitation
+* Enhancement: Get the common period of the obs and pred object in the biasCorrection function to calibrate the bias correction method
+* New miscelaneous function getIntersect to set the common period of two downscaleR objects
 
 

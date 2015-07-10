@@ -119,7 +119,18 @@
 
 biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani", "gqm"), pr.threshold = 1, multi.member = TRUE, window = NULL, extrapolation = c("no", "constant")) {
   method <- match.arg(method, choices = c("qqmap", "delta", "unbiasing", "piani", "scaling", "gqm"))
+  extrapolation <- match.arg(extrapolation, choices = c("no", "constant"))
   threshold <- pr.threshold
+  obj <- getIntersect(obs,pred)
+  obs <- obj$obs
+  pred <- obj$prd
+  if  (length(obj$Dates$start)==0){
+    stop("The obs and pred periods do not overlap\nCheck the periods")
+  }else{
+    if ((length(obj$Dates$start)!=length(obs$Dates$start)) | (length(obj$Dates$start)!=length(pred$Dates$start))){
+      warning("The objects obs and pred, used for the method calibration, have different periods.\n Only the overlap period is considered for the calibration.")
+    }
+  }
   dimObs <- dim(obs$Data)
   obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
   dimPred <- dim(pred$Data)
