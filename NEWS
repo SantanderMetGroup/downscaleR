@@ -1,6 +1,6 @@
-downscaleR 0.8-2
+downscaleR 0.8-3
 ================
 
-* Fixed internal error with biasCorrection version
+* Bug fix in bias correction of precipitation
 
 
