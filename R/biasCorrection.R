@@ -112,7 +112,7 @@
 #' # 'getGrid' function to ensure spatial consistency:
 #' obs <- interpGridData(obs, new.grid = getGrid(prd), method = "nearest")
 #' # Apply the bias correction method:
-#' simBC <- biasCorrection (obs, prd, sim, method = "qqmap", pr.threshold = 1) # qq-mapping
+#' simBC <- biasCorrection (obs, prd, sim, method = "eqm", pr.threshold = 1) # qq-mapping
 #' par(mfrow = c(1,2))
 #' plotMeanField(sim)
 #' plotMeanField(simBC)
