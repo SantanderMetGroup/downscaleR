@@ -3,14 +3,19 @@
 #' @description Implementation of several standard bias correction methods
 #' 
 #' @template templateObsPredSim
-#' @param method method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"unbiasing"}, \code{"piani"} and \code{"gqm"}. See details.
+#' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
+#'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.
 #' @param multi.member Should members be adjusted sepparately (TRUE, default), or jointly (FALSE)?. 
 #' Ignored if the dataset has no members.
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).
 #' @param window Numeric value specifying the time window width used to calibrate. The window is centered on the target day. 
 #' Default to \code{NULL}, which considers the whole period available.
+#' 
+#' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
+#' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
+#' selected as the bias correction method.
+#' 
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
 #' \code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"qqmap"} method, 
 #' thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).
@@ -18,44 +23,40 @@
 #'  
 #' @details
 #' 
-#' The methods available are \code{"qqmap"}, \code{"delta"}, \code{"unbiasing"}, 
-#' \code{"scaling"}, \code{"Piani"}, \code{"gqm"} (the two latter used only for precipitation).
+#' The methods available are \code{"eqm"}, \code{"delta"}, 
+#' \code{"scaling"}, \code{"gqm"}, \code{"gpqm"} (the two latter used only for precipitation).
 #' Next we make a brief description of each method:
 #' 
 #' \strong{Delta}
 #' 
 #' This method consists on adding to the observations the mean change signal (delta method).
 #' This method is applicable to any kind of variable but it is preferable to avoid it for bounded variables
-#'  (e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained
-#'   (e.g. negative wind speeds...).
-#' 
-#' \strong{Unbiasing}
-#' 
-#' This correction consists on adding to the simulation the mean diference between the observations 
-#' and the simulation in the train period. This method is preferably applicable to unbounded
-#'  variables (e.g. temperature).
+#' (e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained
+#' (e.g. negative wind speeds...).
 #' 
 #' \strong{Scaling}
 #' 
-#' This method consists on scaling the simulation by the quotient of the mean observed and simulated in the train period. 
-#' This method is preferably applicable to variables with a lower bound, such as precipitation, because it preserves the 
-#' frequency also.
+#' This method consists on scaling the simulation  with the difference (additive) or quotient (multiplicative) 
+#' between the observed and simulated means in the train period. The \code{additive} or \code{multiplicative}
+#' correction is defined by parameter \code{scaling.type} (default is \code{additive}).
+#' The additive version is preferably applicable to unbounded variables (e.g. temperature) 
+#' and the multiplicative to variables with a lower bound (e.g. precipitation, because it also preserves the frequency). 
 #' 
-#' \strong{Quantile-Quantile Mapping (qqmap)}
+#' \strong{eqm}
 #' 
-#' This is a very extended bias correction method which consists on calibrating the simulated Cumulative Distribution Function (CDF) 
+#' Empirical Quantile Mapping. This is a very extended bias correction method which consists on calibrating the simulated Cumulative Distribution Function (CDF) 
 #' by adding to the observed quantiles both the mean delta change and the individual delta changes in the corresponding quantiles. 
 #' This method is applicable to any kind of variable.
 #' 
-#' \strong{Piani}
+#' \strong{gqm}
 #' 
-#' This method is described in Piani et al. 2010 and is applicable only to precipitation. It is based on the initial assumption that both observed
-#'  and simulated intensity distributions are well approximated by the gamma distribution, therefore is a parametric q-q map 
-#'  that uses the theorical instead of the empirical distribution. 
+#' Gamma Quantile Mapping. This method is described in Piani et al. 2010 and is applicable only to precipitation. It is based on the initial assumption that both observed
+#' and simulated intensity distributions are well approximated by the gamma distribution, therefore is a parametric q-q map 
+#' that uses the theorical instead of the empirical distribution. 
 #'  
-#'\strong{Generalized Quantile Mapping (gqm)}
+#'\strong{gpqm}
 #'  
-#' This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a 
+#' Generalized Quantile Mapping. This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a 
 #' gamma distribution to values under the threshold given by the 95th percentile (following Yang et al. 2010) and a general Pareto 
 #' distribution (GPD) to values above the threshold.  
 #' 
@@ -117,8 +118,9 @@
 #' plotMeanField(simBC)
 #' }
 
-biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani", "gqm"), pr.threshold = 1, multi.member = TRUE, window = NULL, extrapolation = c("no", "constant")) {
-  method <- match.arg(method, choices = c("qqmap", "delta", "unbiasing", "piani", "scaling", "gqm"))
+biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling", "gqm", "gpqm"), pr.threshold = 1, 
+                            multi.member = TRUE, window = NULL, scaling.type = c("additive", "multiplicative"), extrapolation = c("no", "constant")) {
+  method <- match.arg(method, choices = c("eqm", "delta", "scaling", "gqm", "gpqm"))
   extrapolation <- match.arg(extrapolation, choices = c("no", "constant"))
   threshold <- pr.threshold
   obj <- getIntersect(obs,pred)
@@ -164,7 +166,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
   attrSim <- attr(sim$Data, "dimensions")
   #apply function of calibration
   if (length(dimDiff)==0){
-    F <- calibrateProj(obs$Data, aperm(pred$Data,dimPerm), aperm(sim$Data,dimPerm), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, extrapolate = extrapolation)
+    F <- calibrateProj(obs$Data, aperm(pred$Data,dimPerm), aperm(sim$Data,dimPerm), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation)
     if (!any(dimPerm != 1:length(attr(pred$Data, "dimensions")))){
       sim$Data<-F
     }else{
@@ -187,7 +189,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
           callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
           callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
           #                              attrSim <- attr(sim$Data, "dimensions")
-          F <- calibrateProj(aperm(obs$Data, dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, extrapolate = extrapolation)
+          F <- calibrateProj(aperm(obs$Data, dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation)
           indTimeSim <- rep(list(bquote()), length(dimFor))
           for (d in 1:length(dimFor)){
             indTimeSim[[d]] <- 1:dimFor[d]
@@ -219,7 +221,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
             callObs <- as.call(c(list(as.name("["),quote(obs$Data)), indTimeObs))
             callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
             callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
-            F <- calibrateProj(aperm(eval(callObs), dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, extrapolate = extrapolation)
+            F <- calibrateProj(aperm(eval(callObs), dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation)
             indTimeSim <- rep(list(bquote()), length(dimFor))
             for (d in 1:length(dimFor)){
               indTimeSim[[d]] <- 1:dimFor[d]
@@ -247,7 +249,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
           auxObs[indMember,,] <- aperm(obs$Data, dimPermI)
         }
         #                       attrSim <- attr(sim$Data, "dimensions")
-        F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold, extrapolate = extrapolation)
+        F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, ate = extrapolation)
         sim$Data <- aperm(array(data = rep(F,1), dim = c(dimFor[pred.time.index],dimFor[pred.member.index],dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))])), auxPerm)
         #                        attr(sim$Data, "dimensions") <- attrSim
       }else{
@@ -284,7 +286,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
             auxObs[indMember,,] <- aperm(eval(callObs), dimPermI)
           }
           #                             attrSim <- attr(sim$Data, "dimensions")
-          F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold, extrapolate = extrapolation)
+          F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation)
           F <- aperm(array(data = rep(F,1), dim = c(length(indSim),dimFor[pred.member.index],dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))])), auxPerm)
           indTimeSim <- rep(list(bquote()), length(dimFor))
           for (d in 1:length(dimFor)){
@@ -313,8 +315,8 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
 #' @description Implementation of several standard bias correction methods
 #'
 #' @template templateObsPredSim
-#' @param method method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
-#' \code{"scaling"}, \code{"unbiasing"}, \code{"piani"} and \code{"gqm"}. See details.
+#' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
+#' \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.
 #' @param varcode Variable code. This is not the variable itself to be corrected, but
 #' rather it referes to its nature and distributional properties. For instance, \code{"tas"} applies for
 #' temperature-like variables (i.e.: unbounded gaussian variables that can take both negative and positive values),
@@ -323,6 +325,9 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
 #' but without an upper bound) and \code{"pr"}, specifically for precipitation.
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
 #' \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).
+#' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
+#' or \code{"multiplicative"}. This argument is ignored if \code{"scaling"} is not 
+#' selected as the bias correction method.
 #' @param extrapolate Character indicating the extrapolation method to be applied to correct values in  
 #' \code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"qqmap"} method, 
 #' thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).
@@ -339,7 +344,7 @@ biasCorrection <- function (obs, pred, sim, method = c("qqmap", "delta", "scalin
 #'
 
 
-calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling", "unbiasing", "piani", "gqm"), varcode = c("tas", "hurs", "tp", "pr", "wss"), pr.threshold = 1, extrapolate = c("no", "constant")) {
+calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling", "gqm", "gpqm"), varcode = c("tas", "hurs", "tp", "pr", "wss"), pr.threshold = 1, scaling.type = scaling.type, extrapolate = c("no", "constant")) {
   if (any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
     threshold<-pr.threshold
     nP<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
@@ -400,21 +405,23 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
       }
     }
   }
-  if (method == "unbiasing") {
-    obsMean <- apply(obs, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
-    prdMean <- apply(pred, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
-    for (k in 1:dim(sim)[1]) {
-      sim[k,,]<-sim[k,,]-prdMean+obsMean
-    }
-  }
   if (method == "scaling") {
-    obsMean <- apply(obs, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
-    prdMean <- apply(pred, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
-    for (k in 1:dim(sim)[1]) {
-      sim[k,,]<-(sim[k,,]/prdMean)*obsMean
+    if (scaling.type == "additive"){
+      obsMean <- apply(obs, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
+      prdMean <- apply(pred, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
+      for (k in 1:dim(sim)[1]) {
+        sim[k,,]<-sim[k,,]-prdMean+obsMean
+      }
+    }else if(scaling.type == "multiplicative"){
+      obsMean <- apply(obs, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
+      prdMean <- apply(pred, FUN = mean, MARGIN = c(2,3), na.rm = TRUE)
+      for (k in 1:dim(sim)[1]) {
+        sim[k,,]<-(sim[k,,]/prdMean)*obsMean
+      }
     }
   }
-  if (method == "qqmap") {
+  
+  if (method == "eqm") {
     if (!any(grepl(varcode,c("pr","tp","precipitation","precip")))){
       for (i in 1:dim(sim)[2]) {
         for (j in 1:dim(sim)[3]) {
@@ -501,7 +508,7 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
       }
     }
   }
-  if (method == "piani" & any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
+  if (method == "gqm" & any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
     for (i in 1:dim(sim)[2]){
       for (j in 1:dim(sim)[3]){
         if (nP[i,j]>0){
@@ -518,7 +525,7 @@ calibrateProj <- function (obs, pred, sim, method = c("qqmap", "delta", "scaling
       }
     }
   }
-  if (method == "gqm" & any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
+  if (method == "gpqm" & any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
     for (i in 1:dim(sim)[2]){
       for (j in 1:dim(sim)[3]){
         if (nP[i,j]>0){
