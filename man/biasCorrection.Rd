@@ -4,9 +4,10 @@
 \alias{biasCorrection}
 \title{Bias correction methods}
 \usage{
-biasCorrection(obs, pred, sim, method = c("qqmap", "delta", "scaling",
-  "unbiasing", "piani", "gqm"), pr.threshold = 1, multi.member = TRUE,
-  window = NULL, extrapolation = c("no", "constant"))
+biasCorrection(obs, pred, sim, method = c("eqm", "delta", "scaling", "gqm",
+  "gpqm"), pr.threshold = 1, multi.member = TRUE, window = NULL,
+  scaling.type = c("additive", "multiplicative"), extrapolation = c("no",
+  "constant"))
 }
 \arguments{
 \item{obs}{A field or station data containing the observed climate data for the training period}
@@ -18,8 +19,8 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 
 \item{sim}{A field containing the simulated climate for the variables used in \code{pred}, but considering the test period.}
 
-\item{method}{method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
-\code{"scaling"}, \code{"unbiasing"}, \code{"piani"} and \code{"gqm"}. See details.}
+\item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
+\code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.}
 
 \item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
 \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
@@ -29,6 +30,10 @@ Ignored if the dataset has no members.}
 
 \item{window}{Numeric value specifying the time window width used to calibrate. The window is centered on the target day.
 Default to \code{NULL}, which considers the whole period available.}
+
+\item{scaling.type}{Character indicating the type of the scaling method. Options are \code{"additive"} (default)
+or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not
+selected as the bias correction method.}
 
 \item{extrapolation}{Character indicating the extrapolation method to be applied to correct values in
 \code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"qqmap"} method,
@@ -41,44 +46,40 @@ A calibrated object of the same spatio-temporal extent of the input field
 Implementation of several standard bias correction methods
 }
 \details{
-The methods available are \code{"qqmap"}, \code{"delta"}, \code{"unbiasing"},
-\code{"scaling"}, \code{"Piani"}, \code{"gqm"} (the two latter used only for precipitation).
+The methods available are \code{"eqm"}, \code{"delta"},
+\code{"scaling"}, \code{"gqm"}, \code{"gpqm"} (the two latter used only for precipitation).
 Next we make a brief description of each method:
 
 \strong{Delta}
 
 This method consists on adding to the observations the mean change signal (delta method).
 This method is applicable to any kind of variable but it is preferable to avoid it for bounded variables
- (e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained
-  (e.g. negative wind speeds...).
-
-\strong{Unbiasing}
-
-This correction consists on adding to the simulation the mean diference between the observations
-and the simulation in the train period. This method is preferably applicable to unbounded
- variables (e.g. temperature).
+(e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained
+(e.g. negative wind speeds...).
 
 \strong{Scaling}
 
-This method consists on scaling the simulation by the quotient of the mean observed and simulated in the train period.
-This method is preferably applicable to variables with a lower bound, such as precipitation, because it preserves the
-frequency also.
+This method consists on scaling the simulation  with the difference (additive) or quotient (multiplicative)
+between the observed and simulated means in the train period. The \code{additive} or \code{multiplicative}
+correction is defined by parameter \code{scaling.type} (default is \code{additive}).
+The additive version is preferably applicable to unbounded variables (e.g. temperature)
+and the multiplicative to variables with a lower bound (e.g. precipitation, because it also preserves the frequency).
 
-\strong{Quantile-Quantile Mapping (qqmap)}
+\strong{eqm}
 
-This is a very extended bias correction method which consists on calibrating the simulated Cumulative Distribution Function (CDF)
+Empirical Quantile Mapping. This is a very extended bias correction method which consists on calibrating the simulated Cumulative Distribution Function (CDF)
 by adding to the observed quantiles both the mean delta change and the individual delta changes in the corresponding quantiles.
 This method is applicable to any kind of variable.
 
-\strong{Piani}
+\strong{gqm}
 
-This method is described in Piani et al. 2010 and is applicable only to precipitation. It is based on the initial assumption that both observed
- and simulated intensity distributions are well approximated by the gamma distribution, therefore is a parametric q-q map
- that uses the theorical instead of the empirical distribution.
+Gamma Quantile Mapping. This method is described in Piani et al. 2010 and is applicable only to precipitation. It is based on the initial assumption that both observed
+and simulated intensity distributions are well approximated by the gamma distribution, therefore is a parametric q-q map
+that uses the theorical instead of the empirical distribution.
 
-\strong{Generalized Quantile Mapping (gqm)}
+\strong{gpqm}
 
-This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a
+Generalized Quantile Mapping. This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a
 gamma distribution to values under the threshold given by the 95th percentile (following Yang et al. 2010) and a general Pareto
 distribution (GPD) to values above the threshold.
 }

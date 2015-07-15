@@ -4,9 +4,9 @@
 \alias{calibrateProj}
 \title{Bias correction methods}
 \usage{
-calibrateProj(obs, pred, sim, method = c("qqmap", "delta", "scaling",
-  "unbiasing", "piani", "gqm"), varcode = c("tas", "hurs", "tp", "pr", "wss"),
-  pr.threshold = 1, extrapolate = c("no", "constant"))
+calibrateProj(obs, pred, sim, method = c("eqm", "delta", "scaling", "gqm",
+  "gpqm"), varcode = c("tas", "hurs", "tp", "pr", "wss"), pr.threshold = 1,
+  scaling.type = scaling.type, extrapolate = c("no", "constant"))
 }
 \arguments{
 \item{obs}{A field or station data containing the observed climate data for the training period}
@@ -18,8 +18,8 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 
 \item{sim}{A field containing the simulated climate for the variables used in \code{pred}, but considering the test period.}
 
-\item{method}{method applied. Current accepted values are \code{"qqmap"}, \code{"delta"},
-\code{"scaling"}, \code{"unbiasing"}, \code{"piani"} and \code{"gqm"}. See details.}
+\item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
+\code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.}
 
 \item{varcode}{Variable code. This is not the variable itself to be corrected, but
 rather it referes to its nature and distributional properties. For instance, \code{"tas"} applies for
@@ -30,6 +30,10 @@ but without an upper bound) and \code{"pr"}, specifically for precipitation.}
 
 \item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
 \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
+
+\item{scaling.type}{Character indicating the type of the scaling method. Options are \code{"additive"} (default)
+or \code{"multiplicative"}. This argument is ignored if \code{"scaling"} is not
+selected as the bias correction method.}
 
 \item{extrapolate}{Character indicating the extrapolation method to be applied to correct values in
 \code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"qqmap"} method,
