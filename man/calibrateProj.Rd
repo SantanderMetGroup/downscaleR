@@ -6,7 +6,8 @@
 \usage{
 calibrateProj(obs, pred, sim, method = c("eqm", "delta", "scaling", "gqm",
   "gpqm"), varcode = c("tas", "hurs", "tp", "pr", "wss"), pr.threshold = 1,
-  scaling.type = scaling.type, extrapolate = c("no", "constant"))
+  scaling.type = scaling.type, extrapolate = c("no", "constant"),
+  theta = 0.95)
 }
 \arguments{
 \item{obs}{A field or station data containing the observed climate data for the training period}
@@ -36,8 +37,13 @@ or \code{"multiplicative"}. This argument is ignored if \code{"scaling"} is not
 selected as the bias correction method.}
 
 \item{extrapolate}{Character indicating the extrapolation method to be applied to correct values in
-\code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"qqmap"} method,
+\code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"eqm"} method,
 thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).}
+
+\item{theta}{numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed)
+above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD).
+Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th
+percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.}
 }
 \description{
 Implementation of several standard bias correction methods

@@ -17,9 +17,13 @@
 #' selected as the bias correction method.
 #' 
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
-#' \code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"qqmap"} method, 
+#' \code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"eqm"} method, 
 #' thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).
 #' 
+#' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
+#' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
+#' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
+#' percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.
 #'  
 #' @details
 #' 
@@ -119,7 +123,7 @@
 #' }
 
 biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling", "gqm", "gpqm"), pr.threshold = 1, 
-                            multi.member = TRUE, window = NULL, scaling.type = c("additive", "multiplicative"), extrapolation = c("no", "constant")) {
+                            multi.member = TRUE, window = NULL, scaling.type = c("additive", "multiplicative"), extrapolation = c("no", "constant"), theta = .95) {
   method <- match.arg(method, choices = c("eqm", "delta", "scaling", "gqm", "gpqm"))
   extrapolation <- match.arg(extrapolation, choices = c("no", "constant"))
   threshold <- pr.threshold
@@ -166,7 +170,7 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
   attrSim <- attr(sim$Data, "dimensions")
   #apply function of calibration
   if (length(dimDiff)==0){
-    F <- calibrateProj(obs$Data, aperm(pred$Data,dimPerm), aperm(sim$Data,dimPerm), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation)
+    F <- calibrateProj(obs$Data, aperm(pred$Data,dimPerm), aperm(sim$Data,dimPerm), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta = theta)
     if (!any(dimPerm != 1:length(attr(pred$Data, "dimensions")))){
       sim$Data<-F
     }else{
@@ -189,7 +193,7 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
           callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
           callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
           #                              attrSim <- attr(sim$Data, "dimensions")
-          F <- calibrateProj(aperm(obs$Data, dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation)
+          F <- calibrateProj(aperm(obs$Data, dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
           indTimeSim <- rep(list(bquote()), length(dimFor))
           for (d in 1:length(dimFor)){
             indTimeSim[[d]] <- 1:dimFor[d]
@@ -221,7 +225,7 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
             callObs <- as.call(c(list(as.name("["),quote(obs$Data)), indTimeObs))
             callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
             callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
-            F <- calibrateProj(aperm(eval(callObs), dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation)
+            F <- calibrateProj(aperm(eval(callObs), dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
             indTimeSim <- rep(list(bquote()), length(dimFor))
             for (d in 1:length(dimFor)){
               indTimeSim[[d]] <- 1:dimFor[d]
@@ -249,7 +253,7 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
           auxObs[indMember,,] <- aperm(obs$Data, dimPermI)
         }
         #                       attrSim <- attr(sim$Data, "dimensions")
-        F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, ate = extrapolation)
+        F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
         sim$Data <- aperm(array(data = rep(F,1), dim = c(dimFor[pred.time.index],dimFor[pred.member.index],dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))])), auxPerm)
         #                        attr(sim$Data, "dimensions") <- attrSim
       }else{
@@ -286,7 +290,7 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
             auxObs[indMember,,] <- aperm(eval(callObs), dimPermI)
           }
           #                             attrSim <- attr(sim$Data, "dimensions")
-          F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation)
+          F <- calibrateProj(auxObs, auxPrd, auxSim, method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
           F <- aperm(array(data = rep(F,1), dim = c(length(indSim),dimFor[pred.member.index],dimFor[setdiff(1:length(dimFor),c(pred.time.index, pred.member.index))])), auxPerm)
           indTimeSim <- rep(list(bquote()), length(dimFor))
           for (d in 1:length(dimFor)){
@@ -329,8 +333,13 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
 #' or \code{"multiplicative"}. This argument is ignored if \code{"scaling"} is not 
 #' selected as the bias correction method.
 #' @param extrapolate Character indicating the extrapolation method to be applied to correct values in  
-#' \code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"qqmap"} method, 
+#' \code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"eqm"} method, 
 #' thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).
+#' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
+#' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
+#' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
+#' percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.
+#' 
 #' 
 #@author S. Herrera \email{sixto@@predictia.es}
 #' @export
@@ -344,7 +353,7 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
 #'
 
 
-calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling", "gqm", "gpqm"), varcode = c("tas", "hurs", "tp", "pr", "wss"), pr.threshold = 1, scaling.type = scaling.type, extrapolate = c("no", "constant")) {
+calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling", "gqm", "gpqm"), varcode = c("tas", "hurs", "tp", "pr", "wss"), pr.threshold = 1, scaling.type = scaling.type, extrapolate = c("no", "constant"), theta = .95) {
   if (any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
     threshold<-pr.threshold
     nP<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
@@ -531,24 +540,23 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
         if (nP[i,j]>0){
           
           ind<-which(obs[,i,j]>threshold & !is.na(obs[,i,j]))
-          
-          indgamma <- ind[which(obs[ind,i,j] < quantile(obs[ind,i,j], 0.95))]
-          indpareto <- ind[which(obs[ind,i,j] >= quantile(obs[ind,i,j], 0.95))]
+          indgamma <- ind[which(obs[ind,i,j] < quantile(obs[ind,i,j], theta))]
+          indpareto <- ind[which(obs[ind,i,j] >= quantile(obs[ind,i,j], theta))]
           
           obsGQM <- fitdistr(obs[indgamma,i,j],"gamma")
-          obsGQM2 <- fpot(obs[indpareto,i,j], quantile(obs[ind,i,j], 0.95), "gpd", std.err = FALSE)
+          obsGQM2 <- fpot(obs[indpareto,i,j], quantile(obs[ind,i,j], theta), "gpd", std.err = FALSE)
           
           ind <- which(pred[,i,j] > 0 & !is.na(pred[,i,j]))
-          indgamma <- ind[which(pred[ind,i,j]<quantile(pred[ind,i,j], 0.95))]
-          indpareto <-ind[which(pred[ind,i,j]>=quantile(pred[ind,i,j], 0.95))]
+          indgamma <- ind[which(pred[ind,i,j]<quantile(pred[ind,i,j],theta))]
+          indpareto <-ind[which(pred[ind,i,j]>=quantile(pred[ind,i,j], theta))]
           
           prdGQM <- fitdistr(pred[indgamma,i,j], "gamma")
-          prdGQM2 <- fpot(pred[indpareto,i,j], quantile(pred[ind,i,j], 0.95), "gpd", std.err = FALSE)
+          prdGQM2 <- fpot(pred[indpareto,i,j], quantile(pred[ind,i,j], theta), "gpd", std.err = FALSE)
           
           rain <- which(sim[,i,j] > Pth[i,j] & !is.na(sim[,i,j]))
           noRain<-which(sim[,i,j] <= Pth[i,j] & !is.na(sim[,i,j]))
-          indgammasim <- rain[which(sim[rain,i,j] < quantile(pred[ind,i,j], 0.95))]
-          indparetosim <- rain[which(sim[rain,i,j] >= quantile(pred[ind,i,j], 0.95))]
+          indgammasim <- rain[which(sim[rain,i,j] < quantile(pred[ind,i,j], theta))]
+          indparetosim <- rain[which(sim[rain,i,j] >= quantile(pred[ind,i,j], theta))]
           
           auxF <- pgamma(sim[indgammasim,i,j],prdGQM$estimate[1], rate = prdGQM$estimate[2])
           auxF2 <- pgpd(sim[indparetosim,i,j],loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])

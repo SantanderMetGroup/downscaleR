@@ -7,7 +7,7 @@
 biasCorrection(obs, pred, sim, method = c("eqm", "delta", "scaling", "gqm",
   "gpqm"), pr.threshold = 1, multi.member = TRUE, window = NULL,
   scaling.type = c("additive", "multiplicative"), extrapolation = c("no",
-  "constant"))
+  "constant"), theta = 0.95)
 }
 \arguments{
 \item{obs}{A field or station data containing the observed climate data for the training period}
@@ -36,8 +36,13 @@ or \code{"multiplicative"} (see details). This argument is ignored if \code{"sca
 selected as the bias correction method.}
 
 \item{extrapolation}{Character indicating the extrapolation method to be applied to correct values in
-\code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"qqmap"} method,
+\code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"eqm"} method,
 thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).}
+
+\item{theta}{numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed)
+above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD).
+Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th
+percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.}
 }
 \value{
 A calibrated object of the same spatio-temporal extent of the input field
@@ -115,7 +120,7 @@ sim <- loadGridData(dataset = ncep.data.dir,
 # 'getGrid' function to ensure spatial consistency:
 obs <- interpGridData(obs, new.grid = getGrid(prd), method = "nearest")
 # Apply the bias correction method:
-simBC <- biasCorrection (obs, prd, sim, method = "qqmap", pr.threshold = 1) # qq-mapping
+simBC <- biasCorrection (obs, prd, sim, method = "eqm", pr.threshold = 1) # qq-mapping
 par(mfrow = c(1,2))
 plotMeanField(sim)
 plotMeanField(simBC)
