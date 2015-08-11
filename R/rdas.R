@@ -84,3 +84,46 @@ NULL
 #' data(tp_forecast)
 #' plotMeanField(tp_forecast, multi.member = TRUE)
 NULL
+
+#' @title Field containing NCEP reanalysis data of precipitation for the Iberian Peninsula.
+#' @description Iberia_NCEP_tp is an field object returned by loadECOMS 
+#' function (package ecomsUDG.Raccess):
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' var = "tp", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44), 
+#' time = "DD", 
+#' aggr.d = "sum".
+#' @format A field
+#' @name Iberia_NCEP_tp
+#' @docType data
+#' @keywords NCEP reanalysis
+#' @source  subset of NCEP reanalysis data, which is accessible 
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+
+
+NULL
+
+#' @title Field containing NCEP reanalysis data of temperature for the Iberian Peninsula.
+#' @description Iberia_NCEP_tas is an field object returned by loadECOMS 
+#' function (package ecomsUDG.Raccess):
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44), 
+#' time = "DD", 
+#' aggr.d = "min".
+#' @format A field
+#' @name Iberia_NCEP_tas
+#' @docType data
+#' @keywords NCEP reanalysis
+#' @source  subset of NCEP reanalysis data, which is accessible 
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+
+
+NULL
+
