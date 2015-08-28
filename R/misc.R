@@ -206,8 +206,11 @@ adjustDates <- function(timePars) {
 
 getIntersect <- function(obs,prd){
   obj <- list(obs = obs, prd = prd)
-  obj$Dates$start <- intersect(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"),as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
-  obj$Dates$end <- intersect(as.POSIXct(obs$Dates$end, tz="GMT", format="%Y-%m-%d"),as.POSIXct(prd$Dates$end, tz="GMT", format="%Y-%m-%d"))
+  indDates <- which(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d")==as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
+  obj$Dates$start <- as.POSIXct(obs$Dates$start[indDates], tz="GMT", format="%Y-%m-%d")
+  obj$Dates$end <- as.POSIXct(obs$Dates$end[indDates], tz="GMT", format="%Y-%m-%d")
+  #  obj$Dates$start <- intersect(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"),as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
+  #  obj$Dates$end <- intersect(as.POSIXct(obs$Dates$end, tz="GMT", format="%Y-%m-%d"),as.POSIXct(prd$Dates$end, tz="GMT", format="%Y-%m-%d"))
   dimObs <- dim(obs$Data)
   obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
   indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"), obj$Dates$start))

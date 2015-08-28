@@ -104,18 +104,52 @@ loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
             stop("Variable '", shortName, "' not found\nCheck variable names using 'datasetInventory' and/or dictionary 'identifiers'")
       }
       latLon <- getLatLonDomain(grid, lonLim, latLim)
+      proj <- grid$getCoordinateSystem()$getProjection()
+      if (!proj$isLatLon()){
+        nc <- gds$getNetcdfDataset()
+        lonAxis <- nc$findVariable('lon')
+        auxLon <- t(matrix(data = lonAxis$getCoordValues(), nrow = lonAxis$getShape()[2], ncol = lonAxis$getShape()[1]))
+        latAxis <- nc$findVariable('lat')
+        auxLat <- t(matrix(data = latAxis$getCoordValues(), nrow = latAxis$getShape()[2], ncol = latAxis$getShape()[1]))
+        if (length(lonLim) == 1 | length(latLim) == 1) {
+          ind.x <- which.min(abs(auxLon - lonLim))
+          ind.y <- which.min(abs(auxLat - latLim))
+          pointXYindex <- c(ind.y,ind.x)
+          latLon$xyCoords$x <- grid$getCoordinateSystem()$getXHorizAxis()$getCoordValues()[ind.x]
+          latLon$xyCoords$y <- grid$getCoordinateSystem()$getYHorizAxis()$getCoordValues()[ind.y]
+          latLon$xyCoords$lon <- auxLon[ind.y,ind.x]
+          latLon$xyCoords$lat <- auxLat[ind.y,ind.x]
+        }else{
+          auxDis <- sqrt((auxLon - lonLim[1])^2+(auxLat - latLim[1])^2)
+          llrowCol <- arrayInd(which.min(auxDis), dim(auxDis))
+          auxDis <- sqrt((auxLon - lonLim[2])^2+(auxLat - latLim[2])^2)
+          urrowCol <- arrayInd(which.min(auxDis), dim(auxDis))
+          auxDis <- sqrt((auxLon - lonLim[1])^2+(auxLat - latLim[2])^2)
+          ulrowCol <- arrayInd(which.min(auxDis), dim(auxDis))
+          auxDis <- sqrt((auxLon - lonLim[2])^2+(auxLat - latLim[1])^2)
+          lrrowCol <- arrayInd(which.min(auxDis), dim(auxDis))
+          llrowCol <- c(min(c(llrowCol[1],lrrowCol[1])), min(c(llrowCol[2],ulrowCol[2])))
+          urrowCol <- c(max(c(ulrowCol[1],urrowCol[1])),max(c(lrrowCol[2],ulrowCol[2])))
+          latLon$xyCoords$x <- grid$getCoordinateSystem()$getXHorizAxis()$getCoordValues()[llrowCol[2]:urrowCol[2]]
+          latLon$xyCoords$y <- grid$getCoordinateSystem()$getYHorizAxis()$getCoordValues()[llrowCol[1]:urrowCol[1]]
+          latLon$xyCoords$lon <- auxLon[llrowCol[1]:urrowCol[1],llrowCol[2]:urrowCol[2]]
+          latLon$xyCoords$lat <- auxLat[llrowCol[1]:urrowCol[1],llrowCol[2]:urrowCol[2]]
+        }
+        latLon$lonRanges <- .jnew("ucar/ma2/Range", as.integer(llrowCol[2]-1), as.integer(urrowCol[2]-1))
+        latLon$latRanges <- .jnew("ucar/ma2/Range", as.integer(llrowCol[1]-1), as.integer(urrowCol[1]-1))
+      }
       out <- loadGridDataset(var, grid, dic, level, season, years, time, latLon, aggr.d, aggr.m)
       # Definition of projection
-      proj <- grid$getCoordinateSystem()$getProjection()$toString()
+      proj <- proj$toString()
       attr(out$xyCoords, which = "projection") <- proj
       # Dimension ordering
       tab <- c("time", "level", "lat", "lon")
       x <- attr(out$Data, "dimensions")
       if (length(x) > 1) {
-            b <- na.exclude(match(tab, x))
-            dimNames <- attr(out$Data, "dimensions")[b]
-            out$Data <- aperm(out$Data, perm = b)    
-            attr(out$Data, "dimensions")  <- dimNames
+        b <- na.exclude(match(tab, x))
+        dimNames <- attr(out$Data, "dimensions")[b]
+        out$Data <- aperm(out$Data, perm = b)    
+        attr(out$Data, "dimensions")  <- dimNames
       }
       # Source Dataset and other metadata 
       attr(out, "dataset") <- dataset

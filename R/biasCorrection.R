@@ -193,7 +193,11 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
           callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
           callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
           #                              attrSim <- attr(sim$Data, "dimensions")
-          F <- calibrateProj(aperm(obs$Data, dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
+          if (!is.array(obs$Data)){
+            F <- calibrateProj(obs$Data, eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
+          }else{
+            F <- calibrateProj(aperm(obs$Data, dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
+          }
           indTimeSim <- rep(list(bquote()), length(dimFor))
           for (d in 1:length(dimFor)){
             indTimeSim[[d]] <- 1:dimFor[d]
@@ -354,6 +358,21 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
 
 
 calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling", "gqm", "gpqm"), varcode = c("tas", "hurs", "tp", "pr", "wss"), pr.threshold = 1, scaling.type = scaling.type, extrapolate = c("no", "constant"), theta = .95) {
+  d1 <- FALSE
+  d2 <- FALSE
+  if (!is.array(obs)){
+    obs <- array(data = obs, dim = c(length(obs),1,1))
+    pred <- array(data = pred, dim = c(length(pred),1,1))
+    sim <- array(data = sim, dim = c(length(sim),1,1))
+    d1 <- TRUE
+  }else{
+    if (length(dim(obs))==2){
+      obs <- array(data = obs, dim = c(dim(obs),dim(obs)[2]))
+      pred <- array(data = pred, dim = c(dim(pred),dim(pred)[2]))
+      sim <- array(data = sim, dim = c(dim(sim),dim(sim)[2]))
+      d2 <- TRUE
+    }
+  }
   if (any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
     threshold<-pr.threshold
     nP<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
@@ -568,6 +587,13 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
           sim[noRain,i,j]<-0
         }
       }
+    }
+  }
+  if (d1){
+    sim <- sim[,1,1]
+  }else{
+    if (d2){
+      sim <- sim[,,1]
     }
   }
   return(sim)

@@ -31,7 +31,6 @@
 #' current extent of the dataset, returning an error message.
 #' @family loading.grid
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com} and S. Herrera
-#' @export
 #' @examples \dontrun{
 #' # This is the path to the package built-in NCEP dataset (assumes read permission)
 #'  ncep <- system.file(package = "downscaleR.java", "datasets" , "reanalysis", "Iberia_NCEP",
