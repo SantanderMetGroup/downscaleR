@@ -86,7 +86,7 @@ NULL
 NULL
 
 #' @title Field containing NCEP reanalysis data of precipitation for the Iberian Peninsula.
-#' @description Iberia_NCEP_tp is an field object returned by loadECOMS 
+#' @description NCEP_Iberia_tp is a field object returned by loadECOMS 
 #' function (package ecomsUDG.Raccess):
 #' season = c(12,1,2),  
 #' years = 1991-2000, 
@@ -96,7 +96,7 @@ NULL
 #' time = "DD", 
 #' aggr.d = "sum".
 #' @format A field
-#' @name Iberia_NCEP_tp
+#' @name NCEP_Iberia_tp
 #' @docType data
 #' @keywords NCEP reanalysis
 #' @source  subset of NCEP reanalysis data, which is accessible 
@@ -107,7 +107,7 @@ NULL
 NULL
 
 #' @title Field containing NCEP reanalysis data of temperature for the Iberian Peninsula.
-#' @description Iberia_NCEP_tas is an field object returned by loadECOMS 
+#' @description NCEP_Iberia_tas is a field object returned by loadECOMS 
 #' function (package ecomsUDG.Raccess):
 #' season = c(12,1,2),  
 #' years = 1991-2000, 
@@ -117,7 +117,7 @@ NULL
 #' time = "DD", 
 #' aggr.d = "min".
 #' @format A field
-#' @name Iberia_NCEP_tas
+#' @name NCEP_Iberia_tas
 #' @docType data
 #' @keywords NCEP reanalysis
 #' @source  subset of NCEP reanalysis data, which is accessible 
@@ -127,3 +127,71 @@ NULL
 
 NULL
 
+
+#' @title Station data from the VALUE_ECA_86_v2 dataset containing daily precipitation for 82 stations in Europe.
+#' @description 
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' var= "precip".
+#' @format Station data
+#' @name VALUE_tp
+#' @docType data
+#' @keywords VALUE station precipitation 
+#' @source  Subset of VALUE station data. Full dataset is accessible 
+#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' @seealso \code{\link{NCEP_Iberia_tp}}, \code{\link{VALUE_Igueldo_tp}}
+
+
+NULL
+
+
+#' @title Station data from the VALUE_ECA_86_v2 dataset containing daily mean temperature for 82 stations in Europe.
+#' @description 
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' var= "tmean".
+#' @format Station data
+#' @name VALUE_tas
+#' @docType data
+#' @keywords VALUE station temperature
+#' @source  Subset of VALUE station data. Full dataset is accessible 
+#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' @seealso \code{\link{NCEP_Iberia_tas}}, \code{\link{VALUE_Igueldo_tas}}
+
+
+NULL
+
+
+#' @title Station data from the VALUE_ECA_86_v2 dataset containing daily precipitation for the Igueldo-SanSebastian station.
+#' @description 
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' stationID = "000234"
+#' var= "precip".
+#' @format Station data
+#' @name VALUE_Igueldo_tp
+#' @docType data
+#' @keywords VALUE station precipitation Igueldo
+#' @source  Subset of VALUE station data. Full dataset is accessible 
+#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' @seealso \code{\link{NCEP_Iberia_tp}}, \code{\link{VALUE_tp}}
+
+
+NULL
+
+#' @title Station data from the VALUE_ECA_86_v2 dataset containing daily mean temperature for the Igueldo-SanSebastian station.
+#' @description 
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' stationID = "000234"
+#' var= "tmean".
+#' @format Station data
+#' @name VALUE_Igueldo_tas
+#' @docType data
+#' @keywords VALUE station temperature Igueldo
+#' @source  Subset of VALUE station data. Full dataset is accessible 
+#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' @seealso \code{\link{NCEP_Iberia_tas}}, \code{\link{VALUE_tas}}
+
+
+NULL
