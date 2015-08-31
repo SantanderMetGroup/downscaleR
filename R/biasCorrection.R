@@ -229,7 +229,11 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
             callObs <- as.call(c(list(as.name("["),quote(obs$Data)), indTimeObs))
             callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
             callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
-            F <- calibrateProj(aperm(eval(callObs), dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
+            if (!is.array(eval(callObs))){
+              F <- calibrateProj(eval(callObs), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
+            }else{
+              F <- calibrateProj(aperm(eval(callObs), dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
+            }
             indTimeSim <- rep(list(bquote()), length(dimFor))
             for (d in 1:length(dimFor)){
               indTimeSim[[d]] <- 1:dimFor[d]
