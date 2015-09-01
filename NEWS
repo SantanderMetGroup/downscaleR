@@ -1,7 +1,14 @@
 downscaleR 0.8-3
 ================
-* Bug fix in bias correction of precipitation
-* Enhancement: Get the common period of the obs and pred object in the biasCorrection function to calibrate the bias correction method
-* New miscelaneous function getIntersect to set the common period of two downscaleR objects
+* New features:
+   * Load irregularly spaced gridded data (RCMs...)
+* Enhancements in bias correction:
+   * Automatically set the common period of predictand and predictor objects in to calibrate the bias correction method
+   * Use single station data as predictands
+* New miscelaneous functions:
+   * getIntersect: sets the common period of two downscaleR objects
+   * subsetField: select an arbitrary spatial/temporal subset from a field or multifield
+* Minor bug fix in bias correction of precipitation
+* Other minor bug fixes and enhancements
 
 

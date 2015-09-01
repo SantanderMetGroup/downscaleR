@@ -17,18 +17,20 @@ Suggests:
     ecomsUDG.Raccess,
 Type: Package
 Title: Climate data manipulation and statistical downscaling
-Version: 0.8-2
-Date: 29-Jun-2015
+Version: 0.8-3
+Date: 01-Sep-2015
 Authors@R: as.person(c(
+    "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
     "Antonio Cofino <antonio.cofino@unican.es> [ctb]",
-    "Sixto Herrera <sixto@predictia.es> [ctb]",
     "Jesus Fernandez <fernandej@unican.es> [ctb]",
     "Wietse Franssen <wietse.franssen@wur.nl> [ctb]",
     "Maria Dolores Frias <friasmd@unican.es> [ctb]",
+    "Jose Manuel Gutierrez <gutierjm@unican.es> [ctb]",
+    "Sixto Herrera <sixto@predictia.es> [ctb]",
     "Maialen Iturbide <miturbide@ifca.unican.es> [ctb]",
-    "Max Tuni <max@predictia.es> [ctb]",
-    "Santander Meteorology Group <http://meteo.unican.es> [aut]"))
+    "Rodrigo Manzanas <rmanzanas@ifca.unican.es> [ctb]",
+    "Max Tuni <max@predictia.es> [ctb]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
 Description: Load climate and weather data into R and performs climate data
