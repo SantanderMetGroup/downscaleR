@@ -75,9 +75,10 @@ subsetField <- function(field, lonLim = NULL, latLim = NULL, years = NULL) {
             }
             lon.ind <- which.min(abs(lons - lonLim[1]))
             if (length(lonLim) > 1) {
-                  if (lonLim[2] < lons[1] | lonLim[2] > tail(lons, 1))
+                  if (lonLim[2] < lons[1] | lonLim[2] > tail(lons, 1)) {
                         stop("Subset longitude boundaries outside the current field extent: 
                              (", paste(getGrid(field)$x, collapse = ","), ")")
+                  }
             }
             lon2 <- which.min(abs(lons - lonLim[2]))
             lon.ind <- lon.ind:lon2
@@ -100,9 +101,10 @@ subsetField <- function(field, lonLim = NULL, latLim = NULL, years = NULL) {
             }
             lat.ind <- which.min(abs(lats - latLim[1]))
             if (length(latLim) > 1) {
-                  if (latLim[2] < lats[1] | latLim[2] > tail(lats, 1))
+                  if (latLim[2] < lats[1] | latLim[2] > tail(lats, 1)) {
                         stop("Subset latitude boundaries outside the current field extent: 
-                 (", paste(getGrid(field)$y, collapse = ","), ")")
+                              (", paste(getGrid(field)$y, collapse = ","), ")")
+                  }
             }
             lat2 <- which.min(abs(lats - latLim[2]))
             lat.ind <- lat.ind:lat2
