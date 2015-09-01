@@ -35,7 +35,7 @@ the GeoGrid dimension ordering. In addition, the particular case of single-coord
 has in this case a different shape than the final output after \dQuote{slicing}.
 }
 \author{
-J. Bedia \email{joaquin.bedia@gmail.com} and A. Cofin\~no.
+J. Bedia \email{joaquin.bedia@gmail.com}, with contributions of A. Cofin\~no and S. Herrera.
 }
 \references{
 \url{https://www.unidata.ucar.edu/software/thredds/v4.3/netcdf-java/v4.3/javadoc/ucar/nc2/dt/grid/GeoGrid.html}

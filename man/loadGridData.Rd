@@ -156,6 +156,7 @@ Other loading: \code{\link{loadStationData}};
   \code{\link{makeAggregatedDataset}}
 
 Other loading.grid: \code{\link{getGrid}};
-  \code{\link{interpGridData}}
+  \code{\link{interpData}}; \code{\link{interpGridData}};
+  \code{\link{interpLocData}}
 }
 

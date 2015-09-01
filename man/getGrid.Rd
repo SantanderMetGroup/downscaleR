@@ -45,7 +45,8 @@ plotMeanField(int2)
 S. Herrera and J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
-Other loading.grid: \code{\link{interpGridData}};
-  \code{\link{loadGridData}}
+Other loading.grid: \code{\link{interpData}};
+  \code{\link{interpGridData}};
+  \code{\link{interpLocData}}; \code{\link{loadGridData}}
 }
 
