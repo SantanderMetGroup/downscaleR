@@ -10,7 +10,12 @@
 #' 
 
 getSeason <- function(obj) {
-      aux <- as.POSIXlt(obj$Dates$start)$mon + 1      
+      dimNames <- attr(obj$Data, "dimensions")
+      aux <- if (any(grepl("var", dimNames))) {
+            as.POSIXlt(obj$Dates[[1]]$start)$mon + 1      
+      } else {
+            as.POSIXlt(obj$Dates$start)$mon + 1      
+      }
       return(unique(aux))
 }
 # End
@@ -97,7 +102,12 @@ dateReplacement <- function(obs.dates, sim.dates) {
 
 getYearsAsINDEX <- function(obj) {
       season <- getSeason(obj)
-      aux.dates <- as.POSIXlt(obj$Dates$start)
+      dimNames <- attr(obj$Data, "dimensions")
+      if (any(grepl("var", dimNames))) {
+            aux.dates <- as.POSIXlt(obj$Dates[[1]]$start)
+      } else {
+            aux.dates <- as.POSIXlt(obj$Dates$start)
+      }
       yrs <- aux.dates$year + 1900
       if (!identical(season, sort(season))) {
             yy <- unique(yrs)[-1]
