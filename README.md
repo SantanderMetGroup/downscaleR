@@ -1,7 +1,7 @@
 downscaleR
 ==========
 
-R package for bias correction and downscaling of daily climate model outputs (both seasonal forecasting and climate predictions/projections). The package allows loading and handling observations, reanalysis and global and regional model data. Find out more about downscaleR at the [downscaleR's wiki](https://github.com/SantanderMetGroup/downscaleR/wiki).
+downscaleR is a R package for climate data access and analysis, with a special focus on empirical-statistical downscaling of daily data. Find out more about downscaleR at the [downscaleR's wiki](https://github.com/SantanderMetGroup/downscaleR/wiki).
 
 The recommended installation procedure is to use the install_github command from the devtools R package. 
 ```R
