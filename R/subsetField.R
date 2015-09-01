@@ -79,43 +79,43 @@ subsetField <- function(field, lonLim = NULL, latLim = NULL, years = NULL) {
                         stop("Subset longitude boundaries outside the current field extent: 
                              (", paste(getGrid(field)$x, collapse = ","), ")")
                   }
+                  lon2 <- which.min(abs(lons - lonLim[2]))
+                  lon.ind <- lon.ind:lon2
+                  field$Data <- asub(field$Data, lon.ind, grep("lon", dimNames))
+                  attr(field$Data, "dimensions") <- dimNames
+            } else {
+                  field$Data <- asub(field$Data, lon.ind, grep("lon", dimNames), drop = TRUE)
+                  attr(field$Data, "dimensions") <- dimNames[grep("lon", dimNames, invert = TRUE)]
+                  dimNames <- attr(field$Data, "dimensions")
             }
-            lon2 <- which.min(abs(lons - lonLim[2]))
-            lon.ind <- lon.ind:lon2
-            field$Data <- asub(field$Data, lon.ind, grep("lon", dimNames))
-            attr(field$Data, "dimensions") <- dimNames
-      } else {
-            field$Data <- asub(field$Data, lon.ind, grep("lon", dimNames), drop = TRUE)
-            attr(field$Data, "dimensions") <- dimNames[grep("lon", dimNames, invert = TRUE)]
-            dimNames <- attr(field$Data, "dimensions")
+            field$xyCoords$x <- field$xyCoords$x[lon.ind]
       }
-      field$xyCoords$x <- field$xyCoords$x[lon.ind]
       if (!is.null(latLim)) {
             if (!is.vector(latLim) | length(latLim) > 2) {
                   stop("Invalid latitudinal boundary definition")
             }
-            lats <- getCoordinates(field)$y
+            lats <- getCoordinates(field)$x
             if (latLim[1] < lats[1] | latLim[1] > tail(lats, 1)) {
                   stop("Subset latitude boundaries outside the current field extent: 
-                 (", paste(getGrid(field)$x, collapse = ","), ")")
+                       (", paste(getGrid(field)$x, collapse = ","), ")")
             }
             lat.ind <- which.min(abs(lats - latLim[1]))
             if (length(latLim) > 1) {
                   if (latLim[2] < lats[1] | latLim[2] > tail(lats, 1)) {
                         stop("Subset latitude boundaries outside the current field extent: 
-                              (", paste(getGrid(field)$y, collapse = ","), ")")
+                             (", paste(getGrid(field)$x, collapse = ","), ")")
                   }
+                  lat2 <- which.min(abs(lats - latLim[2]))
+                  lat.ind <- lat.ind:lat2
+                  field$Data <- asub(field$Data, lat.ind, grep("lat", dimNames))
+                  attr(field$Data, "dimensions") <- dimNames
+            } else {
+                  field$Data <- asub(field$Data, lat.ind, grep("lat", dimNames), drop = TRUE)
+                  attr(field$Data, "dimensions") <- dimNames[grep("lat", dimNames, invert = TRUE)]
+                  dimNames <- attr(field$Data, "dimensions")
             }
-            lat2 <- which.min(abs(lats - latLim[2]))
-            lat.ind <- lat.ind:lat2
-            field$Data <- asub(field$Data, lat.ind, grep("lat", dimNames))
-            attr(field$Data, "dimensions") <- dimNames
-      } else {
-            field$Data <- asub(field$Data, lat.ind, grep("lat", dimNames), drop = TRUE)
-            attr(field$Data, "dimensions") <- dimNames[grep("lat", dimNames, invert = TRUE)]
-            dimNames <- attr(field$Data, "dimensions")
+            field$xyCoords$x <- field$xyCoords$x[lat.ind]
       }
-      field$xyCoords$y <- field$xyCoords$y[lat.ind]
       attr(field, "subset") <- "subsetField subset"
       return(field)
 }
