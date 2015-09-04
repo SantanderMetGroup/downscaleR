@@ -41,7 +41,11 @@ plotMeanField <- function (gridData, multi.member = FALSE) {
       if (length(mar) != 2) {
             stop("Not a rectangular spatial domain")
       }
-      titles <- gridData$Variable$varName
+      titles <- if (!is.null(gridData$Variable$level)) {
+            paste(gridData$Variable$varName, gridData$Variable$level, sep = "@")
+      } else {
+            gridData$Variable$varName
+      }
       if (is.na(match("var", dimNames))) {
             if (("member" %in% dimNames) & isTRUE(multi.member)) {
                   titles <- gridData$Members
@@ -58,6 +62,3 @@ plotMeanField <- function (gridData, multi.member = FALSE) {
       }
 }
 # End
-
-
-       
