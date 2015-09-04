@@ -111,6 +111,12 @@ loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
         auxLon <- t(matrix(data = lonAxis$getCoordValues(), nrow = lonAxis$getShape()[2], ncol = lonAxis$getShape()[1]))
         latAxis <- nc$findVariable('lat')
         auxLat <- t(matrix(data = latAxis$getCoordValues(), nrow = latAxis$getShape()[2], ncol = latAxis$getShape()[1]))
+        if (is.null(lonLim)){
+          lonLim <- c(min(auxLon),max(auxLon))
+        }
+        if (is.null(latLim)){
+          latLim <- c(min(auxLat),max(auxLat))
+        }
         if (length(lonLim) == 1 | length(latLim) == 1) {
           ind.x <- which.min(abs(auxLon - lonLim))
           ind.y <- which.min(abs(auxLat - latLim))
