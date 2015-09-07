@@ -94,16 +94,16 @@ subsetField <- function(field, lonLim = NULL, latLim = NULL, years = NULL) {
             if (!is.vector(latLim) | length(latLim) > 2) {
                   stop("Invalid latitudinal boundary definition")
             }
-            lats <- getCoordinates(field)$x
+            lats <- getCoordinates(field)$y
             if (latLim[1] < lats[1] | latLim[1] > tail(lats, 1)) {
                   stop("Subset latitude boundaries outside the current field extent: 
-                       (", paste(getGrid(field)$x, collapse = ","), ")")
+                       (", paste(getGrid(field)$y, collapse = ","), ")")
             }
             lat.ind <- which.min(abs(lats - latLim[1]))
             if (length(latLim) > 1) {
                   if (latLim[2] < lats[1] | latLim[2] > tail(lats, 1)) {
                         stop("Subset latitude boundaries outside the current field extent: 
-                             (", paste(getGrid(field)$x, collapse = ","), ")")
+                             (", paste(getGrid(field)$y, collapse = ","), ")")
                   }
                   lat2 <- which.min(abs(lats - latLim[2]))
                   lat.ind <- lat.ind:lat2
@@ -114,7 +114,7 @@ subsetField <- function(field, lonLim = NULL, latLim = NULL, years = NULL) {
                   attr(field$Data, "dimensions") <- dimNames[grep("lat", dimNames, invert = TRUE)]
                   dimNames <- attr(field$Data, "dimensions")
             }
-            field$xyCoords$x <- field$xyCoords$x[lat.ind]
+            field$xyCoords$y <- field$xyCoords$y[lat.ind]
       }
       attr(field, "subset") <- "subsetField subset"
       return(field)
