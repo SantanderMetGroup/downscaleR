@@ -39,7 +39,7 @@ getVerticalLevelPars <- function(grid, level) {
             zRange <- .jnew("ucar/ma2/Range", levelInd, levelInd)
       } else {
             if (!is.null(level)) {
-                  warning("The variable selected is 2D: the '@level' specification was ignored")
+                  # warning("The variable selected is 2D: the '@level' specification was ignored")
                   level <- NULL
             }
             zRange <- .jnull()
