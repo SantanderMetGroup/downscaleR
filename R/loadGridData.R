@@ -38,16 +38,22 @@
 #' @family homogenization
 #' 
 #' @examples \dontrun{
+#' #Download dataset
+#' dir.create("mydirectory")
+#' download.file("http://meteo.unican.es/work/downscaler/data/Iberia_NCEP.tar.gz", 
+#' destfile = "mydirectory/Iberia_NCEP.tar.gz")
+#' # Extract files from the tar.gz file
+#' untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
+#' # First, the path to the ncml file is defined:
+#' ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
 #' # Load air temperature at 850 millibar isobaric surface pressure level from the built-in
 #' # NCEP dataset, for the Iberian Peninsula in summer (JJA):
-#' ncep <- file.path(find.package("downscaleR.java"), 
-#'                   "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-#' field <- loadGridData(ncep, var = "ta@@85000", dictionary = TRUE, lonLim = c(-10,5),
+#' field <- loadGridData(ncep, var = "ta@@850", dictionary = TRUE, lonLim = c(-10,5),
 #'    latLim = c(35.5, 44.5), season = 6:8, years = 1981:2010)
 #' str(field)   
 #' plotMeanField(field)
 #' # Calculation of monthly mean temperature:
-#' field.mm <- loadGridData(ncep, var = "ta@@85000", dictionary = TRUE, lonLim = c(-10,5),
+#' field.mm <- loadGridData(ncep, var = "ta@@850", dictionary = TRUE, lonLim = c(-10,5),
 #'                          latLim = c(35.5, 44.5), season = 6:8,
 #'                          years = 1981:2010, aggr.m = "mean")
 #' str(field.mm)
@@ -59,7 +65,7 @@
 #' vocabulary
 #' # Variable is named 'T', instead of the standard name 'ta' in the vocabulary
 #' # Vertical level is indicated using the '@@' symbol:
-#' non.standard.field <- loadGridData(ncep, var = "T@@85000", dictionary = FALSE, lonLim = c(-10,5),
+#' non.standard.field <- loadGridData(ncep, var = "T@@850", dictionary = FALSE, lonLim = c(-10,5),
 #'                                   latLim = c(35.5, 44.5), season = 6:8, 
 #'                                   years = 1981:2010, aggr.m = "mean")
 #' str(non.standard.field$Variable)

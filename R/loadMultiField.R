@@ -63,11 +63,17 @@
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' 
 #' @examples \donttest{
+#' #Download dataset
+#' dir.create("mydirectory")
+#' download.file("http://meteo.unican.es/work/downscaler/data/Iberia_NCEP.tar.gz", 
+#' destfile = "mydirectory/Iberia_NCEP.tar.gz")
+#' # Extract files from the tar.gz file
+#' untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
+#' # First, the path to the ncml file is defined:
+#' ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
 #' # Load three typical predictors for precipitation on the Iberian Peninsula in winter (DJF),
 #' # on a regular squared grid of 1 deg (bilinearly interpolated):
-#' ncep <- file.path(find.package("downscaleR.java"),
-#'                   "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-#' multifield <- loadMultiField(ncep, vars = c("hus@@85000", "ta@@85000", "psl"), 
+#' multifield <- loadMultiField(ncep, vars = c("hus@@850", "ta@@850", "psl"), 
 #'          dictionary = TRUE, lonLim = c(-10,5), latLim = c(35.5, 44.5), season = c(12,1,2),
 #'          years = 1991:2010, new.grid = list(x = c(-10,5,1), y = c(35.5,44.5,1)),
 #'          interp.method = "bilinear")

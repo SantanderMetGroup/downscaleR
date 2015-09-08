@@ -14,11 +14,17 @@
 #' and not to the standard naming convention defined in the vocabulary.
 #' 
 #' @examples \donttest{
-#' gsn <- file.path(find.package("downscaleR.java"), "datasets/observations/GSN_Iberia")
-#' di <- dataInventory(gsn)
+#' dir.create("mydirectory")
+#' download.file("http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz", 
+#'               destfile = "mydirectory/VALUE_ECA_86_v2.tar.gz")
+#' # Extract files from the tar.gz file
+#' untar("mydirectory/VALUE_ECA_86_v2.tar.gz", exdir = "mydirectory")
+#' # Data inventory
+#' value <- "mydirectory/VALUE_ECA_86_v2"
+#' di <- dataInventory(value)
 #' str(di)
 #' # To obtain summary statistics of the variables stored:
-#' di.stats <- dataInventory(gsn, return.stats = TRUE)
+#' di.stats <- dataInventory(value, return.stats = TRUE)
 #' print(di.stats$Summary.stats)
 #' } 
 #' 
@@ -159,8 +165,14 @@ dataInventory.NetCDF <- function(dataset) {
 #' @export
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
 #' @examples \donttest{
-#' gsn <- file.path(find.package("downscaleR.java"), "datasets/observations/GSN_Iberia")
-#' print(stationInfo(gsn))
+#' dir.create("mydirectory")
+#' download.file("http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz", 
+#'               destfile = "mydirectory/VALUE_ECA_86_v2.tar.gz")
+#' # Extract files from the tar.gz file
+#' untar("mydirectory/VALUE_ECA_86_v2.tar.gz", exdir = "mydirectory")
+#' # Data inventory
+#' value <- "mydirectory/VALUE_ECA_86_v2"
+#' print(stationInfo(value))
 #' } 
 #' 
 

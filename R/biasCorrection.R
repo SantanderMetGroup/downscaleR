@@ -86,28 +86,36 @@
 #' @author S. Herrera \email{sixto@@predictia.es}
 #' @export
 #' @examples \dontrun{
-#' # These are the paths to the package built-in GSN and NCEP datasets 
-#' gsn.data.dir <- file.path(find.package("downscaleR.java"),
-#'                            "datasets/observations/GSN_Iberia")
-#' ncep.data.dir <- file.path(find.package("downscaleR.java"), 
-#'                            "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-#' gsn.inv <- dataInventory(gsn.data.dir)
-#' ncep.inv <- dataInventory(ncep.data.dir)
-#' str(gsn.inv)
+#' # Download VALUE (station data) and NCEP (model data) datasets 
+#' dir.create("mydirectory")
+#' download.file("http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz", 
+#'               destfile = "mydirectory/VALUE_ECA_86_v2.tar.gz")
+#' download.file("http://meteo.unican.es/work/downscaler/data/Iberia_NCEP.tar.gz", 
+#'               destfile = "mydirectory/Iberia_NCEP.tar.gz")
+#' # Extract files from the tar.gz file
+#' untar("mydirectory/VALUE_ECA_86_v2.tar.gz", exdir = "mydirectory")
+#' untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
+#' # Path to the VALUE dataset and the NCEP ncml file.
+#' value <- "mydirectory/VALUE_ECA_86_v2"
+#' ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
+#' # Data inventories provides a quick overview of the available data
+#' value.inv <- dataInventory(value)
+#' ncep.inv <- dataInventory(ncep)
+#' str(value.inv)
 #' str(ncep.inv)
 #' # Load precipitation for boreal winter (DJF) in the train (1991-2000) and test (2001-2010) periods,
-#' # for the observations (GSN_Iberia) and the Iberia_NCEP datasets
-#' obs <- loadStationData(dataset = gsn.data.dir,
+#' # for the observations (VALUE) and the Iberia_NCEP datasets
+#' obs <- loadStationData(dataset = value,
 #'                        var="precip",
 #'                        lonLim = c(-12,10), latLim = c(33,47),
 #'                        season = c(12,1,2),
 #'                        years = 1991:2000)
-#' prd <- loadGridData(dataset = ncep.data.dir,
+#' prd <- loadGridData(dataset = ncep,
 #'                     var = "tp",
 #'                     lonLim = c(-12,10), latLim = c(33,47),
 #'                     season = c(12,1,2),
 #'                     years = 1991:2000)
-#' sim <- loadGridData(dataset = ncep.data.dir,
+#' sim <- loadGridData(dataset = ncep,
 #'                     var = "tp",
 #'                     lonLim = c(-12,10), latLim = c(33,47),
 #'                     season = c(12,1,2),
