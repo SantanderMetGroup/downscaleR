@@ -24,8 +24,14 @@ For an adequate map display the station coordinates must be in decimal degrees.
 }
 \examples{
 \donttest{
-gsn <- file.path(find.package("downscaleR.java"), "datasets/observations/GSN_Iberia")
-print(stationInfo(gsn))
+dir.create("mydirectory")
+download.file("http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz",
+              destfile = "mydirectory/VALUE_ECA_86_v2.tar.gz")
+# Extract files from the tar.gz file
+untar("mydirectory/VALUE_ECA_86_v2.tar.gz", exdir = "mydirectory")
+# Data inventory
+value <- "mydirectory/VALUE_ECA_86_v2"
+print(stationInfo(value))
 }
 }
 \author{

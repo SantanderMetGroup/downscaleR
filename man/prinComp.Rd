@@ -77,11 +77,16 @@ multimember fields instead.
 }
 \examples{
 \donttest{
-# First a multifield containing a set of variables is loaded (e.g. data for spring spanning the
+# Download dataset
+download.file("http://meteo.unican.es/work/downscaler/data/Iberia_NCEP.tar.gz",
+destfile = "mydirectory/Iberia_NCEP.tar.gz")
+# Extract files from the tar.gz file
+untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
+# First, the path to the ncml file is defined:
+ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
+A multifield containing a set of variables is loaded (e.g. data for spring spanning the
 # 30-year period 1981--2010):
-ncep <- file.path(find.package("downscaleR.java"),
-                  "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-multifield <- loadMultiField(ncep, vars = c("hus@85000", "ta@85000", "psl"),
+multifield <- loadMultiField(ncep, vars = c("hus@850", "ta@850", "psl"),
                              season = c(3:5), years = 1981:2010)
 # In this example, we retain the PCs explaining the 99\\\% of the variance
 pca <- prinComp(multifield, v.exp = .99)

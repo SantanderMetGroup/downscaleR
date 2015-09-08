@@ -38,10 +38,16 @@ plotEOF(pca)
 plotEOF(pca, n.eofs = 4)
 
 # Example with PCA analysis of a multifield (multiple variables)
+# Download dataset
+dir.create("mydirectory")
+download.file("http://meteo.unican.es/work/downscaler/data/Iberia_NCEP.tar.gz",
+destfile = "mydirectory/Iberia_NCEP.tar.gz")
+# Extract files from the tar.gz file
+untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
+# First, the path to the ncml file is defined:
+ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
 # load geopotential heigth at 500 mb, temperature at 1000 mb and sea-level pressure
-ncep <- file.path(find.package("downscaleR.java"),
-                  "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-multifield <- loadMultiField(ncep, vars = c("z@50000", "ta@100000", "psl"),
+multifield <- loadMultiField(ncep, vars = c("z@500", "ta@1000", "psl"),
               season = c(12,1,2), years = 1981:2010)
 # PCA analysis, retaining the first 9 PCs of each variable:
 pca2 <- prinComp(multifield, n.eofs = 9)
