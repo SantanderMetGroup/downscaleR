@@ -80,7 +80,7 @@
 #' untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
 #' # First, the path to the ncml file is defined:
 #' ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
-#' A multifield containing a set of variables is loaded (e.g. data for spring spanning the 
+#' # A multifield containing a set of variables is loaded (e.g. data for spring spanning the 
 #' # 30-year period 1981--2010):
 #' multifield <- loadMultiField(ncep, vars = c("hus@@850", "ta@@850", "psl"),
 #'                              season = c(3:5), years = 1981:2010)
