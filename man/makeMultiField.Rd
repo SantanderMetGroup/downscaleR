@@ -32,11 +32,11 @@ The function makes a number of checks in order to test the spatiotemporal compat
  The spatial consistency of the input fields is also checked. In order to avoid possible errors from the user, the spatial
   consistency (i.e., equal XY coordinates) of the input fields must be ensured before attempting the creation of the multifield,
   otherwise giving an error. This can be achieved either through the specification of the same 'lonLim' and 'latLim' argument
-  values when loading the fields, or using the \code{\link{interpGridData}} interpolator in conjuntion with the \code{\link{getGrid}}
+  values when loading the fields, or using the \code{\link{interpData}} interpolator in conjuntion with the \code{\link{getGrid}}
   method.
 }
 \note{
-Multifield can not be passed to the interpolator \code{\link{interpGridData}} directly. Instead, the
+Multifield can not be passed to the interpolator \code{\link{interpData}} directly. Instead, the
 multimember fields should be interpolated individually prior to multifield construction.
 }
 \examples{
@@ -76,7 +76,7 @@ J. bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
 \code{\link{loadGridData}} and \code{\link[ecomsUDG.Raccess]{loadECOMS}} for loading fields (the latter also for loading
-multimember fields), \code{\link{loadMultiField}}, which directly loads a multifield. \code{\link{interpGridData}} and \code{\link{getGrid}}
+multimember fields), \code{\link{loadMultiField}}, which directly loads a multifield. \code{\link{interpData}} and \code{\link{getGrid}}
 for spatial consistency of input fields.
 }
 

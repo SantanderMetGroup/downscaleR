@@ -126,7 +126,7 @@ sim <- loadGridData(dataset = ncep,
                     years = 2001:2010)
 # Interpolation of the observations onto the grid of model: we use the method "nearest" and the
 # 'getGrid' function to ensure spatial consistency:
-obs <- interpData(obs, new.coordinates = getGrid(prd), method = "nearest")
+obs <- interpData(obs, new.Coordinates = getGrid(prd), method = "nearest")
 # Apply the bias correction method:
 simBC <- biasCorrection (obs, prd, sim, method = "eqm", pr.threshold = 1) # qq-mapping
 par(mfrow = c(1,2))

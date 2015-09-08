@@ -111,8 +111,8 @@
 #' # In order make the computation faster, we interpolate to a coarser grid of 2.5 deg
 #' range(tasmax_forecast$xyCoords$x)
 #' range(tasmax_forecast$xyCoords$y)
-#' multimember <- interpGridData(tasmax_forecast, 
-#'                               new.grid = list(c(-10,29.5, 2.5), c(35.5, 64.5, 2.5)))
+#' multimember <- interpData(tasmax_forecast, 
+#'                               new.Coordinates = list(c(-10,29.5, 2.5), c(35.5, 64.5, 2.5)))
 #' # In this case we retain the first 15 EOFs:
 #' pca.mm <- prinComp(multimember, n.eofs = 15) 
 #' # Note that now the results of the PCA for the variable are a list, with the results 
@@ -122,7 +122,7 @@
 #' # The most complex situation comes from multimember multifields:
 #' data(tasmin_forecast)
 #' # We interpolate using an identical grid than the previous example:
-#' multimember2 <- interpGridData(tasmin_forecast, new.grid = getGrid(multimember))
+#' multimember2 <- interpData(tasmin_forecast, new.Coordinates = getGrid(multimember))
 #' # Now the multimember multifield is constructed
 #' mm.multifield <- makeMultiField(multimember, multimember2)
 #' pca.mm.mf <- prinComp(mm.multifield, n.eofs = 10)

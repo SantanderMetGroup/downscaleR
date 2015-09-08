@@ -46,17 +46,22 @@ current extent of the dataset, returning an error message.
 }
 \examples{
 \dontrun{
-# This is the path to the package built-in NCEP dataset (assumes read permission)
- ncep <- system.file(package = "downscaleR.java", "datasets" , "reanalysis", "Iberia_NCEP",
-  "Iberia_NCEP.ncml")
+# Download NCEP (model data) datasets
+dir.create("mydirectory")
+download.file("http://meteo.unican.es/work/downscaler/data/Iberia_NCEP.tar.gz",
+              destfile = "mydirectory/Iberia_NCEP.tar.gz")
+# Extract files from the tar.gz file
+untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
+# Path to the NCEP ncml file.
+ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
 # Load air temperature at 1000 mb isobaric pressure level for boreal winter (DJF) 1991-2000
-t1000.djf <- loadGridData(ncep, var = "ta@100000", lonLim = c(-12,10), latLim = c(33,47),
+t1000.djf <- loadGridData(ncep, var = "ta@1000", lonLim = c(-12,10), latLim = c(33,47),
  season = c(12,1,2), years = 1991:2000)
 par(mfrow = c(2,1))
 plotMeanField(t1000.djf)
 # Bilinear interpolation to a smaller domain centered in Spain using a 0.5 degree resolution
 # in both X and Y axes
-t1000.djf.05 <- interpData(t1000.djf, new.grid = list(x = c(-10,5,.5), y = c(36,44,.5)),
+t1000.djf.05 <- interpData(t1000.djf, new.Coordinates = list(x = c(-10,5,.5), y = c(36,44,.5)),
  method = "bilinear")
 plotMeanField(t1000.djf.05)
 par(mfrow=c(1,1))
