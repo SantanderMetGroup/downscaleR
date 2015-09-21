@@ -138,11 +138,12 @@ ppModelSetup <- function(obs, pred, sim) {
                           }
             } else { # Multifield (no members)
                   multi.member <- FALSE
+                  simsc.list.pre <- lapply(1:n.vars, function(idx) {asub(sim$Data, idx, var.dim.index)})
                   simsc.list <- lapply(1:n.vars, function(x) {
                         o <- which(sim$Variable$varName == pred$Variable$varName[x])
                         if(o != x){mes <- TRUE}
-                        attr(simsc.list[[o]], "dimensions") <- dimNames.sim[-var.dim.index]
-                        aux <- array3Dto2Dmat(simsc.list[[x]])
+                        attr(simsc.list.pre[[o]], "dimensions") <- dimNames.sim[-var.dim.index]
+                        aux <- array3Dto2Dmat(simsc.list.pre[[x]])
                         aux <- (aux - mu.list[[x]]) / sigma.list[[x]]
                         return(aux)
                   })
