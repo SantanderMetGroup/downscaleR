@@ -392,7 +392,7 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
     for (i in 1:dim(pred)[2]){
       for (j in 1:dim(pred)[3]){
         nP[i,j]<-sum(as.double(obs[,i,j]<=threshold & !is.na(obs[,i,j])), na.rm = TRUE)
-        if (nP[i,j]>0 & nP[i,j]<dim(obs)[1]){
+        if (nP[i,j]>=0 & nP[i,j]<dim(obs)[1]){
           ix<-sort(pred[,i,j], decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
           Ps<-sort(pred[,i,j], decreasing = FALSE, na.last = NA)
           Pth[i,j]<-Ps[nP[i,j]+1]
@@ -418,8 +418,10 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
             }
             Ps<-sort(Ps, decreasing = FALSE, na.last = NA)
           }
-          ind<-min(nP[i,j],dim(pred)[1])
-          Ps[1:ind]<-0
+          if (nP[i,j]>0){
+            ind<-min(nP[i,j],dim(pred)[1])
+            Ps[1:ind]<-0
+          }
           pred[ix,i,j]<-Ps
         }else{
           if (nP[i,j]==dim(obs)[1]){
@@ -504,7 +506,6 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
               drizzle<-which(sim[,i,j]>Pth[i,j] & sim[,i,j] <= min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j]))
               if (length(rain)>0){
                 eFrc<-ecdf(sim[rain,i,j]) #eFrc??
-                
                 ##############################################################################3
                 if(extrapolate == "constant"){
                   exupsim <- which(sim[rain,i,j] > max(range(pred[,i,j], na.rm = TRUE))) #
@@ -526,13 +527,9 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
                 }
                 ################################################################################################3
               }
-              
               if (length(drizzle)>0){
-                
-                
                 sim[drizzle,i,j]<-quantile(sim[which(sim[,i,j]>min(pred[which(pred[,i,j]>Pth[i,j]),i,j], na.rm = TRUE) & !is.na(sim[,i,j])),i,j], probs = eFrc(sim[drizzle,i,j]), na.rm = TRUE, type = 4)
               }
-              
               sim[noRain,i,j]<-0
             }else{
               noRain<-which(sim[,i,j]<=Pth[i,j] & !is.na(sim[,i,j]))
@@ -551,7 +548,8 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
   if (method == "gqm" & any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
     for (i in 1:dim(sim)[2]){
       for (j in 1:dim(sim)[3]){
-        if (nP[i,j]>0){
+#        if (nP[i,j]>0){
+        if (nP[i,j]<dim(obs)[1]){
           ind<-which(obs[,i,j]>threshold & !is.na(obs[,i,j]))
           obsGamma<-fitdistr(obs[ind,i,j],"gamma")
           ind<-which(pred[,i,j]>0 & !is.na(pred[,i,j]))
@@ -568,34 +566,27 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
   if (method == "gpqm" & any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
     for (i in 1:dim(sim)[2]){
       for (j in 1:dim(sim)[3]){
-        if (nP[i,j]>0){
-          
+        #        if (nP[i,j]>0){
+        if (nP[i,j]<dim(obs)[1]){
           ind<-which(obs[,i,j]>threshold & !is.na(obs[,i,j]))
           indgamma <- ind[which(obs[ind,i,j] < quantile(obs[ind,i,j], theta))]
           indpareto <- ind[which(obs[ind,i,j] >= quantile(obs[ind,i,j], theta))]
-          
           obsGQM <- fitdistr(obs[indgamma,i,j],"gamma")
           obsGQM2 <- fpot(obs[indpareto,i,j], quantile(obs[ind,i,j], theta), "gpd", std.err = FALSE)
-          
           ind <- which(pred[,i,j] > 0 & !is.na(pred[,i,j]))
           indgamma <- ind[which(pred[ind,i,j]<quantile(pred[ind,i,j],theta))]
           indpareto <-ind[which(pred[ind,i,j]>=quantile(pred[ind,i,j], theta))]
-          
           prdGQM <- fitdistr(pred[indgamma,i,j], "gamma")
           prdGQM2 <- fpot(pred[indpareto,i,j], quantile(pred[ind,i,j], theta), "gpd", std.err = FALSE)
-          
           rain <- which(sim[,i,j] > Pth[i,j] & !is.na(sim[,i,j]))
           noRain<-which(sim[,i,j] <= Pth[i,j] & !is.na(sim[,i,j]))
           indgammasim <- rain[which(sim[rain,i,j] < quantile(pred[ind,i,j], theta))]
           indparetosim <- rain[which(sim[rain,i,j] >= quantile(pred[ind,i,j], theta))]
-          
           auxF <- pgamma(sim[indgammasim,i,j],prdGQM$estimate[1], rate = prdGQM$estimate[2])
           auxF2 <- pgpd(sim[indparetosim,i,j],loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
-          
           sim[indgammasim,i,j] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
           sim[indparetosim[which(auxF2<1)],i,j] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
           sim[indparetosim[which(auxF2==1)],i,j] <- max(obs[indpareto,i,j], na.rm = TRUE)
-          
           sim[noRain,i,j]<-0
         }
       }
