@@ -474,6 +474,7 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
               exupsim <- which(sim[,i,j] > max(range(pred[,i,j], na.rm = TRUE))) 
               exdwnsim <- which(sim[,i,j] < min(range(pred[,i,j], na.rm = TRUE)))  
               ex <- c(exupsim,exdwnsim)
+              exC <- setdiff(1:dim(sim)[1],ex)
               if (length(exupsim)>0){
                 extmin <- max(pred[,i,j], na.rm = TRUE)
                 dif <- extmin - max(obs[,i,j], na.rm = TRUE)
@@ -484,7 +485,7 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
                 dif <- extmin - min(obs[,i,j], na.rm = TRUE)
                 sim[exdwnsim,i,j] <- sim[exdwnsim,i,j] - dif
               }
-              sim[-ex,i,j] <- quantile(obs[,i,j], probs = ePrd(sim[-ex,i,j]), na.rm = TRUE, type = 4)
+              sim[exC,i,j] <- quantile(obs[,i,j], probs = ePrd(sim[exC,i,j]), na.rm = TRUE, type = 4)
             }else{
               sim[,i,j] <- quantile(obs[,i,j], probs = ePrd(sim[,i,j]), na.rm = TRUE, type = 4)
             }
@@ -511,6 +512,7 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
                   exupsim <- which(sim[rain,i,j] > max(range(pred[,i,j], na.rm = TRUE))) #
                   exdwnsim <- which(sim[rain,i,j] < min(range(pred[,i,j], na.rm = TRUE)))  
                   ex <- c(exupsim,exdwnsim)
+                  exC <- setdiff(1:length(rain),ex)
                   if (length(exupsim)>0){
                     extmin <- max(pred[,i,j], na.rm = TRUE)
                     dif <- extmin - max(obs[which(obs[,i,j] > threshold & !is.na(obs[,i,j])),i,j], na.rm = TRUE)
@@ -521,7 +523,7 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
                     dif <- extmin - min(obs[which(obs[,i,j] > threshold & !is.na(obs[,i,j])),i,j], na.rm = TRUE)
                     sim[rain[exdwnsim],i,j] <- sim[rain[exdwnsim],i,j] - dif
                   }
-                  sim[rain[-ex],i,j] <- quantile(obs[which(obs[,i,j] > threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain[-ex],i,j]), na.rm = TRUE, type = 4)
+                  sim[rain[exC],i,j] <- quantile(obs[which(obs[,i,j] > threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain[exC],i,j]), na.rm = TRUE, type = 4)
                 }else{
                   sim[rain,i,j]<-quantile(obs[which(obs[,i,j]>threshold & !is.na(obs[,i,j])),i,j], probs = ePrd(sim[rain,i,j]), na.rm = TRUE, type = 4)
                 }
@@ -559,8 +561,14 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
           auxF<-pgamma(sim[rain,i,j],prdGamma$estimate[1], rate = prdGamma$estimate[2])
           sim[rain,i,j]<-qgamma(auxF,obsGamma$estimate[1], rate = obsGamma$estimate[2])
           sim[noRain,i,j]<-0
+          warningNoRain <- FALSE
+        }else{
+          warningNoRain <- TRUE
         }
       }
+    }
+    if (warningNoRain){
+      warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
     }
   }
   if (method == "gpqm" & any(grepl(varcode,c("pr","tp","precipitation","precip")))) {
@@ -588,8 +596,14 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
           sim[indparetosim[which(auxF2<1)],i,j] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
           sim[indparetosim[which(auxF2==1)],i,j] <- max(obs[indpareto,i,j], na.rm = TRUE)
           sim[noRain,i,j]<-0
+          warningNoRain <- FALSE
+        }else{
+          warningNoRain <- TRUE
         }
       }
+    }
+    if (warningNoRain){
+      warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
     }
   }
   if (d1){
