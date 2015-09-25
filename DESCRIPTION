@@ -18,7 +18,7 @@ Suggests:
 Type: Package
 Title: Climate data manipulation and statistical downscaling
 Version: 0.8-3
-Date: 08-Sep-2015
+Date: 25-Sep-2015
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
