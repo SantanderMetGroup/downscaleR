@@ -37,12 +37,14 @@
 
 plotMeanField <- function (gridData, multi.member = FALSE) {
       dimNames <- attr(gridData$Data, "dimensions")
+      if (is.null(dimNames)) stop("Attribute 'dimensions' undefined")
       mar <- match(c("lon", "lat"), dimNames)
       if (length(mar) != 2) {
             stop("Not a rectangular spatial domain")
       }
       titles <- if (!is.null(gridData$Variable$level)) {
-            paste(gridData$Variable$varName, gridData$Variable$level, sep = "@")
+            aux <- paste(gridData$Variable$varName, gridData$Variable$level, sep = "@")
+            gsub("@NA", "", aux)
       } else {
             gridData$Variable$varName
       }
@@ -62,3 +64,4 @@ plotMeanField <- function (gridData, multi.member = FALSE) {
       }
 }
 # End
+
