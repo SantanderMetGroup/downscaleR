@@ -60,7 +60,7 @@ plotMeanField <- function (gridData, multi.member = FALSE) {
                   world(add = TRUE)
             }
       } else {
-            multiPlot(gridData, "var", titles, FALSE)
+            multiPlot(gridData, "var", titles, multi.member)
       }
 }
 # End
