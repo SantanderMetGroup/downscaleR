@@ -2,36 +2,45 @@
 % Please edit documentation in R/subsetField.R
 \name{subsetField}
 \alias{subsetField}
-\title{Select an arbitrary spatial/temporal subset from a field or multifield}
+\title{Select an arbitrary subset from a field or multifield along one or more of its dimensions}
 \usage{
-subsetField(field, lonLim = NULL, latLim = NULL, years = NULL)
+subsetField(field, var = NULL, members = NULL, years = NULL,
+  latLim = NULL, lonLim = NULL)
 }
 \arguments{
-\item{field}{The input data to be subset. This is either a field, as returned e.g. by \code{loadGridData}
-or a Station dataset as returned by \code{loadStationData}.}
+\item{field}{The input field to be subset. This is either a field, as returned e.g. by \code{loadGridData}, a
+multifield, as returned by \code{loadMultiField} or \code{makeMultiField}, or other types of multimember fields
+(possibly multimember multifields) as returned e.g. by \code{\link[ecomsUDG.Raccess]{loadECOMS}}.}
 
-\item{lonLim}{Vector of length = 2, with minimum and maximum longitude coordinates, in decimal degrees,
-of the bounding box defining the subset. For single-point subsets, a numeric value with the
-longitude coordinate. If \code{NULL} (default), no subsetting is performed on the longitude dimension}
+\item{var}{Character vector indicating the variables(s) to be extracted. (Used for multifield subsetting). See details.}
 
-\item{latLim}{Same as \code{lonLim} argument, but for latitude.}
+\item{members}{An integer vector indicating \strong{the position} of the members to be subset.}
 
 \item{years}{The years to be selected. Note that this can be either a continuous or discontinuous
 series of years, the latter option often used in a cross-validation framework.
  See details for year-crossing seasons. Default to \code{NULL} (no subsetting is performed on the time dimension).}
+
+\item{latLim}{Same as \code{lonLim} argument, but for latitude.}
+
+\item{lonLim}{Vector of length = 2, with minimum and maximum longitude coordinates, in decimal degrees,
+of the bounding box defining the subset. For single-point subsets, a numeric value with the
+longitude coordinate. If \code{NULL} (default), no subsetting is performed on the longitude dimension}
 }
 \value{
-The same type of object as entered in the \code{field} argument representing a subset of its input
+A new field object that is a logical subset of the input field along the specified dimensions.
 }
 \description{
 Create a new field/multifield that is a subset of the input field
-along the space and/or time dimensions
+along the selected dimensions
 }
 \details{
-\strong{Time slicing}
+The attribute \code{subset} will be added to the different slots corresponding to the subset dimensions, taking
+the value of the subroutine called in each case (e.g.: attribute subset will have the value \code{subsetSpatial}
+in the xyCoords slot after spatial subsetting...).
 
-Time slicing is performed on a yearly basis (i.e., sub-yearly specifications are not allowed). In case of
- year-crossing seasons (e.g. boreal winter (DJF), \code{season = c(12,1,2)}),
+\strong{Time slicing by years}
+
+In case of year-crossing seasons (e.g. boreal winter (DJF), \code{season = c(12,1,2)}),
 the season is assigned to the years of January and February
 (i.e., winter of year 2000 corresponds to Dec 1999, Jan 2000 and Feb 2000). Thus,
 the \code{years} argument must be introduced accordingly (See e.g. \code{\link{getYearsAsINDEX}}
@@ -48,8 +57,43 @@ function for details).
  (for instance \code{lonLim=-3.21} and \code{latLim=41.087} for retrieving the data in the closest grid
  point to the point coordinate -3.21E, 41.087N. In the last two cases, the function
  operates by finding the nearest (euclidean distance) grid-points to the coordinates introduced.
+
+ \strong{Extracting fields from multifields}
+
+ One or several variables from a multifield object can be extracted. Note that argument \code{var} is insensitive to the order of the variables, i.e.: variables
+will be always returned in the same order they are in the original multifield.
+}
+\examples{
+# Example 1 - Spatial / member subset
+data(tasmax_forecast)
+plotMeanField(tasmax_forecast, TRUE)
+# Selection of a smaller domain over the Iberian Peninsula and members 3 and 7
+sub <- subsetField(tasmax_forecast,
+                   members = c(3,7),
+                   lonLim = c(-10,5),
+                   latLim = c(36,44))
+plotMeanField(sub, multi.member = TRUE)
+## Example 2 - Subsetting a multimember multifield by variables
+# Multimember multifield creation
+data(tasmax_forecast)
+data(tasmin_forecast)
+data(tp_forecast)
+mm.mf <- makeMultiField(tasmax_forecast, tasmin_forecast, tp_forecast)
+plotMeanField(mm.mf)
+# Extracting just minimum temperature
+sub1 <- subsetField(mm.mf, var = "tasmin", members = 1:4)
+plotMeanField(sub1, multi.member = TRUE)
+# Extracting precipitation and maximum temperature
+# (Note that the field variables are NOT re-ordered)
+sub2 <- subsetField(mm.mf, var = c("tp", "tasmax"))
+plotMeanField(sub2)
 }
 \author{
 J. Bedia \email{joaquin.bedia@gmail.com}
+}
+\seealso{
+Other subsetting: \code{\link{subsetMembers}};
+  \code{\link{subsetSpatial}}; \code{\link{subsetVar}};
+  \code{\link{subsetYears}}
 }
 
