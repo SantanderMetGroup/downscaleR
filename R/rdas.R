@@ -1,6 +1,6 @@
 #' @title Field containing NCEP reanalysis data of specific humidity at 850mb for the Iberian Peninsula.
 #' 
-#' @description The data correspond to the wintertime (DJF) period 1991-2010, and it consists of instantaneous data at 12:00 UTC 
+#' @description The data are daily means, wintertime (DJF) period 1991-2010. 
 #'
 #' @format A field
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
@@ -27,7 +27,7 @@ NULL
 
 #' @title Field containing NCEP reanalysis data of air temperature at 850mb for the Iberian Peninsula.
 #' 
-#' @description The data correspond to the wintertime (DJF) period 1991-2010, and it consists of instantaneous data at 12:00 UTC 
+#' @description The data correspond to the wintertime (DJF) period 1991-2010, and it consists of daily mean data 
 #'
 #' @format A field
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}

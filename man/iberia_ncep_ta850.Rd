@@ -8,7 +8,7 @@
 \url{http://www.meteo.unican.es/ecoms-udg}
 }
 \description{
-The data correspond to the wintertime (DJF) period 1991-2010, and it consists of instantaneous data at 12:00 UTC
+The data correspond to the wintertime (DJF) period 1991-2010, and it consists of daily mean data
 }
 \examples{
 data(iberia_ncep_ta850)
