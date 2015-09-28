@@ -2,7 +2,7 @@
 % Please edit documentation in R/makeMultiField.R
 \name{makeMultiField}
 \alias{makeMultiField}
-\title{Constructor of a multifield from various fields, supporting multimember fields.}
+\title{Multifield constructor}
 \usage{
 makeMultiField(..., spatial.tolerance = 0.001)
 }
@@ -18,6 +18,8 @@ A (multimember) multifield object encompassing the different input (multimember)
 }
 \description{
 Constructs a (possibly multimember) multifield from different (multimember) fields.
+A multifield can be considered a \dQuote{stack} of fields with similar spatiotemporal extents,
+ useful to handle sets of predictors as a single block.
 }
 \details{
 The function makes a number of checks in order to test the spatiotemporal compatibility of the input multi-member fields.
@@ -36,7 +38,7 @@ The function makes a number of checks in order to test the spatiotemporal compat
   method.
 }
 \note{
-Multifield can not be passed to the interpolator \code{\link{interpData}} directly. Instead, the
+A multifield can not be passed to the interpolator \code{\link{interpData}} directly. Instead, the
 multimember fields should be interpolated individually prior to multifield construction.
 }
 \examples{

@@ -1,6 +1,8 @@
-#' @title Constructor of a multifield from various fields, supporting multimember fields.
+#' @title Multifield constructor 
 #' 
 #' @description Constructs a (possibly multimember) multifield from different (multimember) fields.
+#' A multifield can be considered a \dQuote{stack} of fields with similar spatiotemporal extents,
+#'  useful to handle sets of predictors as a single block.
 #' 
 #' @param ... Input fields to form the multifield. These must be compatible in time and space (see details).
 #' @param spatial.tolerance numeric. Coordinate differences smaller than \code{spatial.tolerance} will be considered equal 
@@ -25,7 +27,7 @@
 #'   method.
 #'  
 #'  
-#' @note Multifield can not be passed to the interpolator \code{\link{interpData}} directly. Instead, the 
+#' @note A multifield can not be passed to the interpolator \code{\link{interpData}} directly. Instead, the 
 #' multimember fields should be interpolated individually prior to multifield construction. 
 #' 
 #' @export
@@ -95,12 +97,18 @@ makeMultiField <- function(..., spatial.tolerance = 1e-3) {
                   stop("Inconsistent 'dimensions' attribute")
             }
       }
-      aux.list <- lapply(1:length(field.list), function(x) {field.list[[x]]$Variable})
-      varName <- unlist(lapply(1:length(aux.list), function(x) aux.list[[x]]$varName))      
-      isStandard <- unlist(lapply(1:length(aux.list), function(x) aux.list[[x]]$isStandard))      
-      level <- unlist(lapply(1:length(aux.list), function(x) ifelse(is.null(aux.list[[x]]$level), NA, aux.list[[x]]$level)))      
+      aux.list <- lapply(1:length(field.list), function(x) field.list[[x]]$Variable)
+      varName <- sapply(1:length(aux.list), function(x) aux.list[[x]]$varName)      
+      level <- sapply(1:length(aux.list), function(x) ifelse(is.null(aux.list[[x]]$level), NA, aux.list[[x]]$level))      
+      attr.mf <- lapply(1:length(aux.list), function(x) attributes(aux.list[[x]]))
       aux.list <- NULL
-      field.list[[1]]$Variable <- list("varName" = varName, "isStandard" = isStandard, "level" = level)      
+      field.list[[1]]$Variable <- list("varName" = varName, "level" = level)      
+      attr.list <- lapply(2:length(attr.mf[[1]]), function(x) {
+            unlist(sapply(attr.mf, "c")[x,])
+      })
+      names(attr.list) <- names(attr.mf[[1]])[-1]
+      attributes(field.list[[1]]$Variable) <- attr.list 
+      names(field.list[[1]]$Variable) <- c("varName", "level")
       field.list[[1]]$Dates <- lapply(1:length(field.list), function(x) {field.list[[x]]$Dates})
       dimNames <- attr(field.list[[1]]$Data, "dimensions")
       field.list[[1]]$Data <- unname(do.call("abind", c(lapply(1:length(field.list), function(x) {field.list[[x]]$Data}), along = -1))) 
@@ -108,6 +116,3 @@ makeMultiField <- function(..., spatial.tolerance = 1e-3) {
       return(field.list[[1]])
 }
 # End
-
-
-
