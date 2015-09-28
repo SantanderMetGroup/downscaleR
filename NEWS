@@ -1,15 +1,15 @@
-downscaleR 0.8-3
+downscaleR 1.0-0
 ================
 * New features:
    * Load irregularly spaced gridded data (RCMs...)
    * New interpolation capabilitites
+   * Flexible data subsetting via 'subsetField' function      
 * Enhancements in bias correction:
    * Automatically set the common period of predictand and predictor objects in to calibrate the bias correction method
    * Use single station data as predictands
 * New miscelaneous functions:
    * getIntersect: sets the common period of two downscaleR objects
-   * subsetField: select an arbitrary spatial/temporal subset from a field or multifield
-* Minor bug fix in bias correction of precipitation
+* Minor bug fix in bias correction of precipitation and other modifications (Thanks to: Yuanchao Xu)
 * Other minor bug fixes and enhancements
 
 
