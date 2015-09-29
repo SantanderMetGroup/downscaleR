@@ -8,7 +8,7 @@
 #' 
 #' @return A plot
 #' @author M. Iturbide \email{maibide@@gmail.com}
-
+#' @export
 
 annualOutlook <- function(obs, pred, downscaled, location = c(-40, -5), yrange = NULL){
   
@@ -131,19 +131,19 @@ annualOutlook <- function(obs, pred, downscaled, location = c(-40, -5), yrange =
     
     
     ##Compute statistic
-    x <- tapply(obs$Data[, yo,xo], INDEX = years, FUN = mean)
+    x <- tapply(obs$Data[, yo,xo], INDEX = period.id, FUN = mean)
     
-    y <- tapply(direct$Data[,yi,xi], INDEX = years, FUN = mean)
+    y <- tapply(direct$Data[,yi,xi], INDEX = period.id, FUN = mean)
     
-    w <- tapply(downscaled$Data[,yo,xo], INDEX = years.t, FUN = mean)
+    w <- tapply(downscaled$Data[,yo,xo], INDEX = test.id2, FUN = mean)
     
     ## ACCURACY
     ### Spearman correlation rho and the Root Mean Square Error (RMSE) as accuracy measures 
     ### for the direct and calibrated simulation in the TEST PERIOD
     
-    xt <- tapply(obs.test$Data[, xo, yo], INDEX = years.t, FUN = mean)
+    xt <- tapply(obs.test$Data[, xo, yo], INDEX = test.id, FUN = mean)
     
-    yt <- tapply(pred.test$Data[,yi,xi], INDEX = years.t, FUN = mean)
+    yt <- tapply(pred.test$Data[,yi,xi], INDEX = test.id, FUN = mean)
     
     rmse.down <- sqrt(mean((xt - w)^2))
     bias.down <-  sum(w - xt)/sum(x)

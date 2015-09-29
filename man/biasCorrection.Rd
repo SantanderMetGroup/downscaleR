@@ -52,7 +52,10 @@ Implementation of several standard bias correction methods
 }
 \details{
 The methods available are \code{"eqm"}, \code{"delta"},
-\code{"scaling"}, \code{"gqm"}, \code{"gpqm"} (the two latter used only for precipitation).
+\code{"scaling"}, \code{"gqm"}, \code{"gpqm"} (the two latter used only for precipitation). In the case of precipitation a
+frequency adaptation has been implemented in all versions of qqmap to alleviate the problem that arise when the dry day frequency
+in the raw model output is larger than in the observations (Wilcke et al. 2013).
+
 Next we make a brief description of each method:
 
 \strong{Delta}
