@@ -11,6 +11,7 @@
 #' @param years The years to be selected. Note that this can be either a continuous or discontinuous
 #' series of years, the latter option often used in a cross-validation framework.
 #'  See details for year-crossing seasons. Default to \code{NULL} (no subsetting is performed on the time dimension).
+#' @param season An integer vector indicating the months to be subset. 
 #' @param latLim Same as \code{lonLim} argument, but for latitude.
 #' @param lonLim Vector of length = 2, with minimum and maximum longitude coordinates, in decimal degrees,
 #'  of the bounding box defining the subset. For single-point subsets, a numeric value with the
@@ -44,8 +45,9 @@
 #'  
 #'  \strong{Extracting fields from multifields}
 #'  
-#'  One or several variables from a multifield object can be extracted. Note that argument \code{var} is insensitive to the order of the variables, i.e.: variables
-#' will be always returned in the same order they are in the original multifield.
+#'  One or several variables from a multifield object can be extracted. Note that argument \code{var} is 
+#'  insensitive to the order of the variables, i.e.: variables will be always returned in the same order
+#'   they are in the original multifield.
 #'  
 #' @importFrom abind asub
 #' 
@@ -78,7 +80,7 @@
 #' plotMeanField(sub2)
 
 
-subsetField <- function(field, var = NULL, members = NULL, years = NULL, latLim = NULL, lonLim = NULL) {
+subsetField <- function(field, var = NULL, members = NULL, years = NULL, season = NULL, latLim = NULL, lonLim = NULL) {
       if (!is.null(var)) {
             field <- subsetVar(field, var)
       }
@@ -87,6 +89,9 @@ subsetField <- function(field, var = NULL, members = NULL, years = NULL, latLim 
       }
       if (!is.null(years)) {
             field <- subsetYears(field, years)
+      }
+      if (!is.null(season)) {
+            field <- subsetSeason(field, season)
       }
       if (!is.null(lonLim) | !is.null(latLim)) {
             field <- subsetSpatial(field, lonLim, latLim)
@@ -320,4 +325,44 @@ subsetSpatial <- function(field, lonLim = NULL, latLim = NULL) {
 }
 # End
 
+
+#' Monthly subset of a field
+#' 
+#' Retrieves a field that is a logical subset of the input field along its 'time' dimension,
+#'  on a monthly basis. Multimember multifields are supported. Subroutine of \code{\link{subsetField}}.
+#'
+#' @param field Input field to be subset (possibly a multimember/multifield).
+#' @param season An integer vector indicating the months to be subset.
+#' @details An attribute 'subset' with value 'subsetSeason' is added to the Dates slot of the output subset.
+#' @return A field (or multifield) that is a logical subset of the input field along its 'time' dimension.
+#' @importFrom abind asub
+#' @keywords internal
+#' @export
+#' @author J. Bedia (joaquin.bedia@@gmail.com)
+#' @family subsetting
+
+subsetSeason <- function(field, season = NULL) {
+      dimNames <- attr(field$Data, "dimensions")
+      season0 <- getSeason(field)
+      if (!all(season %in% season0)) stop("Month selection outside original season values")      
+      mon <- if (any(grepl("var", dimNames))) {
+            as.POSIXlt(field$Dates[[1]]$start)$mon + 1
+      } else {
+            as.POSIXlt(field$Dates$start)$mon + 1
+      }
+      time.ind <- which(mon %in% season)
+      field$Data <- asub(field$Data, time.ind, grep("time", dimNames))
+      attr(field$Data, "dimensions") <- dimNames
+      # Verification Date adjustment
+      field$Dates <- if (any(grepl("var", dimNames))) {
+            lapply(1:length(field$Dates), function(i) {
+                  lapply(field$Dates[[i]], function(x) x[time.ind])
+            })
+      } else {
+            lapply(field$Dates, function(x) x[time.ind])
+      }
+      attr(field$Dates, "subset") <- "subsetSeason"
+      return(field)
+}
+# End
 
