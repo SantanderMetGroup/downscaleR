@@ -114,7 +114,7 @@ annualOutlook <- function(obs, pred, downscaled, location = c(-40, -5), yrange =
           lwd = 2, col ="red")
     lines((length(train.period)+1):length(period), w, col = "blue", lwd = 2)
     
-    legend(0, ylim[2] , legend = c("obs",  
+    legend(0, yrange[2] , legend = c("obs",  
                                    paste("direct: rho=", 
                                          round(rho.direct, digits = 2), ", bias=", 
                                          round(bias.direct, digits = 2), sep = ""), 
@@ -133,7 +133,7 @@ annualOutlook <- function(obs, pred, downscaled, location = c(-40, -5), yrange =
     ##Compute statistic
     x <- tapply(obs$Data[, yo,xo], INDEX = period.id, FUN = mean)
     
-    y <- tapply(direct$Data[,yi,xi], INDEX = period.id, FUN = mean)
+    y <- tapply(pred$Data[,yi,xi], INDEX = period.id, FUN = mean)
     
     w <- tapply(downscaled$Data[,yo,xo], INDEX = test.id2, FUN = mean)
     
@@ -178,7 +178,7 @@ annualOutlook <- function(obs, pred, downscaled, location = c(-40, -5), yrange =
           lwd = 2, col ="red")
     lines((length(train.period)+1):length(period), w, col = "blue", lwd = 2)
     
-    legend(0, ylim[2] , legend = c("obs",  
+    legend(0, yrange[2] , legend = c("obs",  
                                    paste("direct: rho=", 
                                          round(rho.direct, digits = 2), ", bias=", 
                                          round(bias.direct, digits = 2), sep = ""), 
