@@ -139,7 +139,7 @@ subsetVar <- function(multiField, var) {
       }
       multiField$Variable$varName <- multiField$Variable$varName[var.idx]
       multiField$Variable$level <- multiField$Variable$level[var.idx]
-      attributes(multiField$Variable) <- lapply(attributes(multiField$Variable), "[", var.idx)
+      attributes(multiField$Variable)[-1] <- lapply(attributes(multiField$Variable)[-1], "[", var.idx)
       multiField$Dates <- if (isTRUE(mf)) {
             multiField$Dates[var.idx]
       } else {
