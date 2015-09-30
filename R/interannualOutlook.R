@@ -97,7 +97,7 @@ interannualOutlook <- function(obs, pred, downscaled, location = c(-40, -5), yra
     plot(1:length(period), x, xlim = c(0,length(period)), ylim = yrange, xlab="", xaxt = "n", 
          ylab = "Annual/seasonal mean value", cex = .6, col = NULL)
     tck <- axis(1, at = 1:length(period), labels=FALSE)
-    text(tck,  par("usr")[3] - 1, xpd = TRUE, labels = (1981:2010), 
+    text(tck,  par("usr")[3] - 2, xpd = TRUE, labels = (1981:2010), 
          srt = 90, cex =.6)
     #plot the sd (shadows)
     polygon(x = c(1:length(period), length(period):1), y =c (ys+y,rev(y-ys)), col = rgb(1,0,0,0.2), border = NA)
@@ -161,7 +161,7 @@ interannualOutlook <- function(obs, pred, downscaled, location = c(-40, -5), yra
     plot(1:length(period), x, xlim = c(0,length(period)), ylim = yrange, xlab="", xaxt = "n", 
          ylab = "Annual/seasonal mean value", cex = .6, col = NULL)
     tck <- axis(1, at = 1:length(period), labels=FALSE)
-    text(tck,  par("usr")[3] - 1, xpd = TRUE, labels = (1981:2010), 
+    text(tck,  par("usr")[3] - 2, xpd = TRUE, labels = (1981:2010), 
          srt = 90, cex =.6)
     #plot the mean (lines)
     lines(1:(length(train.period)+1), x[1:(length(train.period)+1)], lwd = 2, lty = 4, xlim = c(0,length(period)))
