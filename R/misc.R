@@ -248,3 +248,23 @@ getIntersect <- function(obs,prd){
   obj$prd$xyCoords <- prd$xyCoords
   return(obj)
 }
+
+
+
+#' Identification of leap years
+#' Identification of leap years
+#' @param years a integer vector of (gregorian) years
+#' @return a vector of indices of the position of leap years
+#' @references \url{https://en.wikipedia.org/wiki/Leap_year}
+#' @keywords internal
+#' @export
+#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @examples
+#' leap.years <- which.leap(1885:1937)
+#' (1885:1937)[leap.years]
+
+which.leap <- function(years) {
+      which((years %% 4 == 0) & ((years %% 100 != 0) | years %% 400 == 0))
+}
+
+
