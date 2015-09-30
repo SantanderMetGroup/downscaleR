@@ -30,8 +30,8 @@ J. Bedia (joaquin.bedia@gmail.com)
 }
 \seealso{
 Other subsetting: \code{\link{subsetField}};
-  \code{\link{subsetMembers}}; \code{\link{subsetVar}};
-  \code{\link{subsetYears}}
+  \code{\link{subsetMembers}}; \code{\link{subsetSeason}};
+  \code{\link{subsetVar}}; \code{\link{subsetYears}}
 }
 \keyword{internal}
 

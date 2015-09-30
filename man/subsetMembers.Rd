@@ -26,8 +26,8 @@ J. Bedia (joaquin.bedia@gmail.com)
 }
 \seealso{
 Other subsetting: \code{\link{subsetField}};
-  \code{\link{subsetSpatial}}; \code{\link{subsetVar}};
-  \code{\link{subsetYears}}
+  \code{\link{subsetSeason}}; \code{\link{subsetSpatial}};
+  \code{\link{subsetVar}}; \code{\link{subsetYears}}
 }
 \keyword{internal}
 

@@ -5,7 +5,7 @@
 \title{Select an arbitrary subset from a field or multifield along one or more of its dimensions}
 \usage{
 subsetField(field, var = NULL, members = NULL, years = NULL,
-  latLim = NULL, lonLim = NULL)
+  season = NULL, latLim = NULL, lonLim = NULL)
 }
 \arguments{
 \item{field}{The input field to be subset. This is either a field, as returned e.g. by \code{loadGridData}, a
@@ -19,6 +19,8 @@ multifield, as returned by \code{loadMultiField} or \code{makeMultiField}, or ot
 \item{years}{The years to be selected. Note that this can be either a continuous or discontinuous
 series of years, the latter option often used in a cross-validation framework.
  See details for year-crossing seasons. Default to \code{NULL} (no subsetting is performed on the time dimension).}
+
+\item{season}{An integer vector indicating the months to be subset.}
 
 \item{latLim}{Same as \code{lonLim} argument, but for latitude.}
 
@@ -60,8 +62,9 @@ function for details).
 
  \strong{Extracting fields from multifields}
 
- One or several variables from a multifield object can be extracted. Note that argument \code{var} is insensitive to the order of the variables, i.e.: variables
-will be always returned in the same order they are in the original multifield.
+ One or several variables from a multifield object can be extracted. Note that argument \code{var} is
+ insensitive to the order of the variables, i.e.: variables will be always returned in the same order
+  they are in the original multifield.
 }
 \examples{
 # Example 1 - Spatial / member subset
@@ -93,7 +96,7 @@ J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
 Other subsetting: \code{\link{subsetMembers}};
-  \code{\link{subsetSpatial}}; \code{\link{subsetVar}};
-  \code{\link{subsetYears}}
+  \code{\link{subsetSeason}}; \code{\link{subsetSpatial}};
+  \code{\link{subsetVar}}; \code{\link{subsetYears}}
 }
 
