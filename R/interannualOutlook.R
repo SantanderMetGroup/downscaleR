@@ -10,7 +10,7 @@
 #' @author M. Iturbide \email{maibide@@gmail.com}
 #' @export
 
-annualOutlook <- function(obs, pred, downscaled, location = c(-40, -5), yrange = NULL){
+interannualOutlook <- function(obs, pred, downscaled, location = c(-40, -5), yrange = NULL){
   
   test.id2 <- getYearsAsINDEX(downscaled)
   period.id <- (getYearsAsINDEX(pred))
