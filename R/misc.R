@@ -166,7 +166,7 @@ renameDims <- function(obs, multi.member) {
                   dimNames <- dimNames[-st.dim.index]
             }
       }
-      dimNames <- if (isTRUE(multi.member)) c("member", dimNames)
+      if (isTRUE(multi.member)) {dimNames <- c("member", dimNames)}
       return(dimNames)
 }
 # End
