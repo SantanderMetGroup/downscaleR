@@ -25,6 +25,7 @@
 #' case it will be assumed to be the \code{pred} field. This can be used for instance when train and test correspond
 #' to the same model.
 #' 
+#' @importFrom abind abind
 #' @keywords internal
 #' @export
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
@@ -37,7 +38,7 @@ rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
       dimNames <- attr(ref$Data, "dimensions")
       if(!identical(dimNames, attr(sim$Data, "dimensions"))) stop("Input and reference field dimensions do not match")
       seas <- getSeason(pred)
-      if (!identical(seas, getSeason(ref))) stop("Season of input and reference fields do not match")
+      if (!identical(seas, getSeason(ref)) | !identical(seas, getSeason(sim))) stop("Season of input and reference fields do not match")
       var.names <- ref$Variable$varName
       if (!identical(var.names, sim$Variable$varName) | !identical(var.names, pred$Variable$varName)) stop("Variable(s) of predictor and simulation fields do not match")
       aux.ind <- grep(paste(c("var","member","lat","lon"), collapse = "|"), dimNames)
@@ -50,7 +51,7 @@ rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
       index <- unlist(sapply(seas, function(x) which(mon == x), simplify = TRUE))
       mem.ind <- grep("member", attr(ref$Data, "dimensions"))
       n.mem <- ifelse(length(mem.ind) > 0, dim(ref$Data)[mem.ind], 1L)
-      message("[", Sys.time(), "] Calculating parameters...")
+      message("[", Sys.time(), "] Calculating centering parameters...")
       # MU: monthly mean pars of the predictor
       center.list.pred <- lapply(1:length(var.names), function(x) {
             a <- suppressWarnings(subsetField(pred, var = var.names[x]))
@@ -129,7 +130,9 @@ rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
                               center = (center.list.ref[[m]][[v]][[s]] - center.list.pred[[m]][[v]][[s]]),
                               scale = FALSE)
                   })
-                  arr3d <- mat2Dto3Darray(do.call("rbind", mu.list)[index, ], sim$xyCoords$x, sim$xyCoords$y)
+                  a <- cbind(index, do.call("rbind", mu.list))
+                  b <- a[order(a[ ,1]), ][ ,-1]
+                  arr3d <- mat2Dto3Darray(b, sim$xyCoords$x, sim$xyCoords$y)
                   ll <- sapply(1:length(mu.list), function(i) attributes(mu.list[[i]])[-1])
                   names(ll) <- month.name[seas]
                   return(list(ll, arr3d))
