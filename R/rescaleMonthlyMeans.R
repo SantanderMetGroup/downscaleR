@@ -31,7 +31,7 @@
 
 
 
-adjustAnnualCycle <- function(pred, sim, ref = NULL, ensemble = FALSE) {
+rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
       use.ref <- ifelse(is.null(ref), FALSE, TRUE)
       if (is.null(ref)) ref <- pred
       dimNames <- attr(ref$Data, "dimensions")
@@ -118,7 +118,7 @@ adjustAnnualCycle <- function(pred, sim, ref = NULL, ensemble = FALSE) {
       }
       ref <- pred <- NULL
       # In base::scale, each column of x has the corresponding value from center **subtracted** from it.
-      # Thus: center = MUpred - MUref
+      # Thus: center = MUref - MUpred
       message("[", Sys.time(), "] Rescaling...")
       aux.list <- lapply(1:length(var.names), function(v) {
             sf.var <- suppressWarnings(subsetField(sim, var = var.names[v]))
@@ -126,7 +126,6 @@ adjustAnnualCycle <- function(pred, sim, ref = NULL, ensemble = FALSE) {
                   aux <- array3Dto2Dmat(suppressWarnings(subsetField(sf.var, members = m))$Data)
                   mu.list <- lapply(1:length(seas), function(s) {
                         scale(aux[which(mon == seas[s]), ], 
-#                               center = (center.list.ref[[m]][[v]][[s]] + center.list.pred[[m]][[v]][[s]]),
                               center = (center.list.ref[[m]][[v]][[s]] - center.list.pred[[m]][[v]][[s]]),
                               scale = FALSE)
                   })
@@ -140,7 +139,7 @@ adjustAnnualCycle <- function(pred, sim, ref = NULL, ensemble = FALSE) {
             return(list(par.list, arr4d))
       })
       message("[", Sys.time(), "] Done.")
-      arr <- if (length(aux.list) > 1) {# Multifield
+      arr <- if (length(aux.list) > 1) {
                   unname(do.call("abind", c(lapply(1:length(aux.list), function(x) aux.list[[x]][[2]]), along = -1L)))
       } else {
             aux.list[[1]][[2]]
@@ -152,4 +151,3 @@ adjustAnnualCycle <- function(pred, sim, ref = NULL, ensemble = FALSE) {
       sim$Data <- arr
       return(sim)
 }
-# End 
