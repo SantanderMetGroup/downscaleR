@@ -216,36 +216,49 @@ adjustDates <- function(timePars) {
 
 getIntersect <- function(obs,prd){
   obj <- list(obs = obs, prd = prd)
+  dimNames <- attr(obs$Data, "dimensions")
   indDates <- which(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d")==as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
   obj$Dates$start <- as.POSIXct(obs$Dates$start[indDates], tz="GMT", format="%Y-%m-%d")
   obj$Dates$end <- as.POSIXct(obs$Dates$end[indDates], tz="GMT", format="%Y-%m-%d")
+  indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"), obj$Dates$start))
+  obj$obs$Data <- asub(obs$Data, indObs,grep("time", dimNames))
+  dimNames <- attr(prd$Data, "dimensions")
+  indObs <- which(is.element(as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"), obj$Dates$start))
+  obj$prd$Data <- asub(prd$Data, indObs,grep("time", dimNames))
+  attr(obj$obs$Data, "dimensions") <- attr(obs$Data, "dimensions")
+  attr(obj$prd$Data, "dimensions") <- attr(prd$Data, "dimensions")
+  
+#   obj <- list(obs = obs, prd = prd)
+#   indDates <- which(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d")==as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
+#   obj$Dates$start <- as.POSIXct(obs$Dates$start[indDates], tz="GMT", format="%Y-%m-%d")
+#   obj$Dates$end <- as.POSIXct(obs$Dates$end[indDates], tz="GMT", format="%Y-%m-%d")
   #  obj$Dates$start <- intersect(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"),as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
   #  obj$Dates$end <- intersect(as.POSIXct(obs$Dates$end, tz="GMT", format="%Y-%m-%d"),as.POSIXct(prd$Dates$end, tz="GMT", format="%Y-%m-%d"))
-  dimObs <- dim(obs$Data)
-  obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
-  indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"), obj$Dates$start))
-  indVal <- rep(list(bquote()), length(dimObs))
-  for (d in 1:length(dimObs)){
-    indVal[[d]] <- 1:dimObs[d]
-  }
-  indVal[[obs.time.index]] <- indObs
-  callObs <- as.call(c(list(as.name("["),quote(obs$Data)), indVal))
-  obj$obs$Data <- eval(callObs)
-  attr(obj$obs$Data, "dimensions") <- attr(obs$Data, "dimensions")
-  obj$obs$xyCoords <- obs$xyCoords
-  
-  dimPrd <- dim(prd$Data)
-  prd.time.index <- grep("^time$", attr(prd$Data, "dimensions"))
-  indPrd <- which(is.element(as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"), obj$Dates$start))
-  indVal <- rep(list(bquote()), length(dimPrd))
-  for (d in 1:length(dimPrd)){
-    indVal[[d]] <- 1:dimPrd[d]
-  }
-  indVal[[prd.time.index]] <- indPrd
-  callPrd <- as.call(c(list(as.name("["),quote(prd$Data)), indVal))
-  obj$prd$Data <- eval(callPrd)
-  attr(obj$prd$Data, "dimensions") <- attr(prd$Data, "dimensions")
-  obj$prd$xyCoords <- prd$xyCoords
+#   dimObs <- dim(obs$Data)
+#   obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
+#   indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"), obj$Dates$start))
+#   indVal <- rep(list(bquote()), length(dimObs))
+#   for (d in 1:length(dimObs)){
+#     indVal[[d]] <- 1:dimObs[d]
+#   }
+#   indVal[[obs.time.index]] <- indObs
+#   callObs <- as.call(c(list(as.name("["),quote(obs$Data)), indVal))
+#   obj$obs$Data <- eval(callObs)
+#   attr(obj$obs$Data, "dimensions") <- attr(obs$Data, "dimensions")
+#   obj$obs$xyCoords <- obs$xyCoords
+#   
+#   dimPrd <- dim(prd$Data)
+#   prd.time.index <- grep("^time$", attr(prd$Data, "dimensions"))
+#   indPrd <- which(is.element(as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"), obj$Dates$start))
+#   indVal <- rep(list(bquote()), length(dimPrd))
+#   for (d in 1:length(dimPrd)){
+#     indVal[[d]] <- 1:dimPrd[d]
+#   }
+#   indVal[[prd.time.index]] <- indPrd
+#   callPrd <- as.call(c(list(as.name("["),quote(prd$Data)), indVal))
+#   obj$prd$Data <- eval(callPrd)
+#   attr(obj$prd$Data, "dimensions") <- attr(prd$Data, "dimensions")
+#   obj$prd$xyCoords <- prd$xyCoords
   return(obj)
 }
 
