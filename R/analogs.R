@@ -61,6 +61,11 @@
 analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean"), analog.dates = FALSE) {
       modelPars <- ppModelSetup(obs, pred, sim)
       pred <- NULL
+      if (isTRUE(modelPars$multi.member)) {
+            obs[[5]] <- sim$InitializationDates
+            obs[[6]] <- sim$Members
+            names(obs)[5:6] <- c("InitializationDates", "Members")
+      } 
       sim <- NULL
       n.neigh <- as.integer(n.neigh)
       if (n.neigh < 1) {
