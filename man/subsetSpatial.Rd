@@ -29,9 +29,10 @@ An attribute 'subset' with value 'subsetSpatial' is added to the xyCoords slot o
 J. Bedia (joaquin.bedia@gmail.com)
 }
 \seealso{
-Other subsetting: \code{\link{subsetField}};
-  \code{\link{subsetMembers}}; \code{\link{subsetSeason}};
-  \code{\link{subsetVar}}; \code{\link{subsetYears}}
+Other subsetting: \code{\link{subsetDimension}};
+  \code{\link{subsetField}}; \code{\link{subsetMembers}};
+  \code{\link{subsetSeason}}; \code{\link{subsetVar}};
+  \code{\link{subsetYears}}
 }
 \keyword{internal}
 

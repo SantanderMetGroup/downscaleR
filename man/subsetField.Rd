@@ -95,8 +95,9 @@ plotMeanField(sub2)
 J. Bedia \email{joaquin.bedia@gmail.com}
 }
 \seealso{
-Other subsetting: \code{\link{subsetMembers}};
-  \code{\link{subsetSeason}}; \code{\link{subsetSpatial}};
-  \code{\link{subsetVar}}; \code{\link{subsetYears}}
+Other subsetting: \code{\link{subsetDimension}};
+  \code{\link{subsetMembers}}; \code{\link{subsetSeason}};
+  \code{\link{subsetSpatial}}; \code{\link{subsetVar}};
+  \code{\link{subsetYears}}
 }
 

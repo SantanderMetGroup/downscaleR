@@ -28,9 +28,10 @@ An attribute 'subset' with value 'subsetVar' is added to the Variable slot of th
 J. Bedia (joaquin.bedia@gmail.com)
 }
 \seealso{
-Other subsetting: \code{\link{subsetField}};
-  \code{\link{subsetMembers}}; \code{\link{subsetSeason}};
-  \code{\link{subsetSpatial}}; \code{\link{subsetYears}}
+Other subsetting: \code{\link{subsetDimension}};
+  \code{\link{subsetField}}; \code{\link{subsetMembers}};
+  \code{\link{subsetSeason}}; \code{\link{subsetSpatial}};
+  \code{\link{subsetYears}}
 }
 \keyword{internal}
 

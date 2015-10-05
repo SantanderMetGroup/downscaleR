@@ -25,9 +25,10 @@ An attribute 'subset' with value 'subsetYears' is added to the Dates slot of the
 J. Bedia (joaquin.bedia@gmail.com)
 }
 \seealso{
-Other subsetting: \code{\link{subsetField}};
-  \code{\link{subsetMembers}}; \code{\link{subsetSeason}};
-  \code{\link{subsetSpatial}}; \code{\link{subsetVar}}
+Other subsetting: \code{\link{subsetDimension}};
+  \code{\link{subsetField}}; \code{\link{subsetMembers}};
+  \code{\link{subsetSeason}}; \code{\link{subsetSpatial}};
+  \code{\link{subsetVar}}
 }
 \keyword{internal}
 
