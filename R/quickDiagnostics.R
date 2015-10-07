@@ -307,7 +307,7 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
       if (is.null(yrange)) {
             mi <- floor(min(x))-1
             ma <-  floor(max(x))
-            yran <- c(mi, ma + (ma-mi))
+            yran <- c(mi, ma + (ma-mi)/2)
       }else{yran <- yrange}
       
       # Daily time series plot
@@ -421,22 +421,22 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
       
       # qq-plot
       
-      if (is.null(yrange)) {
-            ma <-  floor(max(x))
-            yran <- c(0, ma)
-      }else{yran <- yrange}
+      yran <- yrange
       
+      q1 <- quantile(x, probs = seq(0.01, .99, 0.01), na.rm = T, , type =4)
       
-      plot(quantile(x, probs = seq(0, 1, 0.01), na.rm = T, , type =4), 
-           quantile(y, probs = seq(0, 1, 0.01), na.rm = T, type =4), 
+      yran <- max(q1)
+      
+      plot(q1, 
+           quantile(y, probs = seq(0.01, .99, 0.01), na.rm = T, type =4), 
            col="red", main = "qq-plot", xlab = "obs", ylab = "predicted",
            ylim = yran)
       
       lines(0:yran[2], 0:yran[2])
       
       if(!is.null(downscaled)){
-            points(quantile(x, probs = seq(0, 1, 0.01), na.rm = T, , type =4), 
-                   quantile(w, probs = seq(0, 1, 0.01), na.rm = T, type =4), 
+            points(q1, 
+                   quantile(w, probs = seq(0.01, .99, 0.01), na.rm = T, type =4), 
                    col="blue")
             #                   legend(0, yran[2] , legend = c("obs", "sim", "downscaled"), 
             #                         fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
