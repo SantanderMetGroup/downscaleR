@@ -10,6 +10,7 @@
 #' @author M. Iturbide \email{maibide@@gmail.com}
 #' @export
 
+
 quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), yrange = NULL){
       if(type == "daily"){
             dailyOutlook (obs, sim, downscaled, location, yrange)
@@ -99,8 +100,8 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
             
             
             if (is.null(yrange)) {
-                  mi <- floor(min(c(x,y,w)))-1
-                  ma <-  floor(max(c(x,y,w)))
+                  mi <- floor(min(c(x,y)))-1
+                  ma <-  floor(max(c(x,y)))
                   yrange <- c(mi, ma + (ma-mi))}
             
             
@@ -167,7 +168,7 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                                     INDEX = period.id, FUN = mean)
                         wl <- lapply(1:nmem, function(m) {
                               
-                              tapply(sim.i$Data[m,, coords[i,2], coords[i,1]],
+                              tapply(sim$Data[m,, coords[i,2], coords[i,1]],
                                      INDEX = period.id, FUN = mean)
                         }) 
                   }
@@ -273,7 +274,7 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                         x <- tapply(obs$Data[, coords[i,2], coords[i,1]],
                                     INDEX = period.id, FUN = mean)
                         
-                        w <- tapply(sim.i$Data[, coords[i,2], coords[i,1]],
+                        w <- tapply(sim$Data[, coords[i,2], coords[i,1]],
                                     INDEX = period.id, FUN = mean)   
                   }
                   r[coords[i,2],coords[i,1]] <- cor(x,w,method = "spearman")
