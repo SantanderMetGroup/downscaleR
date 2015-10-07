@@ -10,8 +10,8 @@
 #' @author M. Iturbide \email{maibide@@gmail.com}
 #' @export
 
-
 quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), yrange = NULL){
+ 
       if(type == "daily"){
             dailyOutlook (obs, sim, downscaled, location, yrange)
       }else if (type == "interannual"){
@@ -296,6 +296,7 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
 #end
 
 dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), member = NULL, yrange = NULL){
+      
       x <- subsetField(obs, lonLim = location[1], latLim = location[2])$Data
       y <- subsetField(sim, lonLim = location[1], latLim = location[2])$Data
       if(!is.null(downscaled)){
@@ -305,9 +306,9 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
       
       
       if (is.null(yrange)) {
-            mi <- floor(min(x))-1
+            mi <- 0
             ma <-  floor(max(x))
-            yran <- c(mi, ma + (ma-mi)/2)
+            yran <- c(mi, (ma + ma/4))
       }else{yran <- yrange}
       
       # Daily time series plot
@@ -421,18 +422,16 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
       
       # qq-plot
       
-      yran <- yrange
+      
       
       q1 <- quantile(x, probs = seq(0.01, .99, 0.01), na.rm = T, , type =4)
       
-      yran <- max(q1)
-      
+      yran <- c(0, max(q1))
       plot(q1, 
            quantile(y, probs = seq(0.01, .99, 0.01), na.rm = T, type =4), 
-           col="red", main = "qq-plot", xlab = "obs", ylab = "predicted",
-           ylim = yran)
+           col="red", main = "qq-plot", xlab = "obs", ylab = "predicted", ylim = yran)
       
-      lines(0:yran[2], 0:yran[2])
+      lines(0:max(q1), 0:max(q1))
       
       if(!is.null(downscaled)){
             points(q1, 
