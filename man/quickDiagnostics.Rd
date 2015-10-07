@@ -27,4 +27,9 @@ Plots daily/annual series and the annual correlation map of different field obje
 \author{
 M. Iturbide \email{maibide@gmail.com}
 }
+\seealso{
+Other visualization: \code{\link{bubbleValidation}};
+  \code{\link{plotMeanField}};
+  \code{\link{tercileValidation}}
+}
 

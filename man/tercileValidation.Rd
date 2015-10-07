@@ -57,6 +57,8 @@ Downscaling ECMWF seasonal precipitation forecasts in Europe using the RCA model
  Atmospheric Science, Wiley, NY
 }
 \seealso{
-Other visualization: \code{\link{bubbleValidation}}
+Other visualization: \code{\link{bubbleValidation}};
+  \code{\link{plotMeanField}};
+  \code{\link{quickDiagnostics}}
 }
 

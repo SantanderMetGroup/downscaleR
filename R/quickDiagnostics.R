@@ -5,7 +5,7 @@
 #' @param downscaled Field of downscaling output.  
 #' @param location Coordinates of a location in the geographic domain of the field.  
 #' @param yrange equivalent to ylim argument for plot function  
-#' 
+#' @family visualization
 #' @return A plot
 #' @author M. Iturbide \email{maibide@@gmail.com}
 #' @export

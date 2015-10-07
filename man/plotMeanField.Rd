@@ -46,4 +46,9 @@ plotMeanField(mm.mf) # Note: multi-member not supported in this case
 \author{
 J Bedia \email{joaquin.bedia@gmail.com}
 }
+\seealso{
+Other visualization: \code{\link{bubbleValidation}};
+  \code{\link{quickDiagnostics}};
+  \code{\link{tercileValidation}}
+}
 

@@ -52,6 +52,8 @@ Jolliffe, I. T. and Stephenson, D. B. 2003. Forecast Verification: A Practitione
  Atmospheric Science, Wiley, NY
 }
 \seealso{
-Other visualization: \code{\link{tercileValidation}}
+Other visualization: \code{\link{plotMeanField}};
+  \code{\link{quickDiagnostics}};
+  \code{\link{tercileValidation}}
 }
 

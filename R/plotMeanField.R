@@ -16,7 +16,7 @@
 #' @author J Bedia \email{joaquin.bedia@@gmail.com}
 #' @note The function plots a simple temporal mean of the loaded object in the form of
 #' a map. It does not handle other temporal aggregations. 
-#' 
+#' @family visualization
 #' @examples
 #' # A field
 #' data(iberia_ncep_ta850)
