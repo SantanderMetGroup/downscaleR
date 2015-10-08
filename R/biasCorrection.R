@@ -8,7 +8,7 @@
 #' @param multi.member Should members be adjusted sepparately (TRUE, default), or jointly (FALSE)?. 
 #' Ignored if the dataset has no members.
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
-#'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).
+#'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). See details on bias correction for precipitation.
 #' @param window Numeric value specifying the time window width used to calibrate. The window is centered on the target day. 
 #' Default to \code{NULL}, which considers the whole period available.
 #' 
@@ -28,11 +28,8 @@
 #' @details
 #' 
 #' The methods available are \code{"eqm"}, \code{"delta"}, 
-#' \code{"scaling"}, \code{"gqm"}, \code{"gpqm"} (the two latter used only for precipitation). In the case of precipitation a 
-#' frequency adaptation has been implemented in all versions of qqmap to alleviate the problem that arise when the dry day frequency 
-#' in the raw model output is larger than in the observations (Wilcke et al. 2013). 
-#' 
-#' Next we make a brief description of each method:
+#' \code{"scaling"}, \code{"gqm"}, \code{"gpqm"} (the two latter used only for precipitation).
+#'  These are next briefly described: 
 #' 
 #' \strong{Delta}
 #' 
@@ -65,7 +62,20 @@
 #'  
 #' Generalized Quantile Mapping. This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a 
 #' gamma distribution to values under the threshold given by the 95th percentile (following Yang et al. 2010) and a general Pareto 
-#' distribution (GPD) to values above the threshold.  
+#' distribution (GPD) to values above the threshold.
+#'
+#' @section Note on the bias correction of precipitation:
+#' 
+#' In the case of precipitation a frequency adaptation has been implemented in all versions of 
+#' qqmap to alleviate the problems arising when the dry day frequency in the raw model output is larger
+#'  than in the observations (Wilcke et al. 2013). 
+#'  
+#'  The precipitation subroutines are switched-on when the variable name of the grid 
+#'  (i.e., the value returned by \code{gridData$Variable$varName}) is one of the following: 
+#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the \code{\link{vocabulary}}), \code{"precipitation"} or \code{"precip"}.
+#'  Thus, caution must be taken to ensure that the correct bias correction is being undertaken when dealing with
+#'  non-standard variables.
+#'     
 #' 
 #' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration
 #'  

@@ -2,35 +2,34 @@
 #' @description Plots daily/annual series and the annual correlation map of different field objects
 #' @param obs Field of observations. 
 #' @param sim Field of model data.
-#' @param downscaled Field of downscaling output.  
+#' @param downscaled Optional. Field of the downscaling output.  
 #' @param location Coordinates of a location in the geographic domain of the field.  
-#' @param yrange equivalent to ylim argument for plot function  
+#' @param ylim 'ylim' argument passed to the time series plot.
+#' @param type Character value, either \code{"daily"} or \code{"interannual"}, indicating is the assessment is to
+#' be performed on a daily or interannual basis.
 #' @family visualization
-#' @return A plot
+#' @importFrom fields image.plot
+#' @importFrom fields world
+#' @return Two diagnostic plots with observed, simulated and (possibly) downscaled time series, and a QQ-plot by percentlies.
 #' @author M. Iturbide \email{maibide@@gmail.com}
 #' @export
 
-quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), yrange = NULL){
- 
-      if(type == "daily"){
-            dailyOutlook (obs, sim, downscaled, location, yrange)
-      }else if (type == "interannual"){
-            interannualOutlook (obs, sim, downscaled, location, yrange)
+quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), ylim = NULL){
+      if (type == "daily") {
+            dailyOutlook (obs, sim, downscaled, location, ylim)
+      } else if (type == "interannual") {
+            interannualOutlook (obs, sim, downscaled, location, ylim)
       }
 }
-
 #end
 
-interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), yrange = NULL){
+interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), ylim = NULL){
       par(mfrow = c(1,2))
       period.id <- (getYearsAsINDEX(sim))
       period <- unique(period.id)
-      
-      
       if (!is.null(downscaled)){
             test.id2 <- getYearsAsINDEX(downscaled)
             train.id <- period.id[which(is.na(match(period.id, test.id2)))]
-            
             test.id <- period.id[which(is.na(match(period.id, train.id)))]
             test.period <- unique(test.id)
             train.period <- period[which(is.na(match(period,test.period)))]
@@ -39,131 +38,99 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
             sim.test <- subsetField(sim, years = test.period)
             sim.train <- subsetField(sim, years = train.period)
       }
-      
-      
-      
-      #coordinates
       x.coord <- getCoordinates(obs)$x
       y.coord <- getCoordinates(obs)$y
       coords <- expand.grid(1:length(x.coord), 1:length(y.coord))
-      
-      
       xo <- findInterval(location[1], x.coord)
       yo <- findInterval(location[2], y.coord)
-      
       xi <- findInterval(x.coord[xo], getCoordinates(sim)$x)
       yi <- findInterval(y.coord[yo], getCoordinates(sim)$y)
-      
       if (any(attr(sim$Data, "dimensions")=="member")){
             nmem <- dim(sim$Data)[which(attr(sim$Data, "dimensions")=="member")]
-            
             #Daily time series plot
-            
             ##Compute statistic
             x <- tapply(obs$Data[, yo,xo], INDEX = period.id, FUN = mean)
-            
-            yl <- lapply(1:nmem, function(m){
-                  tapply(sim$Data[m,,yi,xi], INDEX = period.id, FUN = mean)})
+            yl <- lapply(1:nmem, function(m) {
+                  tapply(sim$Data[m,,yi,xi], INDEX = period.id, FUN = mean)
+            })
             y <- Reduce("+", yl)/length(yl)
             ys <- apply(simplify2array(yl), 1, sd)
-            
             if(!is.null(downscaled)){
                   xt <- tapply(obs.test$Data[, yo,xo], INDEX = test.id, FUN = mean)
-                  
                   ytl <- lapply(1:nmem, function(m){
                         tapply(sim.test$Data[m,,yi,xi], INDEX = test.id, FUN = mean)})
                   yt <- Reduce("+", ytl)/length(ytl)
-                  
                   wl <- lapply(1:nmem, function(m){
                         tapply(downscaled$Data[m,,yo,xo], INDEX = test.id2, FUN = mean)})
-                  
                   w <- Reduce("+", wl)/length(wl)
                   ws <- apply(simplify2array(wl), 1, sd)
-                  
                   ## ACCURACY
                   ### Spearman correlation rho and the Root Mean Square Error (RMSE) as accuracy measures 
                   ### for the direct and calibrated simulation in the TEST PERIOD
-                  
                   rmse.down <- sqrt(mean((xt - w)^2))
                   bias.down <-  sum(w - xt)/sum(x)
                   rho.down <- cor(x = xt, y = w, method = "spearman")
-                  
                   rmse.direct <- sqrt(mean((xt - yt)^2))
                   bias.direct <-  sum(yt - xt)/sum(x)
                   rho.direct <- cor(x = xt, y = yt, method = "spearman")
-                  
-            }else{
+            } else {
                   rmse.direct <- sqrt(mean((x - y)^2))
                   bias.direct <-  sum(y - x)/sum(x)
                   rho.direct <- cor(x = x, y = y, method = "spearman")
             }
-            
-            
-            if (is.null(yrange)) {
+            if (is.null(ylim)) {
                   mi <- floor(min(c(x,y)))-1
                   ma <-  floor(max(c(x,y)))
-                  yrange <- c(mi, ma + (ma-mi))}
-            
-            
-            
-            plot(1:length(period), x, xlim = c(0,length(period)), ylim = yrange, xlab="", xaxt = "n", 
+                  ylim <- c(mi, ma + (ma-mi))
+            }
+            plot(1:length(period), x, xlim = c(0,length(period)), ylim = ylim, xlab="", xaxt = "n", 
                  ylab = "Annual/seasonal mean value", cex = .6, col = NULL)
             tck <- axis(1, at = 1:length(period), labels=FALSE)
             text(tck,  par("usr")[3] - 2, xpd = TRUE, labels = (1981:2010), 
                  srt = 90, cex =.6)
             #plot the sd (shadows)
             polygon(x = c(1:length(period), length(period):1), y =c (ys+y,rev(y-ys)), col = rgb(1,0,0,0.2), border = NA)
-            if(!is.null(downscaled)){
+            if (!is.null(downscaled)) {
                   polygon(x = c((length(train.period)+1):length(period), length(period):(length(train.period)+1)), 
                           y =c (ws+w,rev(w-ws)), col = rgb(0,0,1,0.2), border = NA)
                   #plot the mean (lines)
                   lines(1:(length(train.period)+1), x[1:(length(train.period)+1)], lwd = 2, lty = 4, xlim = c(0,length(period)))
                   lines((1+length(train.period)):length(period) , x[(1+length(train.period)):length(period)], 
                         lwd = 2)
-                  
                   lines(1:(length(train.period)+1), y[1:(length(train.period)+1)], lwd = 2, lty = 4, xlim = c(0,length(period)),
                         col="red")
                   lines((1+length(train.period)):length(period) , y[(1+length(train.period)):length(period)], 
                         lwd = 2, col ="red")
                   lines((length(train.period)+1):length(period), w, col = "blue", lwd = 2)
-                  
-                  legend(0, yrange[2] , legend = c("obs",  
-                                                   paste("sim: rho=", 
-                                                         round(rho.direct, digits = 2), ", bias=", 
-                                                         round(bias.direct, digits = 2), sep = ""), 
-                                                   paste("downscaled: rho=", 
-                                                         round(rho.down, digits = 2), ", bias=", 
-                                                         round(bias.down, digits = 2), sep = "")), 
+                  legend(0, ylim[2] , legend = c("obs",  
+                                                 paste("sim: rho=", 
+                                                       round(rho.direct, digits = 2), ", bias=", 
+                                                       round(bias.direct, digits = 2), sep = ""), 
+                                                 paste("downscaled: rho=", 
+                                                       round(rho.down, digits = 2), ", bias=", 
+                                                       round(bias.down, digits = 2), sep = "")), 
                          fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
-            }else{
-                  
-                  
-                  #plot the mean (lines)
+            } else {
+                  # plot the mean (lines)
                   lines(1:length(period), x, lwd = 2)
                   lines(1:length(period), y, lwd = 2, col ="red")
-                  
-                  
-                  legend(0, yrange[2] , legend = c("obs",  
-                                                   paste("sim: rho=", 
-                                                         round(rho.direct, digits = 2), ", bias=", 
-                                                         round(bias.direct, digits = 2), sep = "")), 
-                         
-                         fill = c("black", "red"), box.lwd = 0, cex = .8)
+                  legend(0, ylim[2] , legend = c("obs",  
+                                                 paste("sim: rho=", 
+                                                       round(rho.direct, digits = 2), ", bias=", 
+                                                       round(bias.direct, digits = 2), sep = "")), 
+                                           fill = c("black", "red"), box.lwd = 0, cex = .8)
             }
-            
             ## correlation map
             r <- matrix(nrow = length(x.coord), ncol = length(y.coord))
-            
             for (i in 1:nrow(coords)) {
                   if(!is.null(downscaled)){
                         x <- tapply(obs.test$Data[, coords[i,2], coords[i,1]],
                                     INDEX = test.id, FUN = mean)
-                        
                         wl <- lapply(1:nmem, function(m) {
                               tapply(downscaled$Data[m,, coords[i,2], coords[i,1]],
                                      INDEX = test.id, FUN = mean)
                         })
-                  }else{
+                  } else {
                         x <- tapply(obs$Data[, coords[i,2], coords[i,1]],
                                     INDEX = period.id, FUN = mean)
                         wl <- lapply(1:nmem, function(m) {
@@ -172,145 +139,116 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                                      INDEX = period.id, FUN = mean)
                         }) 
                   }
-                  
                   w <- Reduce("+", wl)/length(wl)
                   r[coords[i,2],coords[i,1]] <- cor(x,w,method = "spearman")
             }
             # Ignore negative values
             r[which(r < 0)] <- 0
-            fields::image.plot(x.coord, y.coord, t(r), asp = 1, breaks = seq(0,1,0.1),
+            image.plot(x.coord, y.coord, t(r), asp = 1, breaks = seq(0,1,0.1),
                                nlevel = 10, lab.breaks = c("=<0",as.character(seq(0.1,1,0.1))),
                                xlab = "longitude", ylab = "latitude")
-            fields::world(add = TRUE)
+            world(add = TRUE)
             points(location[1], location[2], cex = 2, pch = 17)
-            
-            
-      }else{
-            
-            
+      } else {
             ##Compute statistic
             x <- tapply(obs$Data[, yo,xo], INDEX = period.id, FUN = mean)
-            
             y <- tapply(sim$Data[,yi,xi], INDEX = period.id, FUN = mean)
-            
-            if(!is.null(downscaled)){
+            if (!is.null(downscaled)) {
                   w <- tapply(downscaled$Data[,yo,xo], INDEX = test.id2, FUN = mean)
                   xt <- x[(1+length(train.period)):length(period)]
                   yt <- y[(1+length(train.period)):length(period)]
-                  
                   ## ACCURACY
                   ### Spearman correlation rho and the Root Mean Square Error (RMSE) as accuracy measures 
                   ### for the direct and calibrated simulation in the TEST PERIOD
-                  
-                  
                   rmse.down <- sqrt(mean((xt - w)^2))
                   bias.down <-  sum(w - xt)/sum(x)
                   rho.down <- cor(x = xt, y = w, method = "spearman")
-                  
                   rmse.direct <- sqrt(mean((xt - yt)^2))
                   bias.direct <-  sum(yt - xt)/sum(x)
                   rho.direct <- cor(x = xt, y = yt, method = "spearman")
-            }else{
+            } else {
                   rmse.direct <- sqrt(mean((x - y)^2))
                   bias.direct <-  sum(y - x)/sum(x)
                   rho.direct <- cor(x = x, y = y, method = "spearman")
             }
-            
-            if (is.null(yrange)) {
+            if (is.null(ylim)) {
                   mi <- floor(min(c(x,y)))-1
                   ma <-  floor(max(c(x,y)))
-                  yrange <- c(mi, ma + (ma-mi))}
-            
-            plot(1:length(period), x, xlim = c(0,length(period)), ylim = yrange, xlab="", xaxt = "n", 
+                  ylim <- c(mi, ma + (ma-mi))}
+            plot(1:length(period), x, xlim = c(0,length(period)), ylim = ylim, xlab="", xaxt = "n", 
                  ylab = "Annual/seasonal mean value", cex = .6, col = NULL)
             tck <- axis(1, at = 1:length(period), labels=FALSE)
             text(tck,  par("usr")[3] - 2, xpd = TRUE, labels = (1981:2010), 
                  srt = 90, cex =.6)
-            
-            if(!is.null(downscaled)){
+            if (!is.null(downscaled)) {
                   #plot the mean (lines)
                   lines(1:(length(train.period)+1), x[1:(length(train.period)+1)], lwd = 2, lty = 4, xlim = c(0,length(period)))
                   lines((1+length(train.period)):length(period) , x[(1+length(train.period)):length(period)], 
                         lwd = 2)
-                  
                   lines(1:(length(train.period)+1), y[1:(length(train.period)+1)], lwd = 2, lty = 4, xlim = c(0,length(period)),
                         col="red")
                   lines((1+length(train.period)):length(period) , y[(1+length(train.period)):length(period)], 
                         lwd = 2, col ="red")
                   lines((length(train.period)+1):length(period), w, col = "blue", lwd = 2)
-                  
-                  legend(0, yrange[2] , legend = c("obs",  
-                                                   paste("direct: rho=", 
-                                                         round(rho.direct, digits = 2), ", bias=", 
-                                                         round(bias.direct, digits = 2), sep = ""), 
-                                                   paste("downscaled: rho=", 
-                                                         round(rho.down, digits = 2), ", bias=", 
-                                                         round(bias.down, digits = 2), sep = "")), 
+                  legend(0, ylim[2] , legend = c("obs",  
+                                                 paste("direct: rho=", 
+                                                       round(rho.direct, digits = 2), ", bias=", 
+                                                       round(bias.direct, digits = 2), sep = ""), 
+                                                 paste("downscaled: rho=", 
+                                                       round(rho.down, digits = 2), ", bias=", 
+                                                       round(bias.down, digits = 2), sep = "")), 
                          fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
-                  
-            }else{
+            } else {
                   #plot the mean (lines)
                   lines(1:length(period), x, lwd = 2)
                   lines(1:length(period), y, lwd = 2, col ="red")
-                  
-                  legend(0, yrange[2] , legend = c("obs",  
-                                                   paste("direct: rho=", 
-                                                         round(rho.direct, digits = 2), ", bias=", 
-                                                         round(bias.direct, digits = 2), sep = "")), 
+                  legend(0, ylim[2] , legend = c("obs",  
+                                                 paste("direct: rho=", 
+                                                       round(rho.direct, digits = 2), ", bias=", 
+                                                       round(bias.direct, digits = 2), sep = "")), 
                          fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
             }
-            
             #correlation map
             r <- matrix(nrow = length(x.coord), ncol = length(y.coord))
-            
-            for (i in 1:nrow(coords)){
-                  if(!is.null(downscaled)){
+            for (i in 1:nrow(coords)) {
+                  if(!is.null(downscaled)) {
                         x <- tapply(obs.test$Data[, coords[i,2], coords[i,1]],
                                     INDEX = test.id, FUN = mean)
-                        
                         w <- tapply(downscaled$Data[, coords[i,2], coords[i,1]],
                                     INDEX = test.id, FUN = mean)
-                  }else{
+                  } else {
                         x <- tapply(obs$Data[, coords[i,2], coords[i,1]],
                                     INDEX = period.id, FUN = mean)
-                        
                         w <- tapply(sim$Data[, coords[i,2], coords[i,1]],
                                     INDEX = period.id, FUN = mean)   
                   }
                   r[coords[i,2],coords[i,1]] <- cor(x,w,method = "spearman")
             }
-            
             # Ignore negative values
             r[which(r < 0)] <- 0
-            fields::image.plot(x.coord, y.coord, t(r), asp = 1, breaks = seq(0,1,0.1),
+            image.plot(x.coord, y.coord, t(r), asp = 1, breaks = seq(0,1,0.1),
                                nlevel = 10, lab.breaks = c("=<0",as.character(seq(0.1,1,0.1))),
                                xlab = "longitude", ylab = "latitude")
-            fields::world(add = TRUE)
+            world(add = TRUE)
             points(location[1], location[2], cex = 2, pch = 17)
-            
       }
-      
       par(mfrow = c(1,1)) 
 }
-
 #end
 
-dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), member = NULL, yrange = NULL){
-      
+dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), member = NULL, ylim = NULL){
       x <- subsetField(obs, lonLim = location[1], latLim = location[2])$Data
       y <- subsetField(sim, lonLim = location[1], latLim = location[2])$Data
       if(!is.null(downscaled)){
             w <-  subsetField(downscaled, lonLim = location[1], latLim = location[2])$Data
       }
-      
-      
-      
-      if (is.null(yrange)) {
+      yran <- if (is.null(ylim)) {
             mi <- 0
             ma <-  floor(max(x))
-            yran <- c(mi, (ma + ma/4))
-      }else{yran <- yrange}
-      
+            c(mi, (ma + ma/4))
+      } else {
+            ylim
+      }
       # Daily time series plot
       par(mfrow=c(1,2))
       plot(1:length(x), 
@@ -345,21 +283,14 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
                   
                   xt <- x[(length(x) -(length(w)-1)):length(x)]
                   yt <- y[(length(x) -(length(w)-1)):length(x)]
-                  
-                  
-                  
-                  
                   rmse.down <- sqrt(mean((xt - w)^2))
                   bias.down <-  sum(w - xt)/sum(x)
                   rho.down <- cor(x = xt, y = w, method = "spearman")
-                  
                   rmse.direct <- sqrt(mean((xt - yt)^2))
                   bias.direct <-  sum(yt - xt)/sum(x)
                   rho.direct <- cor(x = xt, y = yt, method = "spearman")
-                  
                   lines((length(x) -(length(w)-1)):length(x), 
-                        w, 
-                        col = "blue", lwd = 1)
+                        w, col = "blue", lwd = 1)
                   legend(0, yran[2] , legend = c("obs",  
                                                  paste("sim: rho=", 
                                                        round(rho.direct, digits = 2), ", bias=", 
@@ -368,38 +299,29 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
                                                        round(rho.down, digits = 2), ", bias=", 
                                                        round(bias.down, digits = 2), sep = "")), 
                          fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
-            }else{
+            } else {
                   legend(0, yran[2] , legend = c("obs",  
                                                  paste("sim: rho=", 
                                                        round(rho.direct, digits = 2), ", bias=", 
                                                        round(bias.direct, digits = 2), sep = "")), 
                          fill = c("black", "red"), box.lwd = 0, cex = .8)
             }
-      }else{
-            
-            
-            
-            
+      } else {
             rmse.direct <- sqrt(mean((x - y)^2))
             bias.direct <-  sum(y- x)/sum(x)
             rho.direct <- cor(x = x, y = y, method = "spearman")
-            
             lines(1:length(y), 
                   y, 
                   col = "red", lwd = 1)
-            if (!is.null(downscaled)){
+            if (!is.null(downscaled)) {
                   xt <- x[(length(x) -(length(w)-1)):length(x)]
                   yt <- y[(length(x) -(length(w)-1)):length(x)]
-                  
                   rmse.down <- sqrt(mean((xt - w)^2))
                   bias.down <-  sum(w - xt)/sum(x)
                   rho.down <- cor(x = xt, y = w, method = "spearman")
-                  
                   rmse.direct <- sqrt(mean((xt - yt)^2))
                   bias.direct <-  sum(yt- xt)/sum(x)
                   rho.direct <- cor(x = xt, y = yt, method = "spearman")
-                  
-                  
                   lines((length(x) -(length(w)-1)):length(x), 
                         w, 
                         col = "blue", lwd = 1)
@@ -411,7 +333,7 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
                                                        round(rho.down, digits = 2), ", bias=", 
                                                        round(bias.down, digits = 2), sep = "")), 
                          fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
-            }else{
+            } else {
                   legend(0, yran[2] , legend = c("obs",  
                                                  paste("sim: rho=", 
                                                        round(rho.direct, digits = 2), ", bias=", 
@@ -419,34 +341,18 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
                          fill = c("black", "red"), box.lwd = 0, cex = .8)
             }
       }
-      
       # qq-plot
-      
-      
-      
       q1 <- quantile(x, probs = seq(0.01, .99, 0.01), na.rm = T, , type =4)
-      
       yran <- c(0, max(q1))
       plot(q1, 
            quantile(y, probs = seq(0.01, .99, 0.01), na.rm = T, type =4), 
            col="red", main = "qq-plot", xlab = "obs", ylab = "predicted", ylim = yran)
-      
       lines(0:max(q1), 0:max(q1))
-      
       if(!is.null(downscaled)){
             points(q1, 
                    quantile(w, probs = seq(0.01, .99, 0.01), na.rm = T, type =4), 
                    col="blue")
-            #                   legend(0, yran[2] , legend = c("obs", "sim", "downscaled"), 
-            #                         fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
-            #             
       }
-      # else{
-      #                   legend(0, yran[2] , legend = c("obs", "sim"), 
-      #                         fill = c("black", "red"), box.lwd = 0, cex = .8) 
-      #            }
-      
       par(mfrow = c(1,1)) 
 }
-
 #end    
