@@ -14,8 +14,13 @@
 #' @author M. Iturbide \email{maibide@@gmail.com}
 #' @export
 
+
 quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), ylim = NULL){
+      
       if (type == "daily") {
+            if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
+                  stop("downscaled data is not daily, try with type = 'interannual'")
+            }
             dailyOutlook (obs, sim, downscaled, location, ylim)
       } else if (type == "interannual") {
             interannualOutlook (obs, sim, downscaled, location, ylim)
@@ -61,7 +66,12 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                         tapply(sim.test$Data[m,,yi,xi], INDEX = test.id, FUN = mean)})
                   yt <- Reduce("+", ytl)/length(ytl)
                   wl <- lapply(1:nmem, function(m){
-                        tapply(downscaled$Data[m,,yo,xo], INDEX = test.id2, FUN = mean)})
+                        if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
+                              downscaled$Data[m,,yo,xo]   
+                        }else{
+                        tapply(downscaled$Data[m,,yo,xo], INDEX = test.id2, FUN = mean)}
+                        })
+                  
                   w <- Reduce("+", wl)/length(wl)
                   ws <- apply(simplify2array(wl), 1, sd)
                   ## ACCURACY
@@ -126,9 +136,13 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                   if(!is.null(downscaled)){
                         x <- tapply(obs.test$Data[, coords[i,2], coords[i,1]],
                                     INDEX = test.id, FUN = mean)
+                        
                         wl <- lapply(1:nmem, function(m) {
+                              if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
+                                    downscaled$Data[m,,yo,xo]   
+                              }else{
                               tapply(downscaled$Data[m,, coords[i,2], coords[i,1]],
-                                     INDEX = test.id, FUN = mean)
+                                     INDEX = test.id, FUN = mean)}
                         })
                   } else {
                         x <- tapply(obs$Data[, coords[i,2], coords[i,1]],
@@ -153,8 +167,11 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
             ##Compute statistic
             x <- tapply(obs$Data[, yo,xo], INDEX = period.id, FUN = mean)
             y <- tapply(sim$Data[,yi,xi], INDEX = period.id, FUN = mean)
-            if (!is.null(downscaled)) {
-                  w <- tapply(downscaled$Data[,yo,xo], INDEX = test.id2, FUN = mean)
+            if (!is.null(downscaled)) {!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                  if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
+                       w <- downscaled$Data[m,,yo,xo]   
+                  }else{
+                  w <- tapply(downscaled$Data[,yo,xo], INDEX = test.id2, FUN = mean)}
                   xt <- x[(1+length(train.period)):length(period)]
                   yt <- y[(1+length(train.period)):length(period)]
                   ## ACCURACY
@@ -214,8 +231,11 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                   if(!is.null(downscaled)) {
                         x <- tapply(obs.test$Data[, coords[i,2], coords[i,1]],
                                     INDEX = test.id, FUN = mean)
-                        w <- tapply(downscaled$Data[, coords[i,2], coords[i,1]],
-                                    INDEX = test.id, FUN = mean)
+                        if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
+                              w <- downscaled$Data[m,,yo,xo]   
+                        }else{
+                              w <- tapply(downscaled$Data[, coords[i,2], coords[i,1]],
+                                    INDEX = test.id, FUN = mean)}
                   } else {
                         x <- tapply(obs$Data[, coords[i,2], coords[i,1]],
                                     INDEX = period.id, FUN = mean)
