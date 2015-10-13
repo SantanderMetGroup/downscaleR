@@ -171,7 +171,7 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
             if (!is.null(downscaled)) {
 
                   if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
-                       w <- downscaled$Data[m,,yo,xo]   
+                       w <- downscaled$Data[,yo,xo]   
                   }else{
                   w <- tapply(downscaled$Data[,yo,xo], INDEX = test.id2, FUN = mean)}
                   xt <- x[(1+length(train.period)):length(period)]
@@ -234,7 +234,7 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                         x <- tapply(obs.test$Data[, coords[i,2], coords[i,1]],
                                     INDEX = test.id, FUN = mean)
                         if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
-                              w <- downscaled$Data[m,,yo,xo]   
+                              w <- downscaled$Data[,yo,xo]   
                         }else{
                               w <- tapply(downscaled$Data[, coords[i,2], coords[i,1]],
                                     INDEX = test.id, FUN = mean)}
