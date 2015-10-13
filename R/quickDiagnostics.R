@@ -167,7 +167,9 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
             ##Compute statistic
             x <- tapply(obs$Data[, yo,xo], INDEX = period.id, FUN = mean)
             y <- tapply(sim$Data[,yi,xi], INDEX = period.id, FUN = mean)
+
             if (!is.null(downscaled)) {
+
                   if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
                        w <- downscaled$Data[m,,yo,xo]   
                   }else{
