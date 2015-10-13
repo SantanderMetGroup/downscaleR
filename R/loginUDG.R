@@ -13,7 +13,7 @@
 #' @export
 
 
-login_TAP <- function(username, password, proxy.host = NULL, proxy.port = NULL) {
+loginUDG <- function(username, password, proxy.host = NULL, proxy.port = NULL) {
       proxy.port <- as.integer(proxy.port)
       if (!is.character(username) | !is.character(password)) {
             stop("\'username\' and \'password\' must be character strings")
