@@ -126,12 +126,12 @@ ppModelSetup <- function(obs, pred, sim) {
                       simsc.list <- list()
                           for (i in 1:n.vars) {
                               if (isTRUE(use.PCs)){
-                                    o <- which(sim$Variable$varName == names(pred)[-4][x])      
+                                    o <- which(sim$Variable$varName == names(pred)[-length(pred)][i])      
                               }else{
-                                    o <- which(sim$Variable$varName == pred$Variable$varName[x])
+                                    o <- which(sim$Variable$varName == pred$Variable$varName[i])
                               }
                               
-                              if(o != x){mes <- TRUE}
+                              if(o != i){mes <- TRUE}
 
                               simsc.list[[i]] <- lapply(1:n.mem, function(id.mem) {
                               aux <- asub(simsc.list.pre[[o]], id.mem, mem.dim.index)
@@ -147,7 +147,7 @@ ppModelSetup <- function(obs, pred, sim) {
                   simsc.list.pre <- lapply(1:n.vars, function(idx) {asub(sim$Data, idx, var.dim.index)})
                   simsc.list <- lapply(1:n.vars, function(x) {
                         if (isTRUE(use.PCs)){
-                              o <- which(sim$Variable$varName == names(pred)[-4][x])      
+                              o <- which(sim$Variable$varName == names(pred)[-length(pred)][x])      
                         }else{
                               o <- which(sim$Variable$varName == pred$Variable$varName[x])
                         }
