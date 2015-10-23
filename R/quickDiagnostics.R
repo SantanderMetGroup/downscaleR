@@ -18,8 +18,10 @@
 quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), ylim = NULL){
       
       if (type == "daily") {
+            if (!is.null(downscaled)) {
             if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
                   stop("downscaled data is not daily, try with type = 'interannual'")
+            }
             }
             dailyOutlook (obs, sim, downscaled, location, ylim)
       } else if (type == "interannual") {
@@ -377,4 +379,5 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
       }
       par(mfrow = c(1,1)) 
 }
+
 #end    
