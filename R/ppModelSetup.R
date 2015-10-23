@@ -125,8 +125,14 @@ ppModelSetup <- function(obs, pred, sim) {
                       n.mem <- dim(sim$Data)[-var.dim.index][mem.dim.index]
                       simsc.list <- list()
                           for (i in 1:n.vars) {
-                              o <- which(sim$Variable$varName == pred$Variable$varName[i])
-                              if(o != i){mes <- TRUE}
+                              if (isTRUE(use.PCs)){
+                                    o <- which(sim$Variable$varName == names(pred)[-4][x])      
+                              }else{
+                                    o <- which(sim$Variable$varName == pred$Variable$varName[x])
+                              }
+                              
+                              if(o != x){mes <- TRUE}
+
                               simsc.list[[i]] <- lapply(1:n.mem, function(id.mem) {
                               aux <- asub(simsc.list.pre[[o]], id.mem, mem.dim.index)
                               attr(aux, "dimensions") <- dimNames.sim[-match(c("var","member"), dimNames.sim)]
@@ -140,8 +146,14 @@ ppModelSetup <- function(obs, pred, sim) {
                   multi.member <- FALSE
                   simsc.list.pre <- lapply(1:n.vars, function(idx) {asub(sim$Data, idx, var.dim.index)})
                   simsc.list <- lapply(1:n.vars, function(x) {
-                        o <- which(sim$Variable$varName == pred$Variable$varName[x])
+                        if (isTRUE(use.PCs)){
+                              o <- which(sim$Variable$varName == names(pred)[-4][x])      
+                        }else{
+                              o <- which(sim$Variable$varName == pred$Variable$varName[x])
+                        }
+                        
                         if(o != x){mes <- TRUE}
+        
                         attr(simsc.list.pre[[o]], "dimensions") <- dimNames.sim[-var.dim.index]
                         aux <- array3Dto2Dmat(simsc.list.pre[[x]])
                         aux <- (aux - mu.list[[x]]) / sigma.list[[x]]
