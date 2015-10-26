@@ -4,7 +4,7 @@
 \alias{glimpr}
 \title{GLM downscaling}
 \usage{
-glimpr(obs, pred, sim, pr.threshold = 0.1)
+glimpr(obs, pred, sim, pr.threshold = 0.1, n.eofs = 15)
 }
 \arguments{
 \item{obs}{A field or station data containing the observed climate data for the training period}
@@ -17,6 +17,8 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 \item{sim}{A field containing the simulated climate for the variables used in \code{pred}, but considering the test period.}
 
 \item{pr.threshold}{Value below which precipitation amount is considered zero}
+
+\item{n.eofs}{Integer indicating the number of EOFs to be used as predictors}
 }
 \description{
 Implementation of GLM's to downscale precipitation data
