@@ -156,11 +156,11 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                         }) 
                   }
                   w <- Reduce("+", wl)/length(wl)
-                  r[coords[i,2],coords[i,1]] <- cor(x,w,method = "spearman")
+                  r[coords[i,1],coords[i,2]] <- cor(x,w,method = "spearman")
             }
             # Ignore negative values
             r[which(r < 0)] <- 0
-            image.plot(x.coord, y.coord, t(r), asp = 1, breaks = seq(0,1,0.1),
+            image.plot(x.coord, y.coord, r, asp = 1, breaks = seq(0,1,0.1),
                                nlevel = 10, lab.breaks = c("=<0",as.character(seq(0.1,1,0.1))),
                                xlab = "longitude", ylab = "latitude")
             world(add = TRUE)
@@ -246,11 +246,11 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                         w <- tapply(sim$Data[, coords[i,2], coords[i,1]],
                                     INDEX = period.id, FUN = mean)   
                   }
-                  r[coords[i,2],coords[i,1]] <- cor(x,w,method = "spearman")
+                  r[coords[i,1],coords[i,2]] <- cor(x,w,method = "spearman")
             }
             # Ignore negative values
             r[which(r < 0)] <- 0
-            image.plot(x.coord, y.coord, t(r), asp = 1, breaks = seq(0,1,0.1),
+            image.plot(x.coord, y.coord, r, asp = 1, breaks = seq(0,1,0.1),
                                nlevel = 10, lab.breaks = c("=<0",as.character(seq(0.1,1,0.1))),
                                xlab = "longitude", ylab = "latitude")
             world(add = TRUE)

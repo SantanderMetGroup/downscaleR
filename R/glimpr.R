@@ -42,7 +42,7 @@ glimpr<- function(obs, pred, sim, pr.threshold = .1, n.eofs = 15) {
       pred.list <- suppressWarnings(lapply(1:length(cases), function(x) {
             mod.bin <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.eofs], family = binomial(link = "logit"))
             sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
-                  print(paste(x,i))
+                
                   pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.eofs], type = "response")
                   pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]]))] <- 1L
                   pred <- as.integer(pred)
