@@ -99,7 +99,6 @@ tercileValidation <- function(mm.obj, obs, stationId = NULL, color.pal = c("ypb"
                               y.mm <- mm.obj$xyCoords[ ,2]
                         } else {
                               idx <- grep(stationId, rownames(mm.obj$xyCoords))
-                              idx <- grep(stationId, mm.obj$Metadata$station_id)
                               if (identical(idx, integer(0))) {
                                     stop("The 'stationId' provided was not found")
                               }
