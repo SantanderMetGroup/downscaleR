@@ -83,7 +83,7 @@ loadGridData <- function(dataset, var, dictionary = TRUE, lonLim = NULL,
             aggr.d <- "none"
             message("NOTE: Argument 'aggr.d' ignored as 'time' was set to ", time)
       }
-      aggr.m <- match.arg(aggr.m, choices = c("none", "mean", "min", "max"))
+      aggr.m <- match.arg(aggr.m, choices = c("none", "mean", "min", "max", "sum"))
       aux.level <- findVerticalLevel(var)
       var <- aux.level$var
       level <- aux.level$level
