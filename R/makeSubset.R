@@ -79,11 +79,24 @@ makeSubset <- function(grid, timePars, levelPars, latLon) {
                   aux.list[[i]] <- apply(aux.list[[i]], MARGIN = mar, FUN = function(x) {
                         tapply(x, INDEX = mes, FUN = timePars$aggr.m)
                   })
-                  dimNamesRef <- c("time", dimNamesRef[mar])
+                  dimNamesRef <- if (length(unique(mes)) > 1) {
+                        c("time", dimNamesRef[mar])
+                  } else {
+                        dimNamesRef[mar]
+                  }
                   timePars$dateSliceList[[i]] <- timePars$dateSliceList[[i]][which(day == 1)]
             }
       }
-      mdArray <- do.call("abind", c(aux.list, along = grep("^time", dimNamesRef)))
+      if (timePars$aggr.m != "none") {
+            if (length(unique(mes)) > 1) {
+                  mdArray <- do.call("abind", c(aux.list, along = grep("^time", dimNamesRef)))
+            } else {
+                  mdArray <- do.call("abind", c(aux.list, along = -1L))
+                  dimNamesRef <- c("time", dimNamesRef)
+            }
+      } else {
+            mdArray <- do.call("abind", c(aux.list, along = grep("^time", dimNamesRef)))
+      }
       aux.list <- timePars$tRanges <- NULL
       if (any(dim(mdArray) == 1)) {
             dimNames <- dimNamesRef[-which(dim(mdArray) == 1)]    
