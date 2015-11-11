@@ -12,13 +12,15 @@ Imports:
     MASS,
     verification,
     scales,
-    evd
+    evd,
+    parallel
 Suggests:
-    ecomsUDG.Raccess,
+    loadeR,
+    ecomsUDG.Raccess
 Type: Package
 Title: Climate data manipulation and statistical downscaling
 Version: 0.9-0
-Date: 13-Oct-2015
+Date: 11-Nov-2015
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
