@@ -4,16 +4,17 @@
 #' @param pr.threshold Value below which precipitation amount is considered zero 
 #' @param n.eofs Integer indicating the number of EOFs to be used as predictors 
 #' @family downscaling
-#' @author J Bedia \email{joaquin.bedia@@gmail.com}
+#' @author J Bedia 
 #' @importFrom abind abind
+#' @keywords internal
 
-glimpr<- function(obs, pred, sim, pr.threshold = .1, n.eofs = 15) {
-      modelPars <- ppModelSetup(obs, pred, sim)
-      if(is.null(n.eofs)){
-            n.eofs <-  dim(modelPars$pred.mat)[2]
+glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold, n.pcs = n.pcs) {
+      #modelPars <- ppModelSetup(obs, pred, sim)
+      if(is.null(n.pcs)){
+            n.nps <-  dim(modelPars$pred.mat)[2]
       }
-      pred <- NULL
-      sim <- NULL
+      #pred <- NULL
+      #sim <- NULL
       # Prepare predictand matrix
       ymat <- if (isTRUE(modelPars$stations)) {
             obs$Data
@@ -40,19 +41,19 @@ glimpr<- function(obs, pred, sim, pr.threshold = .1, n.eofs = 15) {
       # Models
       message("[", Sys.time(), "] Fitting models ...")
       pred.list <- suppressWarnings(lapply(1:length(cases), function(x) {
-            mod.bin <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.eofs], family = binomial(link = "logit"))
+            mod.bin <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))
             sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
                 
-                  pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.eofs], type = "response")
+                  pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
                   pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]]))] <- 1L
                   pred <- as.integer(pred)
             })
             mod.bin <- NULL
             wet <- which(ymat[ ,cases[x]] != 0)
             # TODO: handle exception when model is over-specified (https://stat.ethz.ch/pipermail/r-help/2000-January/009833.html)
-            mod.gamma <- glm(ymat[ ,cases[x]] ~., data = as.data.frame(modelPars$pred.mat)[,1:n.eofs], family = Gamma(link = "log"), subset = wet)
+            mod.gamma <- glm(ymat[ ,cases[x]] ~., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = Gamma(link = "log"), subset = wet)
             sims <- sapply(1:length(modelPars$sim.mat), function(i) {
-                  unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.eofs], type = "response") * sims.bin[ ,i])
+                  unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") * sims.bin[ ,i])
             })
             return(unname(sims))
       }))
@@ -85,8 +86,7 @@ glimpr<- function(obs, pred, sim, pr.threshold = .1, n.eofs = 15) {
       attr(obs$Data, "dimensions") <- dimNames
       attr(obs$Data, "downscaling:method") <- "glm"
       attr(obs$Data, "downscaling:simulation_data") <- modelPars$sim.dataset
-      attr(obs$Data, "downscaling:n_eofs") <- n.eofs
-      
+      attr(obs$Data, "downscaling:n_pcs") <- n.pcs
       # Date replacement
       obs$Dates <- modelPars$sim.dates 
       message("[", Sys.time(), "] Done.")

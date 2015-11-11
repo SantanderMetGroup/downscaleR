@@ -13,13 +13,16 @@
 #' \item \code{sim.dates} The Dates element of the simulation data (either a list of start/end lists for
 #' several predictors or a list of two with the estart/end of a single predictor. See \code{\link{dateReplacement}}
 #' for details).
+#' \item \code{init.dates} Initialization dates inherited from 'sim' if a forecast. NULL otherwise.
+#' \item \code{member.names} Names of the members inherited from 'sim' if a forecast. NULL otherwise.
 #' }
 #' @details The function accepts either PCA or raw fields as predictors. In the first case, it handles the 
 #' mapping of EOFs onto the simulation fields.
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @author J. Bedia 
 #' @keywords internal
 #' @export
 #' @importFrom abind asub
+
 
 
 ppModelSetup <- function(obs, pred, sim) {
@@ -57,7 +60,7 @@ ppModelSetup <- function(obs, pred, sim) {
             stop("Observed and predicted time series should match in start/end and length")
       }     
       # Date replacement
-      new.dates <- dateReplacement(obs$Dates, sim$Dates) 
+      new.dates <- dateReplacement(obs$Dates, sim$Dates)
       obs <- NULL
       time.pred <- NULL
       # Number of variables pred-sim
@@ -114,54 +117,48 @@ ppModelSetup <- function(obs, pred, sim) {
       }
       # Scaling and centering of simulation data
       # Scaling and centering of simulation data
-        dimNames.sim <- attr(sim$Data, "dimensions")
-          if ("var" %in% dimNames.sim) { # Multifield
-              mes <- FALSE
-              var.dim.index <- grep("var", dimNames.sim)
-              simsc.list.pre <- lapply(1:n.vars, function(idx) {asub(sim$Data, idx, var.dim.index)})
+      dimNames.sim <- attr(sim$Data, "dimensions")
+      if ("var" %in% dimNames.sim) { # Multifield
+            mes <- FALSE
+            var.dim.index <- grep("var", dimNames.sim)
+            simsc.list.pre <- lapply(1:n.vars, function(idx) asub(sim$Data, idx, var.dim.index))
             if ("member" %in% dimNames.sim) { # Multifield multimember
-                      multi.member <- TRUE
-                      mem.dim.index <- grep("member", dimNames.sim[-var.dim.index])
-                      n.mem <- dim(sim$Data)[-var.dim.index][mem.dim.index]
-                      simsc.list <- list()
-                          for (i in 1:n.vars) {
-                              if (isTRUE(use.PCs)){
-                                    o <- which(sim$Variable$varName == names(pred)[-length(pred)][i])      
-                              }else{
-                                    o <- which(sim$Variable$varName == pred$Variable$varName[i])
-                              }
-                              
-                              if(o != i){mes <- TRUE}
-
-                              simsc.list[[i]] <- lapply(1:n.mem, function(id.mem) {
+                  multi.member <- TRUE
+                  mem.dim.index <- grep("member", dimNames.sim[-var.dim.index])
+                  n.mem <- dim(sim$Data)[-var.dim.index][mem.dim.index]
+                  simsc.list <- list()
+                  for (i in 1:n.vars) {
+                        o <- if (isTRUE(use.PCs)){
+                              which(sim$Variable$varName == names(pred)[-length(pred)][i])      
+                        } else {
+                              which(sim$Variable$varName == pred$Variable$varName[i])
+                        }
+                        if(o != i) mes <- TRUE
+                        simsc.list[[i]] <- lapply(1:n.mem, function(id.mem) {
                               aux <- asub(simsc.list.pre[[o]], id.mem, mem.dim.index)
                               attr(aux, "dimensions") <- dimNames.sim[-match(c("var","member"), dimNames.sim)]
                               aux <- array3Dto2Dmat(aux)
                               aux <- (aux - mu.list[[i]]) / sigma.list[[i]]
                               return(aux)
-                              })
-            
-                          }
+                        })
+                  }
             } else { # Multifield (no members)
                   multi.member <- FALSE
                   simsc.list.pre <- lapply(1:n.vars, function(idx) {asub(sim$Data, idx, var.dim.index)})
                   simsc.list <- lapply(1:n.vars, function(x) {
-                        if (isTRUE(use.PCs)){
-                              o <- which(sim$Variable$varName == names(pred)[-length(pred)][x])      
-                        }else{
-                              o <- which(sim$Variable$varName == pred$Variable$varName[x])
+                        o <- if (isTRUE(use.PCs)){
+                              which(sim$Variable$varName == names(pred)[-length(pred)][x])      
+                        } else {
+                              which(sim$Variable$varName == pred$Variable$varName[x])
                         }
-                        
-                        if(o != x){mes <- TRUE}
-        
+                        if(o != x) mes <- TRUE
                         attr(simsc.list.pre[[o]], "dimensions") <- dimNames.sim[-var.dim.index]
                         aux <- array3Dto2Dmat(simsc.list.pre[[x]])
                         aux <- (aux - mu.list[[x]]) / sigma.list[[x]]
                         return(aux)
                   })
-                  
             }
-            if (mes == TRUE){message("Variables in sim reordered to match pred")}
+            # if (mes == TRUE) message("Variables in sim reordered to match pred")
       } else { # Field
             if ("member" %in% dimNames.sim) { # Multimember field
                   multi.member <- TRUE
@@ -173,8 +170,7 @@ ppModelSetup <- function(obs, pred, sim) {
                         aux <- array3Dto2Dmat(aux)
                         aux <- (aux - mu.list[[1]]) / sigma.list[[1]]
                         return(aux)
-                        })
-                  
+                  })
             } else { # Field (no multimember)
                   multi.member <- FALSE
                   aux <- array3Dto2Dmat(sim$Data)
@@ -185,14 +181,13 @@ ppModelSetup <- function(obs, pred, sim) {
       }
       # Sim 2D matrix
       if (length(simsc.list) > 1) {
-        if ("member" %in% attr(sim$Data, "dimensions")) {
+            if ("member" %in% attr(sim$Data, "dimensions")) {
                   multi.member <- TRUE
-                  if (! "var" %in% attr(sim$Data, "dimensions")){simsc.list <- list(simsc.list)}
-            
+                  if (! "var" %in% attr(sim$Data, "dimensions")) simsc.list <- list(simsc.list)
                   sim.mat <- rep(list(bquote()), n.mem)
                   for (i in 1:n.mem) { 
-                    aux <- lapply(1:length(simsc.list), function(x) simsc.list[[x]][[i]])
-                    sim.mat[[i]] <- do.call("cbind", aux)
+                        aux <- lapply(1:length(simsc.list), function(x) simsc.list[[x]][[i]])
+                        sim.mat[[i]] <- do.call("cbind", aux)
                   }
             } else {
                   multi.member <- FALSE
@@ -204,6 +199,11 @@ ppModelSetup <- function(obs, pred, sim) {
       simsc.list <- NULL
       sim.dataset <- attr(sim, "dataset")
       sim.dates <- sim$Dates
+      init.dates <- mems <- NULL
+      if (multi.member) {
+            init.dates <- sim$InitializationDates
+            mems <- sim$Members
+      }
       sim <- NULL
       # Projection of simulated field onto the predictor EOFs       
       if (isTRUE(use.PCs)) {
@@ -215,6 +215,14 @@ ppModelSetup <- function(obs, pred, sim) {
             })
       }
       pred <- NULL
-      return(list("stations" = stations, "multi.member" = multi.member, "pred.mat" = pred.mat, "sim.mat" = sim.mat, "sim.dates" = new.dates, "sim.dataset" = sim.dataset))
+      return(list("stations" = stations,
+                  "multi.member" = multi.member,
+                  "pred.mat" = pred.mat,
+                  "sim.mat" = sim.mat,
+                  "sim.dates" = new.dates,
+                  "sim.dataset" = sim.dataset,
+                  "init.dates" = init.dates,
+                  "member.names" = mems)
+      )
 }
 # End      

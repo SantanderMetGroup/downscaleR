@@ -7,8 +7,6 @@ downscaleR 1.0-0
 * Enhancements in bias correction:
    * Automatically set the common period of predictand and predictor objects in to calibrate the bias correction method
    * Use single station data as predictands
-* New miscelaneous functions:
-   * getIntersect: sets the common period of two downscaleR objects
 * Minor bug fix in bias correction of precipitation and other modifications (Thanks to: Yuanchao Xu)
 * Other minor bug fixes and enhancements
 

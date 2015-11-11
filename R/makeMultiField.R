@@ -30,14 +30,13 @@
 #' @note A multifield can not be passed to the interpolator \code{\link{interpData}} directly. Instead, the 
 #' multimember fields should be interpolated individually prior to multifield construction. 
 #' 
-#' @export
-#' 
+#' @export 
 #' @importFrom abind abind
 #' 
-#' @author J. bedia \email{joaquin.bedia@@gmail.com}
+#' @author J. bedia
 #' 
 #' @seealso \code{\link{loadGridData}} and \code{\link[ecomsUDG.Raccess]{loadECOMS}} for loading fields (the latter also for loading
-#' multimember fields), \code{\link{loadMultiField}}, which directly loads a multifield. \code{\link{interpData}} and \code{\link{getGrid}}
+#' multimember fields). \code{\link{interpData}} and \code{\link{getGrid}}
 #' for spatial consistency of input fields.
 #' 
 #' @examples

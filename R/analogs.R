@@ -55,18 +55,24 @@
 #' Bedia, J. \emph{et al.}, 2013. Robust projections of Fire Weather Index in the Mediterranean
 #'  using statistical downscaling. Clim. Change 120, 229-247.
 #' 
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com} 
+#' @author J. Bedia 
 #'
+#' @keywords internal
 
-analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean"), analog.dates = FALSE) {
-      modelPars <- ppModelSetup(obs, pred, sim)
-      pred <- NULL
+analogs <- function(obs = obs,
+                    modelPars,
+                    n.neigh = n.neigh,
+                    sel.fun = sel.fun,
+                    analog.dates = analog.dates,
+                    parallel.pars = parallel.pars) {
+      # modelPars <- ppModelSetup(obs, pred, sim)
+      #pred <- NULL
       if (isTRUE(modelPars$multi.member)) {
-            obs[[5]] <- sim$InitializationDates
-            obs[[6]] <- sim$Members
+            obs[[5]] <-  modelPars$init.dates
+            obs[[6]] <- modelPars$member.names
             names(obs)[5:6] <- c("InitializationDates", "Members")
       } 
-      sim <- NULL
+      #sim <- NULL
       n.neigh <- as.integer(n.neigh)
       if (n.neigh < 1) {
             stop("A minimum of 1 nearest neighbour must be selected in 'n.neigh'")
@@ -77,11 +83,18 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean"), 
       sel.fun <- match.arg(sel.fun, choices = c("random", "mean"))
       # Analog search      
       message("[", Sys.time(), "] Calculating analogs ...")
-      d.list <- lapply(1:length(modelPars$sim.mat), function(x) {
-            aux <- rdist(modelPars$sim.mat[[x]], modelPars$pred.mat)
-            aux <- apply(aux, 1, function(vec, n.neigh) {sort(vec, index.return = TRUE)$ix[1:n.neigh]}, n.neigh)
-            return(aux)
-      })
+      d.list <- if (parallel.pars$hasparallel) {
+            on.exit(parallel::stopCluster(parallel.pars$cl))
+            parallel::parLapply(cl = parallel.pars$cl, 1:length(modelPars$sim.mat), function(x) {
+                  aux <- rdist(modelPars$sim.mat[[x]], modelPars$pred.mat)
+                  apply(aux, 1, function(vec, n.neigh) {sort(vec, index.return = TRUE)$ix[1:n.neigh]}, n.neigh)
+            })
+      } else {
+            lapply(1:length(modelPars$sim.mat), function(x) {
+                  aux <- rdist(modelPars$sim.mat[[x]], modelPars$pred.mat)
+                  apply(aux, 1, function(vec, n.neigh) {sort(vec, index.return = TRUE)$ix[1:n.neigh]}, n.neigh)
+            })
+      }
       modelPars$pred.mat <- NULL
       # Analog dates
       if (isTRUE(analog.dates)) {
@@ -104,7 +117,7 @@ analogs <- function(obs, pred, sim, n.neigh = 1, sel.fun = c("random", "mean"), 
                   })
                   message("[", Sys.time(), "] Done.")   
             } else {
-                  out.list <- lapply(1:length(d.list), function(x) {obs$Data[d.list[[x]], ]})
+                  out.list <- lapply(1:length(d.list), function(x) obs$Data[d.list[[x]], ])
                   message("[", Sys.time(), "] Done.")   
             }
       } else {
