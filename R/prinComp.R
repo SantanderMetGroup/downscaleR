@@ -67,7 +67,6 @@
 #' of the output list.
 #'
 #' @export
-#' 
 #' @importFrom abind asub
 #' 
 #' @seealso \code{\link{fieldFromPCs}}, \code{\link{plotEOF}}

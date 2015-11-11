@@ -35,7 +35,7 @@
 #'  while the \code{"mean"} choice will compute their average.
 #' 
 #' @seealso \code{\link{prinComp}} for details on principal component/EOF analysis
-#' \code{\link{loadMultiField}}, \code{\link{makeMultiField}} for multifield creation
+#' \code{\link{makeMultiField}} for multifield creation
 #' \code{\link{loadGridData}} and \code{\link{loadStationData}} for loading fields and station data respectively.
 #' 
 #' @export
