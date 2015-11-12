@@ -11,7 +11,7 @@
 glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold, n.pcs = n.pcs) {
       #modelPars <- ppModelSetup(obs, pred, sim)
       if(is.null(n.pcs)){
-            n.nps <-  dim(modelPars$pred.mat)[2]
+            n.pcs <-  dim(modelPars$pred.mat)[2]
       }
       #pred <- NULL
       #sim <- NULL
@@ -32,7 +32,7 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
       wet.prob <- apply(ymat.bin, 2, function(x) {sum(x, na.rm = TRUE) / length(na.exclude(x))})
       # Filter empty gridcell series
       rm.ind <- which(is.na(wet.prob))
-      # Valid columns (cases)
+      # Valid columns or gridcells (cases)
       cases <- if (length(rm.ind) > 0) {
             (1:ncol(ymat))[-rm.ind]      
       } else {
@@ -58,12 +58,14 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
             return(unname(sims))
       }))
       # Refill with NaN series
+      #######
       if (length(rm.ind) > 0) {
-            aux.list <- rep(list(matrix(nrow = nrow(ymat), ncol = length(modelPars$sim.mat))), ncol(ymat))
+            aux.list <- rep(list(matrix(nrow = nrow(modelPars$sim.mat[[1]]), ncol = length(modelPars$sim.mat))), ncol(ymat))
             aux.list[cases] <- pred.list
             pred.list <- aux.list
             aux.list <- NULL
       }
+
       x.obs <- getCoordinates(obs)$x
       y.obs <- getCoordinates(obs)$y
       aux.list <- lapply(1:length(modelPars$sim.mat), function (i) {
@@ -80,16 +82,14 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
             return(out)
       })
       # Data array - rename dims
-      dimNames <- renameDims(obs, modelPars$multi.member)
-      obs$Data <- drop(unname(do.call("abind", c(aux.list, along = -1))))
+      
+#       obs$Data <- 
+      o <-drop(unname(do.call("abind", c(aux.list, along = -1))))
       aux.list <- NULL
-      attr(obs$Data, "dimensions") <- dimNames
-      attr(obs$Data, "downscaling:method") <- "glm"
-      attr(obs$Data, "downscaling:simulation_data") <- modelPars$sim.dataset
-      attr(obs$Data, "downscaling:n_pcs") <- n.pcs
       # Date replacement
-      obs$Dates <- modelPars$sim.dates 
-      message("[", Sys.time(), "] Done.")
-      return(obs)
+#       obs$Dates <- modelPars$sim.dates 
+       message("[", Sys.time(), "] Done.")
+#       return(obs)
+return(o)
 }
 # End

@@ -121,26 +121,69 @@ downscale <- function(obs,
       cross.val <- match.arg(cross.val, choices = c("none", "loocv"))
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
       modelPars <- ppModelSetup(obs, pred, sim)
+      obs.orig <- obs
       if (cross.val == "none") {
-            switch(method,
-                  "analogs" = analogs(obs = obs,
+            down <- switch(method,
+                        "analogs" = analogs(obs = obs,
                                       modelPars = modelPars,
                                       n.neigh = n.neigh,
                                       sel.fun = sel.fun,
                                       analog.dates = analog.dates,
                                       parallel.pars = parallel.pars),
-                  "glm" = glimpr(obs = obs,
+                        "glm" = glimpr(obs = obs,
                                  modelPars = modelPars,
                                  pr.threshold = pr.threshold,
                                  n.pcs = n.pcs)
             )
       } else if (cross.val == "loocv") {
-            if (!is.null(sim) & !identical(pred, sim)) {
-                  
-                  
+
+            if("scaled:method" %in% names(attributes(pred))){
+                  pred$Dates$start <- attr(pred, "dates_start")
             }
+            years <- getYearsAsINDEX(pred)
+            modelPars.orig <- modelPars
+            downi <-lapply(1:length(unique(years)), function(i) {
+                        year.ind <- which(years == unique(years)[i])
+                        modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
+                        modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
+                        obs$Data <- obs.orig$Data[-year.ind,,]
+                        attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
+                        
+                        if(method == "analogs"){
+                                   analogs(obs = obs,
+                                                modelPars = modelPars,
+                                                n.neigh = n.neigh,
+                                                sel.fun = sel.fun,
+                                                analog.dates = analog.dates,
+                                                parallel.pars = parallel.pars)
+                        }else if (method == "glm"){
+                                    glimpr(obs = obs,
+                                          modelPars = modelPars,
+                                          pr.threshold = pr.threshold,
+                                          n.pcs = n.pcs)
+                        }
+                        
+                                            
+                  })
+            down <- unname(do.call("abind", c(downi, along = 1)))
       }
+      obs.orig$Data <- down
+      # Data array - rename dims
+      dimNames <- renameDims(obs.orig, modelPars$multi.member)
+      attr(obs.orig$Data, "dimensions") <- dimNames
+      attr(obs.orig$Data, "downscaling:method") <- method
+      attr(obs.orig$Data, "downscaling:cross-validation") <- cross.val
+      attr(obs.orig$Data, "downscaling:simulation_data") <- modelPars$sim.dataset
+      attr(obs.orig$Data, "downscaling:n_pcs") <- n.pcs
+      # Date replacement
+      obs.orig$Dates <- modelPars$sim.dates 
+      message("[", Sys.time(), "] Done.")
+      
+      return(obs.orig)
 }
+
+
+
 # identical(pred,sim)
 # # ppModelSetup  la matriz pred tiene que tener un atributo que indica que es un producto de PCA o no
 # a <- downscale(obs = obs.precip, pred = pred, sim = sim, method = "analogs")
@@ -149,3 +192,8 @@ downscale <- function(obs,
 # # range(obs.precip$Data)
 # obs = obs.precip
 # str(modelPars)
+
+#             if (!is.null(sim) & !identical(pred, sim)) {
+#              
+#             }
+

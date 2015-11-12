@@ -18,7 +18,7 @@ A character vector indicating the dimensions of the output object
 Sets the 'dimensions' attribute of model out Data objects after downscaling
 }
 \author{
-J. Bedia \email{joaquin.bedia@gmail.com}
+J. Bedia
 }
 \keyword{internal}
 

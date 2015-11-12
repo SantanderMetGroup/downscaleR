@@ -22,7 +22,7 @@ leap.years <- which.leap(1885:1937)
 (1885:1937)[leap.years]
 }
 \author{
-J. Bedia \email{joaquin.bedia@gmail.com}
+J. Bedia
 }
 \references{
 \url{https://en.wikipedia.org/wiki/Leap_year}

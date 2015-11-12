@@ -146,16 +146,12 @@ analogs <- function(obs = obs,
       }
       d.list <- NULL
       # Data array
-      dimNames <- renameDims(obs, modelPars$multi.member)
-      obs$Data <- drop(unname(do.call("abind", c(out.list, along = -1))))
+      #obs$Data 
+      o <- drop(unname(do.call("abind", c(out.list, along = -1))))
       out.list <- NULL
       # New data attributes
-      attr(obs$Data, "dimensions") <- dimNames
-      attr(obs$Data, "downscaling:method") <- "analogs"
-      attr(obs$Data, "downscaling:simulation_data") <- modelPars$sim.dataset
       # Date replacement
-      obs$Dates <- modelPars$sim.dates 
-      return(obs)
+      return(o)
 }
 # End
 

@@ -153,8 +153,8 @@ getCoordinates <- function(obj) {
 #' @param multi.member Logical indicating if simulation data is a multimember
 #' @return A character vector indicating the dimensions of the output object
 #' @keywords internal
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' @export
+#' @author J. Bedia
+
 
 renameDims <- function(obs, multi.member) {
       dimNames <- attr(obs$Data, "dimensions")
@@ -211,7 +211,6 @@ adjustDates <- function(timePars) {
 #' @title getIntersect
 #' @description Get the common period of the objects obs and prd
 #' @author S. Herrera
-#' @export
 #' @keywords internal
 
 getIntersect <- function(obs,prd){
@@ -240,7 +239,7 @@ getIntersect <- function(obs,prd){
 #' @references \url{https://en.wikipedia.org/wiki/Leap_year}
 #' @keywords internal
 #' @export
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @author J. Bedia 
 #' @examples
 #' leap.years <- which.leap(1885:1937)
 #' (1885:1937)[leap.years]

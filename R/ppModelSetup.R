@@ -74,8 +74,8 @@ ppModelSetup <- function(obs, pred, sim) {
       }
       # Scaling and centering of simulation data. Parameters are inherited from the predictors
       if (isTRUE(use.PCs)) {
-            mu.list <- lapply(1:n.vars, function(x) {attributes(pred[[x]][[1]])$"scaled:center"})
-            sigma.list <- lapply(1:n.vars, function(x) {attributes(pred[[x]][[1]])$"scaled:scale"})
+            mu.list <- lapply(1:n.vars, function(x) {attributes(pred[[x]][[1]]$orig)$"scaled:center"})# acceso a los datos pred cambiante, comprobar
+            sigma.list <- lapply(1:n.vars, function(x) {attributes(pred[[x]][[1]]$orig)$"scaled:scale"})# acceso a los datos pred cambiante, comprobar
             pred.mat <- pred$COMBINED[[1]]$PCs
             if (is.null(pred.mat)) {
                   pred.mat <- pred[[1]][[1]]$PCs
