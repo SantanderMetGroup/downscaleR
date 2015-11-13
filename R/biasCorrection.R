@@ -214,7 +214,8 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
           callPrd <- as.call(c(list(as.name("["),quote(pred$Data)), indTimePrd))
           callSim <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeSim))
           #                              attrSim <- attr(sim$Data, "dimensions")
-          if (!is.array(obs$Data)){
+          #          if (!is.array(obs$Data)){
+          if (!is.array(obs$Data) | length(grep("^station$", attr(obs$Data, "dimensions")))>0){
             F <- calibrateProj(obs$Data, eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
           }else{
             F <- calibrateProj(aperm(obs$Data, dimPermI), eval(callPrd), eval(callSim), method = method, varcode = obs$Variable$varName, pr.threshold = threshold, scaling.type = scaling.type, extrapolate = extrapolation, theta=theta)
@@ -279,7 +280,8 @@ biasCorrection <- function (obs, pred, sim, method = c("eqm", "delta", "scaling"
         auxObs <- array(data = NaN, dim = c(dimPred[pred.member.index]*dimPred[pred.time.index],dimPred[setdiff(1:length(dimPred),c(pred.time.index, pred.member.index))]))
         for (i in 1:dimPred[pred.member.index]){
           indMember <- ((i-1)*dimPred[pred.time.index]+1):(i*dimPred[pred.time.index])
-          if (!is.array(obs$Data)){
+#          if (!is.array(obs$Data)){
+          if (!is.array(obs$Data) | length(grep("^station$", attr(obs$Data, "dimensions")))>0){
             auxObs[indMember,,] <- obs$Data
           }else{
             auxObs[indMember,,] <- aperm(obs$Data, dimPermI)
