@@ -15,7 +15,7 @@
 #' @export
 
 
-quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), ylim = NULL){
+quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), ylim = NULL, main = NULL){
       
       if (type == "daily") {
             if (!is.null(downscaled)) {
@@ -25,25 +25,31 @@ quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3
             }
             dailyOutlook (obs, sim, downscaled, location, ylim)
       } else if (type == "interannual") {
-            interannualOutlook (obs, sim, downscaled, location, ylim)
+            interannualOutlook (obs, sim, downscaled, location, ylim, main)
       }
 }
 #end
 
-interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), ylim = NULL){
+interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), ylim = NULL, main = NULL){
       par(mfrow = c(1,2))
       period.id <- (getYearsAsINDEX(sim))
       period <- unique(period.id)
       if (!is.null(downscaled)){
             test.id2 <- getYearsAsINDEX(downscaled)
             train.id <- period.id[which(is.na(match(period.id, test.id2)))]
+            if(length(train.id)==0){train.id <-period.id}
             test.id <- period.id[which(is.na(match(period.id, train.id)))]
+            if(length(test.id)==0){test.id <- period.id}
             test.period <- unique(test.id)
-            train.period <- period[which(is.na(match(period,test.period)))]
+#             train.period <- period[which(is.na(match(period,test.period)))]
+            train.period <-unique(train.id)
             obs.test <- subsetField(obs, years = test.period) 
             obs.train <- subsetField(obs, years = train.period)
             sim.test <- subsetField(sim, years = test.period)
             sim.train <- subsetField(sim, years = train.period)
+            if(length(which(is.na(match(train.id, test.id2))))==0){
+                  comper <- TRUE
+            }else{comper <- FALSE}
       }
       x.coord <- getCoordinates(obs)$x
       y.coord <- getCoordinates(obs)$y
@@ -175,9 +181,15 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                   if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
                        w <- downscaled$Data[,yo,xo]   
                   }else{
-                  w <- tapply(downscaled$Data[,yo,xo], INDEX = test.id2, FUN = mean)}
+                  w <- tapply(downscaled$Data[,yo,xo], INDEX = test.id2, FUN = mean)
+                  }
+                  if(comper == TRUE){
+                        xt <- x
+                        yt <- y
+                  }else{
                   xt <- x[(1+length(train.period)):length(period)]
                   yt <- y[(1+length(train.period)):length(period)]
+                  }
                   ## ACCURACY
                   ### Spearman correlation rho and the Root Mean Square Error (RMSE) as accuracy measures 
                   ### for the direct and calibrated simulation in the TEST PERIOD
@@ -197,12 +209,19 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                   ma <-  floor(max(c(x,y)))
                   ylim <- c(mi, ma + (ma-mi))}
             plot(1:length(period), x, xlim = c(0,length(period)), ylim = ylim, xlab="", xaxt = "n", 
-                 ylab = "Annual/seasonal mean value", cex = .6, col = NULL)
+                 ylab = "Annual/seasonal mean value", cex = .6, col = NULL, main = main)
             tck <- axis(1, at = 1:length(period), labels=FALSE)
             text(tck,  par("usr")[3] - 2, xpd = TRUE, labels = (1981:2010), 
                  srt = 90, cex =.6)
             if (!is.null(downscaled)) {
                   #plot the mean (lines)
+                  if(comper == TRUE){
+                  lines(1:length(period), x, lwd = 2, xlim = c(0,length(period)))
+                
+                  lines(1:length(period), y, lwd = 2, xlim = c(0,length(period)),
+                        col="red")
+                  lines(1:length(period), w, col = "blue", lwd = 2)                        
+                  }else{
                   lines(1:(length(train.period)+1), x[1:(length(train.period)+1)], lwd = 2, lty = 4, xlim = c(0,length(period)))
                   lines((1+length(train.period)):length(period) , x[(1+length(train.period)):length(period)], 
                         lwd = 2)
@@ -211,6 +230,7 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                   lines((1+length(train.period)):length(period) , y[(1+length(train.period)):length(period)], 
                         lwd = 2, col ="red")
                   lines((length(train.period)+1):length(period), w, col = "blue", lwd = 2)
+                  }
                   legend(0, ylim[2] , legend = c("obs",  
                                                  paste("direct: rho=", 
                                                        round(rho.direct, digits = 2), ", bias=", 
