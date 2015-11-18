@@ -1,13 +1,13 @@
-#' @title Annual aggregation of the data in a field/multifield
-#' @description Aggregates data sub-annual data annually by specifiyng an aggregation function
+#' @title Time aggregation of the data in a field/multifield
+#' @description Aggregates daily or sub-daily data annually or daily by specifiyng an aggregation function.
 #' @param obj a field or multifield (can be multimember).
 #' @param aggr.d a single character or a character vector indicating the daily aggregation function. 
 #' Possibilities are:  "mean", "min", "max", "sum" (default is NULL).
 #' @param aggr.y a single character or a character vector indicating the annual aggregation function. 
 #' Possibilities are: "none", "mean", "min", "max", "sum" (default is "mean").
-#' @return a field or multifield with the time dimension daily or annually aggregated (see details).
+#' @return A field or multifield with the time dimension daily or annually aggregated (see details).
 #' @details If aggr.d = NULL and the data in the field is sub-daily, annualAggregation will return an error. 
-#' If the data is sub-daily and FUN = "none", the function will return the daily aggregated field.
+#' If the data is sub-daily and aggr.y = "none", the function will return the daily aggregated field. 
 #' @author M. Iturbide \email{maibide@@gmail.com}
 #' @export
 

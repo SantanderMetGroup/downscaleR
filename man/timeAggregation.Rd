@@ -2,7 +2,7 @@
 % Please edit documentation in R/timeAggregation.R
 \name{timeAggregation}
 \alias{timeAggregation}
-\title{Annual aggregation of the data in a field/multifield}
+\title{Time aggregation of the data in a field/multifield}
 \usage{
 timeAggregation(obj, aggr.d = NULL, aggr.y = "mean")
 }
@@ -16,14 +16,14 @@ Possibilities are:  "mean", "min", "max", "sum" (default is NULL).}
 Possibilities are: "none", "mean", "min", "max", "sum" (default is "mean").}
 }
 \value{
-a field or multifield with the time dimension daily or annually aggregated (see details).
+A field or multifield with the time dimension daily or annually aggregated (see details).
 }
 \description{
-Aggregates data sub-annual data annually by specifiyng an aggregation function
+Aggregates daily or sub-daily data annually or daily by specifiyng an aggregation function.
 }
 \details{
 If aggr.d = NULL and the data in the field is sub-daily, annualAggregation will return an error.
-If the data is sub-daily and FUN = "none", the function will return the daily aggregated field.
+If the data is sub-daily and aggr.y = "none", the function will return the daily aggregated field.
 }
 \author{
 M. Iturbide \email{maibide@gmail.com}
