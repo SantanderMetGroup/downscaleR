@@ -4,26 +4,29 @@
 \alias{timeAggregation}
 \title{Time aggregation of the data in a field/multifield}
 \usage{
-timeAggregation(obj, aggr.d = NULL, aggr.y = "mean")
+timeAggregation(obj, aggr.d = NULL, aggr.m = NULL, aggr.y = NULL)
 }
 \arguments{
 \item{obj}{a field or multifield (can be multimember).}
 
-\item{aggr.d}{a single character or a character vector indicating the daily aggregation function.
+\item{aggr.d}{a single character or a character string indicating the daily aggregation function.
 Possibilities are:  "mean", "min", "max", "sum" (default is NULL).}
 
-\item{aggr.y}{a single character or a character vector indicating the annual aggregation function.
-Possibilities are: "none", "mean", "min", "max", "sum" (default is "mean").}
+\item{aggr.m}{a single character or a character string indicating the monthly aggregation function.
+Possibilities are:  "mean", "min", "max", "sum" (default is NULL).}
+
+\item{aggr.y}{a single character or a character string indicating the annual aggregation function.
+Possibilities are: "mean", "min", "max", "sum" (default is "NULL").}
 }
 \value{
-A field or multifield with the time dimension daily or annually aggregated (see details).
+A field or multifield with the time dimension daily, monthly or annually aggregated (see details).
 }
 \description{
-Aggregates daily or sub-daily data annually or daily by specifiyng an aggregation function.
+Aggregates data daily, monthly or annually by specifiyng an aggregation function.
 }
 \details{
-If aggr.d = NULL and the data in the field is sub-daily, annualAggregation will return an error.
-If the data is sub-daily and aggr.y = "none", the function will return the daily aggregated field.
+To annually or monthly aggregate data, aggr.d and/or aggr.m might be also specified to apply different aggregations
+for each time scale. If the data in the field is sub-daily and aggr.d is not specified, a WARNING message will be returned.
 }
 \author{
 M. Iturbide \email{maibide@gmail.com}
