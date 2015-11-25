@@ -74,7 +74,7 @@ timeAggregation <- function(obj, aggr.d = NULL, aggr.y = "mean"){
                         fin <- array(dim = c(1,nmem,length(unique(period.id)), length(x.coord), ncol = length(y.coord)))
                         lfin <- lapply(1:length(aggr.d), function(i){
                               message("Applying ", aggr.d[i], " daily aggregation function to var ", vars[i])
-                              fin[,,,,] <- annualAggregationMain(obj$Data[i,,,,], FUN = aggr.d[i], id = period.id)
+                              fin[,,,,] <- annualAggregationMain(obj$Data[i,,,,], FUN = aggr.d[i], id = period.id, y.coord, x.coord, coords)
                               return(fin)
                         })
                         
@@ -82,7 +82,7 @@ timeAggregation <- function(obj, aggr.d = NULL, aggr.y = "mean"){
                         fin <- array(dim = c(1,length(unique(period.id)), length(x.coord), ncol = length(y.coord)))  
                         lfin <- lapply(1:length(aggr.d), function(i){ 
                               message("Applying ", aggr.d[i], " daily aggregation function to var ", vars[i])
-                              fin[,,,] <- annualAggregationMain(obj$Data[i,,,], FUN = aggr.d[i], id = period.id)
+                              fin[,,,] <- annualAggregationMain(obj$Data[i,,,], FUN = aggr.d[i], id = period.id, y.coord, x.coord, coords)
                               return(fin)
                         })
                   }
@@ -92,7 +92,7 @@ timeAggregation <- function(obj, aggr.d = NULL, aggr.y = "mean"){
                   
             }else{
                   message("Applying ", aggr.d, " daily aggregation function")
-                  dato <- annualAggregationMain(obj$Data, FUN =aggr.d, id = period.id)
+                  dato <- annualAggregationMain(obj$Data, FUN =aggr.d, id = period.id, y.coord, x.coord, coords)
             }
             dims <- attr(obj$Data, "dimensions")
             obj$Data <- unname(dato)
@@ -134,7 +134,7 @@ timeAggregation <- function(obj, aggr.d = NULL, aggr.y = "mean"){
                         fin <- array(dim = c(1,nmem,length(unique(period.id)), length(y.coord), ncol = length(x.coord)))
                         lfin <- lapply(1:length(aggr.f), function(i){
                               message("Applying ", aggr.f[i], " annual aggregation function to var ", vars[i])
-                              fin[,,,,] <- annualAggregationMain(obj$Data[i,,,,], FUN = aggr.f[i], id = period.id)                                                                
+                              fin[,,,,] <- annualAggregationMain(obj$Data[i,,,,], FUN = aggr.f[i], id = period.id, y.coord, x.coord, coords)                                                                
                               return(fin)
                         })
                  
@@ -142,7 +142,7 @@ timeAggregation <- function(obj, aggr.d = NULL, aggr.y = "mean"){
                         fin <- array(dim = c(1,length(unique(period.id)), length(y.coord), ncol = length(x.coord)))  
                         lfin <- lapply(1:length(aggr.f), function(i){ 
                               message("Applying ", aggr.f[i], " annual aggregation function to var ", vars[i])
-                              fin[,,,] <- annualAggregationMain(obj$Data[i,,,], FUN = aggr.f[i], id = period.id)
+                              fin[,,,] <- annualAggregationMain(obj$Data[i,,,], FUN = aggr.f[i], id = period.id, y.coord, x.coord, coords)
                               return(fin)
                         })
                   }
@@ -153,7 +153,7 @@ timeAggregation <- function(obj, aggr.d = NULL, aggr.y = "mean"){
             }else{
                   aggr.f <- aggr.y   
                   message("Applying ", aggr.f, " annual aggregation function")
-                  dato <- annualAggregationMain(obj$Data, FUN =aggr.y, id = period.id)
+                  dato <- annualAggregationMain(obj$Data, FUN =aggr.y, id = period.id, y.coord, x.coord, coords)
             }
       
       
@@ -184,7 +184,7 @@ return(obj)
 #' @return array  with the time dimension annually aggregated.
 #' @author M. Iturbide \email{maibide@@gmail.com}
 
-annualAggregationMain <- function(data, FUN = c("mean", "min", "max", "sum"), id){
+annualAggregationMain <- function(data, FUN = c("mean", "min", "max", "sum"), id, y.coord, x.coord, coords){
    
       aggr <- match.arg(FUN, choices = c("none","mean", "min", "max", "sum"))
 
