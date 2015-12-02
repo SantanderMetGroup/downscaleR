@@ -41,22 +41,52 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
       # Models
       message("[", Sys.time(), "] Fitting models ...")
       pred.list <- suppressWarnings(lapply(1:length(cases), function(x) {
-            mod.bin <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))
-            sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
-                
-                  pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
-                  pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]]))] <- 1L
-                  pred <- as.integer(pred)
-            })
+            
+            mod.bin <- tryCatch({glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))}
+                                , error = function(err){})
+            
+            if (is.null(mod.bin)){
+                  sims.bin <- NULL
+            }else{
+                  sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
+                        
+                        pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
+                        pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]]))] <- 1L
+                        pred <- as.integer(pred)
+                  })
+            }
+            
             mod.bin <- NULL
             wet <- which(ymat[ ,cases[x]] != 0)
             # TODO: handle exception when model is over-specified (https://stat.ethz.ch/pipermail/r-help/2000-January/009833.html)
-            mod.gamma <- glm(ymat[ ,cases[x]] ~., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = Gamma(link = "log"), subset = wet)
-            sims <- sapply(1:length(modelPars$sim.mat), function(i) {
-                  unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") * sims.bin[ ,i])
-            })
+            
+            mod.gamma <- tryCatch({glm(ymat[ ,cases[x]] ~., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = Gamma(link = "log"), subset = wet)},
+                                  error = function(err){mod.gamma <- NULL})
+            
+            
+            if (is.null(mod.gamma)){
+                  
+                  sims <- matrix(NA, ncol = 1, nrow = nrow(modelPars$sim.mat[[i]]))
+            }else{
+                  sims <- sapply(1:length(modelPars$sim.mat), function(i) {
+                        unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") * sims.bin[ ,i])
+                  })
+            }
+            
             return(unname(sims))
       }))
+      
+      
+      err <- lapply(1:length(pred.list), function(u){
+            is.logical(pred.list[[u]])
+      })
+      
+      n.err <- length(which(do.call("abind", err)==TRUE))
+      
+      if(n.err > 0){
+            warning("glm.fit did not converge ", n.err, " times, NA returned.")
+      }
+      
       # Refill with NaN series
       #######
       if (length(rm.ind) > 0) {
@@ -65,7 +95,7 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
             pred.list <- aux.list
             aux.list <- NULL
       }
-
+      
       x.obs <- getCoordinates(obs)$x
       y.obs <- getCoordinates(obs)$y
       aux.list <- lapply(1:length(modelPars$sim.mat), function (i) {
@@ -83,13 +113,13 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
       })
       # Data array - rename dims
       
-#       obs$Data <- 
+      #       obs$Data <- 
       o <-drop(unname(do.call("abind", c(aux.list, along = -1))))
       aux.list <- NULL
       # Date replacement
-#       obs$Dates <- modelPars$sim.dates 
-       message("[", Sys.time(), "] Done.")
-#       return(obs)
-return(o)
+      #       obs$Dates <- modelPars$sim.dates 
+      message("[", Sys.time(), "] Done.")
+      #       return(obs)
+      return(o)
 }
 # End

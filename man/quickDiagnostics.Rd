@@ -5,7 +5,8 @@
 \title{Plots daily/annual series and the annual correlation map of different field objects}
 \usage{
 quickDiagnostics(obs, sim, downscaled = NULL, location = c(-42.5, -3),
-  type = c("daily", "interannual"), ylim = NULL)
+  type = c("daily", "interannual"), na.tolerance = 0.3, ylim = NULL,
+  main = NULL)
 }
 \arguments{
 \item{obs}{Field of observations.}
@@ -19,7 +20,11 @@ quickDiagnostics(obs, sim, downscaled = NULL, location = c(-42.5, -3),
 \item{type}{Character value, either \code{"daily"} or \code{"interannual"}, indicating is the assessment is to
 be performed on a daily or interannual basis.}
 
+\item{na.tolerance}{proportion of NAs in a grid cell (location) that are allowed to calculate correlation.}
+
 \item{ylim}{'ylim' argument passed to the time series plot.}
+
+\item{main}{'main' argument passed to the plot.}
 }
 \value{
 Two diagnostic plots with observed, simulated and (possibly) downscaled time series, and a QQ-plot by percentlies.

@@ -124,47 +124,60 @@ downscale <- function(obs,
       obs.orig <- obs
       if (cross.val == "none") {
             down <- switch(method,
-                        "analogs" = analogs(obs = obs,
-                                      modelPars = modelPars,
-                                      n.neigh = n.neigh,
-                                      sel.fun = sel.fun,
-                                      analog.dates = analog.dates,
-                                      parallel.pars = parallel.pars),
-                        "glm" = glimpr(obs = obs,
-                                 modelPars = modelPars,
-                                 pr.threshold = pr.threshold,
-                                 n.pcs = n.pcs)
-            )
-      } else if (cross.val == "loocv") {
-
-            if("scaled:method" %in% names(attributes(pred))){
-                  pred$Dates$start <- attr(pred, "dates_start")
-            }
-            years <- getYearsAsINDEX(pred)
-            modelPars.orig <- modelPars
-            downi <-lapply(1:length(unique(years)), function(i) {
-                        year.ind <- which(years == unique(years)[i])
-                        modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
-                        modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
-                        obs$Data <- obs.orig$Data[-year.ind,,]
-                        attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
-                        
-                        if(method == "analogs"){
-                                   analogs(obs = obs,
-                                                modelPars = modelPars,
-                                                n.neigh = n.neigh,
-                                                sel.fun = sel.fun,
-                                                analog.dates = analog.dates,
-                                                parallel.pars = parallel.pars)
-                        }else if (method == "glm"){
-                                    glimpr(obs = obs,
+                           "analogs" = analogs(obs = obs,
+                                               modelPars = modelPars,
+                                               n.neigh = n.neigh,
+                                               sel.fun = sel.fun,
+                                               analog.dates = analog.dates,
+                                               parallel.pars = parallel.pars),
+                           "glm" = glimpr(obs = obs,
                                           modelPars = modelPars,
                                           pr.threshold = pr.threshold,
                                           n.pcs = n.pcs)
-                        }
-                        
-                                            
-                  })
+            )
+      } else if (cross.val == "loocv") {
+            
+            if(!is.null(sim)){
+                  message("'sim' will be ignored for cross-validation")
+            }
+            
+            if("scaled:method" %in% names(attributes(pred))){
+                  pred$Dates$start <- attr(pred, "dates_start")
+            }
+            
+            years <- getYearsAsINDEX(pred)
+            modelPars.orig <- modelPars
+            message("[", Sys.time(), "] Fitting models...")
+            
+            downi <-lapply(1:length(unique(years)), function(i) {
+                  year.ind <- which(years == unique(years)[i])
+                  modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
+                  modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
+                  obs$Data <- obs.orig$Data[-year.ind,,]
+                  attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
+                  
+                  message("Validation ", i, ", ", length(years)-i, " remaining")
+                  
+                  if(method == "analogs"){
+                        suppressMessages(
+                        analogs(obs = obs,
+                                modelPars = modelPars,
+                                n.neigh = n.neigh,
+                                sel.fun = sel.fun,
+                                analog.dates = analog.dates,
+                                parallel.pars = parallel.pars)
+                        )
+                  }else if (method == "glm"){
+                        suppressMessages(
+                        glimpr(obs = obs,
+                               modelPars = modelPars,
+                               pr.threshold = pr.threshold,
+                               n.pcs = n.pcs)
+                        )
+                  }
+                  
+                  
+            })
             down <- unname(do.call("abind", c(downi, along = 1)))
       }
       obs.orig$Data <- down
@@ -196,4 +209,3 @@ downscale <- function(obs,
 #             if (!is.null(sim) & !identical(pred, sim)) {
 #              
 #             }
-
