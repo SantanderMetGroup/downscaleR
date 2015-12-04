@@ -49,7 +49,6 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
                   sims.bin <- NULL
             }else{
                   sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
-                        
                         pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
                         pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]]))] <- 1L
                         pred <- as.integer(pred)
@@ -65,8 +64,9 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
             
             
             if (is.null(mod.gamma)){
-                  
-                  sims <- matrix(NA, ncol = 1, nrow = nrow(modelPars$sim.mat[[i]]))
+                  sims <-  sapply(1:length(modelPars$sim.mat), function(i) {
+                        matrix(NA, ncol = 1, nrow = nrow(modelPars$sim.mat[[i]]))
+                  })
             }else{
                   sims <- sapply(1:length(modelPars$sim.mat), function(i) {
                         unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") * sims.bin[ ,i])
