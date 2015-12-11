@@ -40,28 +40,51 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
       }
       # Models
       message("[", Sys.time(), "] Fitting models ...")
-      pred.list <- suppressWarnings(lapply(1:length(cases), function(x) {
+      err <- numeric()
+      pred.list <- list()
             
-            mod.bin <- tryCatch({glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))}
-                                , error = function(err){})
+      suppressWarnings(
+            for (x in 1:length(cases)){
+         
             
-            if (is.null(mod.bin)){
-                  sims.bin <- NULL
-            }else{
-                  sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
+            mod.bin <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))
+            
+            sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
                         pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
                         pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]]))] <- 1L
                         pred <- as.integer(pred)
                   })
-            }
             
+
             mod.bin <- NULL
             wet <- which(ymat[ ,cases[x]] != 0)
             # TODO: handle exception when model is over-specified (https://stat.ethz.ch/pipermail/r-help/2000-January/009833.html)
             
-            mod.gamma <- tryCatch({glm(ymat[ ,cases[x]] ~., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = Gamma(link = "log"), subset = wet)},
-                                  error = function(err){mod.gamma <- NULL})
+            Npcs <- n.pcs+1
+            mod.gamma = NULL
             
+            ###########
+            
+            while(is.null(mod.gamma) & Npcs > 1) {
+                  Npcs <-Npcs -1
+#                   print(Npcs)
+                  mod.gamma <- tryCatch(expr = {
+                        glm(ymat[ ,cases[x]] ~., data = as.data.frame(modelPars$pred.mat)[ ,1:Npcs], family = Gamma(link = "log"), subset = wet)
+                  },
+                  error = function(err) {                
+                        mod.gamma <- NULL
+                  })
+            }
+
+            
+            if(length(mod.gamma$model)-1 < n.pcs){
+                  err[x] <- 1 
+            }else{
+                  err[x] <- 0
+            }
+            
+        
+            ###########
             
             if (is.null(mod.gamma)){
                   sims <-  sapply(1:length(modelPars$sim.mat), function(i) {
@@ -72,20 +95,31 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
                         unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") * sims.bin[ ,i])
                   })
             }
-            
-            return(unname(sims))
-      }))
-      
-      
-      err <- lapply(1:length(pred.list), function(u){
-            is.logical(pred.list[[u]])
+
+      pred.list[[x]] <- unname(sims)
+      sims <- NULL
+
       })
-      
-      n.err <- length(which(do.call("abind", err)==TRUE))
-      
+
+     
+      n.err <- length(which(err==1))
+
       if(n.err > 0){
-            warning("glm.fit did not converge ", n.err, " times, NA returned.")
+      n <- round(n.err/length(err)*100, digits = 2)
+      warning("In ", n,"% of the locations: glm.fit convergence reached after variable number reduction.")
       }
+      
+      
+      
+#       err <- lapply(1:length(pred.list), function(u){
+#             is.logical(pred.list[[u]])
+#       })
+#       
+#       n.err <- length(which(do.call("abind", err)==TRUE))
+#       
+#       if(n.err > 0){
+#             warning("glm.fit did not converge ", n.err, " times, NA returned.")
+#       }
       
       # Refill with NaN series
       #######

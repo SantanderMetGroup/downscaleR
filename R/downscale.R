@@ -156,7 +156,7 @@ downscale <- function(obs,
                   obs$Data <- obs.orig$Data[-year.ind,,]
                   attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
                   
-                  message("Validation ", i, ", ", length(years)-i, " remaining")
+                  message("Validation ", i, ", ", length(unique(years))-i, " remaining")
                   
                   if(method == "analogs"){
                         suppressMessages(
@@ -180,9 +180,9 @@ downscale <- function(obs,
             })
             down <- unname(do.call("abind", c(downi, along = 1)))
       }
-      obs.orig$Data <- down
       # Data array - rename dims
       dimNames <- renameDims(obs.orig, modelPars$multi.member)
+      obs.orig$Data <- down
       attr(obs.orig$Data, "dimensions") <- dimNames
       attr(obs.orig$Data, "downscaling:method") <- method
       attr(obs.orig$Data, "downscaling:cross-validation") <- cross.val
