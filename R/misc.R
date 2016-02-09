@@ -123,30 +123,6 @@ getYearsAsINDEX <- function(obj) {
 }
 # End
 
-
-#' @title Get geographical coordinates of a climate data object
-#' @description Returns the coordinates of a climate data object, either stations
-#'  or field
-#' @param obj Any object extending the station or field classes
-#' @return A list with x and y components
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' @export
-#' 
-
-getCoordinates <- function(obj) {
-      if ("station" %in% attr(obj$Data, "dimensions")) {
-            x <- obj$xyCoords[ ,1]
-            y <- obj$xyCoords[ ,2]
-      } else {
-            x <- obj$xyCoords$x
-            y <- obj$xyCoords$y
-      }
-      return(list("x" = x, "y" = y))
-}
-# End
-
-
-
 #' @title Set the 'dimensions' attribute 
 #' @description Sets the 'dimensions' attribute of model out Data objects after downscaling
 #' @param obs A observations object
@@ -172,62 +148,27 @@ renameDims <- function(obs, multi.member) {
 # End
 
 
-#' Calculate the number of days of the current month
-#' @param d A date (character) in format YYYY-MM-DD...
-#' @return The number of days of the current month
-#' @references 
-#' \url{http://stackoverflow.com/questions/6243088/find-out-the-number-of-days-of-a-month-in-r}
-#' @export
-
-ndays <- function(d) {
-      as.difftime(tail((28:31)[which(!is.na(as.Date(paste0(substr(d, 1, 8), 28:31), '%Y-%m-%d')))], 1), units = "days")
-}
-#End
-
-#' Adjust time/start dates of a loaded object
-#' @param timePars Object containing the relevant time parameters
-#' @return A list with dates (POSIXct) start and end, defining the interval [start, end)
-#' @details Sub-daily information is displayed only in case of subdaily data
-#' @author J Bedia \email{joaquin.bedia@@gmail.com}
-#' @keywords internal
-
-# timePars <- cube$timePars
-adjustDates <- function(timePars) {
-      interval <- 0
-      if (timePars$aggr.m != "none") {
-            mon.len <- sapply(timePars$dateSliceList, ndays)
-            interval <- mon.len * 86400
-      } else if (timePars$aggr.d != "none") {
-            timePars$dateSliceList <- format(as.Date(substr(timePars$dateSliceList, 1, 10)), format = "%Y-%m-%d %H:%M:%S", usetz = TRUE) 
-            interval <- 86400
-      }
-      formato <- ifelse(interval[1] == 0, "%Y-%m-%d %H:%M:%S", "%Y-%m-%d")
-      dates.end <- format(as.POSIXct(as.POSIXlt(timePars$dateSliceList, tz = "GMT") + interval), format = formato, usetz = TRUE)
-      dates.start <- format(as.POSIXct(as.POSIXlt(timePars$dateSliceList, tz = "GMT"), tz = "GMT"), format = formato, usetz = TRUE)
-      return(list("start" = dates.start, "end" = dates.end))
-}
-# End
-
 #' @title getIntersect
 #' @description Get the common period of the objects obs and prd
 #' @author S. Herrera
 #' @keywords internal
+#' @importFrom loadeR subsetDimension
 
 getIntersect <- function(obs,prd){
-  dimNames <- attr(obs$Data, "dimensions")
-  indDates <- which(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d")==as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
-  auxDates <- as.POSIXct(obs$Dates$start[indDates], tz="GMT", format="%Y-%m-%d")
-  indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"), auxDates))
-  obs <- subsetDimension(obs, dimension = "time", indices = indObs)
-  dimNames <- attr(prd$Data, "dimensions")
-  indObs <- which(is.element(as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"), auxDates))
-  prd <- subsetDimension(prd, dimension = "time", indices = indObs)
-  obj <- list(obs = obs, prd = prd)
-  obj$Dates$start <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d")
-  obj$Dates$end <- as.POSIXct(obs$Dates$end, tz="GMT", format="%Y-%m-%d")
-  attr(obj$obs$Data, "dimensions") <- attr(obs$Data, "dimensions")
-  attr(obj$prd$Data, "dimensions") <- attr(prd$Data, "dimensions")
-  return(obj)
+      dimNames <- attr(obs$Data, "dimensions")
+      indDates <- which(as.POSIXct(obs$Dates$start, tz="GMT", format = "%Y-%m-%d") == as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
+      auxDates <- as.POSIXct(obs$Dates$start[indDates], tz="GMT", format = "%Y-%m-%d")
+      indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"), auxDates))
+      obs <- subsetDimension(obs, dimension = "time", indices = indObs)
+      dimNames <- attr(prd$Data, "dimensions")
+      indObs <- which(is.element(as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"), auxDates))
+      prd <- subsetDimension(prd, dimension = "time", indices = indObs)
+      obj <- list(obs = obs, prd = prd)
+      obj$Dates$start <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d")
+      obj$Dates$end <- as.POSIXct(obs$Dates$end, tz="GMT", format="%Y-%m-%d")
+      attr(obj$obs$Data, "dimensions") <- attr(obs$Data, "dimensions")
+      attr(obj$prd$Data, "dimensions") <- attr(prd$Data, "dimensions")
+      return(obj)
 }
 
 

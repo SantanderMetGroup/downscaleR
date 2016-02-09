@@ -1,7 +1,6 @@
 
 #' @title Bias correction methods
 #' @description Implementation of several standard bias correction methods
-#' 
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 #'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.
@@ -11,15 +10,12 @@
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). See details on bias correction for precipitation.
 #' @param window Numeric value specifying the time window width used to calibrate. The window is centered on the target day. 
 #' Default to \code{NULL}, which considers the whole period available.
-#' 
 #' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
 #' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
 #' selected as the bias correction method.
-#' 
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
 #' \code{"sim"} that are out of the range of \code{"pred"}. Extrapolation is applied only to the \code{"eqm"} method, 
 #' thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).
-#' 
 #' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 #' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 #' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
@@ -72,7 +68,7 @@
 #'  
 #'  The precipitation subroutines are switched-on when the variable name of the grid 
 #'  (i.e., the value returned by \code{gridData$Variable$varName}) is one of the following: 
-#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the \code{\link{vocabulary}}), \code{"precipitation"} or \code{"precip"}.
+#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (see \code{\link[loadeR]{showVocabulary}}), \code{"precipitation"} or \code{"precip"}.
 #'  Thus, caution must be taken to ensure that the correct bias correction is being undertaken when dealing with
 #'  non-standard variables.
 #'     

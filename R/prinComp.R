@@ -1,6 +1,5 @@
 #' @title Principal Component Analysis of field/multifield/multimember data
 #' @description Performs a Principal Component Analysis of field, multifield or multi-member data
-#' 
 #' @param gridData A field, multifield, multimember field or multimember multifield object
 #' @param n.eofs Number of EOFs to be retained. Default to \code{NULL}, indicating
 #'  that either all EOFs are kept, or that the next argument will be used as criterion
@@ -10,13 +9,11 @@
 #' @param scaling Method for performing the scaling (and centering) of the input raw data matrix.
 #' Currently accepted choices are \code{"field"} (the default) and \code{"gridbox"}. See details.
 #' @template templateParallelParams
-#' 
 #' @return A list of \emph{N + 1} elements for multifields, where \emph{N} is the number of input variables used
 #'  and the last element contains the results of the combined PCA (See details). The list is named as the variables,
 #'  including the last element named \code{"COMBINED"}. In case of single fields (1 variable only), a list of length 1
 #'   (without the combined element). For each element of the list, the following objects are returned, either in the form of
 #'   another list (1 element for each member) for multimembers, or not in the case of non multimember inputs:
-#'  
 #'  \itemize{
 #'  \item \code{PCs}: A matrix of principal components, arranged in columns by decreasing importance order 
 #'  \item \code{EOFs}: A matrix of EOFs, arranged in columns by decreasing importance order
@@ -26,17 +23,13 @@
 #'  The \dQuote{order of importance} is given by the explained variance of each PC, as indicated
 #'  in the attribute \code{"explained_variance"} as a cumulative vector.
 #'  Additional information is returned via the remaining attributes (see details), including geo-referencing and time.
-#' 
 #' @template templateParallel
-#' 
 #' @note Performing PCA analysis on multimember multifields may become time-consuming and computationally expensive. 
 #' It is therefore advisable to avoid the use of this option for large datasets, and iterate over single
 #' multimember fields instead.
-#' 
 #' @details
-#'      
-#' \strong{Number of EOFs}
 #' 
+#' \strong{Number of EOFs}
 #' \code{n.eofs} and \code{v.exp} are alternative choices for the determination
 #'  of the number of EOFs (hence also the corresponding PCs) to be retained. If both are \code{NULL} (the default)
 #'  , all EOFs will be retained. If both are given a value different from \code{NULL}, 
@@ -68,17 +61,13 @@
 #'
 #' @export
 #' @importFrom abind asub
-#' 
 #' @seealso \code{\link{fieldFromPCs}}, \code{\link{plotEOF}}
-#'  
 #' @references
 #' Guti\'{e}rrez, J.M., R. Ancell, A. S. Cofi\~{n}o and C. Sordo (2004). Redes Probabil\'{i}sticas
 #'  y Neuronales en las Ciencias Atmosf\'{e}ricas. MIMAM, Spain. 279 pp.
 #'   \url{http://www.meteo.unican.es/en/books/dataMiningMeteo}
-#'  
 #' @author J. Bedia 
-#' 
-#' @examples \donttest{
+#' @examples \dontrun{
 #' # Download dataset
 #' download.file("http://meteo.unican.es/work/downscaler/data/Iberia_NCEP.tar.gz", 
 #' destfile = "mydirectory/Iberia_NCEP.tar.gz")

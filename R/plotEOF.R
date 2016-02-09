@@ -1,8 +1,6 @@
 #' @title Plot an arbitrary number of EOFs
-#' 
 #' @description Plots an arbitrary number of EOFs. Useful to have a quick overview of the main spatial modes
 #'  of a (possibly multimember) field.
-#'  
 #' @param prinCompObj A PCA object as returned by \code{\link{prinComp}}
 #' @param var Character string indicating the variable whose EOFs are to be displayed. If the PCA analysis has
 #' been applied to 1 single field, this argument can be omitted.
@@ -10,13 +8,11 @@
 #' will be represented
 #' @param member An integer indicating the position of the member whose EOFs are to be displayed. Default 1, 
 #' corresponding to the first member. Ignored for non multimember fields.
-#' 
 #' @return A plot with as many panels as EOFs requested, in the original units of the variable
 #' # @export
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' 
+#' @importFrom loadeR multiPlot
 #' @seealso \code{\link{prinComp}}
-#' 
 #' @examples \dontrun{ 
 #' # Winter temperature at 850 mb isobaric surface pressure level is loaded (period 1981--2010):
 #' data(iberia_ncep_ta850)

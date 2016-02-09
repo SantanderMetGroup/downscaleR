@@ -33,26 +33,33 @@ quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3
 }
 #end
 
+#' @importFrom loadeR subsetField
+#' @importFrom loadeR getCoordinates
+#' @keywords internal
+
+
 interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), na.tolerance = .3, ylim = NULL, main = NULL){
       par(mfrow = c(1,2))
       period.id <- (getYearsAsINDEX(sim))
       period <- unique(period.id)
-      if (!is.null(downscaled)){
+      if (!is.null(downscaled)) {
             test.id2 <- getYearsAsINDEX(downscaled)
             train.id <- period.id[which(is.na(match(period.id, test.id2)))]
-            if(length(train.id)==0){train.id <-period.id}
+            if (length(train.id) == 0){train.id <- period.id}
             test.id <- period.id[which(is.na(match(period.id, train.id)))]
-            if(length(test.id)==0){test.id <- period.id}
+            if (length(test.id) == 0){test.id <- period.id}
             test.period <- unique(test.id)
 #             train.period <- period[which(is.na(match(period,test.period)))]
-            train.period <-unique(train.id)
+            train.period <- unique(train.id)
             obs.test <- subsetField(obs, years = test.period) 
             obs.train <- subsetField(obs, years = train.period)
             sim.test <- subsetField(sim, years = test.period)
             sim.train <- subsetField(sim, years = train.period)
-            if(length(which(is.na(match(train.id, test.id2))))==0){
+            if (length(which(is.na(match(train.id, test.id2)))) == 0) {
                   comper <- TRUE
-            }else{comper <- FALSE}
+            } else {
+                  comper <- FALSE
+            }
       }
       x.coord <- getCoordinates(obs)$x
       y.coord <- getCoordinates(obs)$y
@@ -61,8 +68,8 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
       yo <- findInterval(location[2], y.coord)
       xi <- findInterval(x.coord[xo], getCoordinates(sim)$x)
       yi <- findInterval(y.coord[yo], getCoordinates(sim)$y)
-      if (any(attr(sim$Data, "dimensions")=="member")){
-            nmem <- dim(sim$Data)[which(attr(sim$Data, "dimensions")=="member")]
+      if (any(attr(sim$Data, "dimensions") == "member")){
+            nmem <- dim(sim$Data)[which(attr(sim$Data, "dimensions") == "member")]
             #Daily time series plot
             ##Compute statistic
             x <- tapply(obs$Data[, yo,xo], INDEX = period.id, FUN = mean)
@@ -318,10 +325,14 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
 }
 #end
 
+
+#' @importFrom loadeR subsetField
+#' @keywords internal
+
 dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), member = NULL, ylim = NULL){
       x <- subsetField(obs, lonLim = location[1], latLim = location[2])$Data
       y <- subsetField(sim, lonLim = location[1], latLim = location[2])$Data
-      if(!is.null(downscaled)){
+      if (!is.null(downscaled)){
             w <-  subsetField(downscaled, lonLim = location[1], latLim = location[2])$Data
       }
       yran <- if (is.null(ylim)) {
@@ -332,7 +343,7 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
             ylim
       }
       # Daily time series plot
-      par(mfrow=c(1,2))
+      par(mfrow = c(1,2))
       plot(1:length(x), 
            x, 
            lwd = 2, ty = "l", lty = 3,  
@@ -342,36 +353,32 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
       o <- match(attr(y, "dimensions"),"member")
       mi <- which(!is.na(o))
       
-      if(length(mi)>0){
-            nmem <- dim(sim$Data)[which(attr(sim$Data, "dimensions")=="member")]
-            
+      if (length(mi) > 0) {
+            nmem <- dim(sim$Data)[which(attr(sim$Data, "dimensions") == "member")]
             yl <- lapply(1:nmem, function(m){
                   y[m,]
             })
             y <- Reduce("+", yl)/length(yl)
-            
-            rmse.direct <- sqrt(mean((x - y)^2))
-            bias.direct <-  sum(y - x)/sum(x)
+            rmse.direct <- sqrt(mean((x - y) ^ 2))
+            bias.direct <-  sum(y - x) / sum(x)
             rho.direct <- cor(x = x, y = y, method = "spearman")
-            
             lines(1:length(y), 
                   y, 
                   col = "red", lwd = 1)
-            if (!is.null(downscaled)){
+            if (!is.null(downscaled)) {
                   wl <- lapply(1:nmem, function(m){
                         w[m,]
                   })
                   w <- Reduce("+", wl)/length(wl)
-                  
-                  xt <- x[(length(x) -(length(w)-1)):length(x)]
-                  yt <- y[(length(x) -(length(w)-1)):length(x)]
-                  rmse.down <- sqrt(mean((xt - w)^2))
+                  xt <- x[(length(x) - (length(w) - 1)):length(x)]
+                  yt <- y[(length(x) - (length(w) - 1)):length(x)]
+                  rmse.down <- sqrt(mean((xt - w) ^ 2))
                   bias.down <-  sum(w - xt)/sum(x)
                   rho.down <- cor(x = xt, y = w, method = "spearman")
-                  rmse.direct <- sqrt(mean((xt - yt)^2))
+                  rmse.direct <- sqrt(mean((xt - yt) ^ 2))
                   bias.direct <-  sum(yt - xt)/sum(x)
                   rho.direct <- cor(x = xt, y = yt, method = "spearman")
-                  lines((length(x) -(length(w)-1)):length(x), 
+                  lines((length(x) - (length(w)-1)):length(x), 
                         w, col = "blue", lwd = 1)
                   legend(0, yran[2] , legend = c("obs",  
                                                  paste("sim: rho=", 
@@ -389,15 +396,15 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
                          fill = c("black", "red"), box.lwd = 0, cex = .8)
             }
       } else {
-            rmse.direct <- sqrt(mean((x - y)^2))
+            rmse.direct <- sqrt(mean((x - y) ^ 2))
             bias.direct <-  sum(y- x)/sum(x)
             rho.direct <- cor(x = x, y = y, method = "spearman")
             lines(1:length(y), 
                   y, 
                   col = "red", lwd = 1)
             if (!is.null(downscaled)) {
-                  xt <- x[(length(x) -(length(w)-1)):length(x)]
-                  yt <- y[(length(x) -(length(w)-1)):length(x)]
+                  xt <- x[(length(x) - (length(w)-1)):length(x)]
+                  yt <- y[(length(x) - (length(w)-1)):length(x)]
                   rmse.down <- sqrt(mean((xt - w)^2))
                   bias.down <-  sum(w - xt)/sum(x)
                   rho.down <- cor(x = xt, y = w, method = "spearman")
@@ -424,18 +431,17 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
             }
       }
       # qq-plot
-      q1 <- quantile(x, probs = seq(0.01, .99, 0.01), na.rm = T, , type =4)
+      q1 <- quantile(x, probs = seq(0.01, .99, 0.01), na.rm = TRUE, type = 4)
       yran <- c(0, max(q1))
       plot(q1, 
-           quantile(y, probs = seq(0.01, .99, 0.01), na.rm = T, type =4), 
-           col="red", main = "qq-plot", xlab = "obs", ylab = "predicted", ylim = yran)
+           quantile(y, probs = seq(0.01, .99, 0.01), na.rm = TRUE, type = 4), 
+           col = "red", main = "qq-plot", xlab = "obs", ylab = "predicted", ylim = yran)
       lines(0:max(q1), 0:max(q1))
-      if(!is.null(downscaled)){
+      if (!is.null(downscaled)) {
             points(q1, 
-                   quantile(w, probs = seq(0.01, .99, 0.01), na.rm = T, type =4), 
-                   col="blue")
+                   quantile(w, probs = seq(0.01, .99, 0.01), na.rm = TRUE, type = 4), 
+                   col = "blue")
       }
       par(mfrow = c(1,1)) 
 }
 
-#end    

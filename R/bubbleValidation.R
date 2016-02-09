@@ -1,9 +1,7 @@
 #' @title Bubble plot for visualization of the skill of an ensemble forecast prediction
-#' 
 #' @description Bubble plot for the visualization of the skill of an ensemble forecast prediction. It provides a
 #'  spatially-explicit representation of the skill, resolution and reliability of a probabilistic predictive system in
 #'  a single map.
-#' 
 #' @param mm.obj A multi-member object with predictions, either a field or a multi-member station object as a result of
 #' downscaling of a forecast using station data. See details.
 #' @param obs The benchmarking observations for forecast verification. 
@@ -11,12 +9,11 @@
 #' @param score Logical. Whether to include or not the relative operating characteristic skill score (ROCSS). See details.
 #' @param size.as.probability Logical. Whether to include the tercile probabilities (magnitude proportional to bubble radius)
 #'  in the plot. See details. 
-#' 
 #' @importFrom scales alpha
 #' @importFrom verification roc.area
-#' 
+#' @importFrom loadeR interpGridData
+#' @importFrom loadeR getGrid
 #' @export
-#' 
 #' @details 
 #' 
 #' For each member, the daily predictions are averaged to obtain a single seasonal forecast. The corresponding terciles 
@@ -37,7 +34,7 @@
 #' 
 #' @note The computation of climatological terciles requires a representative period to obtain meaningful results.
 #' 
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}, M.D. Frias and J. Fernandez 
+#' @author J. Bedia, M.D. Frias and J. Fernandez 
 #' 
 #' @family visualization
 #' 

@@ -29,6 +29,7 @@
 #' @keywords internal
 #' @export
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @importFrom loadeR subsetField
 
 
 

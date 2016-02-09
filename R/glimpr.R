@@ -4,13 +4,14 @@
 #' @param pr.threshold Value below which precipitation amount is considered zero 
 #' @param n.eofs Integer indicating the number of EOFs to be used as predictors 
 #' @family downscaling
-#' @author J Bedia 
+#' @author J Bedia, M Iturbide
 #' @importFrom abind abind
+#' @importFrom loadeR getCoordinates
 #' @keywords internal
 
-glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold, n.pcs = n.pcs) {
+glimpr <- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold, n.pcs = n.pcs) {
       #modelPars <- ppModelSetup(obs, pred, sim)
-      if(is.null(n.pcs)){
+      if (is.null(n.pcs)) {
             n.pcs <-  dim(modelPars$pred.mat)[2]
       }
       #pred <- NULL
