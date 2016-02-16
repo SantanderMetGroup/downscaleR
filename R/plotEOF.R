@@ -1,8 +1,6 @@
 #' @title Plot an arbitrary number of EOFs
-#' 
 #' @description Plots an arbitrary number of EOFs. Useful to have a quick overview of the main spatial modes
 #'  of a (possibly multimember) field.
-#'  
 #' @param prinCompObj A PCA object as returned by \code{\link{prinComp}}
 #' @param var Character string indicating the variable whose EOFs are to be displayed. If the PCA analysis has
 #' been applied to 1 single field, this argument can be omitted.
@@ -10,13 +8,11 @@
 #' will be represented
 #' @param member An integer indicating the position of the member whose EOFs are to be displayed. Default 1, 
 #' corresponding to the first member. Ignored for non multimember fields.
-#' 
 #' @return A plot with as many panels as EOFs requested, in the original units of the variable
 #' # @export
 #' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' 
+#' @importFrom loadeR multiPlot
 #' @seealso \code{\link{prinComp}}
-#' 
 #' @examples \dontrun{ 
 #' # Winter temperature at 850 mb isobaric surface pressure level is loaded (period 1981--2010):
 #' data(iberia_ncep_ta850)
@@ -28,10 +24,16 @@
 #' plotEOF(pca, n.eofs = 4)
 #' 
 #' # Example with PCA analysis of a multifield (multiple variables)
+#' # Download dataset
+#' dir.create("mydirectory")
+#' download.file("http://meteo.unican.es/work/downscaler/data/Iberia_NCEP.tar.gz", 
+#' destfile = "mydirectory/Iberia_NCEP.tar.gz")
+#' # Extract files from the tar.gz file
+#' untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
+#' # First, the path to the ncml file is defined:
+#' ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
 #' # load geopotential heigth at 500 mb, temperature at 1000 mb and sea-level pressure
-#' ncep <- file.path(find.package("downscaleR.java"), 
-#'                   "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-#' multifield <- loadMultiField(ncep, vars = c("z@@50000", "ta@@100000", "psl"),
+#' multifield <- loadMultiField(ncep, vars = c("z@@500", "ta@@1000", "psl"),
 #'               season = c(12,1,2), years = 1981:2010)
 #' # PCA analysis, retaining the first 9 PCs of each variable:
 #' pca2 <- prinComp(multifield, n.eofs = 9)

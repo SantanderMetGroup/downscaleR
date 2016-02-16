@@ -1,11 +1,11 @@
 #' @title Field containing NCEP reanalysis data of specific humidity at 850mb for the Iberian Peninsula.
 #' 
-#' @description The data correspond to the wintertime (DJF) period 1991-2010, and it consists of instantaneous data at 12:00 UTC 
+#' @description The data are daily means, wintertime (DJF) period 1991-2010. 
 #'
 #' @format A field
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @name iberia_ncep_hus850
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(iberia_ncep_hus850)
 #' plotMeanField(iberia_ncep_hus850)
@@ -19,7 +19,7 @@ NULL
 #' @format A field
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @name iberia_ncep_psl
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(iberia_ncep_psl)
 #' plotMeanField(iberia_ncep_psl)
@@ -27,12 +27,12 @@ NULL
 
 #' @title Field containing NCEP reanalysis data of air temperature at 850mb for the Iberian Peninsula.
 #' 
-#' @description The data correspond to the wintertime (DJF) period 1991-2010, and it consists of instantaneous data at 12:00 UTC 
+#' @description The data correspond to the wintertime (DJF) period 1991-2010, and it consists of daily mean data 
 #'
 #' @format A field
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @name iberia_ncep_ta850
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(iberia_ncep_ta850)
 #' plotMeanField(iberia_ncep_ta850)
@@ -47,7 +47,7 @@ NULL
 #' @references 
 #' Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
 #' @name tasmax_forecast
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(tasmax_forecast)
 #' plotMeanField(tasmax_forecast, multi.member = TRUE)
@@ -63,7 +63,7 @@ NULL
 #' Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
 
 #' @name tasmin_forecast
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(tasmin_forecast)
 #' plotMeanField(tasmin_forecast, multi.member = TRUE)
@@ -79,8 +79,119 @@ NULL
 #' Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
 
 #' @name tp_forecast
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(tp_forecast)
 #' plotMeanField(tp_forecast, multi.member = TRUE)
+NULL
+
+#' @title Field containing NCEP reanalysis data of precipitation for the Iberian Peninsula.
+#' @description NCEP_Iberia_tp is a field object returned by loadECOMS 
+#' function (package loadeR.ECOMS):
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' var = "tp", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44), 
+#' time = "DD", 
+#' aggr.d = "sum".
+#' @format A field
+#' @name NCEP_Iberia_tp
+#' @docType data
+#' @keywords NCEP reanalysis
+#' @source  subset of NCEP reanalysis data, which is accessible 
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+
+
+NULL
+
+#' @title Field containing NCEP reanalysis data of temperature for the Iberian Peninsula.
+#' @description NCEP_Iberia_tas is a field object returned by loadECOMS 
+#' function (package loadeR.ECOMS):
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44), 
+#' time = "DD", 
+#' aggr.d = "min".
+#' @format A field
+#' @name NCEP_Iberia_tas
+#' @docType data
+#' @keywords NCEP reanalysis
+#' @source  subset of NCEP reanalysis data, which is accessible 
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+
+
+NULL
+
+
+#' @title Station data from the VALUE_ECA_86_v2 dataset containing daily precipitation for 82 stations in Europe.
+#' @description 
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' var= "precip".
+#' @format Station data
+#' @name VALUE_tp
+#' @docType data
+#' @keywords VALUE station precipitation 
+#' @source  Subset of VALUE station data. Full dataset is accessible 
+#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' @seealso \code{\link{NCEP_Iberia_tp}}, \code{\link{VALUE_Igueldo_tp}}
+
+
+NULL
+
+
+#' @title Station data from the VALUE_ECA_86_v2 dataset containing daily mean temperature for 82 stations in Europe.
+#' @description 
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' var= "tmean".
+#' @format Station data
+#' @name VALUE_tas
+#' @docType data
+#' @keywords VALUE station temperature
+#' @source  Subset of VALUE station data. Full dataset is accessible 
+#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' @seealso \code{\link{NCEP_Iberia_tas}}, \code{\link{VALUE_Igueldo_tas}}
+
+
+NULL
+
+
+#' @title Station data from the VALUE_ECA_86_v2 dataset containing daily precipitation for the Igueldo-SanSebastian station.
+#' @description 
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' stationID = "000234"
+#' var= "precip".
+#' @format Station data
+#' @name VALUE_Igueldo_tp
+#' @docType data
+#' @keywords VALUE station precipitation Igueldo
+#' @source  Subset of VALUE station data. Full dataset is accessible 
+#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' @seealso \code{\link{NCEP_Iberia_tp}}, \code{\link{VALUE_tp}}
+
+
+NULL
+
+#' @title Station data from the VALUE_ECA_86_v2 dataset containing daily mean temperature for the Igueldo-SanSebastian station.
+#' @description 
+#' season = c(12,1,2),  
+#' years = 1991-2000, 
+#' stationID = "000234"
+#' var= "tmean".
+#' @format Station data
+#' @name VALUE_Igueldo_tas
+#' @docType data
+#' @keywords VALUE station temperature Igueldo
+#' @source  Subset of VALUE station data. Full dataset is accessible 
+#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' @seealso \code{\link{NCEP_Iberia_tas}}, \code{\link{VALUE_tas}}
+
+
 NULL

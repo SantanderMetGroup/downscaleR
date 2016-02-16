@@ -1,6 +1,5 @@
 #' @title Principal Component Analysis of field/multifield/multimember data
 #' @description Performs a Principal Component Analysis of field, multifield or multi-member data
-#' 
 #' @param gridData A field, multifield, multimember field or multimember multifield object
 #' @param n.eofs Number of EOFs to be retained. Default to \code{NULL}, indicating
 #'  that either all EOFs are kept, or that the next argument will be used as criterion
@@ -9,29 +8,28 @@
 #' to be retained, as an alternative to \code{n.eofs}. Default to \code{NULL}. See details.
 #' @param scaling Method for performing the scaling (and centering) of the input raw data matrix.
 #' Currently accepted choices are \code{"field"} (the default) and \code{"gridbox"}. See details.
-#' 
+#' @template templateParallelParams
 #' @return A list of \emph{N + 1} elements for multifields, where \emph{N} is the number of input variables used
 #'  and the last element contains the results of the combined PCA (See details). The list is named as the variables,
 #'  including the last element named \code{"COMBINED"}. In case of single fields (1 variable only), a list of length 1
 #'   (without the combined element). For each element of the list, the following objects are returned, either in the form of
 #'   another list (1 element for each member) for multimembers, or not in the case of non multimember inputs:
-#'  
 #'  \itemize{
 #'  \item \code{PCs}: A matrix of principal components, arranged in columns by decreasing importance order 
 #'  \item \code{EOFs}: A matrix of EOFs, arranged in columns by decreasing importance order
+#'  \item \code{orig}: The original variable in the form of a 2D-matrix. This is standardized according
+#'  to the approach indicated in argument \code{scaling}.
 #'  }
 #'  The \dQuote{order of importance} is given by the explained variance of each PC, as indicated
 #'  in the attribute \code{"explained_variance"} as a cumulative vector.
 #'  Additional information is returned via the remaining attributes (see details), including geo-referencing and time.
-#' 
+#' @template templateParallel
 #' @note Performing PCA analysis on multimember multifields may become time-consuming and computationally expensive. 
 #' It is therefore advisable to avoid the use of this option for large datasets, and iterate over single
 #' multimember fields instead.
-#' 
 #' @details
-#'      
-#' \strong{Number of EOFs}
 #' 
+#' \strong{Number of EOFs}
 #' \code{n.eofs} and \code{v.exp} are alternative choices for the determination
 #'  of the number of EOFs (hence also the corresponding PCs) to be retained. If both are \code{NULL} (the default)
 #'  , all EOFs will be retained. If both are given a value different from \code{NULL}, 
@@ -62,23 +60,27 @@
 #' of the output list.
 #'
 #' @export
-#' 
+#' @importFrom abind asub
 #' @seealso \code{\link{fieldFromPCs}}, \code{\link{plotEOF}}
-#'  
 #' @references
 #' Guti\'{e}rrez, J.M., R. Ancell, A. S. Cofi\~{n}o and C. Sordo (2004). Redes Probabil\'{i}sticas
 #'  y Neuronales en las Ciencias Atmosf\'{e}ricas. MIMAM, Spain. 279 pp.
 #'   \url{http://www.meteo.unican.es/en/books/dataMiningMeteo}
-#'  
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' 
-#' @examples \donttest{
-#' # First a multifield containing a set of variables is loaded (e.g. data for spring spanning the 
+#' @author J. Bedia 
+#' @examples \dontrun{
+#' # Download dataset
+#' download.file("http://meteo.unican.es/work/downscaler/data/Iberia_NCEP.tar.gz", 
+#' destfile = "mydirectory/Iberia_NCEP.tar.gz")
+#' # Extract files from the tar.gz file
+#' untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
+#' # First, the path to the ncml file is defined:
+#' ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
+#' # A multifield containing a set of variables is loaded (e.g. data for spring spanning the 
 #' # 30-year period 1981--2010):
-#' ncep <- file.path(find.package("downscaleR.java"), 
-#'                   "datasets/reanalysis/Iberia_NCEP/Iberia_NCEP.ncml")
-#' multifield <- loadMultiField(ncep, vars = c("hus@@85000", "ta@@85000", "psl"),
-#'                              season = c(3:5), years = 1981:2010)
+#' hus <- loadGridData(ncep, var = "hus@@850", season = 3:5, years = 1981:2010)
+#' ta <- loadGridData(ncep, var = "ta@@850", season = 3:5, years = 1981:2010)
+#' psl <- loadGridData(ncep, var = "psl", season = 3:5, years = 1981:2010)
+#' multifield <- makeMultiField(hus, ta, psl)
 #' # In this example, we retain the PCs explaining the 99\% of the variance
 #' pca <- prinComp(multifield, v.exp = .99)
 #' # Note that, apart from computing the principal components and EOFs for each field, 
@@ -106,8 +108,8 @@
 #' # In order make the computation faster, we interpolate to a coarser grid of 2.5 deg
 #' range(tasmax_forecast$xyCoords$x)
 #' range(tasmax_forecast$xyCoords$y)
-#' multimember <- interpGridData(tasmax_forecast, 
-#'                               new.grid = list(c(-10,29.5, 2.5), c(35.5, 64.5, 2.5)))
+#' multimember <- interpData(tasmax_forecast, 
+#'                               new.Coordinates = list(c(-10,29.5, 2.5), c(35.5, 64.5, 2.5)))
 #' # In this case we retain the first 15 EOFs:
 #' pca.mm <- prinComp(multimember, n.eofs = 15) 
 #' # Note that now the results of the PCA for the variable are a list, with the results 
@@ -117,7 +119,7 @@
 #' # The most complex situation comes from multimember multifields:
 #' data(tasmin_forecast)
 #' # We interpolate using an identical grid than the previous example:
-#' multimember2 <- interpGridData(tasmin_forecast, new.grid = getGrid(multimember))
+#' multimember2 <- interpData(tasmin_forecast, new.Coordinates = getGrid(multimember))
 #' # Now the multimember multifield is constructed
 #' mm.multifield <- makeMultiField(multimember, multimember2)
 #' pca.mm.mf <- prinComp(mm.multifield, n.eofs = 10)
@@ -125,7 +127,13 @@
 #' str(pca.mm.mf)
 #' }
 
-prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field", "gridbox")) {
+prinComp <- function(gridData,
+                     n.eofs = NULL,
+                     v.exp = NULL,
+                     scaling = c("field", "gridbox"),
+                     parallel = FALSE,
+                     max.ncores = 16,
+                     ncores = NULL) {
       if (!is.null(n.eofs) & !is.null(v.exp)) {
             warning("The 'v.exp' argument was ignored as 'n.eofs' has been indicated")
       }
@@ -150,55 +158,44 @@ prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field",
       if (length(gridData$xyCoords$x) < 2 & length(gridData$xyCoords$y) < 2) {
             stop("The dataset is not a field encompassing multiple grid-cells")
       }
+      parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
       dimNames <- attr(gridData$Data, "dimensions")
-      indices <- rep(list(bquote()), length(dimNames))
       # Multifield case 
       if ("var" %in% dimNames) { 
             var.index <- grep("var", dimNames)
             n.vars <- dim(gridData$Data)[var.index]
             var.list <- rep(list(bquote()), n.vars)
             for (x in 1:n.vars) {                  
-                  indices[[var.index]] <- x
-                  call <- as.call(c(list(as.name("["), quote(gridData$Data)), indices))
-                  l <- eval(call)
+                  l <- asub(gridData$Data, idx = x, dims = var.index)
                   attr(l, "dimensions") <- dimNames[-var.index]
                   # Multimember multifield case
-                  if ("member" %in% attr(l, "dimensions")) {
+                  var.list[[x]] <- if ("member" %in% attr(l, "dimensions")) {
                         indices2 <- rep(list(bquote()), length(dim(l)))
                         mem.index <- grep("member", attr(l, "dimensions"))
                         n.mem <- dim(l)[mem.index]
-                        mem.list <- lapply(1:n.mem, function(m) {
-                              indices2[[mem.index]] <- m
-                              call <- as.call(c(list(as.name("["), quote(l)), indices2))
-                              ll <- eval(call)
+                        lapply(1:n.mem, function(m) {
+                              ll <- asub(l, idx = m, dims = mem.index)
                               attr(ll, "dimensions") <- attr(l, "dimensions")[-mem.index]
-                              ll <- array3Dto2Dmat(ll)
-                              return(ll)
+                              array3Dto2Dmat(ll)
                         })
-                        var.list[[x]] <- mem.list
                   } else {
-                        var.list[[x]] <- list(array3Dto2Dmat(l))
+                        list(array3Dto2Dmat(l))
                   }
             }
       # Field case
       } else {
             var.list <- rep(list(bquote()), 1)
-            # Multimember field case
-            if ("member" %in% dimNames) {
-                  indices2 <- rep(list(bquote()), length(dimNames))
+            var.list[[1]] <- if ("member" %in% dimNames) { # Multimember field case
+                  # indices2 <- rep(list(bquote()), length(dimNames))
                   mem.index <- grep("member", dimNames)
                   n.mem <- dim(gridData$Data)[mem.index]
-                  var.list[[1]] <- lapply(1:n.mem, function(m) {
-                        indices2[[mem.index]] <- m
-                        call <- as.call(c(list(as.name("["), quote(gridData$Data)), indices2))
-                        ll <- eval(call)
+                  lapply(1:n.mem, function(m) {
+                        ll <- asub(gridData$Data, idx = m, dims = mem.index)
                         attr(ll, "dimensions") <- attr(gridData$Data, "dimensions")[-mem.index]
-                        ll <- array3Dto2Dmat(ll)
-                        return(ll)
+                        array3Dto2Dmat(ll)
                   })
-            # Field case      
-            } else {
-                  var.list[[1]] <- list(array3Dto2Dmat(gridData$Data))
+            } else { # Field case      
+                  list(array3Dto2Dmat(gridData$Data))
             }
       }
       # Scaling and centering
@@ -245,40 +242,89 @@ prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field",
       }
       #PCs
       pca.list <- rep(list(bquote()), length(Xsc.list))
-      for (i in 1:length(pca.list)) {
-            pca.list[[i]] <- lapply(1:length(Xsc.list[[i]]), function(x) {
-                  # Covariance matrix
-                  Cx <- cov(Xsc.list[[i]][[x]])
-                  # Singular vectors (EOFs) and values
-                  sv <- svd(Cx)
-                  F <- sv$u
-                  # F <- eigen(Cx)$vectors
-                  lambda <- sv$d
-                  # lambda <- eigen(Cx)$values            
-                  sv <- NULL
-                  # Explained variance
-                  explvar <- cumsum(lambda / sum(lambda))
-                  # Number of EOFs to be retained
-                  if (!is.null(v.exp)) {
-                        n <- findInterval(v.exp, explvar) + 1
-                  } else { 
-                        if (!is.null(n.eofs)) {
-                              n <- n.eofs
-                        } else {
-                              n <- length(explvar)
+      if (parallel.pars$hasparallel) {
+            for (i in 1:length(pca.list)) {
+                  on.exit(parallel::stopCluster(parallel.pars$cl))
+                  pca.list[[i]] <- parallel::parLapply(cl = parallel.pars$cl, 1:length(Xsc.list[[i]]), function(x) {
+                        # Covariance matrix
+                        Cx <- cov(Xsc.list[[i]][[x]])
+                        # Singular vectors (EOFs) and values
+                        sv <- svd(Cx)
+                        F <- sv$u
+                        # F <- eigen(Cx)$vectors
+                        lambda <- sv$d
+                        # lambda <- eigen(Cx)$values            
+                        sv <- NULL
+                        # Explained variance
+                        explvar <- cumsum(lambda / sum(lambda))
+                        # Number of EOFs to be retained
+                        if (!is.null(v.exp)) {
+                              n <- findInterval(v.exp, explvar) + 1
+                        } else { 
+                              if (!is.null(n.eofs)) {
+                                    n <- n.eofs
+                              } else {
+                                    n <- length(explvar)
+                              }
                         }
-                  }
-                  F <- F[ ,1:n]
-                  explvar <- explvar[1:n]
-                  # PCs
-                  PCs <- t(t(F) %*% t(Xsc.list[[i]][[x]]))
-                  out <- list("PCs" = PCs, "EOFs" = F)
-                  attr(out, "scaled:center") <- attr(Xsc.list[[i]][[x]], "scaled:center")
-                  attr(out, "scaled:scale") <- attr(Xsc.list[[i]][[x]], "scaled:scale")
-                  attr(out, "explained_variance") <- explvar
-                  return(out)
-            })
-            attr(pca.list[[i]], "level") <- gridData$Variable$level[i]
+                        F <- F[ ,1:n]
+                        explvar <- explvar[1:n]
+                        # PCs
+                        PCs <- t(t(F) %*% t(Xsc.list[[i]][[x]]))
+                        # ouput
+                        out <- if (i < length(Xsc.list)) {
+                              list("PCs" = PCs, "EOFs" = F, "orig" = Xsc.list[[i]][[x]])
+                        } else {
+                              list("PCs" = PCs, "EOFs" = F)
+                        }
+                        #attr(out, "scaled:center") <- attr(Xsc.list[[i]][[x]], "scaled:center")
+                        #attr(out, "scaled:scale") <- attr(Xsc.list[[i]][[x]], "scaled:scale")
+                        attr(out, "explained_variance") <- explvar
+                        return(out)
+                  })
+                  attr(pca.list[[i]], "level") <- gridData$Variable$level[i]
+            }
+      } else {
+            for (i in 1:length(pca.list)) {
+                  pca.list[[i]] <- lapply(1:length(Xsc.list[[i]]), function(x) {
+                        # Covariance matrix
+                        Cx <- cov(Xsc.list[[i]][[x]])
+                        # Singular vectors (EOFs) and values
+                        sv <- svd(Cx)
+                        F <- sv$u
+                        # F <- eigen(Cx)$vectors
+                        lambda <- sv$d
+                        # lambda <- eigen(Cx)$values            
+                        sv <- NULL
+                        # Explained variance
+                        explvar <- cumsum(lambda / sum(lambda))
+                        # Number of EOFs to be retained
+                        if (!is.null(v.exp)) {
+                              n <- findInterval(v.exp, explvar) + 1
+                        } else { 
+                              if (!is.null(n.eofs)) {
+                                    n <- n.eofs
+                              } else {
+                                    n <- length(explvar)
+                              }
+                        }
+                        F <- F[ ,1:n]
+                        explvar <- explvar[1:n]
+                        # PCs
+                        PCs <- t(t(F) %*% t(Xsc.list[[i]][[x]]))
+                        # ouput
+                        out <- if (i < length(Xsc.list)) {
+                              list("PCs" = PCs, "EOFs" = F, "orig" = Xsc.list[[i]][[x]])
+                        } else {
+                              list("PCs" = PCs, "EOFs" = F)
+                        }
+                        # attr(out, "scaled:center") <- attr(Xsc.list[[i]][[x]], "scaled:center")
+                        # attr(out, "scaled:scale") <- attr(Xsc.list[[i]][[x]], "scaled:scale")
+                        attr(out, "explained_variance") <- explvar
+                        return(out)
+                  })
+                  attr(pca.list[[i]], "level") <- gridData$Variable$level[i]
+            }
       }
       Xsc.list <- NULL
 #       # Recover field
@@ -298,10 +344,10 @@ prinComp <- function(gridData, n.eofs = NULL, v.exp = NULL, scaling = c("field",
                   names(pca.list[[i]]) <- gridData$Members
             }
       }
-      if (is.null(names(gridData$Dates))) {
-            attr(pca.list, "dates_start") <- gridData$Dates[[1]]$start   
+      attr(pca.list, "dates_start") <- if (is.null(names(gridData$Dates))) {
+            gridData$Dates[[1]]$start   
       } else {
-            attr(pca.list, "dates_start") <- gridData$Dates$start 
+            gridData$Dates$start 
       }
       attr(pca.list, "scaled:method") <- scaling
       attr(pca.list, "xCoords") <- gridData$xyCoords$x

@@ -15,6 +15,7 @@
 
 array3Dto2Dmat <- function(array3D) {
       dimNames <- attr(array3D, "dimensions")
+      if (is.null(dimNames)) stop("Undefined 'dimensions' attribute")
       lon.index <- grep("lon", dimNames)
       n.lon <- dim(array3D)[lon.index]
       lat.index <- grep("lat", dimNames)

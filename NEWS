@@ -1,6 +1,11 @@
-downscaleR 0.8-2
+downscaleR 0.9-0
 ================
-
-* Fixed internal error with biasCorrection version
+* New features:
+   * Full integration with new packages for data access: loadeR and loadeR.ECOMS     
+* Enhancements in bias correction:
+   * Automatically set the common period of predictand and predictor objects in to calibrate the bias correction method
+   * Use single station data as predictands
+* Minor bug fix in bias correction of precipitation and other modifications (Thanks to: Yuanchao Xu)
+* Other minor bug fixes and enhancements
 
 

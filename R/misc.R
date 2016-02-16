@@ -10,7 +10,12 @@
 #' 
 
 getSeason <- function(obj) {
-      aux <- as.POSIXlt(obj$Dates$start)$mon + 1      
+      dimNames <- attr(obj$Data, "dimensions")
+      aux <- if (any(grepl("var", dimNames))) {
+            as.POSIXlt(obj$Dates[[1]]$start)$mon + 1      
+      } else {
+            as.POSIXlt(obj$Dates$start)$mon + 1      
+      }
       return(unique(aux))
 }
 # End
@@ -97,7 +102,12 @@ dateReplacement <- function(obs.dates, sim.dates) {
 
 getYearsAsINDEX <- function(obj) {
       season <- getSeason(obj)
-      aux.dates <- as.POSIXlt(obj$Dates$start)
+      dimNames <- attr(obj$Data, "dimensions")
+      if (any(grepl("var", dimNames))) {
+            aux.dates <- as.POSIXlt(obj$Dates[[1]]$start)
+      } else {
+            aux.dates <- as.POSIXlt(obj$Dates$start)
+      }
       yrs <- aux.dates$year + 1900
       if (!identical(season, sort(season))) {
             yy <- unique(yrs)[-1]
@@ -113,38 +123,14 @@ getYearsAsINDEX <- function(obj) {
 }
 # End
 
-
-#' @title Get geographical coordinates of a climate data object
-#' @description Returns the coordinates of a climate data object, either stations
-#'  or field
-#' @param obj Any object extending the station or field classes
-#' @return A list with x and y components
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' @export
-#' 
-
-getCoordinates <- function(obj) {
-      if ("station" %in% attr(obj$Data, "dimensions")) {
-            x <- obj$xyCoords[ ,1]
-            y <- obj$xyCoords[ ,2]
-      } else {
-            x <- obj$xyCoords$x
-            y <- obj$xyCoords$y
-      }
-      return(list("x" = x, "y" = y))
-}
-# End
-
-
-
 #' @title Set the 'dimensions' attribute 
 #' @description Sets the 'dimensions' attribute of model out Data objects after downscaling
 #' @param obs A observations object
 #' @param multi.member Logical indicating if simulation data is a multimember
 #' @return A character vector indicating the dimensions of the output object
 #' @keywords internal
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' @export
+#' @author J. Bedia
+
 
 renameDims <- function(obs, multi.member) {
       dimNames <- attr(obs$Data, "dimensions")
@@ -156,45 +142,51 @@ renameDims <- function(obs, multi.member) {
                   dimNames <- dimNames[-st.dim.index]
             }
       }
-      dimNames <- if (isTRUE(multi.member)) c("member", dimNames)
+      if (isTRUE(multi.member)) {dimNames <- c("member", dimNames)}
       return(dimNames)
 }
 # End
 
 
-#' Calculate the number of days of the current month
-#' @param d A date (character) in format YYYY-MM-DD...
-#' @return The number of days of the current month
-#' @references 
-#' \url{http://stackoverflow.com/questions/6243088/find-out-the-number-of-days-of-a-month-in-r}
-#' @export
-
-ndays <- function(d) {
-      as.difftime(tail((28:31)[which(!is.na(as.Date(paste0(substr(d, 1, 8), 28:31), '%Y-%m-%d')))], 1), units = "days")
-}
-#End
-
-#' Adjust time/start dates of a loaded object
-#' @param timePars Object containing the relevant time parameters
-#' @return A list with dates (POSIXct) start and end, defining the interval [start, end)
-#' @details Sub-daily information is displayed only in case of subdaily data
-#' @author J Bedia \email{joaquin.bedia@@gmail.com}
+#' @title getIntersect
+#' @description Get the common period of the objects obs and prd
+#' @author S. Herrera
 #' @keywords internal
+#' @importFrom loadeR subsetDimension
 
-# timePars <- cube$timePars
-adjustDates <- function(timePars) {
-      interval <- 0
-      if (timePars$aggr.m != "none") {
-            mon.len <- sapply(timePars$dateSliceList, ndays)
-            interval <- mon.len * 86400
-      } else if (timePars$aggr.d != "none") {
-            timePars$dateSliceList <- format(as.Date(substr(timePars$dateSliceList, 1, 10)), format = "%Y-%m-%d %H:%M:%S", usetz = TRUE) 
-            interval <- 86400
-      }
-      formato <- ifelse(interval[1] == 0, "%Y-%m-%d %H:%M:%S", "%Y-%m-%d")
-      dates.end <- format(as.POSIXct(as.POSIXlt(timePars$dateSliceList, tz = "GMT") + interval), format = formato, usetz = TRUE)
-      dates.start <- format(as.POSIXct(as.POSIXlt(timePars$dateSliceList, tz = "GMT"), tz = "GMT"), format = formato, usetz = TRUE)
-      return(list("start" = dates.start, "end" = dates.end))
+getIntersect <- function(obs,prd){
+      dimNames <- attr(obs$Data, "dimensions")
+      indDates <- which(as.POSIXct(obs$Dates$start, tz="GMT", format = "%Y-%m-%d") == as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
+      auxDates <- as.POSIXct(obs$Dates$start[indDates], tz="GMT", format = "%Y-%m-%d")
+      indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"), auxDates))
+      obs <- subsetDimension(obs, dimension = "time", indices = indObs)
+      dimNames <- attr(prd$Data, "dimensions")
+      indObs <- which(is.element(as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"), auxDates))
+      prd <- subsetDimension(prd, dimension = "time", indices = indObs)
+      obj <- list(obs = obs, prd = prd)
+      obj$Dates$start <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d")
+      obj$Dates$end <- as.POSIXct(obs$Dates$end, tz="GMT", format="%Y-%m-%d")
+      attr(obj$obs$Data, "dimensions") <- attr(obs$Data, "dimensions")
+      attr(obj$prd$Data, "dimensions") <- attr(prd$Data, "dimensions")
+      return(obj)
 }
-# End
+
+
+
+#' Identification of leap years
+#' Identification of leap years
+#' @param years a integer vector of (gregorian) years
+#' @return a vector of indices of the position of leap years
+#' @references \url{https://en.wikipedia.org/wiki/Leap_year}
+#' @keywords internal
+#' @export
+#' @author J. Bedia 
+#' @examples
+#' leap.years <- which.leap(1885:1937)
+#' (1885:1937)[leap.years]
+
+which.leap <- function(years) {
+      which((years %% 4 == 0) & ((years %% 100 != 0) | years %% 400 == 0))
+}
+
 
