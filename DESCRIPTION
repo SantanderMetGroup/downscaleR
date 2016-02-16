@@ -16,7 +16,7 @@ Suggests:
     loadeR.ECOMS
 Type: Package
 Title: Climate data manipulation and statistical downscaling
-Version: 0.9-0
+Version: 0.9-1
 Date: 2016-02-16
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
