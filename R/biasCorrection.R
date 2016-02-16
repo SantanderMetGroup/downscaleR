@@ -102,7 +102,7 @@
 #'               destfile = "mydirectory/Iberia_NCEP.tar.gz")
 #' # Extract files from the tar.gz file
 #' untar("mydirectory/VALUE_ECA_86_v2.tar.gz", exdir = "mydirectory")
-#' untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
+#' untar("mydirectory/Iberia_NCEP.tar.gz", exdir = "mydirectory")
 #' # Path to the VALUE dataset and the NCEP ncml file.
 #' value <- "mydirectory/VALUE_ECA_86_v2"
 #' ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
