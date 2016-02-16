@@ -13,11 +13,11 @@ Imports:
     evd,
     parallel
 Suggests:
-    ecomsUDG.Raccess
+    loadeR.ECOMS
 Type: Package
 Title: Climate data manipulation and statistical downscaling
 Version: 0.9-0
-Date: 2016-02-09
+Date: 2016-02-16
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",

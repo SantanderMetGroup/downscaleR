@@ -36,7 +36,7 @@ Implementation of the downscaling analogs method
 
 Several checks of spatial consistency are performed. In particular, note that both 'pred' (reanalysis) and 'sim' (model
 simulations) should be in the same grid. This consistency must be ensured by the user prior to entering these arguments,
-for instance by means of the \code{\link{interpGridData}} function in conjunction with the \code{\link{getGrid}} method.
+for instance by means of the \code{\link[loadeR]{interpData}} function in conjunction with the \code{\link{getGrid}} method.
 
 \strong{Scaling and centering}
 
