@@ -102,7 +102,7 @@
 #'               destfile = "mydirectory/Iberia_NCEP.tar.gz")
 #' # Extract files from the tar.gz file
 #' untar("mydirectory/VALUE_ECA_86_v2.tar.gz", exdir = "mydirectory")
-#' untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
+#' untar("mydirectory/Iberia_NCEP.tar.gz", exdir = "mydirectory")
 #' # Path to the VALUE dataset and the NCEP ncml file.
 #' value <- "mydirectory/VALUE_ECA_86_v2"
 #' ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
@@ -135,7 +135,9 @@
 #' simBC <- biasCorrection (obs, prd, sim, method = "eqm", pr.threshold = 1) # qq-mapping
 #' par(mfrow = c(1,2))
 #' plotMeanField(sim)
+#' title("Raw")
 #' plotMeanField(simBC)
+#' title("Bias-corrected")
 #' }
 
 biasCorrection <- function(obs, pred, sim, method = c("eqm", "delta", "scaling", "gqm", "gpqm"), pr.threshold = 1, 
