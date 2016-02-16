@@ -45,7 +45,7 @@ Values below this threshold are fitted to a gamma (normal) distribution. By defa
 percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.}
 }
 \value{
-A calibrated object of the same spatio-temporal extent of the input field
+A calibrated grid of the same spatio-temporal extent than the input
 }
 \description{
 Implementation of several standard bias correction methods
@@ -54,7 +54,7 @@ Implementation of several standard bias correction methods
 The methods available are \code{"eqm"}, \code{"delta"}, 
 \code{"scaling"}, \code{"gqm"}, \code{"gpqm"} (the two latter used only for precipitation).
  These are next briefly described: 
-
+ 
 \strong{Delta}
 
 This method consists on adding to the observations the mean change signal (delta method).
@@ -97,7 +97,7 @@ qqmap to alleviate the problems arising when the dry day frequency in the raw mo
  
  The precipitation subroutines are switched-on when the variable name of the grid 
  (i.e., the value returned by \code{gridData$Variable$varName}) is one of the following: 
- \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (see \code{\link[loadeR]{showVocabulary}}), \code{"precipitation"} or \code{"precip"}.
+ \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (\code{\link[loadeR]{showVocabulary}}), \code{"precipitation"} or \code{"precip"}.
  Thus, caution must be taken to ensure that the correct bias correction is being undertaken when dealing with
  non-standard variables.
 }

@@ -48,6 +48,9 @@ percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.}
 \description{
 Implementation of several standard bias correction methods
 }
+\author{
+S. Herrera \email{sixto@predictia.es}
+}
 \seealso{
 Other downscaling: \code{\link{analogs}},
   \code{\link{biasCorrection}}, \code{\link{downscale}},
