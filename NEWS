@@ -1,9 +1,7 @@
-downscaleR 1.0-0
+downscaleR 0.9-0
 ================
 * New features:
-   * Load irregularly spaced gridded data (RCMs...)
-   * New interpolation capabilitites
-   * Flexible data subsetting via 'subsetField' function      
+   * Full integration with new packages for data access: loadeR and loadeR.ECOMS     
 * Enhancements in bias correction:
    * Automatically set the common period of predictand and predictor objects in to calibrate the bias correction method
    * Use single station data as predictands

@@ -15,6 +15,6 @@ data(iberia_ncep_hus850)
 plotMeanField(iberia_ncep_hus850)
 }
 \seealso{
-\code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+\code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 }
 

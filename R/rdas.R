@@ -5,7 +5,7 @@
 #' @format A field
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @name iberia_ncep_hus850
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(iberia_ncep_hus850)
 #' plotMeanField(iberia_ncep_hus850)
@@ -19,7 +19,7 @@ NULL
 #' @format A field
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @name iberia_ncep_psl
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(iberia_ncep_psl)
 #' plotMeanField(iberia_ncep_psl)
@@ -32,7 +32,7 @@ NULL
 #' @format A field
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @name iberia_ncep_ta850
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(iberia_ncep_ta850)
 #' plotMeanField(iberia_ncep_ta850)
@@ -47,7 +47,7 @@ NULL
 #' @references 
 #' Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
 #' @name tasmax_forecast
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(tasmax_forecast)
 #' plotMeanField(tasmax_forecast, multi.member = TRUE)
@@ -63,7 +63,7 @@ NULL
 #' Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
 
 #' @name tasmin_forecast
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(tasmin_forecast)
 #' plotMeanField(tasmin_forecast, multi.member = TRUE)
@@ -79,7 +79,7 @@ NULL
 #' Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
 
 #' @name tp_forecast
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' @examples
 #' data(tp_forecast)
 #' plotMeanField(tp_forecast, multi.member = TRUE)
@@ -87,7 +87,7 @@ NULL
 
 #' @title Field containing NCEP reanalysis data of precipitation for the Iberian Peninsula.
 #' @description NCEP_Iberia_tp is a field object returned by loadECOMS 
-#' function (package ecomsUDG.Raccess):
+#' function (package loadeR.ECOMS):
 #' season = c(12,1,2),  
 #' years = 1991-2000, 
 #' var = "tp", 
@@ -101,14 +101,14 @@ NULL
 #' @keywords NCEP reanalysis
 #' @source  subset of NCEP reanalysis data, which is accessible 
 #' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 
 
 NULL
 
 #' @title Field containing NCEP reanalysis data of temperature for the Iberian Peninsula.
 #' @description NCEP_Iberia_tas is a field object returned by loadECOMS 
-#' function (package ecomsUDG.Raccess):
+#' function (package loadeR.ECOMS):
 #' season = c(12,1,2),  
 #' years = 1991-2000, 
 #' var="tas", 
@@ -122,7 +122,7 @@ NULL
 #' @keywords NCEP reanalysis
 #' @source  subset of NCEP reanalysis data, which is accessible 
 #' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
-#' @seealso \code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 
 
 NULL

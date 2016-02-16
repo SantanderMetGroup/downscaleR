@@ -18,6 +18,6 @@ plotMeanField(tasmax_forecast, multi.member = TRUE)
 Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
 }
 \seealso{
-\code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+\code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 }
 

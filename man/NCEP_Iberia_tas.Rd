@@ -11,7 +11,7 @@ through the \strong{ECOMS User Data Gateway (ECOMS-UDG)}
 }
 \description{
 NCEP_Iberia_tas is a field object returned by loadECOMS 
-function (package ecomsUDG.Raccess):
+function (package loadeR.ECOMS):
 season = c(12,1,2),  
 years = 1991-2000, 
 var="tas", 
@@ -21,7 +21,7 @@ time = "DD",
 aggr.d = "min".
 }
 \seealso{
-\code{\link{makeMultiField}}, \code{\link[ecomsUDG.Raccess]{loadECOMS}}
+\code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 }
 \keyword{NCEP}
 \keyword{reanalysis}
