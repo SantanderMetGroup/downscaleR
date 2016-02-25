@@ -1,8 +1,8 @@
-#' @title Field containing NCEP reanalysis data of specific humidity at 850mb for the Iberian Peninsula.
+#' @title grid containing NCEP reanalysis data of specific humidity at 850mb for the Iberian Peninsula.
 #' 
 #' @description The data are daily means, wintertime (DJF) period 1991-2010. 
 #'
-#' @format A field
+#' @format A grid
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @name iberia_ncep_hus850
 #' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
@@ -11,12 +11,12 @@
 #' plotMeanField(iberia_ncep_hus850)
 NULL
 
-#' @title Field containing NCEP reanalysis data of sea-level pressure for the Iberian Peninsula.
+#' @title grid containing NCEP reanalysis data of sea-level pressure for the Iberian Peninsula.
 #' 
 #' @description The data correspond to the wintertime (DJF) period 1991-2010, and it consists of daily mean data, computed as the
 #' mean of the four 6-hourly model outputs. 
 #'
-#' @format A field
+#' @format A grid
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @name iberia_ncep_psl
 #' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
@@ -25,11 +25,11 @@ NULL
 #' plotMeanField(iberia_ncep_psl)
 NULL
 
-#' @title Field containing NCEP reanalysis data of air temperature at 850mb for the Iberian Peninsula.
+#' @title grid containing NCEP reanalysis data of air temperature at 850mb for the Iberian Peninsula.
 #' 
 #' @description The data correspond to the wintertime (DJF) period 1991-2010, and it consists of daily mean data 
 #'
-#' @format A field
+#' @format A grid
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @name iberia_ncep_ta850
 #' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
@@ -38,11 +38,11 @@ NULL
 #' plotMeanField(iberia_ncep_ta850)
 NULL
 
-#' @title Multimember field containing a seasonal forecast of maximum surface temperature for Europe
+#' @title Multimember grid containing a seasonal forecast of maximum surface temperature for Europe
 #' 
 #' @description CFSv2 forecast of maximum daily temperature for July 2001 over Europe. Lead-month 2, first 9 members.
 #'
-#' @format A multimember field
+#' @format A multimember grid
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @references 
 #' Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
@@ -53,11 +53,11 @@ NULL
 #' plotMeanField(tasmax_forecast, multi.member = TRUE)
 NULL
 
-#' @title Multimember field containing a seasonal forecast of minimum surface temperature for Europe
+#' @title Multimember grid containing a seasonal forecast of minimum surface temperature for Europe
 #' 
 #' @description CFSv2 forecast of minimum daily temperature for July 2001 over Europe. Lead-month 2, first 9 members.
 #'
-#' @format A multimember field
+#' @format A multimember grid
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @references 
 #' Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
@@ -69,11 +69,11 @@ NULL
 #' plotMeanField(tasmin_forecast, multi.member = TRUE)
 NULL
 
-#' @title Multimember field containing a seasonal forecast of precipitation for Europe
+#' @title Multimembergrid containing a seasonal forecast of precipitation for Europe
 #' 
 #' @description CFSv2 forecast of daily accumulated precipitation for July 2001 over Europe. Lead-month 2, first 9 members.
 #'
-#' @format A multimember field
+#' @format A multimembergrid
 #' @source \url{http://www.meteo.unican.es/ecoms-udg}
 #' @references 
 #' Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
@@ -85,8 +85,8 @@ NULL
 #' plotMeanField(tp_forecast, multi.member = TRUE)
 NULL
 
-#' @title Field containing NCEP reanalysis data of precipitation for the Iberian Peninsula.
-#' @description NCEP_Iberia_tp is a field object returned by loadECOMS 
+#' @title grid containing NCEP reanalysis data of precipitation for the Iberian Peninsula.
+#' @description NCEP_Iberia_tp is a grid object returned by loadECOMS 
 #' function (package loadeR.ECOMS):
 #' season = c(12,1,2),  
 #' years = 1991-2000, 
@@ -95,7 +95,7 @@ NULL
 #' latLim= c(34,44), 
 #' time = "DD", 
 #' aggr.d = "sum".
-#' @format A field
+#' @format A grid
 #' @name NCEP_Iberia_tp
 #' @docType data
 #' @keywords NCEP reanalysis
@@ -106,8 +106,8 @@ NULL
 
 NULL
 
-#' @title Field containing NCEP reanalysis data of temperature for the Iberian Peninsula.
-#' @description NCEP_Iberia_tas is a field object returned by loadECOMS 
+#' @title grid containing NCEP reanalysis data of temperature for the Iberian Peninsula.
+#' @description NCEP_Iberia_tas is a grid object returned by loadECOMS 
 #' function (package loadeR.ECOMS):
 #' season = c(12,1,2),  
 #' years = 1991-2000, 
@@ -116,7 +116,7 @@ NULL
 #' latLim= c(34,44), 
 #' time = "DD", 
 #' aggr.d = "min".
-#' @format A field
+#' @format A grid
 #' @name NCEP_Iberia_tas
 #' @docType data
 #' @keywords NCEP reanalysis
@@ -195,3 +195,122 @@ NULL
 
 
 NULL
+
+#' @title Grid containing E-OBS observation data of temperature for the Iberian Peninsula.
+#' @description EOBS_Iberia_tas is a grid object returned by function loadGridData 
+#' (package loadeR):
+#' season = c(12,1,2),  
+#' years = 1991:2000, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44)
+#' @format A grid
+#' @name EOBS_Iberia_tas
+#' @docType data
+#' @keywords gridded observations
+#' @source  subset of the E-OBS observational gridded dataset
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR]{loadGridData}}
+
+NULL
+
+#' @title Grid containing E-OBS observation data of precipitation for the Iberian Peninsula.
+#' @description EOBS_Iberia_tp is a grid object returned by function loadGridData 
+#' (package loadeR):
+#' season = c(12,1,2),  
+#' years = 1991:2000, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44)
+#' @format A grid
+#' @name EOBS_Iberia_tp
+#' @docType data
+#' @keywords gridded observations
+#' @source  subset of the E-OBS observational gridded dataset
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR]{loadGridData}}
+
+NULL
+
+#' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
+#' Contains mean temperature data for the Iberian Peninsula.
+#' @description S4_Iberia_tas is a grid object returned by loadECOMS 
+#' function (package loadeR.ECOMS):
+#' season = c(12,1,2),  
+#' years = 1991:2000, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44), 
+#' time = "DD", 
+#' aggr.d = "min".
+#' @format A grid
+#' @name S4_Iberia_tas
+#' @docType data
+#' @keywords seasonal forecasting
+#' @source  subset of System4 seasonal forecasting data of 15 members accesible
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+
+NULL
+
+#' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
+#' Contains precipitation data for the Iberian Peninsula.
+#' @description S4_Iberia_tp is a grid object returned by loadECOMS 
+#' function (package loadeR.ECOMS):
+#' season = c(12,1,2),  
+#' years = 1991:2000, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44), 
+#' time = "DD", 
+#' aggr.d = "min".
+#' @format A grid
+#' @name S4_Iberia_tp
+#' @docType data
+#' @keywords seasonal forecasting
+#' @source  subset of System4 seasonal forecasting data of 15 members accesible
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+#' 
+#' 
+#' NULL
+
+#' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
+#' Contains mean temperature data for the Iberian Peninsula.
+#' @description S4_Iberia_tas_fut is a grid object returned by loadECOMS 
+#' function (package loadeR.ECOMS):
+#' season = c(12,1,2),  
+#' years = 2001:2010, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44), 
+#' time = "DD", 
+#' aggr.d = "min".
+#' @format A grid
+#' @name S4_Iberia_tas_fut
+#' @docType data
+#' @keywords seasonal forecasting
+#' @source  subset of System4 seasonal forecasting data of 15 members accesible
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+
+NULL
+
+#' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
+#' Contains precipitation data for the Iberian Peninsula.
+#' @description S4_Iberia_tp_fut is a grid object returned by loadECOMS 
+#' function (package loadeR.ECOMS):
+#' season = c(12,1,2),  
+#' years = 2001:2010, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44), 
+#' time = "DD", 
+#' aggr.d = "min".
+#' @format A grid
+#' @name S4_Iberia_tp_fut
+#' @docType data
+#' @keywords seasonal forecasting
+#' @source  subset of System4 seasonal forecasting data of 15 members accesible
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+#' 
+#' NULL
