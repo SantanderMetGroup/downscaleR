@@ -271,7 +271,7 @@ NULL
 #' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' 
 #' 
-#' NULL
+NULL
 
 #' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
 #' Contains mean temperature data for the Iberian Peninsula.
@@ -313,4 +313,5 @@ NULL
 #' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
 #' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' 
-#' NULL
+
+NULL
