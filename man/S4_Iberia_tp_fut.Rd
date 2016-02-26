@@ -17,7 +17,8 @@ season = c(12,1,2),
 years = 2001:2010,
 var="tas",
 lonLim = c(-10,5),
-latLim= c(34,44),
+latLim = c(34,44),
+members = 1:5,
 time = "DD",
 aggr.d = "min".
 }
