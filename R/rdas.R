@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #' @title Grid containing NCEP reanalysis data of specific humidity at 850mb for the Iberian Peninsula.
 #' @description The data are daily means, wintertime (DJF) period 1991-2010. 
 #' @format A grid
@@ -132,4 +133,126 @@ NULL
 #' climate data access maintained by the Santander MetGroup. 
 #' The UDG builds on the THREDDS Access Portal (UDG-TAP) which is the entry point for 
 #' authentication and data access (more info in \link{https://meteo.unican.es/trac/wiki/udg}). 
+NULL
+
+#' @title Grid containing E-OBS observation data of temperature for the Iberian Peninsula.
+#' @description EOBS_Iberia_tas is a grid object returned by function loadGridData 
+#' (package loadeR):
+#' season = c(12,1,2),  
+#' years = 1991:2000, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44)
+#' @format A grid
+#' @name EOBS_Iberia_tas
+#' @docType data
+#' @keywords gridded observations
+#' @source  subset of the E-OBS observational gridded dataset
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR]{loadGridData}}
+
+NULL
+
+#' @title Grid containing E-OBS observation data of precipitation for the Iberian Peninsula.
+#' @description EOBS_Iberia_tp is a grid object returned by function loadGridData 
+#' (package loadeR):
+#' season = c(12,1,2),  
+#' years = 1991:2000, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44)
+#' @format A grid
+#' @name EOBS_Iberia_tp
+#' @docType data
+#' @keywords gridded observations
+#' @source  subset of the E-OBS observational gridded dataset
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR]{loadGridData}}
+
+NULL
+
+#' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
+#' Contains mean temperature data for the Iberian Peninsula.
+#' @description S4_Iberia_tas is a grid object returned by loadECOMS 
+#' function (package loadeR.ECOMS):
+#' season = c(12,1,2),  
+#' years = 1991:2000, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44), 
+#' time = "DD", 
+#' aggr.d = "min".
+#' @format A grid
+#' @name S4_Iberia_tas
+#' @docType data
+#' @keywords seasonal forecasting
+#' @source  subset of System4 seasonal forecasting data of 15 members accesible
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+
+NULL
+
+#' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
+#' Contains precipitation data for the Iberian Peninsula.
+#' @description S4_Iberia_tp is a grid object returned by loadECOMS 
+#' function (package loadeR.ECOMS):
+#' season = c(12,1,2),  
+#' years = 1991:2000, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44), 
+#' time = "DD", 
+#' aggr.d = "min".
+#' @format A grid
+#' @name S4_Iberia_tp
+#' @docType data
+#' @keywords seasonal forecasting
+#' @source  subset of System4 seasonal forecasting data of 15 members accesible
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+#' 
+#' 
+NULL
+
+#' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
+#' Contains mean temperature data for the Iberian Peninsula.
+#' @description S4_Iberia_tas_fut is a grid object returned by loadECOMS 
+#' function (package loadeR.ECOMS):
+#' season = c(12,1,2),  
+#' years = 2001:2010, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim= c(34,44), 
+#' members = 1:5, 
+#' time = "DD", 
+#' aggr.d = "min".
+#' @format A grid
+#' @name S4_Iberia_tas_fut
+#' @docType data
+#' @keywords seasonal forecasting
+#' @source  subset of System4 seasonal forecasting data of 15 members accesible
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+
+NULL
+
+#' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
+#' Contains precipitation data for the Iberian Peninsula.
+#' @description S4_Iberia_tp_fut is a grid object returned by loadECOMS 
+#' function (package loadeR.ECOMS):
+#' season = c(12,1,2),  
+#' years = 2001:2010, 
+#' var="tas", 
+#' lonLim = c(-10,5),  
+#' latLim = c(34,44), 
+#' members = 1:5, 
+#' time = "DD", 
+#' aggr.d = "min".
+#' @format A grid
+#' @name S4_Iberia_tp_fut
+#' @docType data
+#' @keywords seasonal forecasting
+#' @source  subset of System4 seasonal forecasting data of 15 members accesible
+#' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
+#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+#' 
+
 NULL
