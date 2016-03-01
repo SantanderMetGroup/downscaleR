@@ -7,13 +7,13 @@
 getCoordinates(obj)
 }
 \arguments{
-\item{obj}{Any object extending the station or field classes}
+\item{obj}{Any object extending the station or grid classes}
 }
 \value{
 A list with x and y components
 }
 \description{
-Returns the coordinates of a climate data object, either stations or field
+Returns the coordinates of a climate data object, either stations or grid
 }
 \author{
 J. Bedia

@@ -1,15 +1,15 @@
-#' @title Time aggregation of the data in a field/multifield
+#' @title Time aggregation of the data in a grid/multigrid
 #' @description Aggregates data daily, monthly or annually by specifiyng an aggregation function.
-#' @param obj a field or multifield (can be multimember).
+#' @param obj a grid or multigrid (can be multimember).
 #' @param aggr.d a single character or a character string indicating the daily aggregation function. 
 #' Possibilities are:  "mean", "min", "max", "sum" (default is NULL).
 #' @param aggr.m a single character or a character string indicating the monthly aggregation function. 
 #' Possibilities are:  "mean", "min", "max", "sum" (default is NULL).
 #' @param aggr.y a single character or a character string indicating the annual aggregation function. 
 #' Possibilities are: "mean", "min", "max", "sum" (default is "NULL").
-#' @return A field or multifield with the time dimension daily, monthly or annually aggregated (see details).
+#' @return A grid or multigrid with the time dimension daily, monthly or annually aggregated (see details).
 #' @details To annually or monthly aggregate data, aggr.d and/or aggr.m might be also specified to apply different aggregations 
-#' for each time scale. If the data in the field is sub-daily and aggr.d is not specified, a WARNING message will be returned.
+#' for each time scale. If the data in the grid is sub-daily and aggr.d is not specified, a WARNING message will be returned.
 #' @author M. Iturbide \email{maibide@@gmail.com}
 #' @export
 
@@ -64,7 +64,7 @@ timeAggregation <- function(obj, aggr.d = NULL, aggr.m = NULL, aggr.y = NULL){
                         if(length(aggr.d)==1){
                               aggr.d <- rep(aggr.d, length(vars))    
                         }else if(length(aggr.d)!=length(vars)){
-                              message("NOTE: Argument 'aggr.d' is not of the same length as the number of variables in the multifield, 
+                              message("NOTE: Argument 'aggr.d' is not of the same length as the number of variables in the multigrid, 
                                       only the first function will be applied to all the variables")
                               aggr.d <- rep(aggr.d[1], length(vars)) 
                               
@@ -177,7 +177,7 @@ timeAggregation <- function(obj, aggr.d = NULL, aggr.m = NULL, aggr.y = NULL){
                         if(length(aggr.m)==1){
                               aggr.m <- rep(aggr.m, length(vars))    
                         }else if(length(aggr.m)!=length(vars)){
-                              message("NOTE: Argument 'aggr.m' is not of the same length as the number of variables in the multifield, 
+                              message("NOTE: Argument 'aggr.m' is not of the same length as the number of variables in the multigrid, 
                                       only the first function will be applied to all the variables")
                               aggr.m <- rep(aggr.m[1], length(vars)) 
                               
@@ -261,7 +261,7 @@ timeAggregation <- function(obj, aggr.d = NULL, aggr.m = NULL, aggr.y = NULL){
                   if(length(aggr.y)==1){
                         aggr.f <- rep(aggr.y, length(vars))    
                   }else if(length(aggr.y)!=length(vars)){
-                        message("NOTE: Argument 'aggr.y' is not of the same length as the number of variables in the multifield, 
+                        message("NOTE: Argument 'aggr.y' is not of the same length as the number of variables in the multigrid, 
                                 only the first function will be applied to all the variables")
                         aggr.f <- rep(aggr.y[1], length(vars)) 
                         
@@ -344,7 +344,7 @@ timeAggregation <- function(obj, aggr.d = NULL, aggr.m = NULL, aggr.y = NULL){
 #end    
 
 
-#' @title Time aggregation of the data in a field
+#' @title Time aggregation of the data in a grid
 #' @description Aggregates data daily, monthly or annually by specifiyng an aggregation function
 #' @param data array (can be multimember).
 #' @param FUN a character indicating the aggregation function. Possibilities are: "mean", "min", "max", "sum".

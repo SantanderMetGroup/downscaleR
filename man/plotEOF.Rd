@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotEOF.R
 \name{plotEOF}
 \alias{plotEOF}
-\title{Plot an arbitrary number of EOFs}
+\title{Plot EOFs}
 \usage{
 plotEOF(prinCompObj, var = NULL, member = 1, n.eofs = NULL)
 }
@@ -10,21 +10,20 @@ plotEOF(prinCompObj, var = NULL, member = 1, n.eofs = NULL)
 \item{prinCompObj}{A PCA object as returned by \code{\link{prinComp}}}
 
 \item{var}{Character string indicating the variable whose EOFs are to be displayed. If the PCA analysis has
-been applied to 1 single field, this argument can be omitted.}
+been applied to 1 single grid, this argument can be omitted.}
 
 \item{member}{An integer indicating the position of the member whose EOFs are to be displayed. Default 1, 
-corresponding to the first member. Ignored for non multimember fields.}
+corresponding to the first member. Ignored for non multimember grids.}
 
 \item{n.eofs}{Number of EOFs to be displayed. Default to NULL, indicating that all computed EOFS
 will be represented}
 }
 \value{
 A plot with as many panels as EOFs requested, in the original units of the variable
-# @export
 }
 \description{
 Plots an arbitrary number of EOFs. Useful to have a quick overview of the main spatial modes
- of a (possibly multimember) field.
+ of a (possibly multimember) grid.
 }
 \examples{
 \dontrun{ 
@@ -37,7 +36,7 @@ plotEOF(pca)
 # Plot the first 4 EOFs:
 plotEOF(pca, n.eofs = 4)
 
-# Example with PCA analysis of a multifield (multiple variables)
+# Example with PCA analysis of a multigrid (multiple variables)
 # Download dataset
 dir.create("mydirectory")
 download.file("http://meteo.unican.es/work/downscaler/data/Iberia_NCEP.tar.gz", 
@@ -47,17 +46,18 @@ untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
 # First, the path to the ncml file is defined:
 ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
 # load geopotential heigth at 500 mb, temperature at 1000 mb and sea-level pressure
-multifield <- loadMultiField(ncep, vars = c("z@500", "ta@1000", "psl"),
-              season = c(12,1,2), years = 1981:2010)
+z500 <- loadGridData(ncep, var = "z@500", season = c(12,1,2), years = 1981:2010)
+ta1000 <- loadGridData(ncep, var = "ta@1000", season = c(12,1,2), years = 1981:2010)
+psl <- loadGridData(ncep, var = "psl", season = c(12,1,2), years = 1981:2010)
+multigrid <- makeMultiGrid(z500, ta1000, psl)
 # PCA analysis, retaining the first 9 PCs of each variable:
-pca2 <- prinComp(multifield, n.eofs = 9)
+pca2 <- prinComp(multigrid, n.eofs = 9)
 names(pca2)
 # EOFs for geopotential
 plotEOF(pca2, "z")
 plotEOF(pca2, "ta", n.eofs = 4)
 plotEOF(pca2, "psl", n.eofs = 2)
 }
-
 }
 \author{
 J. Bedia

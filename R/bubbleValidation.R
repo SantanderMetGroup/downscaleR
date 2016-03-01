@@ -40,13 +40,13 @@ bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.pro
       mm.dimNames <- attr(mm.obj$Data, "dimensions")
       obs.dimNames <- attr(obs$Data, "dimensions")
       if (!("member" %in% mm.dimNames)) {
-            stop("The input data for 'multimember' is not a multimember field")
+            stop("The input data for 'multimember' is not a multimember grid")
       }
       if ("member" %in% obs.dimNames) {
             stop("The verifying observations can't be a multimember")
       }
       if ("var" %in% mm.dimNames | "var" %in% obs.dimNames) {
-            stop("Multifields are not a valid input")
+            stop("Multigrids are not a valid input")
       }
       if (!identical(c("time", "lat", "lon"), obs.dimNames)) {
             stop("The observed reference must be a 3D array of the form [time,lat,lon]")

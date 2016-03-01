@@ -33,17 +33,12 @@
 #' The argument \code{sel.fun} controls how the analogs are constructed when considering more than the first neighbour (argument
 #' \code{n.neigh} > 1). In this case the \code{"random"} choice randomly selects one of the \code{n.neigh} neighbours,
 #'  while the \code{"mean"} choice will compute their average.
-#' 
 #' @seealso \code{\link{prinComp}} for details on principal component/EOF analysis
-#' \code{\link{makeMultiField}} for multifield creation
-#' \code{\link{loadGridData}} and \code{\link{loadStationData}} for loading fields and station data respectively.
-#' 
-#' @export
-#' 
+#' \code{\link{makeMultiGrid}} for multigrid creation
+#' \code{\link{loadGridData}} and \code{\link{loadStationData}} for loading grids and station data respectively.
 #' @importFrom fields rdist
 #' @importFrom abind abind
 #' @family downscaling
-#' 
 #' @references 
 #' Benestad, R.E., Hanssen-Bauer, I. and Chen, D., 2008. Empirical-Statistical Downscaling,
 #'  1st ed. World Scientific Publishing, Singapore
@@ -55,7 +50,6 @@
 #'  using statistical downscaling. Clim. Change 120, 229-247.
 #' 
 #' @author J. Bedia 
-#'
 #' @keywords internal
 
 analogs <- function(obs = obs,

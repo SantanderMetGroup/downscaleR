@@ -2,7 +2,7 @@
 % Please edit documentation in R/timeAggregation.R
 \name{annualAggregationMain}
 \alias{annualAggregationMain}
-\title{Time aggregation of the data in a field}
+\title{Time aggregation of the data in a grid}
 \usage{
 annualAggregationMain(data, FUN = c("mean", "min", "max", "sum"), id, y.coord,
   x.coord, coords, obj)

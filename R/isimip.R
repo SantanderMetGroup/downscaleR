@@ -27,7 +27,7 @@
 #'
 #' @seealso \code{\link{biasCorrection}} for details on other standard methods for bias correction
 #'  
-#' @return A calibrated object of the same spatio-temporal extent of the input field
+#' @return A calibrated object of the same spatio-temporal extent of the input grid
 #' 
 #' @family downscaling
 #' 

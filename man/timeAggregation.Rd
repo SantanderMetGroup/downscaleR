@@ -2,12 +2,12 @@
 % Please edit documentation in R/timeAggregation.R
 \name{timeAggregation}
 \alias{timeAggregation}
-\title{Time aggregation of the data in a field/multifield}
+\title{Time aggregation of the data in a grid/multigrid}
 \usage{
 timeAggregation(obj, aggr.d = NULL, aggr.m = NULL, aggr.y = NULL)
 }
 \arguments{
-\item{obj}{a field or multifield (can be multimember).}
+\item{obj}{a grid or multigrid (can be multimember).}
 
 \item{aggr.d}{a single character or a character string indicating the daily aggregation function. 
 Possibilities are:  "mean", "min", "max", "sum" (default is NULL).}
@@ -19,14 +19,14 @@ Possibilities are:  "mean", "min", "max", "sum" (default is NULL).}
 Possibilities are: "mean", "min", "max", "sum" (default is "NULL").}
 }
 \value{
-A field or multifield with the time dimension daily, monthly or annually aggregated (see details).
+A grid or multigrid with the time dimension daily, monthly or annually aggregated (see details).
 }
 \description{
 Aggregates data daily, monthly or annually by specifiyng an aggregation function.
 }
 \details{
 To annually or monthly aggregate data, aggr.d and/or aggr.m might be also specified to apply different aggregations 
-for each time scale. If the data in the field is sub-daily and aggr.d is not specified, a WARNING message will be returned.
+for each time scale. If the data in the grid is sub-daily and aggr.d is not specified, a WARNING message will be returned.
 }
 \author{
 M. Iturbide \email{maibide@gmail.com}

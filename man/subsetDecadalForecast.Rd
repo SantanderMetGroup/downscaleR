@@ -7,13 +7,13 @@
 subsetDecadalForecast(data, ly = c(1, 2))
 }
 \arguments{
-\item{data}{field obtained from the output of function loadDecadalForecast.}
+\item{data}{grid obtained from the output of function loadDecadalForecast.}
 
 \item{ly}{Vector of integers indicating the lead years of initialization. 
 Default is ly = c(1,2) (the two years before).}
 }
 \value{
-A field object with an additional dimension corresponding to the selected lead years.
+A grid object with an additional dimension corresponding to the selected lead years.
 }
 \description{
 Subset decadal forecast by initialization years

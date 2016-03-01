@@ -7,16 +7,16 @@
 #' @return A list similar to the \code{\link{loadGridData}} output, but simplified. See details.
 #' @details The output of this function returns the minimum required information to use the
 #'  \code{\link{plotMeanGrid}} method, and is intended for comparison and visual analysis
-#'  of the differences between the original fields and the reconstructed ones, for instance
+#'  of the differences between the original grids and the reconstructed ones, for instance
 #'  in determining an optimal number of PCs etc... Hence, the temporal information (i.e.,
-#'   the \code{Dates} object) is lost, and should be retrieved from the original field/multifield
+#'   the \code{Dates} object) is lost, and should be retrieved from the original grid/multigrid
 #'   object used to compute the PC/EOF analysis.
 #' @importFrom abind abind
 #' @export
 #' @author J. Bedia 
 #' @seealso \code{\link{prinComp}}, \code{\link{plotEOF}}
 #' @examples \dontrun{
-#' # First a multifield containing a set of variables is loaded (e.g. data for spring spanning the
+#' # First a multigrid containing a set of variables is loaded (e.g. data for spring spanning the
 #' # 30-year period 1981--2010):
 #' dir.create("mydirectory")
 #' download.file("http://meteo.unican.es/work/downscaler/data/Iberia_NCEP.tar.gz", 
@@ -25,20 +25,23 @@
 #' untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
 #' # First, the path to the ncml file is defined:
 #' ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
-#' multifield <- loadMultiField(ncep, vars = c("hus@@850", "ta@@850", "psl"),
-#'                              season = c(3:5), years = 1981:2010)
+#' hus850 <- loadGridData(ncep, var = "hus@@850", season = 3:5, years = 1981:2010)
+#' ta850 <- loadGridData(ncep, var = "ta@@850", season = 3:5, years = 1981:2010)
+#' psl <- loadGridData(ncep, var = "psl", season = 3:5, years = 1981:2010) 
+#' # Multigrid constructor:
+#' multigrid <- makeMultiGrid(hus850, ta850, psl)
 #' # In this example, we retain the first 10 PCs
 #' pca <- prinComp(multifield, n.eofs = 10)
-#' # We now recover the sea-level pressure field from the PCs:
+#' # We recover the sea-level pressure grid from the its PCs:
 #' names(pca)
 #' psl2 <- gridFromPCs(pca, "psl")
 #' str(psl2)
-#' # The attributes of psl2 indicate that this is a reconstructed field from 10 PCs, 
+#' # The attributes of psl2 indicate that this is a reconstructed grid from 10 PCs, 
 #' # explaining 99\% of the variance:
 #' attributes(psl2)
 #' multifield$Variable$varName
 #' # psl is the 3rd one
-#' # The mean fields of both the original and the reconstructed fields is computed:
+#' # The mean fields of both the original and the reconstructed grids is computed:
 #' psl.orig <- multifield$Data[3,,,]
 #' psl.reconstructed <- psl2$Data
 #' z <- apply(psl.orig, c(3,2), mean)
@@ -75,7 +78,7 @@ gridFromPCs <- function(prinCompObj, var) {
             var.ind <- 1
       } else {
             if (var == "COMBINED") {
-                  stop("The combined field can't be reconstructed (only individual variables)")
+                  stop("The combined grid can't be reconstructed (only individual variables)")
             }
             var.ind <- match(var, varNames)
             if (is.na(var.ind)) {

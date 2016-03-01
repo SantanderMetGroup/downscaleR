@@ -8,7 +8,7 @@ tercileValidation(mm.obj, obs, stationId = NULL, color.pal = c("ypb",
   "reds"))
 }
 \arguments{
-\item{mm.obj}{A multi-member object with predictions, either a field or a multi-member station object as a result of
+\item{mm.obj}{A multi-member object with predictions, either a grid or a multi-member station object as a result of
 downscaling of a forecast using station data. See details.}
 
 \item{obs}{The benchmarking observations for forecast verification}
@@ -24,7 +24,7 @@ Tercile plot for the visualization of the skill of an ensemble forecast predicti
 }
 \details{
 For each member, the daily predictions are averaged to obtain a single seasonal forecast. For
-rectangular spatial domains (i.e., for fields), the spatial average is first computed (with a warning) to obtain a
+rectangular spatial domains (i.e., for grids), the spatial average is first computed (with a warning) to obtain a
 unique series for the whole domain. The corresponding terciles for each ensemble member are then computed
 for the analysis period. Thus, data is converted converted to a series of tercile categories by considering values
  above, between or below the terciles of the whole period. The probability of a member to fall into the observed tercile
@@ -37,7 +37,7 @@ for the analysis period. Thus, data is converted converted to a series of tercil
  (Joliffe and Stephenson 2003). The value of this score ranges from 1 (perfect forecast system) to -1 
  (perfectly bad forecast system). A value zero indicates no skill compared with a random prediction.
  
- In case of multimember fields, the field is spatially averaged to obtain one single time series
+ In case of multimember grids, the grid is spatially averaged to obtain one single time series
  for each member prior to data analysis, with a warning. In case of multimember stations, one single station
  can be selected through the \code{stationId} argument, otherwise all station series are also averaged.
 }

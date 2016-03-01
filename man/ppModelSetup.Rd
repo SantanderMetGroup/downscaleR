@@ -36,8 +36,8 @@ Performs the various data pre-processing and formatting steps required
 to implement the different perfect-prog downscaling methods.
 }
 \details{
-The function accepts either PCA or raw fields as predictors. In the first case, it handles the 
-mapping of EOFs onto the simulation fields.
+The function accepts either PCA or raw grids as predictors. In the first case, it handles the 
+mapping of EOFs onto the simulation grids.
 }
 \author{
 J. Bedia

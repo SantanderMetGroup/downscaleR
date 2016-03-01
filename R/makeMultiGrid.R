@@ -2,7 +2,7 @@
 #' @description Constructs a (possibly multimember) multigrid from different (multimember) grids.
 #' A multigrid can be considered as a \dQuote{stack} of grids with similar spatiotemporal extents,
 #'  useful to handle sets of predictors as a single block.
-#' @param ... Input grids to form the multifield. These must be compatible in time and space (see details).
+#' @param ... Input grids to form the multigrid. These must be compatible in time and space (see details).
 #' @param spatial.tolerance numeric. Coordinate differences smaller than \code{spatial.tolerance} will be considered equal 
 #' coordinates. Default to 0.001 --assuming that degrees are being used it seems a reasonable rounding error after interpolation--.
 #' This value is passed to the \code{\link{identical}} function to check for spatial consistency of the input grids.
@@ -66,7 +66,7 @@
 makeMultiGrid <- function(..., spatial.tolerance = 1e-3) {
       field.list <- list(...)
       if (length(field.list) < 2) {
-            stop("The input must be a list of at least two fields")
+            stop("The input must be a list of at least two grids")
       }
       tol <- spatial.tolerance
       for (i in 2:length(field.list)) {

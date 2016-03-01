@@ -1,6 +1,6 @@
 #' @title Get geographical coordinates of a climate data object
-#' @description Returns the coordinates of a climate data object, either stations or field
-#' @param obj Any object extending the station or field classes
+#' @description Returns the coordinates of a climate data object, either stations or grid
+#' @param obj Any object extending the station or grid classes
 #' @return A list with x and y components
 #' @author J. Bedia 
 #' @export

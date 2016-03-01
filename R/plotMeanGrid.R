@@ -1,13 +1,10 @@
 #' @title Plot a map of the mean value of a grid dataset
-#' 
-#' @description Plot the spatial mean of a gridded variable, or variables in the case of multi-fields.
-#' 
+#' @description Plot the spatial mean of a gridded variable, or variables in the case of multigrids.
 #' @importFrom fields image.plot
 #' @param gridData A grid dataset
 #' @param multi.member Should members be plotted sepparately (TRUE), or just a plot
 #'  of the multi-member mean (FALSE, default)?. Ignored if the dataset has no members.
-#' 
-#' @return a plot of the mean/multi-member/multi-variable field with a world map superposed
+#' @return a plot of the mean/multi-member/multi-variable grid with a world map superposed
 #' @export
 #' @details The function is a wrapper of the \code{\link[fields]{image.plot}} function
 #' in package \pkg{fields}.
@@ -20,24 +17,24 @@
 #' a map. It does not handle other temporal aggregations. 
 #' @family visualization
 #' @examples
-#' # A field
+#' # A grid
 #' data(iberia_ncep_ta850)
 #' plotMeanGrid(iberia_ncep_ta850)
-#' # A multifield
+#' # A multigrid
 #' data(iberia_ncep_hus850)
-#' mf <- makeMultiField(iberia_ncep_ta850, iberia_ncep_hus850)
+#' mf <- makeMultiGrid(iberia_ncep_ta850, iberia_ncep_hus850)
 #' plotMeanGrid(mf)
-#' # A multimember field
+#' # A multimember grid
 #' data(tasmax_forecast)
 #' plotMeanGrid(tasmax_forecast) # multimember mean
 #' plotMeanGrid(tasmax_forecast, multi.member = TRUE) # by members
-#' # A multimember multifield
+#' # A multimember multigrid
 #' data(tasmin_forecast)
-#' mm.mf <- makeMultiField(tasmax_forecast, tasmin_forecast)
+#' mm.mf <- makeMultiGrid(tasmax_forecast, tasmin_forecast)
 #' plotMeanGrid(mm.mf) # Note: multi-member not supported in this case
 #' 
 
-plotMeanGrid <- function (gridData, multi.member = FALSE) {
+plotMeanGrid <- function(gridData, multi.member = FALSE) {
       dimNames <- attr(gridData$Data, "dimensions")
       if (is.null(dimNames)) stop("Attribute 'dimensions' undefined")
       mar <- match(c("lon", "lat"), dimNames)

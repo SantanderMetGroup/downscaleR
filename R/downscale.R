@@ -65,7 +65,7 @@
 #' @seealso \code{\link{prinComp}} for details on principal component/EOF analysis,
 #' \code{rescaleMonthlyMeans} for data pre-processing,
 #' \code{\link{makeMultiGrid}} for multigrid construction
-#' \code{\link{loadGridData}} and \code{\link{loadStationData}} for loading fields and station data respectively.
+#' \code{\link{loadGridData}} and \code{\link{loadStationData}} for loading grids and station data respectively.
 #' @export 
 #' @family downscaling
 #' @author J Bedia and M Iturbide

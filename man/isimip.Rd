@@ -23,7 +23,7 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 or additive (e.g. temperature, \code{type = "additive"}, the default).}
 }
 \value{
-A calibrated object of the same spatio-temporal extent of the input field
+A calibrated object of the same spatio-temporal extent of the input grid
 }
 \description{
 Implementation of the ISI-MIP methodology

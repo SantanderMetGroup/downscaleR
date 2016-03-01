@@ -1,24 +1,24 @@
 #' @title Annual cycle scaling of simulation data
 #' @description Annual cycle scaling of simulation data w.r.t. the predictors
-#' @param pred Predictor field
-#' @param sim Simulation field
-#' @param ref Optional reference field. A field from where the scaling and centering parameters are taken. See details.
+#' @param pred Predictor A grid
+#' @param sim Simulation A grid
+#' @param ref Optional reference grid. A grid from where the scaling and centering parameters are taken. See details.
 #' @param ensemble Logical flag. Should the correction of the mean be performed w.r.t. the ensemble mean (\code{TRUE})
 #'  or member by member independently (\code{ensemble = FALSE})?. Ignored if \code{ref} (and thus \code{sim}) are not
 #'   multimembers. Default to \code{FALSE}.
-#' @return A field with the rescaled simulation data (\code{sim}), with the centering parameters
+#' @return A grid with the rescaled simulation data (\code{sim}), with the centering parameters
 #'  indicated as an attribute
-#' @details The reference field is used to correct the simulation (test) data, as follows:
+#' @details The reference grid is used to correct the simulation (test) data, as follows:
 #' 
 #' \deqn{sim' = sim - mu_ref + mu_pred}
 #' 
 #' , where \emph{mu} corresponds to the monthly climatological mean considering the training period,
 #' and \emph{sim'} is the corrected simulation (test) data. The way \emph{mu_ref} is computed in case
-#' of multimember fields is controlled by the argument \code{ensemble}.
+#' of multimember grids is controlled by the argument \code{ensemble}.
 #' 
 #' The \code{ref} usually corresponds to the control run of the GCM in the training period in climate change applications,
 #' or the hindcast data for the training period in s2d applications. Note that by default \code{ref = NULL}. In this 
-#' case it will be assumed to be the \code{pred} field. This can be used for instance when train and test correspond
+#' case it will be assumed to be the \code{pred} grid. This can be used for instance when train and test correspond
 #' to the same model.
 #' 
 #' @importFrom abind abind
@@ -32,13 +32,13 @@ rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
       use.ref <- ifelse(is.null(ref), FALSE, TRUE)
       if (is.null(ref)) ref <- pred
       dimNames <- attr(ref$Data, "dimensions")
-      if (!identical(dimNames, attr(sim$Data, "dimensions"))) stop("Input and reference field dimensions do not match")
+      if (!identical(dimNames, attr(sim$Data, "dimensions"))) stop("Input and reference grid dimensions do not match")
       seas <- getSeason(pred)
-      if (!identical(seas, getSeason(ref)) | !identical(seas, getSeason(sim))) stop("Season of input and reference fields do not match")
+      if (!identical(seas, getSeason(ref)) | !identical(seas, getSeason(sim))) stop("Season of input and reference grids do not match")
       var.names <- ref$Variable$varName
-      if (!identical(var.names, sim$Variable$varName) | !identical(var.names, pred$Variable$varName)) stop("Variable(s) of predictor and simulation fields do not match")
+      if (!identical(var.names, sim$Variable$varName) | !identical(var.names, pred$Variable$varName)) stop("Variable(s) of predictor and simulation grids do not match")
       aux.ind <- grep(paste(c("var","member","lat","lon"), collapse = "|"), dimNames)
-      if (!identical(dim(ref$Data)[aux.ind], dim(sim$Data)[aux.ind])) stop("Spatial and/or ensemble dimensions of sim and reference fields do not match")
+      if (!identical(dim(ref$Data)[aux.ind], dim(sim$Data)[aux.ind])) stop("Spatial and/or ensemble dimensions of sim and reference grids do not match")
       mon <- if ("var" %in% dimNames) {
             as.POSIXlt(sim$Dates[[1]]$start)$mon + 1
       } else {
@@ -62,7 +62,7 @@ rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
       })
       names(center.list.pred) <- var.names
       center.list.pred <- rep(list(center.list.pred), n.mem)
-      # MU': monthly mean pars of the reference field
+      # MU': monthly mean pars of the reference grid
       if (!use.ref) {
             center.list.ref <- center.list.pred
       } else {

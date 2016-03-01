@@ -13,10 +13,10 @@ plotMeanGrid(gridData, multi.member = FALSE)
 of the multi-member mean (FALSE, default)?. Ignored if the dataset has no members.}
 }
 \value{
-a plot of the mean/multi-member/multi-variable field with a world map superposed
+a plot of the mean/multi-member/multi-variable grid with a world map superposed
 }
 \description{
-Plot the spatial mean of a gridded variable, or variables in the case of multi-fields.
+Plot the spatial mean of a gridded variable, or variables in the case of multigrids.
 }
 \details{
 The function is a wrapper of the \code{\link[fields]{image.plot}} function
@@ -30,20 +30,20 @@ The function plots a simple temporal mean of the loaded object in the form of
 a map. It does not handle other temporal aggregations.
 }
 \examples{
-# A field
+# A grid
 data(iberia_ncep_ta850)
 plotMeanGrid(iberia_ncep_ta850)
-# A multifield
+# A multigrid
 data(iberia_ncep_hus850)
-mf <- makeMultiField(iberia_ncep_ta850, iberia_ncep_hus850)
+mf <- makeMultiGrid(iberia_ncep_ta850, iberia_ncep_hus850)
 plotMeanGrid(mf)
-# A multimember field
+# A multimember grid
 data(tasmax_forecast)
 plotMeanGrid(tasmax_forecast) # multimember mean
 plotMeanGrid(tasmax_forecast, multi.member = TRUE) # by members
-# A multimember multifield
+# A multimember multigrid
 data(tasmin_forecast)
-mm.mf <- makeMultiField(tasmax_forecast, tasmin_forecast)
+mm.mf <- makeMultiGrid(tasmax_forecast, tasmin_forecast)
 plotMeanGrid(mm.mf) # Note: multi-member not supported in this case
 
 }

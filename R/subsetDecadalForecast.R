@@ -2,10 +2,10 @@
 #' 
 #' @description Subset decadal forecast by initialization years
 #' 
-#' @param data field obtained from the output of function loadDecadalForecast. 
+#' @param data grid obtained from the output of function loadDecadalForecast. 
 #' @param ly Vector of integers indicating the lead years of initialization. 
 #' Default is ly = c(1,2) (the two years before).
-#' @return A field object with an additional dimension corresponding to the selected lead years. 
+#' @return A grid object with an additional dimension corresponding to the selected lead years. 
 #' @author M. Iturbide
 #' @importFrom abind abind
 #' @export

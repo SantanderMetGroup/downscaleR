@@ -1,6 +1,6 @@
-#' @title Get season from a station or field object
-#' @description Retrieves the season encompassed by a station or field object
-#' @param obj Any object extending the station or field classes
+#' @title Get season 
+#' @description Retrieves the season encompassed by a station or grid object
+#' @param obj Any object extending the station or grid classes
 #' @return An integer vector with the season
 #' @author J. Bedia 
 #' @export
@@ -21,7 +21,7 @@ getSeason <- function(obj) {
 
 #' @title Compute dates of a downscaled observational dataset
 #' @description The function calculates the appropiate Dates slot in the returned output of downscaling functions,
-#' considering the possible mismatches in time resolution between predictors and predictand, the multifield dates slot etc.
+#' considering the possible mismatches in time resolution between predictors and predictand, the multigrid dates slot etc.
 #' @param obs.dates The \code{Dates} slot of the 'obs' input in the downscaling method
 #' @param sim.dates The \code{Dates} slot of the 'sim' input in the downscaling method
 #' @return A new \code{Dates} list that preserves the temporal extent of the downscaled simulations but considering
@@ -61,7 +61,7 @@ dateReplacement <- function(obs.dates, sim.dates) {
 
 #' @title Get years as a factor
 #' @description Extract the year as a factor (e.g. for computing annual statistics)
-#' @param obj Any object extending the station or field classes
+#' @param obj Any object extending the station or grid classes
 #' @return A vector of years of the same length as the time dimension of the object, 
 #' seasonally-adjusted in the case of year-crossing seasons (e.g. DJF). See details.
 #' @details The function performs a very basic operation, extracting the year element from the 

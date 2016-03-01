@@ -67,8 +67,8 @@ Bedia, J. \emph{et al.}, 2013. Robust projections of Fire Weather Index in the M
 }
 \seealso{
 \code{\link{prinComp}} for details on principal component/EOF analysis
-\code{\link{makeMultiField}} for multifield creation
-\code{\link{loadGridData}} and \code{\link{loadStationData}} for loading fields and station data respectively.
+\code{\link{makeMultiGrid}} for multigrid creation
+\code{\link{loadGridData}} and \code{\link{loadStationData}} for loading grids and station data respectively.
 
 Other downscaling: \code{\link{biasCorrection}},
   \code{\link{calibrateProj}}, \code{\link{downscale}},

@@ -17,7 +17,7 @@ the temporal resolution of the downscaled variable
 }
 \description{
 The function calculates the appropiate Dates slot in the returned output of downscaling functions,
-considering the possible mismatches in time resolution between predictors and predictand, the multifield dates slot etc.
+considering the possible mismatches in time resolution between predictors and predictand, the multigrid dates slot etc.
 }
 \details{
 The function is intended for internal use only. Sometimes the time resolution of the predictors does not match 

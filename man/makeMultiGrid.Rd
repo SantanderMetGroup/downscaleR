@@ -7,7 +7,7 @@
 makeMultiGrid(..., spatial.tolerance = 0.001)
 }
 \arguments{
-\item{...}{Input grids to form the multifield. These must be compatible in time and space (see details).}
+\item{...}{Input grids to form the multigrid. These must be compatible in time and space (see details).}
 
 \item{spatial.tolerance}{numeric. Coordinate differences smaller than \code{spatial.tolerance} will be considered equal 
 coordinates. Default to 0.001 --assuming that degrees are being used it seems a reasonable rounding error after interpolation--.

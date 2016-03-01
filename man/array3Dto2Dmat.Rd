@@ -17,7 +17,7 @@ Converts 3D arrays of the form [lon,lat,time] -not strictly in this order-,
  to 2D matrices of the form [time, grid-point], in this order. Mainly for PCA analysis.
 }
 \details{
-The function is intended to convert fields to a convenient format for PCA-related analyses.
+The function is intended to convert grids to a convenient format for PCA-related analyses.
 The columns are ordered in X and Y ascending order, with coordinate Y varying faster. Thus, column coordinates 
 would be given by the expression: \emph{expand.grid(gridData$xyCoords$y, gridData$xyCoords$x)[2:1]}. This
 is the most convenient format in order to naturally fill a matrix with the adequate number of columns (longitudes) 

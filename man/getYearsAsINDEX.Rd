@@ -7,7 +7,7 @@
 getYearsAsINDEX(obj)
 }
 \arguments{
-\item{obj}{Any object extending the station or field classes}
+\item{obj}{Any object extending the station or grid classes}
 }
 \value{
 A vector of years of the same length as the time dimension of the object, 

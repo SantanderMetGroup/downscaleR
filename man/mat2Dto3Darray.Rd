@@ -19,7 +19,7 @@ A 3-dimensional array with the dimensions ordered: [time,lat,lon]
 }
 \description{
 Converts a 2D matrix of the form [time, lonlat] to a 3D array of the form
-[time,lat,lon], in this order. Mainly for PCA analysis and field reconstruction.
+[time,lat,lon], in this order. Mainly for PCA analysis and grid reconstruction.
 }
 \details{
 The function is the inverse of \code{\link{array3Dto2Dmat}}

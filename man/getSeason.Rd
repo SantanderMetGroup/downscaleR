@@ -2,18 +2,18 @@
 % Please edit documentation in R/misc.R
 \name{getSeason}
 \alias{getSeason}
-\title{Get season from a station or field object}
+\title{Get season}
 \usage{
 getSeason(obj)
 }
 \arguments{
-\item{obj}{Any object extending the station or field classes}
+\item{obj}{Any object extending the station or grid classes}
 }
 \value{
 An integer vector with the season
 }
 \description{
-Retrieves the season encompassed by a station or field object
+Retrieves the season encompassed by a station or grid object
 }
 \examples{
 data(iberia_ncep_ta850)
