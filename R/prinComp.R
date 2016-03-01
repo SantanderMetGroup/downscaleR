@@ -160,7 +160,6 @@ prinComp <- function(gridData,
       }
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
       dimNames <- attr(gridData$Data, "dimensions")
-      # Multifield case 
       if ("var" %in% dimNames) { 
             var.index <- grep("var", dimNames)
             n.vars <- dim(gridData$Data)[var.index]
@@ -168,7 +167,6 @@ prinComp <- function(gridData,
             for (x in 1:n.vars) {                  
                   l <- asub(gridData$Data, idx = x, dims = var.index)
                   attr(l, "dimensions") <- dimNames[-var.index]
-                  # Multimember multifield case
                   var.list[[x]] <- if ("member" %in% attr(l, "dimensions")) {
                         indices2 <- rep(list(bquote()), length(dim(l)))
                         mem.index <- grep("member", attr(l, "dimensions"))
@@ -182,11 +180,9 @@ prinComp <- function(gridData,
                         list(array3Dto2Dmat(l))
                   }
             }
-      # Field case
       } else {
             var.list <- rep(list(bquote()), 1)
-            var.list[[1]] <- if ("member" %in% dimNames) { # Multimember field case
-                  # indices2 <- rep(list(bquote()), length(dimNames))
+            var.list[[1]] <- if ("member" %in% dimNames) { 
                   mem.index <- grep("member", dimNames)
                   n.mem <- dim(gridData$Data)[mem.index]
                   lapply(1:n.mem, function(m) {
@@ -194,7 +190,7 @@ prinComp <- function(gridData,
                         attr(ll, "dimensions") <- attr(gridData$Data, "dimensions")[-mem.index]
                         array3Dto2Dmat(ll)
                   })
-            } else {# Field case      
+            } else {
                   list(array3Dto2Dmat(gridData$Data))
             }
       }
@@ -267,7 +263,7 @@ prinComp <- function(gridData,
                                     n <- length(explvar)
                               }
                         }
-                        F <- F[ ,1:n]
+                        F <- as.matrix(F[ ,1:n])
                         explvar <- explvar[1:n]
                         # PCs
                         PCs <- t(t(F) %*% t(Xsc.list[[i]][[x]]))
@@ -308,7 +304,7 @@ prinComp <- function(gridData,
                                     n <- length(explvar)
                               }
                         }
-                        F <- F[ ,1:n]
+                        F <- as.matrix(F[ ,1:n])
                         explvar <- explvar[1:n]
                         # PCs
                         PCs <- t(t(F) %*% t(Xsc.list[[i]][[x]]))
