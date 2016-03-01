@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 #' @title Grid containing NCEP reanalysis data of specific humidity at 850mb for the Iberian Peninsula.
 #' @description The data are daily means, wintertime (DJF) period 1991-2010. 
 #' @format A grid
@@ -90,7 +89,7 @@ NULL
 #' @name VALUE_tp
 #' @docType data
 #' @source  Subset of VALUE station data. Full dataset is accessible 
-#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' for download in \url{http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz}.
 NULL
 
 #' @title Station mean temperature dataset
@@ -99,7 +98,7 @@ NULL
 #' @name VALUE_tas
 #' @docType data
 #' @source  Subset of VALUE station data. Full dataset is accessible 
-#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' for download in \url{http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz}.
 NULL
 
 
@@ -109,7 +108,7 @@ NULL
 #' @name VALUE_Igueldo_tp
 #' @docType data
 #' @source  Subset of VALUE station data. Full dataset is accessible 
-#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' for download in \url{http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz}.
 NULL
 
 #' @title Station mean temperature data
@@ -119,7 +118,7 @@ NULL
 #' @docType data
 #' @keywords VALUE station temperature Igueldo
 #' @source  Subset of VALUE station data. Full dataset is accessible 
-#' for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+#' for download in \url{http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz}.
 NULL
 
 #' @title Decada forecast example grid
@@ -132,127 +131,78 @@ NULL
 #' for loading in the \strong{The User Data Gateway (UDG)}, which is the one stop shop for 
 #' climate data access maintained by the Santander MetGroup. 
 #' The UDG builds on the THREDDS Access Portal (UDG-TAP) which is the entry point for 
-#' authentication and data access (more info in \link{https://meteo.unican.es/trac/wiki/udg}). 
+#' authentication and data access (more info in \url{https://meteo.unican.es/trac/wiki/udg}). 
 NULL
 
 #' @title Grid containing E-OBS observation data of temperature for the Iberian Peninsula.
-#' @description EOBS_Iberia_tas is a grid object returned by function loadGridData 
-#' (package loadeR):
-#' season = c(12,1,2),  
-#' years = 1991:2000, 
-#' var="tas", 
-#' lonLim = c(-10,5),  
-#' latLim= c(34,44)
+#' @description EOBS_Iberia_tas is a grid object returned by \code{loadECOMS} from package \pkg{loadeR.ECOMS}
 #' @format A grid
 #' @name EOBS_Iberia_tas
 #' @docType data
 #' @keywords gridded observations
 #' @source  subset of the E-OBS observational gridded dataset
-#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR]{loadGridData}}
+#' @seealso \code{\link{makeMultiGrid}}, \code{\link[loadeR]{loadGridData}}
 
 NULL
 
 #' @title Grid containing E-OBS observation data of precipitation for the Iberian Peninsula.
-#' @description EOBS_Iberia_tp is a grid object returned by function loadGridData 
-#' (package loadeR):
-#' season = c(12,1,2),  
-#' years = 1991:2000, 
-#' var="tas", 
-#' lonLim = c(-10,5),  
-#' latLim= c(34,44)
+#' @description EOBS_Iberia_tp is a grid object returned by \code{loadECOMS} from package \pkg{loadeR.ECOMS}
 #' @format A grid
 #' @name EOBS_Iberia_tp
 #' @docType data
 #' @keywords gridded observations
 #' @source  subset of the E-OBS observational gridded dataset
-#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR]{loadGridData}}
+#' @seealso \code{\link{makeMultiGrid}}, \code{\link[loadeR]{loadGridData}}
 
 NULL
 
 #' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
 #' Contains mean temperature data for the Iberian Peninsula.
-#' @description S4_Iberia_tas is a grid object returned by loadECOMS 
-#' function (package loadeR.ECOMS):
-#' season = c(12,1,2),  
-#' years = 1991:2000, 
-#' var="tas", 
-#' lonLim = c(-10,5),  
-#' latLim= c(34,44), 
-#' time = "DD", 
-#' aggr.d = "min".
+#' @description S4_Iberia_tas is a grid object returned by \code{loadECOMS} from package \pkg{loadeR.ECOMS}
 #' @format A grid
 #' @name S4_Iberia_tas
 #' @docType data
 #' @keywords seasonal forecasting
 #' @source  subset of System4 seasonal forecasting data of 15 members accesible
 #' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
-#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+#' @seealso \code{\link{makeMultiGrid}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 
 NULL
 
 #' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
 #' Contains precipitation data for the Iberian Peninsula.
-#' @description S4_Iberia_tp is a grid object returned by loadECOMS 
-#' function (package loadeR.ECOMS):
-#' season = c(12,1,2),  
-#' years = 1991:2000, 
-#' var="tas", 
-#' lonLim = c(-10,5),  
-#' latLim= c(34,44), 
-#' time = "DD", 
-#' aggr.d = "min".
+#' @description S4_Iberia_tp is a grid object returned by \code{loadECOMS} from package \pkg{loadeR.ECOMS}
 #' @format A grid
 #' @name S4_Iberia_tp
 #' @docType data
 #' @keywords seasonal forecasting
 #' @source  subset of System4 seasonal forecasting data of 15 members accesible
 #' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
-#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+#' @seealso \code{\link{makeMultiGrid}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 #' 
 #' 
 NULL
 
 #' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
 #' Contains mean temperature data for the Iberian Peninsula.
-#' @description S4_Iberia_tas_fut is a grid object returned by loadECOMS 
-#' function (package loadeR.ECOMS):
-#' season = c(12,1,2),  
-#' years = 2001:2010, 
-#' var="tas", 
-#' lonLim = c(-10,5),  
-#' latLim= c(34,44), 
-#' members = 1:5, 
-#' time = "DD", 
-#' aggr.d = "min".
+#' @description S4_Iberia_tas_fut is a grid object returned by \code{loadECOMS} from package \pkg{loadeR.ECOMS}
 #' @format A grid
 #' @name S4_Iberia_tas_fut
 #' @docType data
 #' @keywords seasonal forecasting
 #' @source  subset of System4 seasonal forecasting data of 15 members accesible
 #' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
-#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
-
+#' @seealso \code{\link{makeMultiGrid}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 NULL
 
 #' @title grid containing the first 5 members of the System4 seasonal forecasting data of 15 members.
 #' Contains precipitation data for the Iberian Peninsula.
-#' @description S4_Iberia_tp_fut is a grid object returned by loadECOMS 
-#' function (package loadeR.ECOMS):
-#' season = c(12,1,2),  
-#' years = 2001:2010, 
-#' var="tas", 
-#' lonLim = c(-10,5),  
-#' latLim = c(34,44), 
-#' members = 1:5, 
-#' time = "DD", 
-#' aggr.d = "min".
+#' @description S4_Iberia_tp_fut is a grid object returned by \code{loadECOMS} from package \pkg{loadeR.ECOMS}
 #' @format A grid
 #' @name S4_Iberia_tp_fut
 #' @docType data
 #' @keywords seasonal forecasting
 #' @source  subset of System4 seasonal forecasting data of 15 members accesible
 #' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
-#' @seealso \code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
-#' 
-
+#' @seealso \code{\link{makeMultiGrid}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 NULL

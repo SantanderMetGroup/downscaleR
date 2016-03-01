@@ -3,21 +3,13 @@
 \docType{data}
 \name{VALUE_tas}
 \alias{VALUE_tas}
-\title{Station data from the VALUE_ECA_86_v2 dataset containing daily mean temperature for 82 stations in Europe.}
+\title{Station mean temperature dataset}
 \format{Station data}
 \source{
 Subset of VALUE station data. Full dataset is accessible 
-for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+for download in \url{http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz}.
 }
 \description{
-season = c(12,1,2),  
-years = 1991-2000, 
-var= "tmean".
+Station data from the VALUE_ECA_86_v2 dataset containing daily mean temperature for 82 stations in Europe.
 }
-\seealso{
-\code{\link{NCEP_Iberia_tas}}, \code{\link{VALUE_Igueldo_tas}}
-}
-\keyword{VALUE}
-\keyword{station}
-\keyword{temperature}
 

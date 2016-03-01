@@ -2,8 +2,8 @@
 % Please edit documentation in R/rdas.R
 \name{tasmin_forecast}
 \alias{tasmin_forecast}
-\title{Multimember field containing a seasonal forecast of minimum surface temperature for Europe}
-\format{A multimember field}
+\title{Multimember grid containing a seasonal forecast of minimum surface temperature for Europe}
+\format{A multimember grid}
 \source{
 \url{http://www.meteo.unican.es/ecoms-udg}
 }
@@ -12,12 +12,9 @@ CFSv2 forecast of minimum daily temperature for July 2001 over Europe. Lead-mont
 }
 \examples{
 data(tasmin_forecast)
-plotMeanField(tasmin_forecast, multi.member = TRUE)
+plotMeanGrid(tasmin_forecast, multi.member = TRUE)
 }
 \references{
 Saha, S. \emph{et al.}, 2013. The NCEP Climate Forecast System Version 2. J Clim 130925135638001. doi:10.1175/JCLI-D-12-00823.1
-}
-\seealso{
-\code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 }
 

@@ -39,7 +39,7 @@
 #' 
 #' @note The computation of climatological terciles requires a representative period to obtain meaningful results.
 #' 
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}, M.D. Frias and J, Fernandez based on the original diagram 
+#' @author J. Bedia, M.D. Frias and J, Fernandez based on the original diagram 
 #' conceived by A. Cofino.
 #' 
 #' @family visualization

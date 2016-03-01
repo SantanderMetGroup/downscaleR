@@ -2,8 +2,8 @@
 % Please edit documentation in R/rdas.R
 \name{iberia_ncep_hus850}
 \alias{iberia_ncep_hus850}
-\title{Field containing NCEP reanalysis data of specific humidity at 850mb for the Iberian Peninsula.}
-\format{A field}
+\title{Grid containing NCEP reanalysis data of specific humidity at 850mb for the Iberian Peninsula.}
+\format{A grid}
 \source{
 \url{http://www.meteo.unican.es/ecoms-udg}
 }
@@ -12,9 +12,6 @@ The data are daily means, wintertime (DJF) period 1991-2010.
 }
 \examples{
 data(iberia_ncep_hus850)
-plotMeanField(iberia_ncep_hus850)
-}
-\seealso{
-\code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+plotMeanGrid(iberia_ncep_hus850)
 }
 

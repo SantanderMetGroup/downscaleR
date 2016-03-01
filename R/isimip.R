@@ -70,8 +70,8 @@
 #' # Apply the bias correction method:
 #' simBC <- isimip (obs, prd, sim, threshold = 1) # ISI-MIP Method
 #' par(mfrow = c(1,2))
-#' plotMeanField(sim)
-#' plotMeanField(simBC)
+#' plotMeanGrid(sim)
+#' plotMeanGrid(simBC)
 #' par(mfrow = c(1,1))
 #' }
 

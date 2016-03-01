@@ -1,8 +1,8 @@
-#' @title Bubble plot for visualization of the skill of an ensemble forecast prediction
+#' @title Bubble plot 
 #' @description Bubble plot for the visualization of the skill of an ensemble forecast prediction. It provides a
 #'  spatially-explicit representation of the skill, resolution and reliability of a probabilistic predictive system in
 #'  a single map.
-#' @param mm.obj A multi-member object with predictions, either a field or a multi-member station object as a result of
+#' @param mm.obj A multi-member object with predictions, either a grid or a multi-member station object as a result of
 #' downscaling of a forecast using station data. See details.
 #' @param obs The benchmarking observations for forecast verification. 
 #' @param select.year Year within the whole verification period to display the results for.
@@ -11,8 +11,6 @@
 #'  in the plot. See details. 
 #' @importFrom scales alpha
 #' @importFrom verification roc.area
-#' @importFrom loadeR interpData
-#' @importFrom loadeR getGrid
 #' @export
 #' @details 
 #' For each member, the daily predictions are averaged to obtain a single seasonal forecast. The corresponding terciles 
@@ -65,7 +63,6 @@ bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.pro
       lon.dim <- grep("lon", mm.dimNames)
       lat.dim <- grep("lat", mm.dimNames)
       member.dim <- grep("member", mm.dimNames)
-      time.dim <- grep("time", mm.dimNames)
       n.mem <- dim(mm.obj$Data)[member.dim]
       # Computation of terciles and exceedance probabilities
       # yearmean changes the data dimension. time.dim is in the first dimension!!
@@ -158,7 +155,7 @@ bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.pro
       } else {
             plot(nn.yx[ , 2], nn.yx[ , 1], cex = df$max.prob * 3, col = df$color, pch = 19, xlab = "", ylab = "")
       }
-      world(add = TRUE, interior = FALSE)      
+      draw.world.lines()
       par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
       plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
       if (score) {

@@ -2,8 +2,8 @@
 % Please edit documentation in R/rdas.R
 \name{iberia_ncep_psl}
 \alias{iberia_ncep_psl}
-\title{Field containing NCEP reanalysis data of sea-level pressure for the Iberian Peninsula.}
-\format{A field}
+\title{Grid containing NCEP reanalysis data of sea-level pressure for the Iberian Peninsula.}
+\format{A grid}
 \source{
 \url{http://www.meteo.unican.es/ecoms-udg}
 }
@@ -13,9 +13,6 @@ mean of the four 6-hourly model outputs.
 }
 \examples{
 data(iberia_ncep_psl)
-plotMeanField(iberia_ncep_psl)
-}
-\seealso{
-\code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+plotMeanGrid(iberia_ncep_psl)
 }
 

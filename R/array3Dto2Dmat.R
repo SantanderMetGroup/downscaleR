@@ -9,7 +9,7 @@
 #' is the most convenient format in order to naturally fill a matrix with the adequate number of columns (longitudes) 
 #' and rows (latitudes) given the vectorized value of the output at a given time (or after time-averaging via rowMeans).
 #' The function is insensitive to the dimension ordering of the input data array 
-#'@author J. Bedia \email{joaquin.bedia@@gmail.com}
+#'@author J. Bedia 
 #'@keywords internal
 #'@export
 
@@ -51,7 +51,7 @@ array3Dto2Dmat <- function(array3D) {
 #'@importFrom abind abind
 #'
 #'@details The function is the inverse of \code{\link{array3Dto2Dmat}} 
-#'@author J. Bedia \email{joaquin.bedia@@gmail.com}
+#'@author J. Bedia 
 #'@keywords internal
 #'@export
 #'@seealso \code{\link{array3Dto2Dmat}}, which performs the inverse operation.

@@ -6,7 +6,6 @@
 #' @family downscaling
 #' @author J Bedia, M Iturbide
 #' @importFrom abind abind
-#' @importFrom loadeR getCoordinates
 #' @keywords internal
 
 glimpr <- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold, n.pcs = n.pcs) {

@@ -25,7 +25,7 @@ and rows (latitudes) given the vectorized value of the output at a given time (o
 The function is insensitive to the dimension ordering of the input data array
 }
 \author{
-J. Bedia \email{joaquin.bedia@gmail.com}
+J. Bedia
 }
 \keyword{internal}
 

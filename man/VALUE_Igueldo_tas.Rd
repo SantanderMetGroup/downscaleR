@@ -3,20 +3,14 @@
 \docType{data}
 \name{VALUE_Igueldo_tas}
 \alias{VALUE_Igueldo_tas}
-\title{Station data from the VALUE_ECA_86_v2 dataset containing daily mean temperature for the Igueldo-SanSebastian station.}
+\title{Station mean temperature data}
 \format{Station data}
 \source{
 Subset of VALUE station data. Full dataset is accessible 
-for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+for download in \url{http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz}.
 }
 \description{
-season = c(12,1,2),  
-years = 1991-2000, 
-stationID = "000234"
-var= "tmean".
-}
-\seealso{
-\code{\link{NCEP_Iberia_tas}}, \code{\link{VALUE_tas}}
+Station data from the VALUE_ECA_86_v2 dataset containing daily mean temperature for the Igueldo-SanSebastian station.
 }
 \keyword{Igueldo}
 \keyword{VALUE}

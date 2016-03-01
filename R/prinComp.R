@@ -1,6 +1,6 @@
-#' @title Principal Component Analysis of field/multifield/multimember data
-#' @description Performs a Principal Component Analysis of field, multifield or multi-member data
-#' @param gridData A field, multifield, multimember field or multimember multifield object
+#' @title Principal Component Analysis of grid/multigrid/multimember data
+#' @description Performs a Principal Component Analysis of grid, multigrid or multi-member data
+#' @param gridData A grid, multigrid, multimember grid or multimember multigrid object
 #' @param n.eofs Number of EOFs to be retained. Default to \code{NULL}, indicating
 #'  that either all EOFs are kept, or that the next argument will be used as criterion
 #'  for its determination. See next argument and details.
@@ -9,9 +9,9 @@
 #' @param scaling Method for performing the scaling (and centering) of the input raw data matrix.
 #' Currently accepted choices are \code{"field"} (the default) and \code{"gridbox"}. See details.
 #' @template templateParallelParams
-#' @return A list of \emph{N + 1} elements for multifields, where \emph{N} is the number of input variables used
+#' @return A list of \emph{N + 1} elements for multigrids, where \emph{N} is the number of input variables used
 #'  and the last element contains the results of the combined PCA (See details). The list is named as the variables,
-#'  including the last element named \code{"COMBINED"}. In case of single fields (1 variable only), a list of length 1
+#'  including the last element named \code{"COMBINED"}. In case of single grids (1 variable only), a list of length 1
 #'   (without the combined element). For each element of the list, the following objects are returned, either in the form of
 #'   another list (1 element for each member) for multimembers, or not in the case of non multimember inputs:
 #'  \itemize{
@@ -24,9 +24,9 @@
 #'  in the attribute \code{"explained_variance"} as a cumulative vector.
 #'  Additional information is returned via the remaining attributes (see details), including geo-referencing and time.
 #' @template templateParallel
-#' @note Performing PCA analysis on multimember multifields may become time-consuming and computationally expensive. 
+#' @note Performing PCA analysis on multimember multigrids may become time-consuming and computationally expensive. 
 #' It is therefore advisable to avoid the use of this option for large datasets, and iterate over single
-#' multimember fields instead.
+#' multimember grids instead.
 #' @details
 #' 
 #' \strong{Number of EOFs}
@@ -34,8 +34,8 @@
 #'  of the number of EOFs (hence also the corresponding PCs) to be retained. If both are \code{NULL} (the default)
 #'  , all EOFs will be retained. If both are given a value different from \code{NULL}, 
 #'  the \code{n.eofs} argument will prevail, and \code{v.exp} will be ignored, with a warning.
-#'  Note that when dealing with multifields, the \code{n.eofs} argument will return the same number of EOFs
-#'  for each variable by sepparate and also for the combined field, while \code{v.exp} will select
+#'  Note that when dealing with multigrids, the \code{n.eofs} argument will return the same number of EOFs
+#'  for each variable by sepparate and also for the combined grid, while \code{v.exp} will select
 #'  a different number, depending on the explained variance in each case. 
 #'  
 #' \strong{Scaling and centering}
@@ -46,7 +46,7 @@
 #' grid-boxes together (i.e., at the field level, \code{"field"}). The last case is the preferred choice and has
 #' been set as default, returning one single mean and sigma parameter for each variable. If the \code{"gridbox"}
 #' approach is selected, a vector of length \emph{n}, where \emph{n} is the number of grid-cells composing the 
-#' field, is returned for both the mean and sigma parameters (this is equivalent to using the \code{\link{scale}}
+#' grid, is returned for both the mean and sigma parameters (this is equivalent to using the \code{\link{scale}}
 #' function with the input data matrix). 
 #' 
 #' The method used is returned as a global attribute of the returned object (\code{"scaled:method"}), and the 
@@ -55,13 +55,13 @@
 #' 
 #' \strong{Combined EOF analysis}
 #' 
-#' When dealing with multifield data, apart from the PCA analysis performed on each variable indivisually,
+#' When dealing with multigrid data, apart from the PCA analysis performed on each variable indivisually,
 #' a combined analysis considering all variables together is done. This is always returned in the last element
 #' of the output list.
 #'
 #' @export
 #' @importFrom abind asub
-#' @seealso \code{\link{fieldFromPCs}}, \code{\link{plotEOF}}
+#' @seealso \code{\link{gridFromPCs}}, \code{\link{plotEOF}}
 #' @references
 #' Guti\'{e}rrez, J.M., R. Ancell, A. S. Cofi\~{n}o and C. Sordo (2004). Redes Probabil\'{i}sticas
 #'  y Neuronales en las Ciencias Atmosf\'{e}ricas. MIMAM, Spain. 279 pp.
@@ -75,15 +75,15 @@
 #' untar("mydirectory/NCEP_Iberia.tar.gz", exdir = "mydirectory")
 #' # First, the path to the ncml file is defined:
 #' ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
-#' # A multifield containing a set of variables is loaded (e.g. data for spring spanning the 
+#' # A multigrid containing a set of variables is loaded (e.g. data for spring spanning the 
 #' # 30-year period 1981--2010):
 #' hus <- loadGridData(ncep, var = "hus@@850", season = 3:5, years = 1981:2010)
 #' ta <- loadGridData(ncep, var = "ta@@850", season = 3:5, years = 1981:2010)
 #' psl <- loadGridData(ncep, var = "psl", season = 3:5, years = 1981:2010)
-#' multifield <- makeMultiField(hus, ta, psl)
+#' multigrid <- makeMultiGrid(hus, ta, psl)
 #' # In this example, we retain the PCs explaining the 99\% of the variance
-#' pca <- prinComp(multifield, v.exp = .99)
-#' # Note that, apart from computing the principal components and EOFs for each field, 
+#' pca <- prinComp(multigrid, v.exp = .99)
+#' # Note that, apart from computing the principal components and EOFs for each grid, 
 #' # it also returns, in the last element of the output list,
 #' # the results of a PC analysis of all the variables combined (named "COMBINED"):
 #' names(pca)
@@ -92,9 +92,9 @@
 #' # and the geo-referencing information
 #' str(attributes(pca))
 #' # In addition, for each variable (and their combination), the scaling and centering parameters 
-#' # are also returned. These are either a single value in case of field scaling (the default), or a
+#' # are also returned. These are either a single value in case of grid scaling (the default), or a
 #' # vector of values, one for each grid-cell, for the gridbox scaling. For instance, the parameters
-#' # for the specific humidity field are:
+#' # for the specific humidity grid are:
 #' attributes(pca$hus[[1]])$`scaled:center`
 #' attributes(pca$hus[[1]])$`scaled:scale`
 #' # In addition, the (cumulative) explained variance of each PC is also returned:
@@ -116,13 +116,13 @@
 #' # for each member sepparately considered
 #' str(pca.mm)
 #' 
-#' # The most complex situation comes from multimember multifields:
+#' # The most complex situation comes from multimember multigrids:
 #' data(tasmin_forecast)
 #' # We interpolate using an identical grid than the previous example:
 #' multimember2 <- interpData(tasmin_forecast, new.Coordinates = getGrid(multimember))
-#' # Now the multimember multifield is constructed
-#' mm.multifield <- makeMultiField(multimember, multimember2)
-#' pca.mm.mf <- prinComp(mm.multifield, n.eofs = 10)
+#' # Now the multimember multigrid is constructed
+#' mm.multigrid <- makeMultiGrid(multimember, multimember2)
+#' pca.mm.mf <- prinComp(mm.multigrid, n.eofs = 10)
 #' # Now there is a "COMBINED" element at the end of the output list
 #' str(pca.mm.mf)
 #' }
@@ -194,7 +194,7 @@ prinComp <- function(gridData,
                         attr(ll, "dimensions") <- attr(gridData$Data, "dimensions")[-mem.index]
                         array3Dto2Dmat(ll)
                   })
-            } else { # Field case      
+            } else {# Field case      
                   list(array3Dto2Dmat(gridData$Data))
             }
       }
@@ -333,7 +333,7 @@ prinComp <- function(gridData,
 #       dim(Xsc)
 #       image.plot(Xsc.list[[x]])
 #       image.plot(Xhat)
-      if(length(pca.list) > 1) {
+      if (length(pca.list) > 1) {
             names(pca.list) <- c(gridData$Variable$varName, "COMBINED")
             attr(pca.list[[length(pca.list)]], "level") <- NULL
       } else {

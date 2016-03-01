@@ -18,9 +18,8 @@ Retrieves the season encompassed by a station or field object
 \examples{
 data(iberia_ncep_ta850)
 getSeason(iberia_ncep_ta850) # Boreal winter (DJF)
-
 }
 \author{
-J. Bedia \email{joaquin.bedia@gmail.com}
+J. Bedia
 }
 

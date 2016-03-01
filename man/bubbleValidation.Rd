@@ -2,13 +2,13 @@
 % Please edit documentation in R/bubbleValidation.R
 \name{bubbleValidation}
 \alias{bubbleValidation}
-\title{Bubble plot for visualization of the skill of an ensemble forecast prediction}
+\title{Bubble plot}
 \usage{
 bubbleValidation(mm.obj, obs, select.year, score = TRUE,
   size.as.probability = TRUE)
 }
 \arguments{
-\item{mm.obj}{A multi-member object with predictions, either a field or a multi-member station object as a result of
+\item{mm.obj}{A multi-member object with predictions, either a grid or a multi-member station object as a result of
 downscaling of a forecast using station data. See details.}
 
 \item{obs}{The benchmarking observations for forecast verification.}
@@ -52,7 +52,8 @@ Jolliffe, I. T. and Stephenson, D. B. 2003. Forecast Verification: A Practitione
  Atmospheric Science, Wiley, NY
 }
 \seealso{
-Other visualization: \code{\link{quickDiagnostics}},
+Other visualization: \code{\link{plotMeanGrid}},
+  \code{\link{quickDiagnostics}},
   \code{\link{tercileValidation}}
 }
 

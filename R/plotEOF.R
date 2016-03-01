@@ -10,8 +10,7 @@
 #' corresponding to the first member. Ignored for non multimember fields.
 #' @return A plot with as many panels as EOFs requested, in the original units of the variable
 #' # @export
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' @importFrom loadeR multiPlot
+#' @author J. Bedia 
 #' @seealso \code{\link{prinComp}}
 #' @examples \dontrun{ 
 #' # Winter temperature at 850 mb isobaric surface pressure level is loaded (period 1981--2010):

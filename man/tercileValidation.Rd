@@ -45,7 +45,7 @@ for the analysis period. Thus, data is converted converted to a series of tercil
 The computation of climatological terciles requires a representative period to obtain meaningful results.
 }
 \author{
-J. Bedia \email{joaquin.bedia@gmail.com}, M.D. Frias and J, Fernandez based on the original diagram 
+J. Bedia, M.D. Frias and J, Fernandez based on the original diagram 
 conceived by A. Cofino.
 }
 \references{
@@ -58,6 +58,7 @@ Downscaling ECMWF seasonal precipitation forecasts in Europe using the RCA model
 }
 \seealso{
 Other visualization: \code{\link{bubbleValidation}},
+  \code{\link{plotMeanGrid}},
   \code{\link{quickDiagnostics}}
 }
 

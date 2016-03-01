@@ -134,9 +134,9 @@
 #' # Apply the bias correction method:
 #' simBC <- biasCorrection (obs, prd, sim, method = "eqm", pr.threshold = 1) # qq-mapping
 #' par(mfrow = c(1,2))
-#' plotMeanField(sim)
+#' plotMeanGrid(sim)
 #' title("Raw")
-#' plotMeanField(simBC)
+#' plotMeanGrid(simBC)
 #' title("Bias-corrected")
 #' }
 

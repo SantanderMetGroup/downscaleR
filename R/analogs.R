@@ -42,8 +42,6 @@
 #' 
 #' @importFrom fields rdist
 #' @importFrom abind abind
-#' @importFrom loadeR getCoordinates
-#' 
 #' @family downscaling
 #' 
 #' @references 

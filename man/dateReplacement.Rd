@@ -25,7 +25,7 @@ that of the downscaled variable (e.g., suppose that instantaneous surface temper
  of daily minimum temperature). In addition, in case of multiple predictors the \code{Dates} slot of the simulated series
  has several start/end time lists, one for each predictor, while there is only one predictand. For this reason,
  the function takes care of adjusting adequately the returned \code{Dates} slot.
- @author J. Bedia \email{joaquin.bedia@gmail.com}
+ @author J. Bedia 
  @keywords internal
  @export
 }

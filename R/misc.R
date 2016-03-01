@@ -2,12 +2,11 @@
 #' @description Retrieves the season encompassed by a station or field object
 #' @param obj Any object extending the station or field classes
 #' @return An integer vector with the season
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @author J. Bedia 
 #' @export
 #' @examples 
 #' data(iberia_ncep_ta850)
 #' getSeason(iberia_ncep_ta850) # Boreal winter (DJF)
-#' 
 
 getSeason <- function(obj) {
       dimNames <- attr(obj$Data, "dimensions")
@@ -32,10 +31,9 @@ getSeason <- function(obj) {
 #'  of daily minimum temperature). In addition, in case of multiple predictors the \code{Dates} slot of the simulated series
 #'  has several start/end time lists, one for each predictor, while there is only one predictand. For this reason,
 #'  the function takes care of adjusting adequately the returned \code{Dates} slot.
-#'  @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#'  @author J. Bedia 
 #'  @keywords internal
 #'  @export
-#' 
 
 dateReplacement <- function(obs.dates, sim.dates) {
       time.res <- difftime(as.POSIXlt(obs.dates$end[1]), as.POSIXlt(obs.dates$start[1]))
@@ -74,7 +72,7 @@ dateReplacement <- function(obs.dates, sim.dates) {
 #'  and so on... The function is useful for computing and/or plotting annual statistics, seasonal climatologies ... 
 #' @section Warning:
 #' The function should no be used to extract the actual years vector
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @author J. Bedia 
 #' @export
 #' @examples 
 #' data(iberia_ncep_hus850)
@@ -114,7 +112,7 @@ getYearsAsINDEX <- function(obj) {
             aux <- match(aux.dates$mon + 1, season)
             brks <- c(1, which(diff(aux) < 0) + 1, length(aux) + 1)
             l <- lapply(1:(length(brks) - 1), function(x) {
-                  a <- yrs[brks[x] : (brks[x + 1] - 1)]
+                  a <- yrs[brks[x]:(brks[x + 1] - 1)]
                   return(rep(yy[x], length(a)))
             })
             yrs  <- do.call("c", l)
@@ -152,20 +150,19 @@ renameDims <- function(obs, multi.member) {
 #' @description Get the common period of the objects obs and prd
 #' @author S. Herrera
 #' @keywords internal
-#' @importFrom loadeR subsetDimension
 
 getIntersect <- function(obs,prd){
       dimNames <- attr(obs$Data, "dimensions")
-      indDates <- which(as.POSIXct(obs$Dates$start, tz="GMT", format = "%Y-%m-%d") == as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
-      auxDates <- as.POSIXct(obs$Dates$start[indDates], tz="GMT", format = "%Y-%m-%d")
-      indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"), auxDates))
+      indDates <- which(as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d") == as.POSIXct(prd$Dates$start, tz = "GMT", format = "%Y-%m-%d"))
+      auxDates <- as.POSIXct(obs$Dates$start[indDates], tz = "GMT", format = "%Y-%m-%d")
+      indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d"), auxDates))
       obs <- subsetDimension(obs, dimension = "time", indices = indObs)
       dimNames <- attr(prd$Data, "dimensions")
-      indObs <- which(is.element(as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"), auxDates))
+      indObs <- which(is.element(as.POSIXct(prd$Dates$start, tz = "GMT", format = "%Y-%m-%d"), auxDates))
       prd <- subsetDimension(prd, dimension = "time", indices = indObs)
       obj <- list(obs = obs, prd = prd)
-      obj$Dates$start <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d")
-      obj$Dates$end <- as.POSIXct(obs$Dates$end, tz="GMT", format="%Y-%m-%d")
+      obj$Dates$start <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+      obj$Dates$end <- as.POSIXct(obs$Dates$end, tz = "GMT", format = "%Y-%m-%d")
       attr(obj$obs$Data, "dimensions") <- attr(obs$Data, "dimensions")
       attr(obj$prd$Data, "dimensions") <- attr(prd$Data, "dimensions")
       return(obj)
@@ -190,3 +187,19 @@ which.leap <- function(years) {
 }
 
 
+#' @title Land borders
+#' @description Add land borders to a map
+#' @param ... Graphical parameters passed to \code{\link{lines}}.
+#' @return Draws a simplied land border areas as lines onto the map
+#' @details The function loads a built-in world segments dataset created ad hoc to avoid dependencies on other packages (i.e. 'maps').
+#' Geographical lonlat coordinates in wgs84.
+#' @source Postprocessed from the original shapefile from Natural Earth (http://www.naturalearthdata.com/downloads/110m-physical-vectors/)
+#' @author J. Bedia
+#' @keywords internal
+
+draw.world.lines <- function(...) {
+      load(file.path(find.package("loadeR"), "wrl.Rda"))
+      for (i in 1:length(node.list)) {
+            lines(node.list[[i]][,1], node.list[[i]][,2], ...)            
+      }
+}

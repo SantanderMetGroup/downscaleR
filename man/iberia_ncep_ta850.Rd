@@ -2,8 +2,8 @@
 % Please edit documentation in R/rdas.R
 \name{iberia_ncep_ta850}
 \alias{iberia_ncep_ta850}
-\title{Field containing NCEP reanalysis data of air temperature at 850mb for the Iberian Peninsula.}
-\format{A field}
+\title{Grid containing NCEP reanalysis data of air temperature at 850mb for the Iberian Peninsula.}
+\format{A grid}
 \source{
 \url{http://www.meteo.unican.es/ecoms-udg}
 }
@@ -12,9 +12,6 @@ The data correspond to the wintertime (DJF) period 1991-2010, and it consists of
 }
 \examples{
 data(iberia_ncep_ta850)
-plotMeanField(iberia_ncep_ta850)
-}
-\seealso{
-\code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+plotMeanGrid(iberia_ncep_ta850)
 }
 

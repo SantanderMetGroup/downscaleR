@@ -1,17 +1,13 @@
 #' @title Annual cycle scaling of simulation data
-#' 
 #' @description Annual cycle scaling of simulation data w.r.t. the predictors
-#' 
 #' @param pred Predictor field
 #' @param sim Simulation field
 #' @param ref Optional reference field. A field from where the scaling and centering parameters are taken. See details.
 #' @param ensemble Logical flag. Should the correction of the mean be performed w.r.t. the ensemble mean (\code{TRUE})
 #'  or member by member independently (\code{ensemble = FALSE})?. Ignored if \code{ref} (and thus \code{sim}) are not
 #'   multimembers. Default to \code{FALSE}.
-#'  
 #' @return A field with the rescaled simulation data (\code{sim}), with the centering parameters
 #'  indicated as an attribute
-#'  
 #' @details The reference field is used to correct the simulation (test) data, as follows:
 #' 
 #' \deqn{sim' = sim - mu_ref + mu_pred}
@@ -28,8 +24,7 @@
 #' @importFrom abind abind
 #' @keywords internal
 #' @export
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' @importFrom loadeR subsetField
+#' @author J. Bedia
 
 
 
@@ -37,7 +32,7 @@ rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
       use.ref <- ifelse(is.null(ref), FALSE, TRUE)
       if (is.null(ref)) ref <- pred
       dimNames <- attr(ref$Data, "dimensions")
-      if(!identical(dimNames, attr(sim$Data, "dimensions"))) stop("Input and reference field dimensions do not match")
+      if (!identical(dimNames, attr(sim$Data, "dimensions"))) stop("Input and reference field dimensions do not match")
       seas <- getSeason(pred)
       if (!identical(seas, getSeason(ref)) | !identical(seas, getSeason(sim))) stop("Season of input and reference fields do not match")
       var.names <- ref$Variable$varName
@@ -55,9 +50,9 @@ rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
       message("[", Sys.time(), "] Calculating centering parameters...")
       # MU: monthly mean pars of the predictor
       center.list.pred <- lapply(1:length(var.names), function(x) {
-            a <- suppressWarnings(subsetField(pred, var = var.names[x]))
+            a <- suppressWarnings(subsetGrid(pred, var = var.names[x]))
             b <- lapply(seas, function(y) {
-                  aux <- subsetField(a, season = y)$Data
+                  aux <- subsetGrid(a, season = y)$Data
                   aux <- apply(aux, grep("member", attr(aux, "dimensions"), invert = TRUE), mean, na.rm = TRUE)
                   attr(aux, "dimensions") <- c("time", "lat", "lon")                                    
                   colMeans(array3Dto2Dmat(aux))
@@ -74,9 +69,9 @@ rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
             if (n.mem > 1) {
                   if (isTRUE(ensemble)) {
                         aux1 <- lapply(1:length(var.names), function(x) {
-                              a <- suppressWarnings(subsetField(ref, var = var.names[x]))
+                              a <- suppressWarnings(subsetGrid(ref, var = var.names[x]))
                               b <- lapply(seas, function(y) {
-                                    aux <- subsetField(a, season = y)$Data
+                                    aux <- subsetGrid(a, season = y)$Data
                                     aux <- apply(aux, grep("member", attr(aux, "dimensions"), invert = TRUE), mean, na.rm = TRUE)
                                     attr(aux, "dimensions") <- c("time", "lat", "lon")                                    
                                     colMeans(array3Dto2Dmat(aux))
@@ -88,11 +83,11 @@ rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
                         center.list.ref <- rep(list(aux1), n.mem)
                   } else {
                         center.list.ref <- lapply(1:n.mem, function(x) {
-                              a <- subsetField(ref, members = x)
+                              a <- subsetGrid(ref, members = x)
                               aux1 <- lapply(1:length(var.names), function(y) {
-                                    b <- suppressWarnings(subsetField(a, var = var.names[y]))
+                                    b <- suppressWarnings(subsetGrid(a, var = var.names[y]))
                                     aux <- lapply(seas, function(z) {
-                                          colMeans(array3Dto2Dmat(subsetField(b, season = z)$Data))
+                                          colMeans(array3Dto2Dmat(subsetGrid(b, season = z)$Data))
                                     })
                                     names(aux) <- month.abb[seas]
                                     return(aux)
@@ -104,9 +99,9 @@ rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
                   names(center.list.ref) <- ref$Members
             } else {
                   center.list.ref <- lapply(1:length(var.names), function(x) {
-                        a <- suppressWarnings(subsetField(ref, var = var.names[x]))
+                        a <- suppressWarnings(subsetGrid(ref, var = var.names[x]))
                         b <- lapply(seas, function(y) {
-                              aux <- subsetField(a, season = y)$Data
+                              aux <- subsetGrid(a, season = y)$Data
                               aux <- apply(aux, grep("member", attr(aux, "dimensions"), invert = TRUE), mean, na.rm = TRUE)
                               attr(aux, "dimensions") <- c("time", "lat", "lon")                                    
                               colMeans(array3Dto2Dmat(aux))
@@ -123,9 +118,9 @@ rescaleMonthlyMeans <- function(pred, sim, ref = NULL, ensemble = FALSE) {
       # Thus: center = MUref - MUpred
       message("[", Sys.time(), "] Rescaling...")
       aux.list <- lapply(1:length(var.names), function(v) {
-            sf.var <- suppressWarnings(subsetField(sim, var = var.names[v]))
+            sf.var <- suppressWarnings(subsetGrid(sim, var = var.names[v]))
             l <- lapply(1:n.mem, function(m) {
-                  aux <- array3Dto2Dmat(suppressWarnings(subsetField(sf.var, members = m))$Data)
+                  aux <- array3Dto2Dmat(suppressWarnings(subsetGrid(sf.var, members = m))$Data)
                   mu.list <- lapply(1:length(seas), function(s) {
                         scale(aux[which(mon == seas[s]), ], 
                               center = (center.list.ref[[m]][[v]][[s]] - center.list.pred[[m]][[v]][[s]]),

@@ -60,7 +60,7 @@ plotEOF(pca2, "psl", n.eofs = 2)
 
 }
 \author{
-J. Bedia \email{joaquin.bedia@gmail.com}
+J. Bedia
 }
 \seealso{
 \code{\link{prinComp}}

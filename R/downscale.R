@@ -61,49 +61,14 @@
 #' Note that the analog dates can be only returned for one single neighbour selections (i.e. \code{n.neigh = 1}),
 #'  otherwise giving an error. The analog dates are different for each member in case of 
 #'  multimember downscaling, and are returned as a list, each element of the list corresponding to one member. 
-#' 
 #' @template templateParallel
-#' 
-#'   
 #' @seealso \code{\link{prinComp}} for details on principal component/EOF analysis,
 #' \code{rescaleMonthlyMeans} for data pre-processing,
-#' \code{\link{makeMultiField}} for multifield creation
+#' \code{\link{makeMultiGrid}} for multigrid construction
 #' \code{\link{loadGridData}} and \code{\link{loadStationData}} for loading fields and station data respectively.
-#' 
 #' @export 
 #' @family downscaling
 #' @author J Bedia and M Iturbide
-
-# load("ignore/juaco/data/obsPredSim_NCEP.Rdata", verbose = TRUE)
-# 
-# plotMeanField(pred)
-# 
-# 
-# # # 
-# pca.pred <- prinComp(pred, v.exp = .99)
-# str(pca.pred)
-
-# str(sim)
-
-# str(a)
-# 
-# str(pred)
-# str(pca.pred)
-# # 
-# # a <- ppModelSetup(obs.precip, pca.pred, sim)
-# # str(a)
-# # str(pca.pred)
-# str(pred)
-# str(modelPars)
-# parallel = TRUE
-# ncores = NULL
-# max.ncores = 16
-# 
-# 
-# a <- downscale(obs.tmean, pred, sim, method = "analogs", parallel = TRUE)
-# 
-# b <- downscale(obs.tmean, pred, sim, method = "analogs", parallel = FALSE)
-
 
 downscale <- function(obs,
                       pred,
@@ -136,29 +101,23 @@ downscale <- function(obs,
                                           n.pcs = n.pcs)
             )
       } else if (cross.val == "loocv") {
-            
-            if(!is.null(sim)){
+            if (!is.null(sim)) {
                   message("'sim' will be ignored for cross-validation")
             }
-            
-            if("scaled:method" %in% names(attributes(pred))){
+            if ("scaled:method" %in% names(attributes(pred))) {
                   pred$Dates$start <- attr(pred, "dates_start")
             }
-            
             years <- getYearsAsINDEX(pred)
             modelPars.orig <- modelPars
             message("[", Sys.time(), "] Fitting models...")
-            
-            downi <-lapply(1:length(unique(years)), function(i) {
+            downi <- lapply(1:length(unique(years)), function(i) {
                   year.ind <- which(years == unique(years)[i])
                   modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
                   modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
                   obs$Data <- obs.orig$Data[-year.ind,,]
                   attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
-                  
-                  message("Validation ", i, ", ", length(unique(years))-i, " remaining")
-                  
-                  if(method == "analogs"){
+                  message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
+                  if (method == "analogs") {
                         suppressMessages(
                         analogs(obs = obs,
                                 modelPars = modelPars,
@@ -167,7 +126,7 @@ downscale <- function(obs,
                                 analog.dates = analog.dates,
                                 parallel.pars = parallel.pars)
                         )
-                  }else if (method == "glm"){
+                  } else if (method == "glm") {
                         suppressMessages(
                         glimpr(obs = obs,
                                modelPars = modelPars,
@@ -175,8 +134,6 @@ downscale <- function(obs,
                                n.pcs = n.pcs)
                         )
                   }
-                  
-                  
             })
             down <- unname(do.call("abind", c(downi, along = 1)))
       }
@@ -191,21 +148,6 @@ downscale <- function(obs,
       # Date replacement
       obs.orig$Dates <- modelPars$sim.dates 
       message("[", Sys.time(), "] Done.")
-      
       return(obs.orig)
 }
 
-
-
-# identical(pred,sim)
-# # ppModelSetup  la matriz pred tiene que tener un atributo que indica que es un producto de PCA o no
-# a <- downscale(obs = obs.precip, pred = pred, sim = sim, method = "analogs")
-# str(a)
-# # 
-# # range(obs.precip$Data)
-# obs = obs.precip
-# str(modelPars)
-
-#             if (!is.null(sim) & !identical(pred, sim)) {
-#              
-#             }

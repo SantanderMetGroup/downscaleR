@@ -11,7 +11,8 @@ Imports:
     verification,
     scales,
     evd,
-    parallel
+    parallel,
+    akima
 Suggests:
     loadeR.ECOMS
 Type: Package

@@ -25,7 +25,7 @@ Converts a 2D matrix of the form [time, lonlat] to a 3D array of the form
 The function is the inverse of \code{\link{array3Dto2Dmat}}
 }
 \author{
-J. Bedia \email{joaquin.bedia@gmail.com}
+J. Bedia
 }
 \seealso{
 \code{\link{array3Dto2Dmat}}, which performs the inverse operation.

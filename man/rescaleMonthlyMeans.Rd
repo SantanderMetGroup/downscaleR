@@ -39,7 +39,7 @@ case it will be assumed to be the \code{pred} field. This can be used for instan
 to the same model.
 }
 \author{
-J. Bedia \email{joaquin.bedia@gmail.com}
+J. Bedia
 }
 \keyword{internal}
 

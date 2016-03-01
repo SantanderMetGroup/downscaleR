@@ -3,23 +3,13 @@
 \docType{data}
 \name{VALUE_Igueldo_tp}
 \alias{VALUE_Igueldo_tp}
-\title{Station data from the VALUE_ECA_86_v2 dataset containing daily precipitation for the Igueldo-SanSebastian station.}
+\title{Station daily precipitation data}
 \format{Station data}
 \source{
 Subset of VALUE station data. Full dataset is accessible 
-for download in \strong{"http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz"}.
+for download in \url{http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz}.
 }
 \description{
-season = c(12,1,2),  
-years = 1991-2000, 
-stationID = "000234"
-var= "precip".
+Station data from the VALUE_ECA_86_v2 dataset containing daily precipitation for the Igueldo-SanSebastian station.
 }
-\seealso{
-\code{\link{NCEP_Iberia_tp}}, \code{\link{VALUE_tp}}
-}
-\keyword{Igueldo}
-\keyword{VALUE}
-\keyword{precipitation}
-\keyword{station}
 

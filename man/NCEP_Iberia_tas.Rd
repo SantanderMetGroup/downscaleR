@@ -3,25 +3,13 @@
 \docType{data}
 \name{NCEP_Iberia_tas}
 \alias{NCEP_Iberia_tas}
-\title{Field containing NCEP reanalysis data of temperature for the Iberian Peninsula.}
-\format{A field}
+\title{Grid containing NCEP reanalysis data of temperature for the Iberian Peninsula.}
+\format{A grid}
 \source{
-subset of NCEP reanalysis data, which is accessible 
-through the \strong{ECOMS User Data Gateway (ECOMS-UDG)}
+subset of NCEP reanalysis data, which is accessible through the \strong{ECOMS User Data Gateway (ECOMS-UDG)}
 }
 \description{
-NCEP_Iberia_tas is a field object returned by loadECOMS 
-function (package loadeR.ECOMS):
-season = c(12,1,2),  
-years = 1991-2000, 
-var="tas", 
-lonLim = c(-10,5),  
-latLim= c(34,44), 
-time = "DD", 
-aggr.d = "min".
-}
-\seealso{
-\code{\link{makeMultiField}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
+NCEP_Iberia_tas is a grid object returned by loadECOMS from package loadeR.ECOMS
 }
 \keyword{NCEP}
 \keyword{reanalysis}

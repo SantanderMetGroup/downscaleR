@@ -53,6 +53,6 @@ par(mfrow = c(1,1))
 
 }
 \author{
-J. Bedia \email{joaquin.bedia@gmail.com}
+J. Bedia
 }
 
