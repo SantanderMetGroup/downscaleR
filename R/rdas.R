@@ -206,3 +206,21 @@ NULL
 #' through the \strong{ECOMS User Data Gateway (ECOMS-UDG)} 
 #' @seealso \code{\link{makeMultiGrid}}, \code{\link[loadeR.ECOMS]{loadECOMS}}
 NULL
+
+#' @title Station daily precipitation dataset in Iberia
+#' @description Station data from the VALUE_ECA_86_v2 dataset containing daily precipitation for stations in the Iberian Peninsula.
+#' @format Station data
+#' @name VALUE_Iberia_tp
+#' @docType data
+#' @source  Subset of VALUE station data. Full dataset is accessible 
+#' for download in \url{http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz}.
+NULL
+
+#' @title Station mean temperature dataset
+#' @description Station data from the VALUE_ECA_86_v2 dataset containing daily mean temperature for for stations in the Iberian Peninsula.
+#' @format Station data
+#' @name VALUE_Iberia_tas
+#' @docType data
+#' @source  Subset of VALUE station data. Full dataset is accessible 
+#' for download in \url{http://meteo.unican.es/work/downscaler/data/VALUE_ECA_86_v2.tar.gz}.
+NULL

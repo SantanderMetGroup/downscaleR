@@ -27,7 +27,10 @@
 #' @param analog.dates Logical flag indicating whether the dates of the analogs should be returned. See the analogs section.
 #' @param pr.threshold Value below which precipitation amount is considered zero 
 #' @param n.pcs Integer indicating the number of EOFs to be used as predictors
-#' @param cross.val Should cross-validation be performed?
+#' @param cross.val Should cross-validation be performed? methods available are leave-one-out ("loocv") and k-fold ("kfold"). The default 
+#' option ("none") does not perform cross-validation.
+#' @param folds Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
+#' the corresponding fold.
 #' @template templateParallelParams 
 #' 
 #' @details
