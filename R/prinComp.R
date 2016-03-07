@@ -135,28 +135,28 @@ prinComp <- function(gridData,
                      max.ncores = 16,
                      ncores = NULL) {
       if (!is.null(n.eofs) & !is.null(v.exp)) {
-            warning("The 'v.exp' argument was ignored as 'n.eofs' has been indicated")
+            warning("The 'v.exp' argument was ignored as 'n.eofs' has been indicated", call. = FALSE)
       }
       if (is.null(n.eofs) & is.null(v.exp)) {
-            warning("All possible PCs/EOFs retained: This may result in an unnecessarily large object")
+            warning("All possible PCs/EOFs retained: This may result in an unnecessarily large object", call. = FALSE)
       }
       if (!is.null(n.eofs)) {
             v.exp <- NULL
             if (n.eofs < 1) {
-                  stop("Invalid number of EOFs selected")
+                  stop("Invalid number of EOFs selected", call. = FALSE)
             }
       }
       if (!is.null(v.exp)) {
             if (!(v.exp > 0 & v.exp <= 1)) {
-                  stop("The explained variance threshold must be in the range (0,1]")
+                  stop("The explained variance threshold must be in the range (0,1]", call. = FALSE)
             }
       }
       if (any(is.na(gridData$Data))) {
-            stop("There are missing values in the input data array")
+            stop("There are missing values in the input data array", call. = FALSE)
       }
       scaling <- match.arg(scaling, choices = c("field", "gridbox"))
       if (length(gridData$xyCoords$x) < 2 & length(gridData$xyCoords$y) < 2) {
-            stop("The dataset is not a field encompassing multiple grid-cells")
+            stop("The dataset is not a field encompassing multiple grid-cells", call. = FALSE)
       }
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
       dimNames <- attr(gridData$Data, "dimensions")
@@ -273,8 +273,8 @@ prinComp <- function(gridData,
                         } else {
                               list("PCs" = PCs, "EOFs" = F)
                         }
-                        #attr(out, "scaled:center") <- attr(Xsc.list[[i]][[x]], "scaled:center")
-                        #attr(out, "scaled:scale") <- attr(Xsc.list[[i]][[x]], "scaled:scale")
+                        attr(out, "scaled:center") <- attr(Xsc.list[[i]][[x]], "scaled:center")
+                        attr(out, "scaled:scale") <- attr(Xsc.list[[i]][[x]], "scaled:scale")
                         attr(out, "explained_variance") <- explvar
                         return(out)
                   })
@@ -314,8 +314,8 @@ prinComp <- function(gridData,
                         } else {
                               list("PCs" = PCs, "EOFs" = F)
                         }
-                        # attr(out, "scaled:center") <- attr(Xsc.list[[i]][[x]], "scaled:center")
-                        # attr(out, "scaled:scale") <- attr(Xsc.list[[i]][[x]], "scaled:scale")
+                        attr(out, "scaled:center") <- attr(Xsc.list[[i]][[x]], "scaled:center")
+                        attr(out, "scaled:scale") <- attr(Xsc.list[[i]][[x]], "scaled:scale")
                         attr(out, "explained_variance") <- explvar
                         return(out)
                   })
@@ -348,6 +348,8 @@ prinComp <- function(gridData,
       attr(pca.list, "scaled:method") <- scaling
       attr(pca.list, "xCoords") <- gridData$xyCoords$x
       attr(pca.list, "yCoords") <- gridData$xyCoords$y
+      attr(pca.list, "yCoords") <- gridData$xyCoords$y
+      attr(pca.list, "projection") <- attr(gridData$xyCoords, "projection")
       message("[", Sys.time(), "] Done")
       return(pca.list)
 }
