@@ -104,7 +104,7 @@ downscale <- function(obs,
                                           pr.threshold = pr.threshold,
                                           n.pcs = n.pcs)
             )
-      }else{
+      } else {
             if (!is.null(sim)) {
                   message("'sim' will be ignored for cross-validation")
             }
@@ -114,9 +114,7 @@ downscale <- function(obs,
             years <- getYearsAsINDEX(pred)
             modelPars.orig <- modelPars
             message("[", Sys.time(), "] Fitting models...")
-            
             if (cross.val == "loocv") {
-                  
                   downi <- lapply(1:length(unique(years)), function(i) {
                         year.ind <- which(years == unique(years)[i])
                         modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
@@ -124,69 +122,63 @@ downscale <- function(obs,
                         obs$Data <- obs.orig$Data[-year.ind,,]
                         attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
                         message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
-                              if (method == "analogs") {
-                                    suppressMessages(
+                        if (method == "analogs") {
+                              suppressMessages(
                                     analogs(obs = obs,
-                                    modelPars = modelPars,
-                                    n.neigh = n.neigh,
-                                    sel.fun = sel.fun,
-                                    analog.dates = analog.dates,
-                                    parallel.pars = parallel.pars)
-                                    )
-                              }else if (method == "glm") {
-                                    suppressMessages(
+                                            modelPars = modelPars,
+                                            n.neigh = n.neigh,
+                                            sel.fun = sel.fun,
+                                            analog.dates = analog.dates,
+                                            parallel.pars = parallel.pars)
+                              )
+                        } else if (method == "glm") {
+                              suppressMessages(
                                     glimpr(obs = obs,
-                                    modelPars = modelPars,
-                                    pr.threshold = pr.threshold,
-                                    n.pcs = n.pcs)
-                                    )
-                              }
-                        })
+                                           modelPars = modelPars,
+                                           pr.threshold = pr.threshold,
+                                           n.pcs = n.pcs)
+                              )
+                        }
+                  })
                   down <- unname(do.call("abind", c(downi, along = 1)))
-            }else if(cross.val == "kfold"){
-            
-                  if(is.null(folds)){
+            } else if (cross.val == "kfold") {
+                  
+                  if (is.null(folds)) {
                         stop("Folds need to be given")
                   }
-         
                   downi <- lapply(1:length(folds), function(i) {
                         year.ind <- lapply(1:length(folds[[i]]), function(x){
                               indstep <- which(years == folds[[i]][x])
                               return(indstep)
                         })
                         year.ind <- unname(abind(year.ind, along = 1))
-                                    
+                        
                         modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
                         modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
                         obs$Data <- obs.orig$Data[-year.ind,,]
                         attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
                         message("Validation ", i, ", ", length(folds) - i, " remaining")
-                              if (method == "analogs") {
-                                    suppressMessages(
-                                          analogs(obs = obs,
-                                                modelPars = modelPars,
-                                                n.neigh = n.neigh,
-                                                sel.fun = sel.fun,
-                                                analog.dates = analog.dates,
-                                                parallel.pars = parallel.pars)
-                                    )
-                              } else if (method == "glm") {
-                                    suppressMessages(
-                                          glimpr(obs = obs,
-                                                modelPars = modelPars,
-                                                pr.threshold = pr.threshold,
-                                                n.pcs = n.pcs)
-                                    )
-                              }
-                        })
+                        if (method == "analogs") {
+                              suppressMessages(
+                                    analogs(obs = obs,
+                                            modelPars = modelPars,
+                                            n.neigh = n.neigh,
+                                            sel.fun = sel.fun,
+                                            analog.dates = analog.dates,
+                                            parallel.pars = parallel.pars)
+                              )
+                        } else if (method == "glm") {
+                              suppressMessages(
+                                    glimpr(obs = obs,
+                                           modelPars = modelPars,
+                                           pr.threshold = pr.threshold,
+                                           n.pcs = n.pcs)
+                              )
+                        }
+                  })
                   down <- unname(do.call("abind", c(downi, along = 1)))
-    
-            
             }
       }
-      
-      
-      
       # Data array - rename dims
       dimNames <- renameDims(obs.orig, modelPars$multi.member)
       obs.orig$Data <- down
