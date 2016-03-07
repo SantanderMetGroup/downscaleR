@@ -151,6 +151,7 @@ ppModelSetup <- function(obs, pred, sim) {
                         } else {
                               which(sim$Variable$varName == pred$Variable$varName[x])
                         }
+                        print(x)
                         if (o != x) mes <- TRUE
                         attr(simsc.list.pre[[o]], "dimensions") <- dimNames.sim[-var.dim.index]
                         aux <- array3Dto2Dmat(simsc.list.pre[[x]])
