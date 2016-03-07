@@ -88,6 +88,7 @@ gridFromPCs <- function(prinCompObj, var) {
       # scaling <- attributes(prinCompObj)$"scaled:method"
       x <- attributes(prinCompObj)$xCoords
       y <- attributes(prinCompObj)$yCoords
+      proj <- attributes(prinCompObj)$projection
       pco <- prinCompObj[[var.ind]]
       prinCompObj <- NULL
       scale <- lapply(1:length(pco), function(x) attributes(pco[[x]])$"scaled:scale")
@@ -117,6 +118,7 @@ gridFromPCs <- function(prinCompObj, var) {
       }
       attr(out, "nPcs") <- unlist(lapply(1:length(exv), function(x) length(exv[[x]])))
       attr(out, "explained_variance") <- unlist(lapply(1:length(exv), function(x) round(tail(exv[[x]], 1), 2)))
+      attr(out$xyCoords, "projection") <- proj
       return(out)
 }
 # End
