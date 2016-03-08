@@ -51,7 +51,7 @@ glimpr <- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold
             
             sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
                         pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
-                        pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]]))] <- 1L
+                        pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]], na.rm = TRUE))] <- 1L
                         pred <- as.integer(pred)
                   })
             
