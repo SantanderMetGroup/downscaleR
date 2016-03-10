@@ -198,7 +198,7 @@ which.leap <- function(years) {
 #' @keywords internal
 
 draw.world.lines <- function(...) {
-      load(file.path(find.package("loadeR"), "wrl.Rda"))
+      load(file.path(find.package("downscaleR"), "wrl.Rda"))
       for (i in 1:length(node.list)) {
             lines(node.list[[i]][,1], node.list[[i]][,2], ...)            
       }
