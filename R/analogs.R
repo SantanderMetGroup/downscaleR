@@ -35,7 +35,7 @@
 #'  while the \code{"mean"} choice will compute their average.
 #' @seealso \code{\link{prinComp}} for details on principal component/EOF analysis
 #' \code{\link{makeMultiGrid}} for multigrid creation
-#' \code{\link{loadGridData}} and \code{\link{loadStationData}} for loading grids and station data respectively.
+#' \code{loadGridData} and \code{loadStationData}, from package \pkg{loadeR}, for loading grids and station data respectively.
 #' @importFrom fields rdist
 #' @importFrom abind abind
 #' @family downscaling

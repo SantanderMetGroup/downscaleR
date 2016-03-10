@@ -1,6 +1,6 @@
 # downscale.R Perfect-prog downscaling methods
 #
-#     Copyright (C) 2015 Santander Meteorology Group (http://www.meteo.unican.es)
+#     Copyright (C) 2016 Santander Meteorology Group (http://www.meteo.unican.es)
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@
 #' @seealso \code{\link{prinComp}} for details on principal component/EOF analysis,
 #' \code{rescaleMonthlyMeans} for data pre-processing,
 #' \code{\link{makeMultiGrid}} for multigrid construction
-#' \code{\link{loadGridData}} and \code{\link{loadStationData}} for loading grids and station data respectively.
+#' \code{loadGridData} and \code{loadStationData} for loading grids and station data respectively, from package \pkg{loadeR}.
 #' @export 
 #' @family downscaling
 #' @author J Bedia and M Iturbide

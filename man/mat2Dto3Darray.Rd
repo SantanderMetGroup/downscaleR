@@ -30,5 +30,4 @@ J. Bedia
 \seealso{
 \code{\link{array3Dto2Dmat}}, which performs the inverse operation.
 }
-\keyword{internal}
 

@@ -7,7 +7,7 @@
 getGrid(gridData)
 }
 \arguments{
-\item{gridData}{A grid data object coming from \code{\link{loadGridData}} or \code{\link{interpData}}
+\item{gridData}{A grid data object coming from \code{loadGridData} (package \pkg{loadeR}) or \code{\link{interpData}}
 or the function \code{loadECOMS} of package \pkg{loadeR.ECOMS}.}
 }
 \value{

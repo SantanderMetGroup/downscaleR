@@ -4,7 +4,7 @@
 #' @param prinCompObj A EOF analysis object as returned by \code{\link{prinComp}}
 #' @param var Character string indicating the variable to be re-constructed. In case of
 #' PCA analyses performed on a single variable (either multimember or not), this can be omitted.
-#' @return A list similar to the \code{\link{loadGridData}} output, but simplified. See details.
+#' @return A list similar to the \code{loadGridData} output (package \pkg{loadeR}), but simplified. See details.
 #' @details The output of this function returns the minimum required information to use the
 #'  \code{\link{plotMeanGrid}} method, and is intended for comparison and visual analysis
 #'  of the differences between the original grids and the reconstructed ones, for instance

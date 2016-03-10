@@ -13,7 +13,7 @@ gridFromPCs(prinCompObj, var)
 PCA analyses performed on a single variable (either multimember or not), this can be omitted.}
 }
 \value{
-A list similar to the \code{\link{loadGridData}} output, but simplified. See details.
+A list similar to the \code{loadGridData} output (package \pkg{loadeR}), but simplified. See details.
 }
 \description{
 Reconstructs a grid of a climatic variable from the outputs of a

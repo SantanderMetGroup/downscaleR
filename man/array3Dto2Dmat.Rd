@@ -27,5 +27,7 @@ The function is insensitive to the dimension ordering of the input data array
 \author{
 J. Bedia
 }
-\keyword{internal}
+\seealso{
+\code{\link{mat2Dto3Darray}}, which performs the inverse operation
+}
 
