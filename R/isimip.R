@@ -27,7 +27,7 @@
 #'
 #' @seealso \code{\link{biasCorrection}} for details on other standard methods for bias correction
 #'  
-#' @return A calibrated object of the same spatio-temporal extent of the input field
+#' @return A calibrated object of the same spatio-temporal extent of the input grid
 #' 
 #' @family downscaling
 #' 
@@ -70,13 +70,23 @@
 #' # Apply the bias correction method:
 #' simBC <- isimip (obs, prd, sim, threshold = 1) # ISI-MIP Method
 #' par(mfrow = c(1,2))
-#' plotMeanField(sim)
-#' plotMeanField(simBC)
+#' plotMeanGrid(sim)
+#' plotMeanGrid(simBC)
 #' par(mfrow = c(1,1))
 #' }
 
 isimip <- function (obs, pred, sim, threshold = 1, type = c("additive", "multiplicative")) {
-      datesObs <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
+      
+      if (is.null(obs$Dates$start)){
+            datesObs <- as.POSIXct(obs$Dates[[1]]$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
+            multiField <- TRUE
+            obs.var.index <- grep("^var$", attr(obs$Data, "dimensions"))
+            pred.var.index <- grep("^var$", attr(pred$Data, "dimensions"))
+            sim.var.index <- grep("^var$", attr(sim$Data, "dimensions"))
+      }else{
+            datesObs <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
+            multiField <- FALSE
+      }
       datesObs<-cut(datesObs, "month")
       yearList<-unlist(strsplit(as.character(datesObs), "[-]"))
       months<-unique(unlist(strsplit(as.character(datesObs), "[-]"))[seq(2,length(yearList),3)])
@@ -115,7 +125,12 @@ isimip <- function (obs, pred, sim, threshold = 1, type = c("additive", "multipl
             callObs <- as.call(c(list(as.name("["),quote(pred$Data)), indTimeObs1))
             monthlyPred[indTimeObs] <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimPred),pred.time.index), na.rm = TRUE)
       }
-      datesFor <- as.POSIXct(sim$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
+      
+      if (is.null(sim$Dates$start)){
+            datesFor <- as.POSIXct(sim$Dates[[1]]$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")            
+      }else{
+            datesFor <- as.POSIXct(sim$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")            
+      }
       datesFor<-cut(datesFor, "month")
       yearListFor<-unlist(strsplit(as.character(datesFor), "[-]"))
       dimFor<-dim(sim$Data)
@@ -138,7 +153,7 @@ isimip <- function (obs, pred, sim, threshold = 1, type = c("additive", "multipl
             callObs <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeObs1))
             monthlyFor[indTimeObs] <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimFor),sim.time.index), na.rm = TRUE)
       }
-      if ((any(grepl(obs$Variable$varName,c("tas","mean temperature","tmean")))) | (type == "additive")){
+      if ((any(match(obs$Variable$varName,c("tas","mean temperature","tmean"))) | (type == "additive")) & !multiField){
             # First Step: Monthly Correction
             dimAux<-dimPred
             dimAux[pred.time.index]<-length(months)
@@ -603,7 +618,7 @@ isimip <- function (obs, pred, sim, threshold = 1, type = c("additive", "multipl
             }
             attr(sim$Data, "threshold") <- threshold
       }
-      if ((any(grepl(obs$Variable$varName,c("radiation","pressure","wind","windspeed","humidity","specific humidity","radiacion","presion","viento","humedad","humedad especifica","rss","rsds","rls","rlds","ps","slp","wss","huss","hus")))) | (type == "multiplicative")){
+      if (((any(match(obs$Variable$varName,c("radiation","pressure","wind","windspeed","humidity","specific humidity","radiacion","presion","viento","humedad","humedad especifica","rss","rsds","rls","rlds","ps","slp","wss","huss","hus")))) | (type == "multiplicative")) & !multiField){
             if (length(threshold)==1){
                   threshold<-array(data = threshold, dim = 3)
             }
@@ -929,281 +944,220 @@ isimip <- function (obs, pred, sim, threshold = 1, type = c("additive", "multipl
             }
             attr(sim$Data, "threshold") <- threshold
       }
-#       if ((any(grepl(obs$Variable$varName,c("maximum temperature","temperatura maxima","tasmax","tmax"))))){
-#             indTas <- which(!is.na(match(obs$Variable$varName,c("tas","temperatura media","mean temperature"))))
-#             if (length(indTas) == 0){
-#                   stop("Mean temperature is needed to correct the Maximum Temperature")
-#             }else{
-#                   indTasMax <- which(!is.na(match(obs$Variable$varName,c("maximum temperature","temperatura maxima","tasmax","tmax"))))
-#                   obsTas <- obs
-#                   indTasAux <- rep(list(bquote()), length(dimObs))
-#                   indTasAux[[1]] <- indTas
-#                   callTas <- as.call(c(list(as.name("["),quote(obs$Data)), indTasAux))
-#                   obsTas$Data <- eval(callTas)
-#                   attr(obsTas$Data, "dimensions") <- attributes(obs$Data)$dimensions[2:length(attributes(obs$Data)$dimensions)]
-#                   obsTas$Variable$varName <- obs$Variable$varName[indTas]
-#                   obsTas$Dates$start <- obs$Dates[[indTas]]$start
-#                   obsTas$Dates$end <- obs$Dates[[indTas]]$end
-# 
-#                   prdTas <- pred
-#                   indTasAux <- rep(list(bquote()), length(dimPred))
-#                   indTasAux[[1]] <- indTas
-#                   callTas <- as.call(c(list(as.name("["),quote(pred$Data)), indTasAux))
-#                   prdTas$Data <- eval(callTas)
-#                   attr(prdTas$Data, "dimensions") <- attributes(pred$Data)$dimensions[2:length(attributes(pred$Data)$dimensions)]
-#                   prdTas$Variable$varName <- pred$Variable$varName[indTas]
-#                   prdTas$Dates$start <- pred$Dates[[indTas]]$start
-#                   prdTas$Dates$end <- pred$Dates[[indTas]]$end
-# 
-#                   simTas <- sim
-#                   indTasAux <- rep(list(bquote()), length(dimFor))
-#                   indTasAux[[1]] <- indTas
-#                   callTas <- as.call(c(list(as.name("["),quote(sim$Data)), indTasAux))
-#                   simTas$Data <- eval(callTas)
-#                   attr(simTas$Data, "dimensions") <- attributes(sim$Data)$dimensions[2:length(attributes(sim$Data)$dimensions)]
-#                   simTas$Variable$varName <- sim$Variable$varName[indTas]
-#                   simTas$Dates$start <- sim$Dates[[indTas]]$start
-#                   simTas$Dates$end <- sim$Dates[[indTas]]$end
-# 
-#                   simTas <- isimip(obsTas, prdTas, simTas)# isimip
-#                   
-#                   indTasAux <- rep(list(bquote()), length(dimObs))
-#                   indTasAux[[1]] <- indTas
-#                   indTasAux <- as.matrix(expand.grid(indTasAux))
-#                   
-#                   [daysObs,Idays,Jdays]=unique(datesVecObs(:,2:3),'rows');ndaysObs=size(daysObs,1);
-#                   k=repmat(NaN,ndaysObs,Nest);
-#                   for nd=1:ndaysObs
-#                   indDaysObs=find(Jdays==nd);
-#                   if ~isempty(indDaysObs)
-#                   k=nansum(P(indDaysObs,:)-Tg.P(indDaysObs,:))./nansum(O(indDaysObs,:)-Tg.O(indDaysObs,:));
-#                   indDaysFor=find(abs(datesVecFor(:,2)-daysObs(nd,2))+abs(datesVecFor(:,3)-daysObs(nd,3))==0);
-#                   if ~isempty(indDaysFor)
-#                   F(indDaysFor,:)=repmat(k,size(indDaysFor,1),1).*(F(indDaysFor,:)-Tg.F(indDaysFor,:))+tgC(indDaysFor,:);
-#                   k(nd,:)=nansum(P(indDaysObs,:)-Tg.P(indDaysObs,:))./nansum(O(indDaysObs,:)-Tg.O(indDaysObs,:));
-#                   end
-#                   end
-#                   end
-#                   case {'uas';'vas';'ua';'va';'eastward wind component';'northward wind component'},
-#                   if isempty(Ws),error('Wind speed is necessary for the correction of the eastward and northward wind component');end
-#                   wsC=isimip(Ws.O,Ws.P,Ws.F,'variable','windspeed','datesobs',datesObs,'datesfor',datesFor);
-#                   indC=find(~isnan(Ws.F) & Ws.F>0);F(indC)=(F(indC).*wsC(indC))./Ws.F(indC);
-#                   case {'prsn';'snowfall';'nieve'},
-#                   if isempty(Pr),error('Precipitation is necessary for the correction of the snowfall');end
-#                   prC=isimip(Pr.O,Pr.P,Pr.F,'variable','precipitation','datesobs',datesObs,'datesfor',datesFor,'threshold', threshold);
-#                   indC=find(~isnan(Pr.F) & Pr.F>0);F(indC)=(F(indC).*prC(indC))./Pr.F(indC);
-#             }
-#             
-#       }
-#       if ((any(grepl(obs$Variable$varName,c("minimum temperature","temperatura minima","tasmin","tmin"))))){
-#             
-#       }
-#                   
-
-      datesObs <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
-      datesObs<-cut(datesObs, "month")
-      yearList<-unlist(strsplit(as.character(datesObs), "[-]"))
-      months<-unique(unlist(strsplit(as.character(datesObs), "[-]"))[seq(2,length(yearList),3)])
-      dimObs<-dim(obs$Data)
-      dimMonthlyObs<-dim(obs$Data)
-      dimMonthlyObs[which(grepl("^time",attr(obs$Data, "dimensions")))]<-length(unique(datesObs))
-      dimPred<-dim(pred$Data)
-      dimMonthlyPred<-dim(pred$Data)
-      dimMonthlyPred[which(grepl("^time",attr(pred$Data, "dimensions")))]<-length(unique(datesObs))
-      monthlyObs<- array(data = NA, dim = dimMonthlyObs)
-      monthlyPred<- array(data = NA, dim = dimMonthlyPred)
-      month2dayObs<- array(data = NA, dim = c(length(datesObs),1))
-      obs.time.index <- grep("^time$", attr(obs$Data, "dimensions"))
-      pred.time.index <- grep("^time$", attr(pred$Data, "dimensions"))
-      for (i in 1:dimMonthlyObs[obs.time.index]){
-            indMonth<-which(datesObs == unique(datesObs)[i])
-            month2dayObs[indMonth]<-i
-            indTimeObs <- rep(list(bquote()), length(dimObs))
-            for (d in 1:length(dimObs)){
-                  indTimeObs[[d]] <- 1:dimObs[d]
-            }
-            indTimeObs[[obs.time.index]] <- i
-            indTimeObs<-as.matrix(expand.grid(indTimeObs))
-            indTimeObs1 <- rep(list(bquote()), length(dimObs))
-            indTimeObs1[[obs.time.index]] <- indMonth
-            callObs <- as.call(c(list(as.name("["),quote(obs$Data)), indTimeObs1))
-            monthlyObs[indTimeObs] <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimObs),obs.time.index), na.rm = TRUE)
-            indTimeObs <- rep(list(bquote()), length(dimPred))
-            for (d in 1:length(dimPred)){
-                  indTimeObs[[d]] <- 1:dimPred[d]
-            }
-            indTimeObs[[pred.time.index]] <- i
-            indTimeObs<-as.matrix(expand.grid(indTimeObs))
-            indTimeObs1 <- rep(list(bquote()), length(dimPred))
-            indTimeObs1[[pred.time.index]] <- indMonth
-            callObs <- as.call(c(list(as.name("["),quote(pred$Data)), indTimeObs1))
-            monthlyPred[indTimeObs] <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimPred),pred.time.index), na.rm = TRUE)
-      }
-      datesFor <- as.POSIXct(sim$Dates$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
-      datesFor<-cut(datesFor, "month")
-      yearListFor<-unlist(strsplit(as.character(datesFor), "[-]"))
-      dimFor<-dim(sim$Data)
-      dimMonthlyFor<-dim(sim$Data)
-      dimMonthlyFor[which(grepl("^time",attr(sim$Data, "dimensions")))]<-length(unique(datesFor))
-      monthlyFor<- array(data = NA, dim = dimMonthlyFor)
-      month2dayFor<- array(data = NA, dim = c(length(datesFor),1))
-      sim.time.index <- grep("^time$", attr(sim$Data, "dimensions"))
-      for (i in 1:dimMonthlyFor[sim.time.index]){
-            indMonth<-which(datesFor == unique(datesFor)[i])
-            month2dayFor[indMonth]<-i
-            indTimeObs <- rep(list(bquote()), length(dimFor))
-            for (d in 1:length(dimFor)){
-                  indTimeObs[[d]] <- 1:dimFor[d]
-            }
-            indTimeObs[[sim.time.index]] <- i
-            indTimeObs<-as.matrix(expand.grid(indTimeObs))
-            indTimeObs1 <- rep(list(bquote()), length(dimFor))
-            indTimeObs1[[sim.time.index]] <- indMonth
-            callObs <- as.call(c(list(as.name("["),quote(sim$Data)), indTimeObs1))
-            monthlyFor[indTimeObs] <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimFor),sim.time.index), na.rm = TRUE)
-      }
-      if ((any(grepl(obs$Variable$varName,c("tas","mean temperature","tmean")))) | (type == "additive")){
-            # First Step: Monthly Correction
-            dimAux<-dimPred
-            dimAux[pred.time.index]<-length(months)
-            monthlyCorrection<-array(data = NA, dim = dimAux)
-            for (i in 1:length(months)){
-                  indMonth <- which(grepl(paste("-",months[i],"-", sep=""),unique(datesObs)))
-                  indTimeObs <- rep(list(bquote()), length(dimObs))
-                  indTimeObs[[obs.time.index]] <- indMonth
-                  callObs <- as.call(c(list(as.name("["),quote(monthlyObs)), indTimeObs))
-                  auxObs <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimObs),obs.time.index), na.rm = TRUE)
-                  indTimeObs <- rep(list(bquote()), length(dimPred))
-                  indTimeObs[[pred.time.index]] <- indMonth
-                  callObs <- as.call(c(list(as.name("["),quote(monthlyPred)), indTimeObs))
-                  auxPrd <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimPred),pred.time.index), na.rm = TRUE)
-                  indTimeObs <- rep(list(bquote()), length(dimPred))
-                  for (d in 1:length(dimPred)){
-                        indTimeObs[[d]] <- 1:dimPred[d]
+      if (!is.na(any(match(obs$Variable$varName,c("maximum temperature","temperatura maxima","tasmax","tmax","minimum temperature","temperatura minima","tasmin","tmin"))))) {
+            indTas <- which(!is.na(match(obs$Variable$varName,c("tas","temperatura media","mean temperature","tmean"))))
+            if (length(indTas) == 0){
+                  stop("Mean temperature is needed to correct the Maximum and Minimum Temperatures")
+            }else{
+                  if (!is.na(any(match(obs$Variable$varName,c("maximum temperature","temperatura maxima","tasmax","tmax"))))) {
+                        indTasMax <- which(!is.na(match(obs$Variable$varName,c("maximum temperature","temperatura maxima","tasmax","tmax"))))
                   }
-                  indTimeObs[[pred.time.index]] <- i
-                  indTimeObs<-as.matrix(expand.grid(indTimeObs))
-                  auxObs <- array(auxObs, dim = c(dim(auxObs),dimPred[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))]))
-                  monthlyCorrection[indTimeObs]<-aperm(auxObs,match(attr(pred$Data,"dimensions")[setdiff(1:length(dimPred),pred.time.index)],c(attr(obs$Data,"dimensions")[setdiff(1:length(dimObs),obs.time.index)],attr(pred$Data,"dimensions")[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))])))-auxPrd
-            }
-            indTimeObs <- rep(list(bquote()), length(dimPred))
-            for (d in 1:length(dimPred)){
-                  indTimeObs[[d]] <- 1:dimPred[d]
-            }
-            indTimeObs[[pred.time.index]] <- month2dayObs
-            indTimeObs<-as.matrix(expand.grid(indTimeObs))
-            pred$Data <- pred$Data-array(monthlyPred[indTimeObs], dim = dimPred)
-            indTimeObs <- rep(list(bquote()), length(dimObs))
-            for (d in 1:length(dimObs)){
-                  indTimeObs[[d]] <- 1:dimObs[d]
-            }
-            indTimeObs[[obs.time.index]] <- month2dayObs
-            indTimeObs<-as.matrix(expand.grid(indTimeObs))
-            obs$Data <- obs$Data-array(monthlyObs[indTimeObs], dim = dimObs)
-            indTimeObs <- rep(list(bquote()), length(dimFor))
-            for (d in 1:length(dimFor)){
-                  indTimeObs[[d]] <- 1:dimFor[d]
-            }
-            indTimeObs[[sim.time.index]] <- month2dayFor
-            indTimeObs<-as.matrix(expand.grid(indTimeObs))
-            sim$Data <- sim$Data-array(monthlyFor[indTimeObs], dim = dimFor)      
-            indTimeObs <- rep(list(bquote()), length(dimObs))
-            indTimePrd <- rep(list(bquote()), length(dimPred))
-            indTimeSim <- rep(list(bquote()), length(dimFor))
-            for (d in 1:length(dimObs)){
-                  if (d!=obs.time.index){
-                        indTimeObs[[d]] <- 1:dimObs[d]
-                        indTimePrd[[match(attr(obs$Data, "dimensions")[d], attr(pred$Data, "dimensions"))]] <- 1:dimPred[match(attr(obs$Data, "dimensions")[d], attr(pred$Data, "dimensions"))]
-                        indTimeSim[[match(attr(obs$Data, "dimensions")[d], attr(sim$Data, "dimensions"))]] <- 1:dimFor[match(attr(obs$Data, "dimensions")[d], attr(sim$Data, "dimensions"))]
+                  if (!is.na(any(match(obs$Variable$varName,c("minimum temperature","temperatura minima","tasmin","tmin"))))) {
+                        indTasMax <- which(!is.na(match(obs$Variable$varName,c("minimum temperature","temperatura minima","tasmin","tmin"))))
                   }
-            }
-            dimDiff <- setdiff(1:length(dimPred),match(attr(obs$Data, "dimensions"), attr(pred$Data, "dimensions")))
-            if (length(dimDiff)>0){
-                  for (d in 1:length(dimDiff)){
-                        indTimePrd[[dimDiff[d]]] <- 1:dimPred[dimDiff[d]]
-                        indTimeSim[[dimDiff[d]]] <- 1:dimFor[dimDiff[d]]
+                  obsTas <- obs
+                  indTasAux <- rep(list(bquote()), length(dimObs))
+                  indTasAux[[obs.var.index]] <- indTas
+                  callTas <- as.call(c(list(as.name("["),quote(obs$Data)), indTasAux))
+                  obsTas$Data <- eval(callTas)
+                  attr(obsTas$Data, "dimensions") <- attributes(obs$Data)$dimensions[setdiff(1:length(attributes(obs$Data)$dimensions),obs.var.index)]
+                  obsTas$Variable$varName <- obs$Variable$varName[indTas]
+                  obsTas$Dates$start <- obs$Dates[[indTas]]$start
+                  obsTas$Dates$end <- obs$Dates[[indTas]]$end
+                  prdTas <- pred
+                  indTasAux <- rep(list(bquote()), length(dimPred))
+                  indTasAux[[pred.var.index]] <- indTas
+                  callTas <- as.call(c(list(as.name("["),quote(pred$Data)), indTasAux))
+                  prdTas$Data <- eval(callTas)
+                  attr(prdTas$Data, "dimensions") <- attributes(pred$Data)$dimensions[setdiff(1:length(attributes(pred$Data)$dimensions),pred.var.index)]
+                  prdTas$Variable$varName <- pred$Variable$varName[indTas]
+                  prdTas$Dates$start <- pred$Dates[[indTas]]$start
+                  prdTas$Dates$end <- pred$Dates[[indTas]]$end
+                  simTas <- sim
+                  indTasAux <- rep(list(bquote()), length(dimFor))
+                  indTasAux[[sim.var.index]] <- indTas
+                  callTas <- as.call(c(list(as.name("["),quote(sim$Data)), indTasAux))
+                  simTas$Data <- eval(callTas)
+                  attr(simTas$Data, "dimensions") <- attributes(sim$Data)$dimensions[setdiff(1:length(attributes(sim$Data)$dimensions),sim.var.index)]
+                  simTas$Variable$varName <- sim$Variable$varName[indTas]
+                  simTas$Dates$start <- sim$Dates[[indTas]]$start
+                  simTas$Dates$end <- sim$Dates[[indTas]]$end
+                  simTas <- isimip(obsTas, prdTas, simTas, type = "additive")# isimip
+                  indTasFor <- rep(list(bquote()), length(dimFor))
+                  for (d in 1:length(dimFor)){
+                        indTasFor[[d]] <- 1:dimFor[d]
                   }
-            }
-            indTimeObs[[obs.time.index]]<-NA
-            indTimePrd[[pred.time.index]]<-NA
-            indTimeSim[[sim.time.index]]<-NA
-            indTimeObs<-as.matrix(expand.grid(indTimeObs))
-            indTimePrd<-as.matrix(expand.grid(indTimePrd))
-            indTimeSim<-as.matrix(expand.grid(indTimeSim))
-            for (m in 1:length(months)){
-                  indMonth<-which(grepl(paste("-",months[m],"-", sep=""),datesObs))
-                  indMonthFor<-which(grepl(paste("-",months[m],"-", sep=""),datesFor))
-                  for (j in 1:dim(indTimeObs)[1]){
-                        indObs <- as.list(indTimeObs[j,])
-                        indObs[[obs.time.index]]<-indMonth
-                        indObs<-as.matrix(expand.grid(indObs))
-                        if (any(!is.na(obs$Data[indObs]))){
-                              indPrd <- rep(list(bquote()), length(dimPred))
-                              indSim <- rep(list(bquote()), length(dimFor))
-                              indPrd[match(attr(obs$Data, "dimensions"), attr(pred$Data, "dimensions"))] <- as.list(indTimeObs[j,])
-                              indSim[match(attr(obs$Data, "dimensions"), attr(sim$Data, "dimensions"))] <- as.list(indTimeObs[j,])
-                              if (length(dimDiff)>0){
-                                    for (d in 1:length(dimDiff)){
-                                          indPrd[[dimDiff[d]]] <- 1:dimPred[dimDiff[d]]
-                                          indSim[[dimDiff[d]]] <- 1:dimFor[dimDiff[d]]
-                                    }
-                              }
-                              indPrd<-as.matrix(expand.grid(indPrd))
-                              indSim<-as.matrix(expand.grid(indSim))
-                              for (i in 1:dim(indPrd)[1]){
-                                    indPrd1 <- as.list(indPrd[i,])
-                                    indPrd1[[pred.time.index]]<-indMonth
-                                    indPrd1<-as.matrix(expand.grid(indPrd1))
-                                    if (any(!is.na(pred$Data[indPrd1]))){
-                                          indSim1 <- as.list(indSim[i,])
-                                          indSim1[[sim.time.index]]<-indMonthFor
-                                          indSim1<-as.matrix(expand.grid(indSim1))
-                                          auxlmPrd <- pred$Data[indPrd1]
-                                          auxlmObs <- obs$Data[indObs]
-                                          indLM <- which(!is.na(auxlmPrd) & !is.na(auxlmObs))
-                                          if (length(indLM)>0){
-                                                lmAdjust<-lm(sort(auxlmPrd[indLM], decreasing = FALSE, na.last = NA) ~ sort(auxlmObs[indLM], decreasing = FALSE, na.last = NA)-1)
-                                                sim$Data[indSim1]<-coef(lmAdjust)[1]*sim$Data[indSim1]
-                                          }
-                                    }
+                  daysObs <- matrix(data = c(as.numeric(unlist(strsplit(as.character(datesObs), "[-]"))[seq(2,length(yearList),3)]),as.numeric(unlist(strsplit(as.character(datesObs), "[-]"))[seq(3,length(yearList),3)])), nrow = length(yearList)/3, ncol = 2)
+                  daysObsU <- unique(daysObs, MARGIN = 1)
+                  ndaysObs <- dim(daysObsU)[1]
+                  daysFor <- matrix(data = c(as.numeric(unlist(strsplit(as.character(datesFor), "[-]"))[seq(2,length(yearListFor),3)]),as.numeric(unlist(strsplit(as.character(datesFor), "[-]"))[seq(3,length(yearListFor),3)])), nrow = length(yearListFor)/3, ncol = 2)
+                  for (nd in 1:ndaysObs){
+                        indDaysObs <- which(abs(daysObs[,1]-daysObsU[nd,1])+abs(daysObs[,2]-daysObsU[nd,2])==0)
+                        if (!is.null(indDaysObs)){
+                              indDaysFor <- which(abs(daysFor[,1]-daysObsU[nd,1])+abs(daysFor[,2]-daysObsU[nd,2])==0)
+                              if (!is.null(indDaysFor)){
+                                    indTasObsAux1 <- rep(list(bquote()), length(dimObs))
+                                    indTasObsAux2 <- rep(list(bquote()), length(dimObs))
+                                    indTasObsAux1[[obs.time.index]] <- indDaysObs
+                                    indTasObsAux2[[obs.time.index]] <- indDaysObs
+                                    indTasObsAux1[[obs.var.index]] <- indTas
+                                    indTasObsAux2[[obs.var.index]] <- indTasMax
+                                    callObs1 <- as.call(c(list(as.name("["),quote(obs$Data)), indTasObsAux1))
+                                    callObs2 <- as.call(c(list(as.name("["),quote(obs$Data)), indTasObsAux2))
+                                    indTasPrdAux1 <- rep(list(bquote()), length(dimPred))
+                                    indTasPrdAux2 <- rep(list(bquote()), length(dimPred))
+                                    indTasPrdAux1[[pred.time.index]] <- indDaysObs
+                                    indTasPrdAux2[[pred.time.index]] <- indDaysObs
+                                    indTasPrdAux1[[pred.var.index]] <- indTas
+                                    indTasPrdAux2[[pred.var.index]] <- indTasMax
+                                    callPrd1 <- as.call(c(list(as.name("["),quote(pred$Data)), indTasPrdAux1))
+                                    callPrd2 <- as.call(c(list(as.name("["),quote(pred$Data)), indTasPrdAux2))
+                                    MARGIN <- setdiff(1:length(attr(pred$Data, "dimensions")[setdiff(1:length(dimObs),obs.var.index)]),grep("^time$", attr(pred$Data, "dimensions")[setdiff(1:length(dimObs),obs.var.index)]))
+                                    k <- apply(eval(callObs2)-eval(callObs1), FUN = sum, MARGIN = MARGIN, na.rm = TRUE)/
+                                          apply(eval(callPrd2)-eval(callPrd1), FUN = sum, MARGIN = MARGIN, na.rm = TRUE)
+                                    indTasFor[[sim.time.index]] <- indDaysFor
+                                    indTasFor[[sim.var.index]] <- indTasMax
+                                    indTasForAux <- as.matrix(expand.grid(indTasFor))
+                                    indTasForAux1 <- rep(list(bquote()), length(dimFor))
+                                    indTasForAux2 <- rep(list(bquote()), length(dimFor))
+                                    indTasForAux3 <- rep(list(bquote()), length(dim(simTas$Data)))
+                                    indTasForAux1[[sim.time.index]] <- indDaysFor
+                                    indTasForAux2[[sim.time.index]] <- indDaysFor
+                                    indTasForAux3[[grep("^time$", attr(simTas$Data, "dimensions"))]] <- indDaysFor
+                                    indTasForAux1[[sim.var.index]] <- indTas
+                                    indTasForAux2[[sim.var.index]] <- indTasMax
+                                    callSim1 <- as.call(c(list(as.name("["),quote(sim$Data)), indTasForAux1))
+                                    callSim2 <- as.call(c(list(as.name("["),quote(sim$Data)), indTasForAux2))
+                                    callSim3 <- as.call(c(list(as.name("["),quote(simTas$Data)), indTasForAux3))
+                                    k <- array(data = k, dim = c(dim(simTas$Data)[MARGIN],length(indDaysFor)))
+                                    k <- aperm(k, perm = c(length(dim(k)), 1:(length(dim(k))-1)))
+                                    sim$Data[indTasForAux] <- k*(eval(callSim2)-eval(callSim1))+eval(callSim3)
                               }
                         }
                   }
             }
-            indTimeFor <- rep(list(bquote()), length(dimFor))
-            for (d in 1:length(dimFor)){
-                  indTimeFor[[d]] <- 1:dimFor[d]
-            }
-            indTimeFor[[sim.time.index]] <- month2dayFor
-            indTimeFor<-as.matrix(expand.grid(indTimeFor))
-            sim$Data <- sim$Data+array(monthlyFor[indTimeFor], dim = dimFor)      
-            for (i in 1:length(months)){
-                  indMonthFor<-which(grepl(paste("-",months[i],"-", sep=""),datesFor))
-                  if (!is.null(indMonthFor)){
-                        indCorrection <- rep(list(bquote()), length(dim(monthlyCorrection)))
-                        for (d in 1:length(dimFor)){
-                              indCorrection[[d]] <- 1:dim(monthlyCorrection)[d]
-                        }
-                        indCorrection[[pred.time.index]] <- i
-                        indCorrection<-as.matrix(expand.grid(indCorrection))
-                        for (j in 1:length(indMonthFor)){
-                              indTimeFor <- rep(list(bquote()), length(dimFor))
-                              for (d in 1:length(dimFor)){
-                                    indTimeFor[[d]] <- 1:dimFor[d]
-                              }
-                              indTimeFor[[sim.time.index]] <- indMonthFor[j]
-                              indTimeFor<-as.matrix(expand.grid(indTimeFor))
-                              sim$Data[indTimeFor]<-sim$Data[indTimeFor]+monthlyCorrection[indCorrection]
-                        }
+      }
+      #       case {'uas';'vas';'ua';'va';'eastward wind component';'northward wind component'},
+      #       if isempty(Ws),error('Wind speed is necessary for the correction of the eastward and northward wind component');end
+      #       wsC=isimip(Ws.O,Ws.P,Ws.F,'variable','windspeed','datesobs',datesObs,'datesfor',datesFor);
+      #       indC=find(~isnan(Ws.F) & Ws.F>0);F(indC)=(F(indC).*wsC(indC))./Ws.F(indC);
+      if (!is.na(any(match(obs$Variable$varName,c("uas","vas","ua","va","eastward wind component","northward wind component"))))) {
+            indTas <- which(!is.na(match(obs$Variable$varName,c("wind","windspeed","viento","wss"))))
+            if (length(indTas) == 0){
+                  stop("Wind speed is needed to correct eastward and northward wind components")
+            }else{
+                  if (!is.na(any(match(obs$Variable$varName,c("uas","ua","eastward wind component"))))) {
+                        indTasMax <- which(!is.na(match(obs$Variable$varName,c("uas","ua","eastward wind component"))))
+                  }
+                  if (!is.na(any(match(obs$Variable$varName,c("vas","va","northward wind component"))))) {
+                        indTasMax <- which(!is.na(match(obs$Variable$varName,c("vas","va","northward wind component"))))
+                  }
+                  obsTas <- obs
+                  indTasAux <- rep(list(bquote()), length(dimObs))
+                  indTasAux[[obs.var.index]] <- indTas
+                  callTas <- as.call(c(list(as.name("["),quote(obs$Data)), indTasAux))
+                  obsTas$Data <- eval(callTas)
+                  attr(obsTas$Data, "dimensions") <- attributes(obs$Data)$dimensions[setdiff(1:length(attributes(obs$Data)$dimensions),obs.var.index)]
+                  obsTas$Variable$varName <- obs$Variable$varName[indTas]
+                  obsTas$Dates$start <- obs$Dates[[indTas]]$start
+                  obsTas$Dates$end <- obs$Dates[[indTas]]$end
+                  prdTas <- pred
+                  indTasAux <- rep(list(bquote()), length(dimPred))
+                  indTasAux[[pred.var.index]] <- indTas
+                  callTas <- as.call(c(list(as.name("["),quote(pred$Data)), indTasAux))
+                  prdTas$Data <- eval(callTas)
+                  attr(prdTas$Data, "dimensions") <- attributes(pred$Data)$dimensions[setdiff(1:length(attributes(pred$Data)$dimensions),pred.var.index)]
+                  prdTas$Variable$varName <- pred$Variable$varName[indTas]
+                  prdTas$Dates$start <- pred$Dates[[indTas]]$start
+                  prdTas$Dates$end <- pred$Dates[[indTas]]$end
+                  simTas <- sim
+                  indTasAux <- rep(list(bquote()), length(dimFor))
+                  indTasAux[[sim.var.index]] <- indTas
+                  callTas <- as.call(c(list(as.name("["),quote(sim$Data)), indTasAux))
+                  simTas$Data <- eval(callTas)
+                  attr(simTas$Data, "dimensions") <- attributes(sim$Data)$dimensions[setdiff(1:length(attributes(sim$Data)$dimensions),sim.var.index)]
+                  simTas$Variable$varName <- sim$Variable$varName[indTas]
+                  simTas$Dates$start <- sim$Dates[[indTas]]$start
+                  simTas$Dates$end <- sim$Dates[[indTas]]$end
+                  simTas <- isimip(obsTas, prdTas, simTas, type = "multiplicative")# isimip
+                  indTasFor <- rep(list(bquote()), length(dimFor))
+                  for (d in 1:length(dimFor)){
+                        indTasFor[[d]] <- 1:dimFor[d]
+                  }
+                  indTasForAux <- as.matrix(expand.grid(indTasFor))
+                  indTasForAux1 <- rep(list(bquote()), length(dimFor))
+                  indTasForAux2 <- rep(list(bquote()), length(dimFor))
+                  indTasForAux1[[sim.var.index]] <- indTas
+                  indTasForAux2[[sim.var.index]] <- indTasMax
+                  callSim1 <- as.call(c(list(as.name("["),quote(sim$Data)), indTasForAux1))
+                  callSim2 <- as.call(c(list(as.name("["),quote(sim$Data)), indTasForAux2))
+                  indCalmWind <- which((eval(callSim1) == 0) & !is.na(sim$Data[indTasForAux]))
+                  calmWind <- sim$Data[indTasForAux[indCalmWind,]]
+                  sim$Data[indTasForAux] <- (eval(callSim2)*simTas$Data)/eval(callSim1)
+                  if (length(calmWind)>0){
+                        sim$Data[indTasForAux[indCalmWind,]] <- calmWind
                   }
             }
       }
-      
-#       case {'uas';'vas';'ua';'va';'eastward wind component';'northward wind component'},
-#       if isempty(Ws),error('Wind speed is necessary for the correction of the eastward and northward wind component');end
-#       wsC=isimip(Ws.O,Ws.P,Ws.F,'variable','windspeed','datesobs',datesObs,'datesfor',datesFor);
-#       indC=find(~isnan(Ws.F) & Ws.F>0);F(indC)=(F(indC).*wsC(indC))./Ws.F(indC);
-      
+      #       case {'prsn';'snowfall';'nieve'},
+      #       if isempty(Pr),error('Precipitation is necessary for the correction of the snowfall');end
+      #       prC=isimip(Pr.O,Pr.P,Pr.F,'variable','precipitation','datesobs',datesObs,'datesfor',datesFor,'threshold', threshold);
+      #       indC=find(~isnan(Pr.F) & Pr.F>0);F(indC)=(F(indC).*prC(indC))./Pr.F(indC);
+      if (!is.na(any(match(obs$Variable$varName,c("prsn","snowfall","nieve"))))) {
+            indTas <- which(!is.na(match(obs$Variable$varName,c("pr","tp","precipitation","precip"))))
+            if (length(indTas) == 0){
+                  stop("Precipitation is needed to correct snow")
+            }else{
+                  if (!is.na(any(match(obs$Variable$varName,c("prsn","snowfall","nieve"))))) {
+                        indTasMax <- which(!is.na(match(obs$Variable$varName,c("prsn","snowfall","nieve"))))
+                  }
+                  obsTas <- obs
+                  indTasAux <- rep(list(bquote()), length(dimObs))
+                  indTasAux[[obs.var.index]] <- indTas
+                  callTas <- as.call(c(list(as.name("["),quote(obs$Data)), indTasAux))
+                  obsTas$Data <- eval(callTas)
+                  attr(obsTas$Data, "dimensions") <- attributes(obs$Data)$dimensions[setdiff(1:length(attributes(obs$Data)$dimensions),obs.var.index)]
+                  obsTas$Variable$varName <- obs$Variable$varName[indTas]
+                  obsTas$Dates$start <- obs$Dates[[indTas]]$start
+                  obsTas$Dates$end <- obs$Dates[[indTas]]$end
+                  prdTas <- pred
+                  indTasAux <- rep(list(bquote()), length(dimPred))
+                  indTasAux[[pred.var.index]] <- indTas
+                  callTas <- as.call(c(list(as.name("["),quote(pred$Data)), indTasAux))
+                  prdTas$Data <- eval(callTas)
+                  attr(prdTas$Data, "dimensions") <- attributes(pred$Data)$dimensions[setdiff(1:length(attributes(pred$Data)$dimensions),pred.var.index)]
+                  prdTas$Variable$varName <- pred$Variable$varName[indTas]
+                  prdTas$Dates$start <- pred$Dates[[indTas]]$start
+                  prdTas$Dates$end <- pred$Dates[[indTas]]$end
+                  simTas <- sim
+                  indTasAux <- rep(list(bquote()), length(dimFor))
+                  indTasAux[[sim.var.index]] <- indTas
+                  callTas <- as.call(c(list(as.name("["),quote(sim$Data)), indTasAux))
+                  simTas$Data <- eval(callTas)
+                  attr(simTas$Data, "dimensions") <- attributes(sim$Data)$dimensions[setdiff(1:length(attributes(sim$Data)$dimensions),sim.var.index)]
+                  simTas$Variable$varName <- sim$Variable$varName[indTas]
+                  simTas$Dates$start <- sim$Dates[[indTas]]$start
+                  simTas$Dates$end <- sim$Dates[[indTas]]$end
+                  simTas <- isimip(obsTas, prdTas, simTas, type = "multiplicative")# isimip
+                  indTasFor <- rep(list(bquote()), length(dimFor))
+                  for (d in 1:length(dimFor)){
+                        indTasFor[[d]] <- 1:dimFor[d]
+                  }
+                  indTasForAux <- as.matrix(expand.grid(indTasFor))
+                  indTasForAux1 <- rep(list(bquote()), length(dimFor))
+                  indTasForAux2 <- rep(list(bquote()), length(dimFor))
+                  indTasForAux1[[sim.var.index]] <- indTas
+                  indTasForAux2[[sim.var.index]] <- indTasMax
+                  callSim1 <- as.call(c(list(as.name("["),quote(sim$Data)), indTasForAux1))
+                  callSim2 <- as.call(c(list(as.name("["),quote(sim$Data)), indTasForAux2))
+                  indCalmWind <- which((eval(callSim1) == 0) & !is.na(sim$Data[indTasForAux]))
+                  calmWind <- sim$Data[indTasForAux[indCalmWind,]]
+                  sim$Data[indTasForAux] <- (eval(callSim2)*simTas$Data)/eval(callSim1)
+                  if (length(calmWind)>0){
+                        sim$Data[indTasForAux[indCalmWind,]] <- calmWind
+                  }
+            }
+      }
       attr(sim$Data, "correction") <- "ISI-MIP"
       return(sim)
 }

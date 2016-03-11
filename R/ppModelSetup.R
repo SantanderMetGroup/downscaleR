@@ -16,8 +16,8 @@
 #' \item \code{init.dates} Initialization dates inherited from 'sim' if a forecast. NULL otherwise.
 #' \item \code{member.names} Names of the members inherited from 'sim' if a forecast. NULL otherwise.
 #' }
-#' @details The function accepts either PCA or raw fields as predictors. In the first case, it handles the 
-#' mapping of EOFs onto the simulation fields.
+#' @details The function accepts either PCA or raw grids as predictors. In the first case, it handles the 
+#' mapping of EOFs onto the simulation grids.
 #' @author J. Bedia 
 #' @keywords internal
 #' @export
@@ -34,7 +34,7 @@ ppModelSetup <- function(obs, pred, sim) {
             time.pred <- attr(pred, "dates_start")
       } else {
             if (length(dim(pred$Data)) < 3) {
-                  stop("'pred' must be a field/multifield\nSingle point selections are not allowed")
+                  stop("'pred' must be a grid/multigrid\nSingle point selections are not allowed")
             }
             use.PCs <- FALSE
             x.pred <- pred$xyCoords$x
@@ -47,7 +47,7 @@ ppModelSetup <- function(obs, pred, sim) {
       }
       # Georef simulations
       if (length(dim(sim$Data)) < 3) {
-            stop("'pred' must be a field/multifield\nSingle point selections are not allowed")
+            stop("'pred' must be a grid/multigrid\nSingle point selections are not allowed")
       }
       x.sim <- sim$xyCoords$x
       y.sim <- sim$xyCoords$y
@@ -83,7 +83,7 @@ ppModelSetup <- function(obs, pred, sim) {
       } else {
             # pred rescaled matrix
             dimNames <- attr(pred$Data, "dimensions")
-            if ("var" %in% attr(pred$Data, "dimensions")) { # multifield
+            if ("var" %in% attr(pred$Data, "dimensions")) { 
                   var.dim.index <- grep("var", dimNames)
                   n.vars <- dim(pred$Data)[var.dim.index]
                   Xsc.list <- lapply(1:n.vars, function(idx) {
@@ -118,22 +118,22 @@ ppModelSetup <- function(obs, pred, sim) {
       # Scaling and centering of simulation data
       # Scaling and centering of simulation data
       dimNames.sim <- attr(sim$Data, "dimensions")
-      if ("var" %in% dimNames.sim) { # Multifield
+      if ("var" %in% dimNames.sim) { 
             mes <- FALSE
             var.dim.index <- grep("var", dimNames.sim)
             simsc.list.pre <- lapply(1:n.vars, function(idx) asub(sim$Data, idx, var.dim.index))
-            if ("member" %in% dimNames.sim) { # Multifield multimember
+            if ("member" %in% dimNames.sim) { 
                   multi.member <- TRUE
                   mem.dim.index <- grep("member", dimNames.sim[-var.dim.index])
                   n.mem <- dim(sim$Data)[-var.dim.index][mem.dim.index]
                   simsc.list <- list()
                   for (i in 1:n.vars) {
-                        o <- if (isTRUE(use.PCs)){
+                        o <- if (isTRUE(use.PCs)) {
                               which(sim$Variable$varName == names(pred)[-length(pred)][i])      
                         } else {
                               which(sim$Variable$varName == pred$Variable$varName[i])
                         }
-                        if(o != i) mes <- TRUE
+                        if (o != i) mes <- TRUE
                         simsc.list[[i]] <- lapply(1:n.mem, function(id.mem) {
                               aux <- asub(simsc.list.pre[[o]], id.mem, mem.dim.index)
                               attr(aux, "dimensions") <- dimNames.sim[-match(c("var","member"), dimNames.sim)]
@@ -142,25 +142,25 @@ ppModelSetup <- function(obs, pred, sim) {
                               return(aux)
                         })
                   }
-            } else { # Multifield (no members)
+            } else { 
                   multi.member <- FALSE
                   simsc.list.pre <- lapply(1:n.vars, function(idx) {asub(sim$Data, idx, var.dim.index)})
                   simsc.list <- lapply(1:n.vars, function(x) {
-                        o <- if (isTRUE(use.PCs)){
+                        o <- if (isTRUE(use.PCs)) {
                               which(sim$Variable$varName == names(pred)[-length(pred)][x])      
                         } else {
                               which(sim$Variable$varName == pred$Variable$varName[x])
                         }
-                        if(o != x) mes <- TRUE
+                        print(x)
+                        if (o != x) mes <- TRUE
                         attr(simsc.list.pre[[o]], "dimensions") <- dimNames.sim[-var.dim.index]
                         aux <- array3Dto2Dmat(simsc.list.pre[[x]])
                         aux <- (aux - mu.list[[x]]) / sigma.list[[x]]
                         return(aux)
                   })
             }
-            # if (mes == TRUE) message("Variables in sim reordered to match pred")
-      } else { # Field
-            if ("member" %in% dimNames.sim) { # Multimember field
+      } else {
+            if ("member" %in% dimNames.sim) { 
                   multi.member <- TRUE
                   mem.dim.index <- grep("member", dimNames.sim)
                   n.mem <- dim(sim$Data)[mem.dim.index]
@@ -171,7 +171,7 @@ ppModelSetup <- function(obs, pred, sim) {
                         aux <- (aux - mu.list[[1]]) / sigma.list[[1]]
                         return(aux)
                   })
-            } else { # Field (no multimember)
+            } else { 
                   multi.member <- FALSE
                   aux <- array3Dto2Dmat(sim$Data)
                   aux <- (aux - mu.list[[1]]) / sigma.list[[1]]
@@ -205,7 +205,7 @@ ppModelSetup <- function(obs, pred, sim) {
             mems <- sim$Members
       }
       sim <- NULL
-      # Projection of simulated field onto the predictor EOFs       
+      # Projection of simulated grid onto the predictor EOFs       
       if (isTRUE(use.PCs)) {
             sim.mat <- tryCatch(expr = lapply(1:length(sim.mat), function(x) {
                   t(t(pred$COMBINED[[1]]$EOFs) %*% t(sim.mat[[x]]))

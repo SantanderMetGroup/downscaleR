@@ -1,13 +1,12 @@
-#' @title Get season from a station or field object
-#' @description Retrieves the season encompassed by a station or field object
-#' @param obj Any object extending the station or field classes
+#' @title Get season 
+#' @description Retrieves the season encompassed by a station or grid object
+#' @param obj Any object extending the station or grid classes
 #' @return An integer vector with the season
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @author J. Bedia 
 #' @export
 #' @examples 
 #' data(iberia_ncep_ta850)
 #' getSeason(iberia_ncep_ta850) # Boreal winter (DJF)
-#' 
 
 getSeason <- function(obj) {
       dimNames <- attr(obj$Data, "dimensions")
@@ -22,7 +21,7 @@ getSeason <- function(obj) {
 
 #' @title Compute dates of a downscaled observational dataset
 #' @description The function calculates the appropiate Dates slot in the returned output of downscaling functions,
-#' considering the possible mismatches in time resolution between predictors and predictand, the multifield dates slot etc.
+#' considering the possible mismatches in time resolution between predictors and predictand, the multigrid dates slot etc.
 #' @param obs.dates The \code{Dates} slot of the 'obs' input in the downscaling method
 #' @param sim.dates The \code{Dates} slot of the 'sim' input in the downscaling method
 #' @return A new \code{Dates} list that preserves the temporal extent of the downscaled simulations but considering
@@ -32,10 +31,9 @@ getSeason <- function(obj) {
 #'  of daily minimum temperature). In addition, in case of multiple predictors the \code{Dates} slot of the simulated series
 #'  has several start/end time lists, one for each predictor, while there is only one predictand. For this reason,
 #'  the function takes care of adjusting adequately the returned \code{Dates} slot.
-#'  @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#'  @author J. Bedia 
 #'  @keywords internal
 #'  @export
-#' 
 
 dateReplacement <- function(obs.dates, sim.dates) {
       time.res <- difftime(as.POSIXlt(obs.dates$end[1]), as.POSIXlt(obs.dates$start[1]))
@@ -63,7 +61,7 @@ dateReplacement <- function(obs.dates, sim.dates) {
 
 #' @title Get years as a factor
 #' @description Extract the year as a factor (e.g. for computing annual statistics)
-#' @param obj Any object extending the station or field classes
+#' @param obj Any object extending the station or grid classes
 #' @return A vector of years of the same length as the time dimension of the object, 
 #' seasonally-adjusted in the case of year-crossing seasons (e.g. DJF). See details.
 #' @details The function performs a very basic operation, extracting the year element from the 
@@ -74,7 +72,7 @@ dateReplacement <- function(obs.dates, sim.dates) {
 #'  and so on... The function is useful for computing and/or plotting annual statistics, seasonal climatologies ... 
 #' @section Warning:
 #' The function should no be used to extract the actual years vector
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
+#' @author J. Bedia 
 #' @export
 #' @examples 
 #' data(iberia_ncep_hus850)
@@ -114,7 +112,7 @@ getYearsAsINDEX <- function(obj) {
             aux <- match(aux.dates$mon + 1, season)
             brks <- c(1, which(diff(aux) < 0) + 1, length(aux) + 1)
             l <- lapply(1:(length(brks) - 1), function(x) {
-                  a <- yrs[brks[x] : (brks[x + 1] - 1)]
+                  a <- yrs[brks[x]:(brks[x + 1] - 1)]
                   return(rep(yy[x], length(a)))
             })
             yrs  <- do.call("c", l)
@@ -122,30 +120,6 @@ getYearsAsINDEX <- function(obj) {
       return(yrs)
 }
 # End
-
-
-#' @title Get geographical coordinates of a climate data object
-#' @description Returns the coordinates of a climate data object, either stations
-#'  or field
-#' @param obj Any object extending the station or field classes
-#' @return A list with x and y components
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}
-#' @export
-#' 
-
-getCoordinates <- function(obj) {
-      if ("station" %in% attr(obj$Data, "dimensions")) {
-            x <- obj$xyCoords[ ,1]
-            y <- obj$xyCoords[ ,2]
-      } else {
-            x <- obj$xyCoords$x
-            y <- obj$xyCoords$y
-      }
-      return(list("x" = x, "y" = y))
-}
-# End
-
-
 
 #' @title Set the 'dimensions' attribute 
 #' @description Sets the 'dimensions' attribute of model out Data objects after downscaling
@@ -172,62 +146,26 @@ renameDims <- function(obs, multi.member) {
 # End
 
 
-#' Calculate the number of days of the current month
-#' @param d A date (character) in format YYYY-MM-DD...
-#' @return The number of days of the current month
-#' @references 
-#' \url{http://stackoverflow.com/questions/6243088/find-out-the-number-of-days-of-a-month-in-r}
-#' @export
-
-ndays <- function(d) {
-      as.difftime(tail((28:31)[which(!is.na(as.Date(paste0(substr(d, 1, 8), 28:31), '%Y-%m-%d')))], 1), units = "days")
-}
-#End
-
-#' Adjust time/start dates of a loaded object
-#' @param timePars Object containing the relevant time parameters
-#' @return A list with dates (POSIXct) start and end, defining the interval [start, end)
-#' @details Sub-daily information is displayed only in case of subdaily data
-#' @author J Bedia \email{joaquin.bedia@@gmail.com}
-#' @keywords internal
-
-# timePars <- cube$timePars
-adjustDates <- function(timePars) {
-      interval <- 0
-      if (timePars$aggr.m != "none") {
-            mon.len <- sapply(timePars$dateSliceList, ndays)
-            interval <- mon.len * 86400
-      } else if (timePars$aggr.d != "none") {
-            timePars$dateSliceList <- format(as.Date(substr(timePars$dateSliceList, 1, 10)), format = "%Y-%m-%d %H:%M:%S", usetz = TRUE) 
-            interval <- 86400
-      }
-      formato <- ifelse(interval[1] == 0, "%Y-%m-%d %H:%M:%S", "%Y-%m-%d")
-      dates.end <- format(as.POSIXct(as.POSIXlt(timePars$dateSliceList, tz = "GMT") + interval), format = formato, usetz = TRUE)
-      dates.start <- format(as.POSIXct(as.POSIXlt(timePars$dateSliceList, tz = "GMT"), tz = "GMT"), format = formato, usetz = TRUE)
-      return(list("start" = dates.start, "end" = dates.end))
-}
-# End
-
 #' @title getIntersect
 #' @description Get the common period of the objects obs and prd
 #' @author S. Herrera
 #' @keywords internal
 
 getIntersect <- function(obs,prd){
-  dimNames <- attr(obs$Data, "dimensions")
-  indDates <- which(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d")==as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"))
-  auxDates <- as.POSIXct(obs$Dates$start[indDates], tz="GMT", format="%Y-%m-%d")
-  indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d"), auxDates))
-  obs <- subsetDimension(obs, dimension = "time", indices = indObs)
-  dimNames <- attr(prd$Data, "dimensions")
-  indObs <- which(is.element(as.POSIXct(prd$Dates$start, tz="GMT", format="%Y-%m-%d"), auxDates))
-  prd <- subsetDimension(prd, dimension = "time", indices = indObs)
-  obj <- list(obs = obs, prd = prd)
-  obj$Dates$start <- as.POSIXct(obs$Dates$start, tz="GMT", format="%Y-%m-%d")
-  obj$Dates$end <- as.POSIXct(obs$Dates$end, tz="GMT", format="%Y-%m-%d")
-  attr(obj$obs$Data, "dimensions") <- attr(obs$Data, "dimensions")
-  attr(obj$prd$Data, "dimensions") <- attr(prd$Data, "dimensions")
-  return(obj)
+      dimNames <- attr(obs$Data, "dimensions")
+      indDates <- which(as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d") == as.POSIXct(prd$Dates$start, tz = "GMT", format = "%Y-%m-%d"))
+      auxDates <- as.POSIXct(obs$Dates$start[indDates], tz = "GMT", format = "%Y-%m-%d")
+      indObs <- which(is.element(as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d"), auxDates))
+      obs <- subsetDimension(obs, dimension = "time", indices = indObs)
+      dimNames <- attr(prd$Data, "dimensions")
+      indObs <- which(is.element(as.POSIXct(prd$Dates$start, tz = "GMT", format = "%Y-%m-%d"), auxDates))
+      prd <- subsetDimension(prd, dimension = "time", indices = indObs)
+      obj <- list(obs = obs, prd = prd)
+      obj$Dates$start <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+      obj$Dates$end <- as.POSIXct(obs$Dates$end, tz = "GMT", format = "%Y-%m-%d")
+      attr(obj$obs$Data, "dimensions") <- attr(obs$Data, "dimensions")
+      attr(obj$prd$Data, "dimensions") <- attr(prd$Data, "dimensions")
+      return(obj)
 }
 
 
@@ -249,3 +187,19 @@ which.leap <- function(years) {
 }
 
 
+#' @title Land borders
+#' @description Add land borders to a map
+#' @param ... Graphical parameters passed to \code{\link{lines}}.
+#' @return Draws a simplied land border areas as lines onto the map
+#' @details The function loads a built-in world segments dataset created ad hoc to avoid dependencies on other packages (i.e. 'maps').
+#' Geographical lonlat coordinates in wgs84.
+#' @source Postprocessed from the original shapefile from Natural Earth (http://www.naturalearthdata.com/downloads/110m-physical-vectors/)
+#' @author J. Bedia
+#' @keywords internal
+
+draw.world.lines <- function(...) {
+      load(file.path(find.package("downscaleR"), "wrl.Rda"))
+      for (i in 1:length(node.list)) {
+            lines(node.list[[i]][,1], node.list[[i]][,2], ...)            
+      }
+}

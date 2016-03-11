@@ -18,7 +18,7 @@
 #' 
 #' Several checks of spatial consistency are performed. In particular, note that both 'pred' (reanalysis) and 'sim' (model
 #' simulations) should be in the same grid. This consistency must be ensured by the user prior to entering these arguments,
-#' for instance by means of the \code{\link{interpGridData}} function in conjunction with the \code{\link{getGrid}} method.
+#' for instance by means of the \code{\link[loadeR]{interpData}} function in conjunction with the \code{\link{getGrid}} method.
 #' 
 #' \strong{Scaling and centering}
 #' 
@@ -33,18 +33,12 @@
 #' The argument \code{sel.fun} controls how the analogs are constructed when considering more than the first neighbour (argument
 #' \code{n.neigh} > 1). In this case the \code{"random"} choice randomly selects one of the \code{n.neigh} neighbours,
 #'  while the \code{"mean"} choice will compute their average.
-#' 
 #' @seealso \code{\link{prinComp}} for details on principal component/EOF analysis
-#' \code{\link{makeMultiField}} for multifield creation
-#' \code{\link{loadGridData}} and \code{\link{loadStationData}} for loading fields and station data respectively.
-#' 
-#' @export
-#' 
+#' \code{\link{makeMultiGrid}} for multigrid creation
+#' \code{loadGridData} and \code{loadStationData}, from package \pkg{loadeR}, for loading grids and station data respectively.
 #' @importFrom fields rdist
 #' @importFrom abind abind
-#' 
 #' @family downscaling
-#' 
 #' @references 
 #' Benestad, R.E., Hanssen-Bauer, I. and Chen, D., 2008. Empirical-Statistical Downscaling,
 #'  1st ed. World Scientific Publishing, Singapore
@@ -56,7 +50,6 @@
 #'  using statistical downscaling. Clim. Change 120, 229-247.
 #' 
 #' @author J. Bedia 
-#'
 #' @keywords internal
 
 analogs <- function(obs = obs,

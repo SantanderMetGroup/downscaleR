@@ -2,7 +2,7 @@
 #' 
 #' @description Tercile plot for the visualization of the skill of an ensemble forecast prediction.
 #' 
-#' @param mm.obj A multi-member object with predictions, either a field or a multi-member station object as a result of
+#' @param mm.obj A multi-member object with predictions, either a grid or a multi-member station object as a result of
 #' downscaling of a forecast using station data. See details.
 #' @param obs The benchmarking observations for forecast verification
 #' @param stationId In case of multimember multistation objects, one station can be selected to plot
@@ -19,7 +19,7 @@
 #' @details 
 #'  
 #' For each member, the daily predictions are averaged to obtain a single seasonal forecast. For
-#' rectangular spatial domains (i.e., for fields), the spatial average is first computed (with a warning) to obtain a
+#' rectangular spatial domains (i.e., for grids), the spatial average is first computed (with a warning) to obtain a
 #' unique series for the whole domain. The corresponding terciles for each ensemble member are then computed
 #' for the analysis period. Thus, data is converted converted to a series of tercile categories by considering values
 #'  above, between or below the terciles of the whole period. The probability of a member to fall into the observed tercile
@@ -32,14 +32,14 @@
 #'  (Joliffe and Stephenson 2003). The value of this score ranges from 1 (perfect forecast system) to -1 
 #'  (perfectly bad forecast system). A value zero indicates no skill compared with a random prediction.
 #'  
-#'  In case of multimember fields, the field is spatially averaged to obtain one single time series
+#'  In case of multimember grids, the grid is spatially averaged to obtain one single time series
 #'  for each member prior to data analysis, with a warning. In case of multimember stations, one single station
 #'  can be selected through the \code{stationId} argument, otherwise all station series are also averaged.
 #'   
 #' 
 #' @note The computation of climatological terciles requires a representative period to obtain meaningful results.
 #' 
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}, M.D. Frias and J, Fernandez based on the original diagram 
+#' @author J. Bedia, M.D. Frias and J, Fernandez based on the original diagram 
 #' conceived by A. Cofino.
 #' 
 #' @family visualization
@@ -58,19 +58,19 @@ tercileValidation <- function(mm.obj, obs, stationId = NULL, color.pal = c("ypb"
       mm.dimNames <- attr(mm.obj$Data, "dimensions")
       obs.dimNames <- attr(obs$Data, "dimensions")
       if (!("member" %in% mm.dimNames)) {
-            stop("The input data for 'multimember' is not a multimember field")
+            stop("The input data for 'multimember' is not a multimember grid")
       }
       if ("member" %in% obs.dimNames) {
             stop("The verifying observations can't be a multimember")
       }
       if ("var" %in% mm.dimNames | "var" %in% obs.dimNames) {
-            stop("Multifields are not a valid input")
+            stop("Multigrids are not a valid input")
       }
       # Preparation of a 2D array with "member" and "time" dimensions for the target
       is.mm.station <- ifelse(exists("Metadata", where = mm.obj), TRUE, FALSE)
       is.obs.station <- ifelse(exists("Metadata", where = obs), TRUE, FALSE)
       if (identical(mm.dimNames, c("member", "time", "lat", "lon"))) {
-            warning("The results presented are the spatial mean of the input field")
+            warning("The results presented are the spatial mean of the input grid")
             lat.dim.index <- grep("lat", mm.dimNames)
             lon.dim.index <- grep("lon", mm.dimNames)
             mar <- setdiff(1:length(mm.dimNames), c(lat.dim.index, lon.dim.index))

@@ -1,24 +1,18 @@
-#' @title Bubble plot for visualization of the skill of an ensemble forecast prediction
-#' 
+#' @title Bubble plot 
 #' @description Bubble plot for the visualization of the skill of an ensemble forecast prediction. It provides a
 #'  spatially-explicit representation of the skill, resolution and reliability of a probabilistic predictive system in
 #'  a single map.
-#' 
-#' @param mm.obj A multi-member object with predictions, either a field or a multi-member station object as a result of
+#' @param mm.obj A multi-member object with predictions, either a grid or a multi-member station object as a result of
 #' downscaling of a forecast using station data. See details.
 #' @param obs The benchmarking observations for forecast verification. 
 #' @param select.year Year within the whole verification period to display the results for.
 #' @param score Logical. Whether to include or not the relative operating characteristic skill score (ROCSS). See details.
 #' @param size.as.probability Logical. Whether to include the tercile probabilities (magnitude proportional to bubble radius)
 #'  in the plot. See details. 
-#' 
 #' @importFrom scales alpha
 #' @importFrom verification roc.area
-#' 
 #' @export
-#' 
 #' @details 
-#' 
 #' For each member, the daily predictions are averaged to obtain a single seasonal forecast. The corresponding terciles 
 #' for each ensemble member are then computed for the analysis period. Thus, each particular grid point, member and season,
 #' are categorized into three categories (above, between or below), according to their respective climatological 
@@ -33,18 +27,12 @@
 #' this score ranges from 1 (perfect forecast system) to -1 (perfectly bad forecast system). A value zero indicates no skill 
 #' compared with a random prediction. The transparency of the bubble is associated to the ROCSS (negative values are
 #' plotted with x).  This option is not plotted if the score argument is FALSE.
-#' 
-#' 
 #' @note The computation of climatological terciles requires a representative period to obtain meaningful results.
-#' 
-#' @author J. Bedia \email{joaquin.bedia@@gmail.com}, M.D. Frias and J. Fernandez 
-#' 
+#' @author J. Bedia, M.D. Frias and J. Fernandez 
 #' @family visualization
-#' 
 #' @references
 #'  Jolliffe, I. T. and Stephenson, D. B. 2003. Forecast Verification: A Practitioner's Guide in 
 #'  Atmospheric Science, Wiley, NY
-#'  
 
 
 bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.probability = TRUE) {
@@ -52,21 +40,18 @@ bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.pro
       mm.dimNames <- attr(mm.obj$Data, "dimensions")
       obs.dimNames <- attr(obs$Data, "dimensions")
       if (!("member" %in% mm.dimNames)) {
-            stop("The input data for 'multimember' is not a multimember field")
+            stop("The input data for 'multimember' is not a multimember grid")
       }
       if ("member" %in% obs.dimNames) {
             stop("The verifying observations can't be a multimember")
       }
       if ("var" %in% mm.dimNames | "var" %in% obs.dimNames) {
-            stop("Multifields are not a valid input")
+            stop("Multigrids are not a valid input")
       }
-#       if (!("lon" %in% obs.dimNames & "lat" %in% obs.dimNames)) {
-#             stop("The observed reference must have 'lon' and 'lat' dimensions")
-#       }
       if (!identical(c("time", "lat", "lon"), obs.dimNames)) {
             stop("The observed reference must be a 3D array of the form [time,lat,lon]")
       }
-      obs <- interpGridData(obs, new.grid = getGrid(mm.obj), method = "nearest")  
+      obs <- interpData(obs, new.Coordinates = getGrid(mm.obj), method = "nearest")  
       x.mm <- mm.obj$xyCoords$x
       y.mm <- mm.obj$xyCoords$y
       yrs <- getYearsAsINDEX(mm.obj)
@@ -78,14 +63,13 @@ bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.pro
       lon.dim <- grep("lon", mm.dimNames)
       lat.dim <- grep("lat", mm.dimNames)
       member.dim <- grep("member", mm.dimNames)
-      time.dim <- grep("time", mm.dimNames)
       n.mem <- dim(mm.obj$Data)[member.dim]
       # Computation of terciles and exceedance probabilities
       # yearmean changes the data dimension. time.dim is in the first dimension!!
       y.mean <- apply(mm.obj$Data, MARGIN = c(lat.dim, lon.dim, member.dim), FUN = function(x) {
             tapply(x, INDEX = yrs, FUN = mean, na.rm = TRUE)
       })
-      terciles <- apply(y.mean, MARGIN=c(2, 3, 4), FUN=quantile, c(1/3, 2/3), na.rm = TRUE)
+      terciles <- apply(y.mean, MARGIN = c(2, 3, 4), FUN = quantile, c(1/3, 2/3), na.rm = TRUE)
       # Compute the probability for each tercile
       t.u <- array(dim = dim(y.mean)[1:3])
       t.l <- t.u
@@ -123,7 +107,7 @@ bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.pro
       v.t.max.prob <- as.vector(t.max.prob[iyear, , ])
       v.nans <- complete.cases(as.vector(obs.t[iyear, , ]))
       ve.max.prob <- v.max.prob[v.nans]
-      if (!size.as.probability){
+      if (!size.as.probability) {
             ve.max.prob <- rep(0.5, length(ve.max.prob))
       }
       df <- data.frame(max.prob = ve.max.prob, t.max.prob = v.t.max.prob[v.nans])
@@ -140,22 +124,22 @@ bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.pro
             for (ilon in seq(1,length(x.mm))) {
                   for (ilat in seq(1,length(y.mm))) {
                         n.nan <- sum(is.na(obs.t[,ilat,ilon]))
-                        if (n.nan == 0){
+                        if (n.nan == 0) {
                               # Compute the score only for the tercile with maximum probability
                               select.tercile <- t.max.prob[iyear,ilat,ilon] 
-                              if (select.tercile == 1){
+                              if (select.tercile == 1) {
                                     res <- suppressWarnings(roc.area(obs.t.l[ , ilat, ilon], t.l[ , ilat, ilon]))
-                                    v.score[count] <- res$A*2-1
+                                    v.score[count] <- res$A*2 - 1
                               } 
-                              if (select.tercile == 2){
+                              if (select.tercile == 2) {
                                     res <- suppressWarnings(roc.area(obs.t.m[ ,ilat, ilon], t.m[ , ilat, ilon]))
-                                    v.score[count] <- res$A*2-1
+                                    v.score[count] <- res$A*2 - 1
                               }
-                              if (select.tercile == 3){
+                              if (select.tercile == 3) {
                                     res <- suppressWarnings(roc.area(obs.t.u[,ilat,ilon], t.u[,ilat,ilon]))
-                                    v.score[count] <- res$A*2-1
+                                    v.score[count] <- res$A*2 - 1
                               }      
-                              count <- count+1
+                              count <- count + 1
                         }
                   }  
             }
@@ -167,17 +151,17 @@ bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.pro
       par(bg = "white", mar = c(3, 3, 1, 5))
       if (score) {
             plot(nn.yx[pos.val, 2], nn.yx[pos.val, 1], cex = df$max.prob[pos.val] * 3, col = alpha(df$color[pos.val], v.score[pos.val]), pch = 19, xlab = "", ylab = "")
-            points(nn.yx[neg.val, 2], nn.yx[neg.val, 1], pch=4, cex=0.75)
+            points(nn.yx[neg.val, 2], nn.yx[neg.val, 1], pch = 4, cex = 0.75)
       } else {
-            plot(nn.yx[ , 2], nn.yx[ , 1], cex=df$max.prob * 3, col = df$color, pch = 19, xlab = "", ylab = "")
+            plot(nn.yx[ , 2], nn.yx[ , 1], cex = df$max.prob * 3, col = df$color, pch = 19, xlab = "", ylab = "")
       }
-      world(add = TRUE, interior = FALSE)      
+      draw.world.lines()
       par(fig = c(0, 1, 0, 1), oma = c(0, 0, 0, 0), mar = c(0, 0, 0, 0), new = TRUE)
       plot(0, 0, type = "n", bty = "n", xaxt = "n", yaxt = "n")
-      if (score){
+      if (score) {
             legend('right', c("T1", "T2", "T3", "Negat.\nScore"), pch = c(19, 19, 19, 4), col = c("blue", "gold", "red", "black"), inset = c(0,0), xpd = TRUE, bty = "n")
-      } else{
-            legend('right', c("T1", "T2", "T3"), pch=c(19, 19, 19), col = c("blue", "gold", "red"), inset = c(0, 0), xpd = TRUE, bty = "n")
+      } else {
+            legend('right', c("T1", "T2", "T3"), pch = rep(19, 3), col = c("blue", "gold", "red"), inset = c(0, 0), xpd = TRUE, bty = "n")
       }
 }
 # End

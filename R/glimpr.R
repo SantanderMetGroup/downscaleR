@@ -4,13 +4,13 @@
 #' @param pr.threshold Value below which precipitation amount is considered zero 
 #' @param n.eofs Integer indicating the number of EOFs to be used as predictors 
 #' @family downscaling
-#' @author J Bedia 
+#' @author J Bedia, M Iturbide
 #' @importFrom abind abind
 #' @keywords internal
 
-glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold, n.pcs = n.pcs) {
+glimpr <- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold, n.pcs = n.pcs) {
       #modelPars <- ppModelSetup(obs, pred, sim)
-      if(is.null(n.pcs)){
+      if (is.null(n.pcs)) {
             n.pcs <-  dim(modelPars$pred.mat)[2]
       }
       #pred <- NULL
@@ -40,23 +40,87 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
       }
       # Models
       message("[", Sys.time(), "] Fitting models ...")
-      pred.list <- suppressWarnings(lapply(1:length(cases), function(x) {
+      err <- numeric()
+      pred.list <- list()
+            
+      suppressWarnings(
+            for (x in 1:length(cases)){
+         
+            
             mod.bin <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))
+            
             sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
-                
-                  pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
-                  pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]]))] <- 1L
-                  pred <- as.integer(pred)
-            })
+                        pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
+                        pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]], na.rm = TRUE))] <- 1L
+                        pred <- as.integer(pred)
+                  })
+            
+
             mod.bin <- NULL
-            wet <- which(ymat[ ,cases[x]] != 0)
+            wet <- which(ymat[ ,cases[x]] >= pr.threshold)
             # TODO: handle exception when model is over-specified (https://stat.ethz.ch/pipermail/r-help/2000-January/009833.html)
-            mod.gamma <- glm(ymat[ ,cases[x]] ~., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = Gamma(link = "log"), subset = wet)
-            sims <- sapply(1:length(modelPars$sim.mat), function(i) {
-                  unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") * sims.bin[ ,i])
-            })
-            return(unname(sims))
-      }))
+            
+            Npcs <- n.pcs+1
+            mod.gamma = NULL
+            
+            ###########
+            
+            while(is.null(mod.gamma) & Npcs > 1) {
+                  Npcs <-Npcs -1
+#                   print(Npcs)
+                  mod.gamma <- tryCatch(expr = {
+                        glm(ymat[ ,cases[x]] ~., data = as.data.frame(modelPars$pred.mat)[ ,1:Npcs], family = Gamma(link = "log"), subset = wet)
+                  },
+                  error = function(err) {                
+                        mod.gamma <- NULL
+                  })
+            }
+
+            
+            if(length(mod.gamma$model)-1 < n.pcs){
+                  err[x] <- 1 
+            }else{
+                  err[x] <- 0
+            }
+            
+        
+            ###########
+            
+            if (is.null(mod.gamma)){
+                  sims <-  sapply(1:length(modelPars$sim.mat), function(i) {
+                        matrix(NA, ncol = 1, nrow = nrow(modelPars$sim.mat[[i]]))
+                  })
+            }else{
+                  sims <- sapply(1:length(modelPars$sim.mat), function(i) {
+                        unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") * sims.bin[ ,i])
+                  })
+            }
+
+      pred.list[[x]] <- unname(sims)
+      sims <- NULL
+
+      })
+
+     
+      n.err <- length(which(err==1))
+
+      if(n.err > 0){
+      n <- round(n.err/length(err)*100, digits = 2)
+      warning("In ", n,"% of the locations: glm.fit convergence reached after variable number reduction.")
+      }
+      
+      
+      
+#       err <- lapply(1:length(pred.list), function(u){
+#             is.logical(pred.list[[u]])
+#       })
+#       
+#       n.err <- length(which(do.call("abind", err)==TRUE))
+#       
+#       if(n.err > 0){
+#             warning("glm.fit did not converge ", n.err, " times, NA returned.")
+#       }
+      
       # Refill with NaN series
       #######
       if (length(rm.ind) > 0) {
@@ -65,7 +129,7 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
             pred.list <- aux.list
             aux.list <- NULL
       }
-
+      
       x.obs <- getCoordinates(obs)$x
       y.obs <- getCoordinates(obs)$y
       aux.list <- lapply(1:length(modelPars$sim.mat), function (i) {
@@ -83,13 +147,13 @@ glimpr<- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold,
       })
       # Data array - rename dims
       
-#       obs$Data <- 
+      #       obs$Data <- 
       o <-drop(unname(do.call("abind", c(aux.list, along = -1))))
       aux.list <- NULL
       # Date replacement
-#       obs$Dates <- modelPars$sim.dates 
-       message("[", Sys.time(), "] Done.")
-#       return(obs)
-return(o)
+      #       obs$Dates <- modelPars$sim.dates 
+      message("[", Sys.time(), "] Done.")
+      #       return(obs)
+      return(o)
 }
 # End

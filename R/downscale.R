@@ -1,6 +1,6 @@
 # downscale.R Perfect-prog downscaling methods
 #
-#     Copyright (C) 2015 Santander Meteorology Group (http://www.meteo.unican.es)
+#     Copyright (C) 2016 Santander Meteorology Group (http://www.meteo.unican.es)
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,10 @@
 #' @param analog.dates Logical flag indicating whether the dates of the analogs should be returned. See the analogs section.
 #' @param pr.threshold Value below which precipitation amount is considered zero 
 #' @param n.pcs Integer indicating the number of EOFs to be used as predictors
-#' @param cross.val Should cross-validation be performed?
+#' @param cross.val Should cross-validation be performed? methods available are leave-one-out ("loocv") and k-fold ("kfold"). The default 
+#' option ("none") does not perform cross-validation.
+#' @param folds Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
+#' the corresponding fold.
 #' @template templateParallelParams 
 #' 
 #' @details
@@ -61,49 +64,14 @@
 #' Note that the analog dates can be only returned for one single neighbour selections (i.e. \code{n.neigh = 1}),
 #'  otherwise giving an error. The analog dates are different for each member in case of 
 #'  multimember downscaling, and are returned as a list, each element of the list corresponding to one member. 
-#' 
 #' @template templateParallel
-#' 
-#'   
 #' @seealso \code{\link{prinComp}} for details on principal component/EOF analysis,
 #' \code{rescaleMonthlyMeans} for data pre-processing,
-#' \code{\link{makeMultiField}} for multifield creation
-#' \code{\link{loadGridData}} and \code{\link{loadStationData}} for loading fields and station data respectively.
-#' 
+#' \code{\link{makeMultiGrid}} for multigrid construction
+#' \code{loadGridData} and \code{loadStationData} for loading grids and station data respectively, from package \pkg{loadeR}.
 #' @export 
 #' @family downscaling
 #' @author J Bedia and M Iturbide
-
-# load("ignore/juaco/data/obsPredSim_NCEP.Rdata", verbose = TRUE)
-# 
-# plotMeanField(pred)
-# 
-# 
-# # # 
-# pca.pred <- prinComp(pred, v.exp = .99)
-# str(pca.pred)
-
-# str(sim)
-
-# str(a)
-# 
-# str(pred)
-# str(pca.pred)
-# # 
-# # a <- ppModelSetup(obs.precip, pca.pred, sim)
-# # str(a)
-# # str(pca.pred)
-# str(pred)
-# str(modelPars)
-# parallel = TRUE
-# ncores = NULL
-# max.ncores = 16
-# 
-# 
-# a <- downscale(obs.tmean, pred, sim, method = "analogs", parallel = TRUE)
-# 
-# b <- downscale(obs.tmean, pred, sim, method = "analogs", parallel = FALSE)
-
 
 downscale <- function(obs,
                       pred,
@@ -114,62 +82,127 @@ downscale <- function(obs,
                       analog.dates = FALSE,
                       pr.threshold = .1,
                       n.pcs = NULL,
-                      cross.val = c("none", "loocv"),
+                      cross.val = c("none", "loocv", "kfold"),
+                      folds = NULL,
                       parallel = FALSE,
                       max.ncores = 16,
                       ncores = NULL) {
-      cross.val <- match.arg(cross.val, choices = c("none", "loocv"))
+      cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
       modelPars <- ppModelSetup(obs, pred, sim)
       obs.orig <- obs
+      if ("station" %in% attr(obs$Data, "dimensions")){
+            stations <-  TRUE
+      } else {
+            stations <- FALSE
+      }
       if (cross.val == "none") {
             down <- switch(method,
-                        "analogs" = analogs(obs = obs,
-                                      modelPars = modelPars,
-                                      n.neigh = n.neigh,
-                                      sel.fun = sel.fun,
-                                      analog.dates = analog.dates,
-                                      parallel.pars = parallel.pars),
-                        "glm" = glimpr(obs = obs,
-                                 modelPars = modelPars,
-                                 pr.threshold = pr.threshold,
-                                 n.pcs = n.pcs)
+                           "analogs" = analogs(obs = obs,
+                                               modelPars = modelPars,
+                                               n.neigh = n.neigh,
+                                               sel.fun = sel.fun,
+                                               analog.dates = analog.dates,
+                                               parallel.pars = parallel.pars),
+                           "glm" = glimpr(obs = obs,
+                                          modelPars = modelPars,
+                                          pr.threshold = pr.threshold,
+                                          n.pcs = n.pcs)
             )
-      } else if (cross.val == "loocv") {
-
-            if("scaled:method" %in% names(attributes(pred))){
+      }else{
+            if (!is.null(sim)) {
+                  message("'sim' will be ignored for cross-validation")
+            }
+            if ("scaled:method" %in% names(attributes(pred))) {
                   pred$Dates$start <- attr(pred, "dates_start")
             }
             years <- getYearsAsINDEX(pred)
             modelPars.orig <- modelPars
-            downi <-lapply(1:length(unique(years)), function(i) {
+            message("[", Sys.time(), "] Fitting models...")
+            
+            if (cross.val == "loocv") {
+                  
+                  downi <- lapply(1:length(unique(years)), function(i) {
                         year.ind <- which(years == unique(years)[i])
                         modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
                         modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
-                        obs$Data <- obs.orig$Data[-year.ind,,]
+                        if(stations == TRUE){
+                              obs$Data <- obs.orig$Data[-year.ind,]
+                        }else{
+                              obs$Data <- obs.orig$Data[-year.ind,,]
+                        }
                         attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
-                        
-                        if(method == "analogs"){
-                                   analogs(obs = obs,
+                        message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
+                              if (method == "analogs") {
+                                    suppressMessages(
+                                    analogs(obs = obs,
+                                    modelPars = modelPars,
+                                    n.neigh = n.neigh,
+                                    sel.fun = sel.fun,
+                                    analog.dates = analog.dates,
+                                    parallel.pars = parallel.pars)
+                                    )
+                              }else if (method == "glm") {
+                                    suppressMessages(
+                                    glimpr(obs = obs,
+                                    modelPars = modelPars,
+                                    pr.threshold = pr.threshold,
+                                    n.pcs = n.pcs)
+                                    )
+                              }
+                        })
+                  down <- unname(do.call("abind", c(downi, along = 1)))
+            }else if(cross.val == "kfold"){
+            
+                  if(is.null(folds)){
+                        stop("Folds need to be given")
+                  }
+         
+                  downi <- lapply(1:length(folds), function(i) {
+                        year.ind <- lapply(1:length(folds[[i]]), function(x){
+                              indstep <- which(years == folds[[i]][x])
+                              return(indstep)
+                        })
+                        year.ind <- unname(abind(year.ind, along = 1))
+                                    
+                        modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
+                        modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
+                        if(stations == TRUE){
+                              obs$Data <- obs.orig$Data[-year.ind,]
+                        }else{
+                              obs$Data <- obs.orig$Data[-year.ind,,]
+                        }
+                        attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
+                        message("Validation ", i, ", ", length(folds) - i, " remaining")
+                              if (method == "analogs") {
+                                    suppressMessages(
+                                          analogs(obs = obs,
                                                 modelPars = modelPars,
                                                 n.neigh = n.neigh,
                                                 sel.fun = sel.fun,
                                                 analog.dates = analog.dates,
                                                 parallel.pars = parallel.pars)
-                        }else if (method == "glm"){
-                                    glimpr(obs = obs,
-                                          modelPars = modelPars,
-                                          pr.threshold = pr.threshold,
-                                          n.pcs = n.pcs)
-                        }
-                        
-                                            
-                  })
-            down <- unname(do.call("abind", c(downi, along = 1)))
+                                    )
+                              } else if (method == "glm") {
+                                    suppressMessages(
+                                          glimpr(obs = obs,
+                                                modelPars = modelPars,
+                                                pr.threshold = pr.threshold,
+                                                n.pcs = n.pcs)
+                                    )
+                              }
+                        })
+                  down <- unname(do.call("abind", c(downi, along = 1)))
+    
+            
+            }
       }
-      obs.orig$Data <- down
+      
+      
+      
       # Data array - rename dims
       dimNames <- renameDims(obs.orig, modelPars$multi.member)
+      obs.orig$Data <- down
       attr(obs.orig$Data, "dimensions") <- dimNames
       attr(obs.orig$Data, "downscaling:method") <- method
       attr(obs.orig$Data, "downscaling:cross-validation") <- cross.val
@@ -178,22 +211,6 @@ downscale <- function(obs,
       # Date replacement
       obs.orig$Dates <- modelPars$sim.dates 
       message("[", Sys.time(), "] Done.")
-      
       return(obs.orig)
 }
-
-
-
-# identical(pred,sim)
-# # ppModelSetup  la matriz pred tiene que tener un atributo que indica que es un producto de PCA o no
-# a <- downscale(obs = obs.precip, pred = pred, sim = sim, method = "analogs")
-# str(a)
-# # 
-# # range(obs.precip$Data)
-# obs = obs.precip
-# str(modelPars)
-
-#             if (!is.null(sim) & !identical(pred, sim)) {
-#              
-#             }
 

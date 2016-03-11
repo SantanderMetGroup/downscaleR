@@ -1,8 +1,5 @@
 Package: downscaleR
 Depends:
-    rJava,
-    downscaleR.java(>= 1.0.0),
-    maps,
     R(>= 3.0.0)
 Imports:
     utils,
@@ -13,14 +10,15 @@ Imports:
     verification,
     scales,
     evd,
-    parallel
+    parallel,
+    akima
 Suggests:
     loadeR,
-    ecomsUDG.Raccess
+    loadeR.ECOMS
 Type: Package
-Title: Climate data manipulation and statistical downscaling
-Version: 0.9-0
-Date: 11-Nov-2015
+Title: Climate data manipulation, bias correction and statistical downscaling
+Version: 0.10-0
+Date: 2016-03-10
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
@@ -37,11 +35,9 @@ Authors@R: as.person(c(
     "Max Tuni <max@predictia.es> [ctb]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
-Description: Load climate and weather data into R and performs climate data
-    analysis and visualization, including model calibration (bias correction,
-    qq-mapping...), and perfect-prog statistical downscaling. Focused on daily
-    data, the package is conceived for dealing also with forecast
-    (multi-member) data.
+Description: Tools for climate data analysis and visualization, including
+      model calibration (bias correction, qq-mapping...), and perfect-prog statistical downscaling.
+      Focused on daily data, the package is conceived for dealing also with forecast (multi-member) data.
 License: GPL (>= 3)
 LazyData: true
-RoxygenNote: 5.0.0
+RoxygenNote: 5.0.1
