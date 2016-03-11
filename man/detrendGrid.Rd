@@ -42,6 +42,7 @@ particular case of large multimember datasets or large grids.
  
 Parallel computing is currently not available for Windows machines.
 }
+
 \examples{
 data("iberia_ncep_ta850")
 monthly <- timeAggregation(iberia_ncep_ta850, aggr.m = "mean")
@@ -51,6 +52,7 @@ det <- detrendGrid(monthly)
 lines(det$Data[,4,2], col = "red")
 abline(h = 0, lty = 2, col = "red")
 }
+
 \author{
 J Bedia
 }

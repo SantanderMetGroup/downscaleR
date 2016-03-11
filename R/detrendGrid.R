@@ -20,7 +20,6 @@
 #' lines(det$Data[,4,2], col = "red")
 #' abline(h = 0, lty = 2, col = "red")
 
-
 detrendGrid <- function(grid, parallel = FALSE, max.ncores = 16, ncores = NULL) {
       arr <- grid$Data
       refdim <- dim(arr)
