@@ -2,6 +2,7 @@ Package: downscaleR
 Depends:
     R(>= 3.0.0)
 Imports:
+    abind,
     utils,
     RCurl,
     abind,
