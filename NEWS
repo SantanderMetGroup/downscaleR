@@ -6,7 +6,7 @@ downscaleR 0.10-0
 * Enabled parallelization (Linux and Mac OS only)
 * Enhancements in perfect-prog downscaling
   * Parallel option
-  * Cross validatin schemes
+  * Cross validation schemes
   * Monthly mean rescaling
 * Function for flexible temporal aggregations
 * Function for grid linear detrending
