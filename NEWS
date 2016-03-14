@@ -1,11 +1,12 @@
-downscaleR 0.9-0
-================
-* New features:
-   * Full integration with new packages for data access: loadeR and loadeR.ECOMS     
-* Enhancements in bias correction:
-   * Automatically set the common period of predictand and predictor objects in to calibrate the bias correction method
-   * Use single station data as predictands
-* Minor bug fix in bias correction of precipitation and other modifications (Thanks to: Yuanchao Xu)
+downscaleR 0.10-0
+=================
+* New function/object nomenclature (non-backwards compatibility)
+ * In general, the term field is replaced by more generic 'grid'
+* Fully independized from the loadeR bundle (yet highly recommended)
+* Enabled parallelization (Linux and Mac OS only)
+* Enhancements in perfect-prog downscaling performance
+* Function for flexible temporal aggregations
+* Function for grid linear detrending
 * Other minor bug fixes and enhancements
 
 

@@ -4,7 +4,8 @@
 \alias{timeAggregation}
 \title{Time aggregation of the data in a grid/multigrid}
 \usage{
-timeAggregation(obj, aggr.d = NULL, aggr.m = NULL, aggr.y = NULL)
+timeAggregation(obj, aggr.d = NULL, aggr.m = NULL, aggr.y = NULL,
+  parallel = FALSE, max.ncores = 16, ncores = NULL)
 }
 \arguments{
 \item{obj}{a grid or multigrid (can be multimember).}
@@ -17,6 +18,13 @@ Possibilities are:  "mean", "min", "max", "sum" (default is NULL).}
 
 \item{aggr.y}{a single character or a character string indicating the annual aggregation function. 
 Possibilities are: "mean", "min", "max", "sum" (default is "NULL").}
+
+\item{parallel}{Logical. Should parallel execution be used?}
+
+\item{max.ncores}{Integer. Upper bound for user-defined number of cores.}
+
+\item{ncores}{Integer number of cores used in parallel computation. Self-selected number of
+cores is used when \code{ncpus = NULL} (the default), or when \code{maxcores} exceeds the default \code{ncores} value.}
 }
 \value{
 A grid or multigrid with the time dimension daily, monthly or annually aggregated (see details).
@@ -28,7 +36,23 @@ Aggregates data daily, monthly or annually by specifiyng an aggregation function
 To annually or monthly aggregate data, aggr.d and/or aggr.m might be also specified to apply different aggregations 
 for each time scale. If the data in the grid is sub-daily and aggr.d is not specified, a WARNING message will be returned.
 }
+\section{Parallel Processing}{
+
+
+Parallel processing is enabled using the \pkg{parallel} package. 
+Parallelization is undertaken by a FORK-type parallel socket cluster formed by \code{ncores}.
+If \code{ncores} is not specified (default), \code{ncores} will be one less than the autodetected number of cores.
+The maximum number of cores used for parallel processing can be set with the \code{max.ncores} argument, 
+although this will be reset to the auto-detected number of cores minus 1 if this number is exceeded. Note that not all 
+code, but just some critical loops within the function are parallelized.
+
+In practice, parallelization does not always result in smaller execution times, due to the parallel overhead.
+However, parallel computing may potentially provide a significant speedup for the 
+particular case of large multimember datasets or large grids.
+ 
+Parallel computing is currently not available for Windows machines.
+}
 \author{
-M. Iturbide \email{maibide@gmail.com}
+M. Iturbide, M. de Felice, J. Bedia
 }
 
