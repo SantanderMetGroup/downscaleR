@@ -1,7 +1,7 @@
 downscaleR 0.10-0
 =================
 * New function/object nomenclature (non-backwards compatibility)
-  * In general, the term field is replaced by more generic 'grid'
+  * The term field is replaced by more generic 'grid'
 * Fully independized from the loadeR bundle (yet highly recommended)
 * Enabled parallelization (Linux and Mac OS only)
 * Enhancements in perfect-prog downscaling
