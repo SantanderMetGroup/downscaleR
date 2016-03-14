@@ -20,13 +20,12 @@
 #' mapping of EOFs onto the simulation grids.
 #' @author J. Bedia 
 #' @keywords internal
-#' @export
 #' @importFrom abind asub
 
 
 
 ppModelSetup <- function(obs, pred, sim) {
-      stations <- ifelse ("station" %in% attr(obs$Data, "dimensions"), TRUE, FALSE)
+      stations <- ifelse("station" %in% attr(obs$Data, "dimensions"), TRUE, FALSE)
       if ("scaled:method" %in% names(attributes(pred))) {
             use.PCs <- TRUE
             x.pred <- attr(pred, "xCoords")
@@ -183,7 +182,7 @@ ppModelSetup <- function(obs, pred, sim) {
       if (length(simsc.list) > 1) {
             if ("member" %in% attr(sim$Data, "dimensions")) {
                   multi.member <- TRUE
-                  if (! "var" %in% attr(sim$Data, "dimensions")) simsc.list <- list(simsc.list)
+                  if (!"var" %in% attr(sim$Data, "dimensions")) simsc.list <- list(simsc.list)
                   sim.mat <- rep(list(bquote()), n.mem)
                   for (i in 1:n.mem) { 
                         aux <- lapply(1:length(simsc.list), function(x) simsc.list[[x]][[i]])
@@ -198,7 +197,6 @@ ppModelSetup <- function(obs, pred, sim) {
       }
       simsc.list <- NULL
       sim.dataset <- attr(sim, "dataset")
-      sim.dates <- sim$Dates
       init.dates <- mems <- NULL
       if (multi.member) {
             init.dates <- sim$InitializationDates
