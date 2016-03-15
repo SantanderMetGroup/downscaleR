@@ -35,7 +35,7 @@ detrendGrid <- function(grid, parallel = FALSE, max.ncores = 16, ncores = NULL) 
             unname(parallel::parApply(cl = parallel.pars$cl, arr, MARGIN = mar, FUN = function(y) {
                   out <- rep(NA, length(y))
                   ind <- intersect(which(!is.na(y)), which(!is.na(x)))
-                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x)))$resid,
+                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x)))$resid + mean(y, na.rm = TRUE),
                                        error = function(err) {
                                              rep(NA,ntimes)
                                        })
@@ -45,7 +45,7 @@ detrendGrid <- function(grid, parallel = FALSE, max.ncores = 16, ncores = NULL) 
             unname(apply(arr, MARGIN = mar, FUN = function(y) {
                   out <- rep(NA, length(y))
                   ind <- intersect(which(!is.na(y)), which(!is.na(x)))
-                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x)))$resid,
+                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x) + 0))$resid + mean(y, na.rm = TRUE),
                                        error = function(err) {
                                              rep(NA,ntimes)
                                        })
