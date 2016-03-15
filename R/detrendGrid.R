@@ -14,11 +14,12 @@
 #' @examples 
 #' data("iberia_ncep_ta850")
 #' monthly <- timeAggregation(iberia_ncep_ta850, aggr.m = "mean")
-#' plot(monthly$Data[,4,2], ty = 'l',ylim = c(-4,7))
+#' plot(monthly$Data[,4,2], ty = 'l')
 #' abline(reg = lm(monthly$Data[,4,2] ~ I(1:length(monthly$Data[,4,2]))))
-#' det <- detrendGrid(monthly)
+#' det <- detrendGrid(monthly, parallel = FALSE)
+#' # Detrended series in red
 #' lines(det$Data[,4,2], col = "red")
-#' abline(h = 0, lty = 2, col = "red")
+#' abline(reg = lm(det$Data[,4,2] ~ I(1:length(det$Data[,4,2]))), col = "red")
 
 detrendGrid <- function(grid, parallel = FALSE, max.ncores = 16, ncores = NULL) {
       arr <- grid$Data
@@ -35,21 +36,22 @@ detrendGrid <- function(grid, parallel = FALSE, max.ncores = 16, ncores = NULL) 
             unname(parallel::parApply(cl = parallel.pars$cl, arr, MARGIN = mar, FUN = function(y) {
                   out <- rep(NA, length(y))
                   ind <- intersect(which(!is.na(y)), which(!is.na(x)))
+                  print(mean(y, na.rm = TRUE))
                   out[ind] <- tryCatch(expr = summary(lm(y ~ I(x)))$resid + mean(y, na.rm = TRUE),
                                        error = function(err) {
                                              rep(NA,ntimes)
                                        })
-            })
+                  })
             )
       } else {
             unname(apply(arr, MARGIN = mar, FUN = function(y) {
                   out <- rep(NA, length(y))
                   ind <- intersect(which(!is.na(y)), which(!is.na(x)))
-                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x) + 0))$resid + mean(y, na.rm = TRUE),
+                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x)))$resid + mean(y, na.rm = TRUE),
                                        error = function(err) {
                                              rep(NA,ntimes)
                                        })
-            })
+                  })
             )
       }
       message("[", Sys.time(), "] - Done.")
