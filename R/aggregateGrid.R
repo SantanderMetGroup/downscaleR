@@ -60,71 +60,13 @@
 #' par(mfrow = c(1,1))
 #' 
 #' ## Monthly aggregation
+#' monthly.mean <- aggregateGrid(tasmax_forecast, aggr.m = list(FUN = mean, na.rm = TRUE))
 #' 
+#' ## Several dimensions ca be aggregated in one go:
+#' mm.mean <- aggregateGrid(tasmax_forecast,
+#'                aggr.mem = list(FUN = "mean", na.rm = TRUE),
+#'                aggr.m = list(FUN = "mean", na.rm = TRUE))
 #' }
-
-
-# monthly.mean <- aggregateGrid(tasmax_forecast, aggr.m = list(FUN = mean, na.rm = TRUE), parallel = TRUE)
-# str(tasmax_forecast)
-# str(monthly.mean)
-# load("data/tasmax_forecast.rda", verbose = TRUE)
-# str(tasmax_forecast)
-# library(parallel)
-# x <- aggregateGrid(tasmax_forecast, aggr.mem = list(FUN = "mean", na.rm = TRUE), parallel = TRUE)
-# x <- aggregateGrid(tasmax_forecast,
-#                    aggr.mem = list(FUN = "mean", na.rm = TRUE),
-#                    aggr.m = list(FUN = "max", na.rm = TRUE),
-#                    parallel = TRUE)
-# str(x)
-# str(x)
- load("/oceano/gmeteo/WORK/juaco/SPECS/gs5_validation/rdata/ERAIN_tas_djf_monthly_1993_2012_LD.rda", verbose = TRUE)
- load("/oceano/gmeteo/WORK/juaco/SPECS/gs5_validation/rdata/GS5_24_tas_djf_monthly_1993_2012_LD.rda", verbose = TRUE)
-# 
-# 
- x <- aggregateGrid(tasmax_forecast,
-                    aggr.mem = list(FUN = "mean", na.RM = TRUE))
-# 
-str(x)
-plotMeanGrid(x)
-x <- aggregateGrid(tas.djf.erain,
-              aggr.y = list(FUN = "mean", na.rm = TRUE),
-              parallel = TRUE)
-# 
-# 
- x <- aggregateGrid(tas.djf.gs5.ld,
-                    aggr.mem = list(FUN = "quantile", probs = .5),
-                    aggr.y = list(FUN = "mean", na.rm = TRUE),
-                    parallel = TRUE)
- 
- x <- aggregateGrid(tas.djf.gs5.ld,
-                    aggr.y = list(FUN = "mean", na.rm = TRUE),
-                    parallel = TRUE)
-# 
-# 
-str(x)
-# 
-# x1 <- aggregateGrid(x, aggr.m = list(FUN = "mean",na.rm = TRUE))
-# 
-# plot
-# str()
-# grid <- x
-# aggr.m <- list(FUN = mean,na.rm = TRUE)
-# 
-# print(match.call(aggr.m$FUN))
-# 
-# 
-# ?toString
-# 
-# parallel = FALSE
-# max.ncores = 16
-# ncores = NULL
-# 
-# 
-# aggr.fun = list(FUN = "mean", na.rm = TRUE)
-# 
-# 
-# aggr.type = "MM"
-
 
 aggregateGrid <- function(grid,
                           aggr.mem = list(FUN = NULL),
@@ -209,13 +151,17 @@ memberAggregation <- function(grid, aggr.mem, parallel, max.ncores, ncores) {
 
 
 timeAggregation <- function(grid, aggr.type = c("DD","MM","YY"), aggr.fun, parallel, max.ncores, ncores) {
-      aux.dates <- grid$Dates$start
+      aux.dates <- if ("var" %in% attr(grid$Data, "dimensions")) {
+            grid$Dates[[1]]$start
+      } else {
+            grid$Dates$start
+      }
       dff <- abs(difftime(aux.dates[1], aux.dates[2], units = "hours"))
       if (aggr.type == "DD" & dff >= 24) {
             message("Data is already daily: 'aggr.d' option was ignored.")
       } else if (aggr.type == "MM" & dff >= 672) {
             message("Data is already monthly: 'aggr.m' option was ignored.")
-      } else if (aggr.type == "DD" & dff >= 8640) {
+      } else if (aggr.type == "YY" & dff >= 8640) {
             message("Data is already 6annual: 'aggr.y' option was ignored.")
       } else {
             dimNames <- attr(grid$Data, "dimensions")
@@ -253,12 +199,9 @@ timeAggregation <- function(grid, aggr.type = c("DD","MM","YY"), aggr.fun, paral
             message("[", Sys.time(), "] Done.")
             # Array attributes -----------------
             if (length(dim(arr)) != length(dimNames)) arr <- abind(arr, along = -1) # Preserve time dimension if lost
-            
-            #############333
-            # if ("member" %in% dimNames) c("member","time","lat","lon")
-            ###################
-                  
-                  
+            if (grep("^time", dimNames) > 1) {
+                  arr <- aperm(arr, c(grep("^time", dimNames), grep("^time", dimNames, invert = TRUE)))     
+            }
             grid$Data <- unname(arr)
             if (any(names(attr.all) != "dim" & names(attr.all) != "dimensions")) {
                   attributes(grid$Data) <- attr.all[grep("^dim$|^dimensions$", names(attr.all), invert = TRUE)]
@@ -268,7 +211,7 @@ timeAggregation <- function(grid, aggr.type = c("DD","MM","YY"), aggr.fun, paral
             if ("var" %in% dimNames) {
                   grid$Dates <- lapply(1:length(grid$Dates), function(x) {
                         list("start" = unname(tapply(grid$Dates[[x]]$start, INDEX = fac, FUN = min)),
-                             "end" = unname(tapply(grid$Dates[[x]]$end, INDEX = fac, FUN = min)))
+                             "end" = unname(tapply(grid$Dates[[x]]$end, INDEX = fac, FUN = max)))
                   })
             } else {
                   grid$Dates <- list("start" = unname(tapply(grid$Dates$start, INDEX = fac, FUN = min)),
