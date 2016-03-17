@@ -70,8 +70,8 @@ dateReplacement <- function(obs.dates, sim.dates) {
 #' annual statistics for a year-crossing season, it is necessary to modify first the vector of years, 
 #' and assign year 2001 to the preceding December. Similarly, the next December 2001 belongs to winter 2002,
 #'  and so on... The function is useful for computing and/or plotting annual statistics, seasonal climatologies ... 
-#' @section Warning:
-#' The function should no be used to extract the actual years vector
+#' @note Warning:
+#' The function should no be used to extract the vector of actual date years
 #' @author J. Bedia 
 #' @export
 #' @examples 
@@ -101,15 +101,16 @@ dateReplacement <- function(obs.dates, sim.dates) {
 getYearsAsINDEX <- function(obj) {
       season <- getSeason(obj)
       dimNames <- attr(obj$Data, "dimensions")
-      if (any(grepl("var", dimNames))) {
-            aux.dates <- as.POSIXlt(obj$Dates[[1]]$start)
+      aux.dates <- if (any(grepl("var", dimNames))) {
+            as.POSIXlt(obj$Dates[[1]]$start)
       } else {
-            aux.dates <- as.POSIXlt(obj$Dates$start)
+            as.POSIXlt(obj$Dates$start)
       }
-      yrs <- aux.dates$year + 1900
+      yrs <- as.numeric(substr(aux.dates,1,4))
+      mon <- as.numeric(substr(aux.dates,6,7))
       if (!identical(season, sort(season))) {
             yy <- unique(yrs)[-1]
-            aux <- match(aux.dates$mon + 1, season)
+            aux <- match(mon, season)
             brks <- c(1, which(diff(aux) < 0) + 1, length(aux) + 1)
             l <- lapply(1:(length(brks) - 1), function(x) {
                   a <- yrs[brks[x]:(brks[x + 1] - 1)]
@@ -120,6 +121,8 @@ getYearsAsINDEX <- function(obj) {
       return(yrs)
 }
 # End
+
+
 
 #' @title Set the 'dimensions' attribute 
 #' @description Sets the 'dimensions' attribute of model out Data objects after downscaling
