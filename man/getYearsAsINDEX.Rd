@@ -24,9 +24,9 @@ annual statistics for a year-crossing season, it is necessary to modify first th
 and assign year 2001 to the preceding December. Similarly, the next December 2001 belongs to winter 2002,
  and so on... The function is useful for computing and/or plotting annual statistics, seasonal climatologies ...
 }
-\section{Warning}{
-
-The function should no be used to extract the actual years vector
+\note{
+Warning:
+The function should no be used to extract the vector of actual date years
 }
 \examples{
 data(iberia_ncep_hus850)

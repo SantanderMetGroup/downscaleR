@@ -44,12 +44,13 @@ Parallel computing is currently not available for Windows machines.
 }
 \examples{
 data("iberia_ncep_ta850")
-monthly <- timeAggregation(iberia_ncep_ta850, aggr.m = "mean")
-plot(monthly$Data[,4,2], ty = 'l',ylim = c(-4,7))
+monthly <- aggregateGrid(iberia_ncep_ta850, aggr.m = list(FUN = "mean"))
+plot(monthly$Data[,4,2], ty = 'l')
 abline(reg = lm(monthly$Data[,4,2] ~ I(1:length(monthly$Data[,4,2]))))
-det <- detrendGrid(monthly)
+det <- detrendGrid(monthly, parallel = FALSE)
+# Detrended series in red
 lines(det$Data[,4,2], col = "red")
-abline(h = 0, lty = 2, col = "red")
+abline(reg = lm(det$Data[,4,2] ~ I(1:length(det$Data[,4,2]))), col = "red")
 }
 \author{
 J Bedia

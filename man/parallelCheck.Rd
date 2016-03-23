@@ -16,8 +16,10 @@ is used when \code{is.null(ncpus)} (the default).}
 }
 \value{
 A list with two elements:
-(i) \code{hasparallel}, a logical flag indicating if parallelization is enabled and
-(ii) \code{cl}: parallel socket cluster object, or NULL.
+\itemize{
+\item \code{hasparallel}, a logical flag indicating if parallelization is enabled and
+\item \code{cl}: parallel socket cluster object, or NULL.
+}
 }
 \description{
 Check availability of parallel package and set parameters

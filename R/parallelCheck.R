@@ -24,7 +24,7 @@ parallelCheck <- function(parallel, max.ncores = 16, ncores = NULL) {
             if (is.null(ncores)) {
                   ncores <- min(max(parallel::detectCores() - 1, 1), max.ncores)
             }
-            if (ncores > 1){
+            if (ncores > 1) {
                   .cl <- try(parallel::makeCluster(ncores, type = 'FORK'), silent = TRUE)
                   if (!"try-error" %in% class(.cl)) {
                         hasparallel <- TRUE

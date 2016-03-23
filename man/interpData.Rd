@@ -5,7 +5,8 @@
 \title{Interpolate a dataset}
 \usage{
 interpData(obj, new.Coordinates = list(x = NULL, y = NULL),
-  method = c("nearest", "bilinear"))
+  method = c("nearest", "bilinear"), parallel = FALSE, max.ncores = 16,
+  ncores = NULL)
 }
 \arguments{
 \item{obj}{A data object coming from \code{loadGridData}, \code{loadStationData} of package \pkg{loadeR}, or the \pkg{loadeR.ECOMS} 
@@ -19,6 +20,13 @@ Each component consists of a vector of length three with components \emph{from},
 
 \item{method}{Method for interpolation. Currently implemented methods are either \code{"bilinear"},
 for bilinear interpolation, and \code{"nearest"}, for nearest-neighbor interpolation (default).}
+
+\item{parallel}{Logical. Should parallel execution be used?}
+
+\item{max.ncores}{Integer. Upper bound for user-defined number of cores.}
+
+\item{ncores}{Integer number of cores used in parallel computation. Self-selected number of
+cores is used when \code{ncpus = NULL} (the default), or when \code{maxcores} exceeds the default \code{ncores} value.}
 }
 \value{
 An interpolated object preserving the structure of the input
@@ -41,6 +49,22 @@ The output has special attributes in the \code{xyCoords} element that indicate t
 To avoid unnecessary NA values, the function will not extrapolate using a new grid outside the
 current extent of the dataset, returning an error message.
 }
+\section{Parallel Processing}{
+
+
+Parallel processing is enabled using the \pkg{parallel} package. 
+Parallelization is undertaken by a FORK-type parallel socket cluster formed by \code{ncores}.
+If \code{ncores} is not specified (default), \code{ncores} will be one less than the autodetected number of cores.
+The maximum number of cores used for parallel processing can be set with the \code{max.ncores} argument, 
+although this will be reset to the auto-detected number of cores minus 1 if this number is exceeded. Note that not all 
+code, but just some critical loops within the function are parallelized.
+
+In practice, parallelization does not always result in smaller execution times, due to the parallel overhead.
+However, parallel computing may potentially provide a significant speedup for the 
+particular case of large multimember datasets or large grids.
+ 
+Parallel computing is currently not available for Windows machines.
+}
 \examples{
 \dontrun{
 # Load air temperature at 850 mb isobaric pressure level for boreal winter (DJF) 1991-2010
@@ -59,6 +83,6 @@ attributes(t$xyCoords)
 }
 }
 \author{
-J. Bedia and S. Herrera
+J. Bedia, S. Herrera, M. de Felice
 }
 

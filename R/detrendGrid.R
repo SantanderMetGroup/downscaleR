@@ -30,7 +30,7 @@
 #' @author J Bedia
 #' @examples 
 #' data("iberia_ncep_ta850")
-#' monthly <- timeAggregation(iberia_ncep_ta850, aggr.m = "mean")
+#' monthly <- aggregateGrid(iberia_ncep_ta850, aggr.m = list(FUN = "mean"))
 #' plot(monthly$Data[,4,2], ty = 'l')
 #' abline(reg = lm(monthly$Data[,4,2] ~ I(1:length(monthly$Data[,4,2]))))
 #' det <- detrendGrid(monthly, parallel = FALSE)

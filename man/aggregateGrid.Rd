@@ -82,7 +82,8 @@ data("iberia_tasmax")
 # Ensemble mean
 mn <- aggregateGrid(grid = tasmax_forecast, aggr.mem = list("mean", na.rm = TRUE))
 # Ensemble 90th percentile
-ens90 <- aggregateGrid(grid = tasmax_forecast, aggr.mem = list("quantile", probs = 0.9, na.rm = TRUE))
+ens90 <- aggregateGrid(grid = tasmax_forecast,
+                       aggr.mem = list("quantile", probs = 0.9, na.rm = TRUE))
 par(mfrow = c(1,2))
 plotMeanGrid(mn)
 plotMeanGrid(ens90)
