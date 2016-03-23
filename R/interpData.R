@@ -145,7 +145,7 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
                 }  
                 on.exit(parallel::stopCluster(parallel.pars$cl))
             } else {
-                apply_fun <- lapply
+                apply_fun <- pblapply
             }
             interp.list <- apply_fun(1:dim(obj$Data)[time.ind], function(j) {
                   indices <- rep(list(bquote()), length(dim(obj$Data)))
@@ -156,6 +156,7 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
                         z <- t(z)
                   }
                   any_is_NA_or_NAN <- any(is.nan(z) | anyNA(z))
+                  if (any_is_NA_or_NAN) message("[", Sys.time(), "] Due to the presence of NAs/NANs the interpolation may be slower")
                         
                   if (any(attr(new.Coordinates,"type") == "location")) {
                         int <- array(data = NA, dim = length(new.Coordinates$x))
@@ -233,7 +234,7 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
                 }  
                 on.exit(parallel::stopCluster(parallel.pars$cl))
             } else {
-                apply_fun <- lapply
+                apply_fun <- pblapply
             }
             for (i in 1:n.members) {
                   message("[", Sys.time(), "] Interpolating member ", i, " out of ", n.members)
@@ -247,6 +248,7 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
                               z <- t(z)      
                         }
                         any_is_NA_or_NAN <- any(is.nan(z) | anyNA(z))
+                        if (any_is_NA_or_NAN) message("[", Sys.time(), "] Due to the presence of NAs/NANs the interpolation may be slower")
                         
                         if (any(attr(new.Coordinates,"type") == "location")) {
                               int <- array(data = NA, dim = length(new.Coordinates$x))

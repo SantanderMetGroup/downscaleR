@@ -11,7 +11,8 @@ Imports:
     scales,
     evd,
     parallel,
-    akima
+    akima,
+    pbapply
 Suggests:
     loadeR,
     loadeR.ECOMS
