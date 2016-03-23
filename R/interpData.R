@@ -41,8 +41,9 @@
 #' attributes(t$xyCoords)
 #' }
 
-interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method = c("nearest", "bilinear")) {
+interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method = c("nearest", "bilinear"), parallel, max.ncores, ncores) {
       method <- match.arg(method, choices = c("nearest", "bilinear"))
+      parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
       if (any(attr(obj$Data, "dimensions") == "station")) {
             x <- as.numeric(obj$xyCoords[,1])
             y <- as.numeric(obj$xyCoords[,2])
@@ -136,7 +137,17 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
       }
       if (is.null(n.members)) {
             message("[", Sys.time(), "] Performing ", method, " interpolation... may take a while")
-            interp.list <- lapply(1:dim(obj$Data)[time.ind], function(j) {
+            # To reduce the copy & paste code we use a kind of wrapper
+            # function for lapply 
+            if (parallel.pars$hasparallel) {
+                apply_fun    <- function(...) {
+                    parallel::parLapply(cl = parallel.pars$cl, ...)
+                }  
+                on.exit(parallel::stopCluster(parallel.pars$cl))
+            } else {
+                apply_fun <- lapply
+            }
+            interp.list <- apply_fun(1:dim(obj$Data)[time.ind], function(j) {
                   indices <- rep(list(bquote()), length(dim(obj$Data)))
                   indices[[time.ind]] <- j
                   ind.call <- as.call(c(list(as.symbol("["), quote(obj$Data)), indices))
@@ -144,13 +155,16 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
                   if (isTRUE(transpose)) {
                         z <- t(z)
                   }
-                  indNoNA <- which(!is.nan(z) | !is.na(z))
+                  any_is_NA_or_NAN <- any(is.nan(z) | anyNA(z))
+                        
                   if (any(attr(new.Coordinates,"type") == "location")) {
                         int <- array(data = NA, dim = length(new.Coordinates$x))
                   }else{
                         int <- matrix(data = NA, nrow = length(new.Coordinates$x), ncol = length(new.Coordinates$y))
                   }
-                  if (method == "bilinear" & length(indNoNA) != 0) {
+                  if (method == "bilinear" & any_is_NA_or_NAN) {
+                        # Due to the presence of NAs or NANs akima::interp must be used (slower)
+                        indNoNA <- which(!is.nan(z) | !is.na(z))
                         int <- interp(x = x[indNoNA], y = y[indNoNA], z[indNoNA], xo = new.Coordinates$x, yo = new.Coordinates$y,
                                       linear = TRUE, extrap = FALSE, duplicate = "error", dupfun = NULL, ncp = NULL,
                                       nx = length(new.Coordinates$x), ny = length(new.Coordinates$y))
@@ -160,7 +174,16 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
                               int <- int$z
                         }
                   }
-                  if (method == "nearest" & length(indNoNA) != 0) {
+                  if (method == "bilinear" & !any_is_NA_or_NAN) {
+                              # In absence of NAs/NANs we can use fields::interp.surface.grid that is drastically faster than akima::interp
+                              int <- fields::interp.surface.grid(list(x = obj$xyCoords$x, y = obj$xyCoords$y, z = z), grid.list = list(x =  new.Coordinates$x, y  = new.Coordinates$y))
+                              if (any(attr(new.Coordinates,"type") == "location")) {
+                                    int <- int[c(0:(length(new.Coordinates$y) - 1)) * length(new.Coordinates$y) + c(1:length(new.Coordinates$y))]
+                              } else {
+                                int = int$z    
+                              }
+                        }
+                  if (method == "nearest") {
                         if (any(attr(new.Coordinates,"type") == "location")) {
                               for (k in 1:length(new.Coordinates$x)) {
                                     if (!any(attr(obj$Data, "dimensions") == "station")) {
@@ -202,9 +225,19 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
       } else {
             message("[", Sys.time(), "] Performing multi-member ", method, " interpolation... may take a while")
             aux.list <- list()
+            # To reduce the copy & paste code we use a kind of wrapper
+            # function for lapply 
+            if (parallel.pars$hasparallel) {
+                apply_fun    <- function(...) {
+                    parallel::parLapply(cl = parallel.pars$cl, ...)
+                }  
+                on.exit(parallel::stopCluster(parallel.pars$cl))
+            } else {
+                apply_fun <- lapply
+            }
             for (i in 1:n.members) {
                   message("[", Sys.time(), "] Interpolating member ", i, " out of ", n.members)
-                  interp.list <- lapply(1:dim(obj$Data)[time.ind], function(j) {
+                  interp.list <- apply_fun(1:dim(obj$Data)[time.ind], function(j) {
                         indices <- rep(list(bquote()), length(dim(obj$Data)))
                         indices[[time.ind]] <- j
                         indices[[mem.ind]] <- i
@@ -213,21 +246,36 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
                         if (isTRUE(transpose)) {
                               z <- t(z)      
                         }
-                        indNoNA <- which(!is.nan(z) | !is.na(z))
+                        any_is_NA_or_NAN <- any(is.nan(z) | anyNA(z))
+                        
                         if (any(attr(new.Coordinates,"type") == "location")) {
                               int <- array(data = NA, dim = length(new.Coordinates$x))
                         }else{
                               int <- matrix(data = NA, nrow = length(new.Coordinates$x), ncol = length(new.Coordinates$y))
                         }
-                        if (method == "bilinear" & length(indNoNA) != 0) {
+                        if (method == "bilinear" & any_is_NA_or_NAN) {
+                            # Due to the presence of NAs or NANs akima::interp must be used (slower)
+                              indNoNA <- which(!is.nan(z) | !is.na(z))
                               int <- interp(x = x[indNoNA], y = y[indNoNA], z[indNoNA], xo = new.Coordinates$x, yo = new.Coordinates$y,
-                                            linear = TRUE, extrap = FALSE, duplicate = "error",
-                                            dupfun = NULL, ncp = NULL, nx = length(new.Coordinates$x), ny = length(new.Coordinates$y))
+                              linear = TRUE, extrap = FALSE, duplicate = "error",
+                              dupfun = NULL, ncp = NULL, nx = length(new.Coordinates$x), ny = length(new.Coordinates$y))
                               if (any(attr(new.Coordinates,"type") == "location")) {
                                     int <- int[c(0:(length(new.Coordinates$y) - 1)) * length(new.Coordinates$y) + c(1:length(new.Coordinates$y))]
+                              } else {
+                                int = int$z    
                               }
+                        } 
+                        if (method == "bilinear" & !any_is_NA_or_NAN) {
+                              # In absence of NAs/NANs we can use fields::interp.surface.grid that is drastically faster than akima::interp
+                              int <- fields::interp.surface.grid(list(x = obj$xyCoords$x, y = obj$xyCoords$y, z = z), grid.list = list(x =  new.Coordinates$x, y  = new.Coordinates$y))
+                              if (any(attr(new.Coordinates,"type") == "location")) {
+                                    int <- int[c(0:(length(new.Coordinates$y) - 1)) * length(new.Coordinates$y) + c(1:length(new.Coordinates$y))]
+                              } else {
+                                int = int$z    
+                              }
+                              
                         }
-                        if (method == "nearest" & length(indNoNA) != 0) {
+                        if (method == "nearest") {
                               if (any(attr(new.Coordinates,"type") == "location")) {
                                     int <- array(data = NA, dim = length(new.Coordinates$x))
                                     for (k in 1:length(new.Coordinates$x)) {
@@ -259,6 +307,7 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
                         z <- NULL
                         return(int)
                   })
+
                   if (any(attr(new.Coordinates,"type") == "location")) {
                         aux.list[[i]] <- unname(do.call("abind", c(interp.list, along = 2)))
                   } else {
