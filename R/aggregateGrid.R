@@ -18,17 +18,23 @@
 
 #' @title Grid aggregation along selected dimensions
 #' @description Aggregates a grid along the target dimensions through aggregation function specification.
-#' @param obj a grid or multigrid to be aggregated.
+#' @param grid a grid or multigrid to be aggregated.
 #' @param aggr.d Daily aggregation function (for sub-daily data only). A list indicating the name of the
 #'  aggregation function in first place, and other optional arguments to be passed to the aggregation function. See the examples.
 #' @param aggr.m Same as \code{aggr.d}, but indicating the monthly aggregation function. 
 #' @param aggr.y Same as \code{aggr.d}, but indicating the annual aggregation function. 
 #' @param aggr.mem Same as \code{aggr.d}, but indicating the function for computinh the member aggregation.
 #' @param aggr.lat Same as \code{aggr.d}, indicating the aggregation function to be applied along latitude.
-#' @para, agg.lon Same as \code{aggr.lat}, but for longitude.
+#' @param aggr.lon Same as \code{aggr.lat}, but for longitude.
 #' @template templateParallelParams
 #' @return A grid or multigrid aggregated along the chosen dimension(s).
 #' @details
+#' 
+#' \strong{Aggregation function definition}
+#' 
+#' The aggregation functions are specified in the form of a named list of the type \code{FUN = "function", ...}, where
+#' \code{...} are further arguments passes to FUN. This allows for a flexible definition of aggregation functions, that are 
+#' internally passes to \code{\link{tapply}}. Note that the name of the function is indicated as a character string.
 #' 
 #' \strong{Member aggregation}
 #' 
@@ -53,7 +59,8 @@
 #' # Ensemble mean
 #' mn <- aggregateGrid(grid = tasmax_forecast, aggr.mem = list("mean", na.rm = TRUE))
 #' # Ensemble 90th percentile
-#' ens90 <- aggregateGrid(grid = tasmax_forecast, aggr.mem = list("quantile", probs = 0.9, na.rm = TRUE))
+#' ens90 <- aggregateGrid(grid = tasmax_forecast,
+#'                        aggr.mem = list("quantile", probs = 0.9, na.rm = TRUE))
 #' par(mfrow = c(1,2))
 #' plotMeanGrid(mn)
 #' plotMeanGrid(ens90)
@@ -93,7 +100,8 @@ aggregateGrid <- function(grid,
       return(grid)
 }
 
-
+#' @title Member aggregation
+#' @description Aggregate a grid along its member dimension
 #' @param grid A multimember grid to apply the aggregation
 #' @param aggr.mem Character string indicatins the aggregation function
 #' @param parallel.pars Arguments defining the parallelization options, as passed by \code{\link{parallelCheck}}
@@ -138,7 +146,8 @@ memberAggregation <- function(grid, aggr.mem, parallel, max.ncores, ncores) {
 }
 
 
-
+#' @title Time aggregation
+#' @description Aggregate a grid along its time dimension
 #' @param grid A multimember grid to apply the aggregation
 #' @param aggr.type Character string indicating the type of temporal aggregation: 
 #' daily (\code{"DD"}), monthly (\code{"MM"}) or annual (\code{"YY"}).
