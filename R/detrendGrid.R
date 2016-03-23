@@ -1,3 +1,20 @@
+# detrendGrid.R Linear detrending of a grid
+#
+#     Copyright (C) 2016 Santander Meteorology Group (http://www.meteo.unican.es)
+#
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #' @title Linear detrending
 #' @description Perform a linear detrending along the time dimension of a grid
 #' @param grid Input grid (possibly multimember)
@@ -14,11 +31,12 @@
 #' @examples 
 #' data("iberia_ncep_ta850")
 #' monthly <- timeAggregation(iberia_ncep_ta850, aggr.m = "mean")
-#' plot(monthly$Data[,4,2], ty = 'l',ylim = c(-4,7))
+#' plot(monthly$Data[,4,2], ty = 'l')
 #' abline(reg = lm(monthly$Data[,4,2] ~ I(1:length(monthly$Data[,4,2]))))
-#' det <- detrendGrid(monthly)
+#' det <- detrendGrid(monthly, parallel = FALSE)
+#' # Detrended series in red
 #' lines(det$Data[,4,2], col = "red")
-#' abline(h = 0, lty = 2, col = "red")
+#' abline(reg = lm(det$Data[,4,2] ~ I(1:length(det$Data[,4,2]))), col = "red")
 
 detrendGrid <- function(grid, parallel = FALSE, max.ncores = 16, ncores = NULL) {
       arr <- grid$Data
@@ -35,21 +53,22 @@ detrendGrid <- function(grid, parallel = FALSE, max.ncores = 16, ncores = NULL) 
             unname(parallel::parApply(cl = parallel.pars$cl, arr, MARGIN = mar, FUN = function(y) {
                   out <- rep(NA, length(y))
                   ind <- intersect(which(!is.na(y)), which(!is.na(x)))
-                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x)))$resid,
+                  print(mean(y, na.rm = TRUE))
+                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x)))$resid + mean(y, na.rm = TRUE),
                                        error = function(err) {
                                              rep(NA,ntimes)
                                        })
-            })
+                  })
             )
       } else {
             unname(apply(arr, MARGIN = mar, FUN = function(y) {
                   out <- rep(NA, length(y))
                   ind <- intersect(which(!is.na(y)), which(!is.na(x)))
-                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x)))$resid,
+                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x)))$resid + mean(y, na.rm = TRUE),
                                        error = function(err) {
                                              rep(NA,ntimes)
                                        })
-            })
+                  })
             )
       }
       message("[", Sys.time(), "] - Done.")

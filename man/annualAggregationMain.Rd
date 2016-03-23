@@ -5,7 +5,7 @@
 \title{Time aggregation of the data in a grid}
 \usage{
 annualAggregationMain(data, FUN = c("mean", "min", "max", "sum"), id, y.coord,
-  x.coord, coords, obj)
+  x.coord, coords, obj, parallel.pars = parallel.pars)
 }
 \arguments{
 \item{data}{array (can be multimember).}
@@ -21,6 +21,8 @@ annualAggregationMain(data, FUN = c("mean", "min", "max", "sum"), id, y.coord,
 \item{coords}{coords}
 
 \item{obj}{obj}
+
+\item{parallel.pars}{Arguments defining the parallelization options, as passed by \code{\link{parallelCheck}}}
 }
 \value{
 array  with the time dimension aggregated.
@@ -29,6 +31,7 @@ array  with the time dimension aggregated.
 Aggregates data daily, monthly or annually by specifiyng an aggregation function
 }
 \author{
-M. Iturbide \email{maibide@gmail.com}
+M. Iturbide, M. de Felice, J. Bedia
 }
+\keyword{internal}
 

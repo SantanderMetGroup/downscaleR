@@ -1,20 +1,17 @@
 #' @title Parallel availability check
 #' @description Check availability of parallel package and set parameters
-#' 
 #' @param parallel Logical, should parallel execution be used?
 #' @param maxcores upper bound for self-selected number of cores
 #' @param ncores number of cores used in parallel computation, self-selected number of cores
 #'  is used when \code{is.null(ncpus)} (the default).
-#' 
 #' @details The function checks if package parallel is available. Then, it is checked whether the FORK nodes
 #' can be initialized
-#'  
 #' @return A list with two elements:
-#' (i) \code{hasparallel}, a logical flag indicating if parallelization is enabled and
-#' (ii) \code{cl}: parallel socket cluster object, or NULL.
-#' 
+#' \itemize{
+#' \item \code{hasparallel}, a logical flag indicating if parallelization is enabled and
+#' \item \code{cl}: parallel socket cluster object, or NULL.
+#' }
 #' @author J. Bedia, relying on previous code by Jonas Bhend and Matteo de Felice
-#'  
 #' @importFrom parallel detectCores
 #' @importFrom parallel makeCluster
 #' @keywords internal
