@@ -41,8 +41,9 @@
 #' attributes(t$xyCoords)
 #' }
 
-interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method = c("nearest", "bilinear")) {
+interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method = c("nearest", "bilinear"), parallel, max.ncores, ncores) {
       method <- match.arg(method, choices = c("nearest", "bilinear"))
+      parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
       if (any(attr(obj$Data, "dimensions") == "station")) {
             x <- as.numeric(obj$xyCoords[,1])
             y <- as.numeric(obj$xyCoords[,2])
@@ -136,7 +137,17 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
       }
       if (is.null(n.members)) {
             message("[", Sys.time(), "] Performing ", method, " interpolation... may take a while")
-            interp.list <- lapply(1:dim(obj$Data)[time.ind], function(j) {
+            # To reduce the copy & paste code we use a kind of wrapper
+            # function for lapply 
+            if (parallel.pars$hasparallel) {
+                apply_fun    <- function(...) {
+                    parallel::parLapply(cl = parallel.pars$cl, ...)
+                }  
+                on.exit(parallel::stopCluster(parallel.pars$cl))
+            } else {
+                apply_fun <- lapply
+            }
+            interp.list <- apply_fun(1:dim(obj$Data)[time.ind], function(j) {
                   indices <- rep(list(bquote()), length(dim(obj$Data)))
                   indices[[time.ind]] <- j
                   ind.call <- as.call(c(list(as.symbol("["), quote(obj$Data)), indices))
@@ -202,9 +213,19 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
       } else {
             message("[", Sys.time(), "] Performing multi-member ", method, " interpolation... may take a while")
             aux.list <- list()
+            # To reduce the copy & paste code we use a kind of wrapper
+            # function for lapply 
+            if (parallel.pars$hasparallel) {
+                apply_fun    <- function(...) {
+                    parallel::parLapply(cl = parallel.pars$cl, ...)
+                }  
+                on.exit(parallel::stopCluster(parallel.pars$cl))
+            } else {
+                apply_fun <- lapply
+            }
             for (i in 1:n.members) {
                   message("[", Sys.time(), "] Interpolating member ", i, " out of ", n.members)
-                  interp.list <- lapply(1:dim(obj$Data)[time.ind], function(j) {
+                  interp.list <- apply_fun(1:dim(obj$Data)[time.ind], function(j) {
                         indices <- rep(list(bquote()), length(dim(obj$Data)))
                         indices[[time.ind]] <- j
                         indices[[mem.ind]] <- i
@@ -226,6 +247,7 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
                               if (any(attr(new.Coordinates,"type") == "location")) {
                                     int <- int[c(0:(length(new.Coordinates$y) - 1)) * length(new.Coordinates$y) + c(1:length(new.Coordinates$y))]
                               }
+                              int = int$z
                         }
                         if (method == "nearest" & length(indNoNA) != 0) {
                               if (any(attr(new.Coordinates,"type") == "location")) {
@@ -259,6 +281,7 @@ interpData <- function(obj, new.Coordinates = list(x = NULL, y = NULL), method =
                         z <- NULL
                         return(int)
                   })
+
                   if (any(attr(new.Coordinates,"type") == "location")) {
                         aux.list[[i]] <- unname(do.call("abind", c(interp.list, along = 2)))
                   } else {
