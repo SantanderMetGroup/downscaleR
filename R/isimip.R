@@ -228,7 +228,7 @@ isimip <- function (obs, pred, sim, threshold = 1, type = c("additive", "multipl
                         indObs <- as.list(indTimeObs[j,])
                         indObs[[obs.time.index]]<-indMonth
                         indObs<-as.matrix(expand.grid(indObs))
-                        if (any(!is.na(obs$Data[indObs]))){
+                        if (!anyNA(obs$Data[indObs])){
                               indPrd <- rep(list(bquote()), length(dimPred))
                               indSim <- rep(list(bquote()), length(dimFor))
                               indPrd[match(attr(obs$Data, "dimensions"), attr(pred$Data, "dimensions"))] <- as.list(indTimeObs[j,])
@@ -245,7 +245,7 @@ isimip <- function (obs, pred, sim, threshold = 1, type = c("additive", "multipl
                                     indPrd1 <- as.list(indPrd[i,])
                                     indPrd1[[pred.time.index]]<-indMonth
                                     indPrd1<-as.matrix(expand.grid(indPrd1))
-                                    if (any(!is.na(pred$Data[indPrd1]))){
+                                    if (!anyNA(pred$Data[indPrd1])) {
                                           indSim1 <- as.list(indSim[i,])
                                           indSim1[[sim.time.index]]<-indMonthFor
                                           indSim1<-as.matrix(expand.grid(indSim1))

@@ -410,7 +410,7 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
             Pth<-matrix(data = NA, ncol=dim(pred)[3], nrow=dim(pred)[2])
             for (i in 1:dim(pred)[2]){
                   for (j in 1:dim(pred)[3]){
-                        if (any(!is.na(obs[,i,j]))){
+                        if (!anyNA(obs[,i,j])){
                               nP[i,j]<-sum(as.double(obs[,i,j]<=threshold & !is.na(obs[,i,j])), na.rm = TRUE)
                               if (nP[i,j]>=0 & nP[i,j]<dim(obs)[1]){
                                     ix<-sort(pred[,i,j], decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
@@ -489,7 +489,7 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
             if (!any(grepl(varcode,c("pr","tp","precipitation","precip")))){
                   for (i in 1:dim(sim)[2]) {
                         for (j in 1:dim(sim)[3]) {
-                              if (any(!is.na(pred[,i,j])) & any(!is.na(obs[,i,j]))) {
+                              if (!anyNA(pred[,i,j]) & !anyNA(obs[,i,j])) {
                                     ePrd <- ecdf(pred[,i,j])
                                     ################################################################################################3           
                                     if(extrapolate == "constant"){
@@ -519,7 +519,7 @@ calibrateProj <- function (obs, pred, sim, method = c("eqm", "delta", "scaling",
             } else {
                   for (i in 1:dim(sim)[2]) {
                         for (j in 1:dim(sim)[3]) {
-                              if (any(!is.na(pred[,i,j])) & any(!is.na(obs[,i,j]))){
+                              if (!anyNA(pred[,i,j]) & !anyNA(obs[,i,j])){
                                     if (length(which(pred[,i,j]>Pth[i,j]))>0){ 
                                           ##
                                           ePrd<-ecdf(pred[which(pred[,i,j]>Pth[i,j]),i,j]) 
