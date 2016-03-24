@@ -1,6 +1,6 @@
 # downscale.R Perfect-prog downscaling methods
 #
-#     Copyright (C) 2016 Santander Meteorology Group (http://www.meteo.unican.es)
+#     Copyright (C) 2015 Santander Meteorology Group (http://www.meteo.unican.es)
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -21,11 +21,12 @@
 #' 
 #' @template templateObsPredSim
 #' @param method Downscaling method
+#' @param simulate Logical. Default is TRUE.
 #' @param n.neigh Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.
 #' @param sel.fun Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n.neig = 1}.
 #' Current values are \code{"random"} (the default) and \code{"mean"}. See details.
 #' @param analog.dates Logical flag indicating whether the dates of the analogs should be returned. See the analogs section.
-#' @param pr.threshold Value below which precipitation amount is considered zero 
+#' @param wet.threshold Value below which precipitation amount is considered zero 
 #' @param n.pcs Integer indicating the number of EOFs to be used as predictors
 #' @param cross.val Should cross-validation be performed? methods available are leave-one-out ("loocv") and k-fold ("kfold"). The default 
 #' option ("none") does not perform cross-validation.
@@ -68,7 +69,7 @@
 #' @seealso \code{\link{prinComp}} for details on principal component/EOF analysis,
 #' \code{rescaleMonthlyMeans} for data pre-processing,
 #' \code{\link{makeMultiGrid}} for multigrid construction
-#' \code{loadGridData} and \code{loadStationData} for loading grids and station data respectively, from package \pkg{loadeR}.
+#' \code{\link{loadGridData}} and \code{\link{loadStationData}} for loading grids and station data respectively.
 #' @export 
 #' @family downscaling
 #' @author J Bedia and M Iturbide
@@ -77,10 +78,11 @@ downscale <- function(obs,
                       pred,
                       sim = NULL,
                       method = c("analogs", "glm"),
+                      simulate = TRUE,
                       n.neigh = 1,
                       sel.fun = c("random", "mean"),
                       analog.dates = FALSE,
-                      pr.threshold = .1,
+                      wet.threshold = .1,
                       n.pcs = NULL,
                       cross.val = c("none", "loocv", "kfold"),
                       folds = NULL,
@@ -106,8 +108,9 @@ downscale <- function(obs,
                                                parallel.pars = parallel.pars),
                            "glm" = glimpr(obs = obs,
                                           modelPars = modelPars,
-                                          pr.threshold = pr.threshold,
-                                          n.pcs = n.pcs)
+                                          wet.threshold = wet.threshold,
+                                          n.pcs = n.pcs,
+                                          simulate = simulate)
             )
       }else{
             if (!is.null(sim)) {
@@ -146,8 +149,9 @@ downscale <- function(obs,
                                     suppressMessages(
                                     glimpr(obs = obs,
                                     modelPars = modelPars,
-                                    pr.threshold = pr.threshold,
-                                    n.pcs = n.pcs)
+                                    wet.threshold = wet.threshold,
+                                    n.pcs = n.pcs,
+                                    simulate = simulate)
                                     )
                               }
                         })
@@ -187,7 +191,7 @@ downscale <- function(obs,
                                     suppressMessages(
                                           glimpr(obs = obs,
                                                 modelPars = modelPars,
-                                                pr.threshold = pr.threshold,
+                                                wet.threshold = wet.threshold,
                                                 n.pcs = n.pcs)
                                     )
                               }

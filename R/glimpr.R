@@ -1,14 +1,15 @@
 #' @title GLM downscaling
 #' @description Implementation of GLM's to downscale precipitation data
 #' @template templateObsPredSim
-#' @param pr.threshold Value below which precipitation amount is considered zero 
+#' @param simulate Logical. Default is TRUE.
+#' @param wet.threshold Value below which precipitation amount is considered zero 
 #' @param n.eofs Integer indicating the number of EOFs to be used as predictors 
 #' @family downscaling
 #' @author J Bedia, M Iturbide
 #' @importFrom abind abind
 #' @keywords internal
 
-glimpr <- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold, n.pcs = n.pcs) {
+glimpr <- function(obs = obs, modelPars = modelPars, simulate = TRUE, wet.threshold = wet.threshold, n.pcs = n.pcs) {
       #modelPars <- ppModelSetup(obs, pred, sim)
       if (is.null(n.pcs)) {
             n.pcs <-  dim(modelPars$pred.mat)[2]
@@ -27,8 +28,9 @@ glimpr <- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold
       }
       # binarize      
       ymat.bin <- ymat
-      ymat.bin[which(ymat < pr.threshold)] <- 0
-      ymat.bin[which(ymat > 0)] <- 1L
+      ymat.bin[which(ymat < wet.threshold)] <- 0
+      ymat.bin[which(ymat >= wet.threshold)] <- 1L
+      #obtaining climatological frequencies of occurrences for probability threshold calibration
       wet.prob <- apply(ymat.bin, 2, function(x) {sum(x, na.rm = TRUE) / length(na.exclude(x))})
       # Filter empty gridcell series
       rm.ind <- which(is.na(wet.prob))
@@ -45,19 +47,25 @@ glimpr <- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold
             
       suppressWarnings(
             for (x in 1:length(cases)){
-         
-            
-            mod.bin <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))
-            
+            mod.bin <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))           
             sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
                         pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
-                        pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]], na.rm = TRUE))] <- 1L
-                        pred <- as.integer(pred)
+                        if(simulate == TRUE){
+                              rnd <- runif(length(pred), min = 0, max = 1)
+                              ind01 <- which(pred > rnd)
+                              pred[ind01] <- 1
+                              pred[-ind01] <- 0
+                        }else{
+#                               pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]], na.rm = TRUE))] <- 1L
+                              pred[which(pred >= 0.5)] <- 1L
+                              pred <- as.integer(pred)
+                        }
+                        return(pred)
                   })
             
 
             mod.bin <- NULL
-            wet <- which(ymat[ ,cases[x]] >= pr.threshold)
+            wet <- which(ymat[ ,cases[x]] >= wet.threshold)
             # TODO: handle exception when model is over-specified (https://stat.ethz.ch/pipermail/r-help/2000-January/009833.html)
             
             Npcs <- n.pcs+1
@@ -92,10 +100,17 @@ glimpr <- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold
                   })
             }else{
                   sims <- sapply(1:length(modelPars$sim.mat), function(i) {
-                        unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") * sims.bin[ ,i])
+                        if(simulate == TRUE){
+                              predg <- unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response"))
+#                               predg[which(predg<=wet.threshold)] <- 0
+                              rgamma(n = length(predg), shape = 1/summary(mod.gamma)$dispersion, scale = summary(mod.gamma)$dispersion * predg) * sims.bin[,i] 
+                        }else{
+                               unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") ) * sims.bin[,i] 
+                        }
                   })
             }
-
+         
+      
       pred.list[[x]] <- unname(sims)
       sims <- NULL
 
@@ -109,8 +124,7 @@ glimpr <- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold
       warning("In ", n,"% of the locations: glm.fit convergence reached after variable number reduction.")
       }
       
-      
-      
+
 #       err <- lapply(1:length(pred.list), function(u){
 #             is.logical(pred.list[[u]])
 #       })
@@ -154,6 +168,7 @@ glimpr <- function(obs = obs, modelPars = modelPars, pr.threshold = pr.threshold
       #       obs$Dates <- modelPars$sim.dates 
       message("[", Sys.time(), "] Done.")
       #       return(obs)
-      return(o)
+ return(o)
+# return(sims.bin)
 }
 # End

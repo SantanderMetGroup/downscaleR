@@ -6,7 +6,7 @@
 #' \itemize{
 #' \item \code{stations} Logical indicating whether the predictand comes from station data
 #' \item \code{multi.member} Logical indicating whether the simulation data is multi-member or not
-# #' \item \code{obs} Same as input parameter of the same name
+#  \item \code{obs} Same as input parameter of the same name
 #' \item \code{pred.mat} 2D matrix of predictors. Predictors are arranged in columns and time in rows
 #' \item \code{sim.mat} A list of 2D matrices containing the prediction data. The list is of length \emph{n},
 #' being \emph{n} the number of members considered (n = 1 for deterministic/single member predictions).
@@ -25,7 +25,7 @@
 
 
 ppModelSetup <- function(obs, pred, sim) {
-      stations <- ifelse("station" %in% attr(obs$Data, "dimensions"), TRUE, FALSE)
+      stations <- ifelse ("station" %in% attr(obs$Data, "dimensions"), TRUE, FALSE)
       if ("scaled:method" %in% names(attributes(pred))) {
             use.PCs <- TRUE
             x.pred <- attr(pred, "xCoords")
@@ -150,7 +150,7 @@ ppModelSetup <- function(obs, pred, sim) {
                         } else {
                               which(sim$Variable$varName == pred$Variable$varName[x])
                         }
-                        print(x)
+                     
                         if (o != x) mes <- TRUE
                         attr(simsc.list.pre[[o]], "dimensions") <- dimNames.sim[-var.dim.index]
                         aux <- array3Dto2Dmat(simsc.list.pre[[x]])
@@ -182,7 +182,7 @@ ppModelSetup <- function(obs, pred, sim) {
       if (length(simsc.list) > 1) {
             if ("member" %in% attr(sim$Data, "dimensions")) {
                   multi.member <- TRUE
-                  if (!"var" %in% attr(sim$Data, "dimensions")) simsc.list <- list(simsc.list)
+                  if (! "var" %in% attr(sim$Data, "dimensions")) simsc.list <- list(simsc.list)
                   sim.mat <- rep(list(bquote()), n.mem)
                   for (i in 1:n.mem) { 
                         aux <- lapply(1:length(simsc.list), function(x) simsc.list[[x]][[i]])
@@ -197,6 +197,7 @@ ppModelSetup <- function(obs, pred, sim) {
       }
       simsc.list <- NULL
       sim.dataset <- attr(sim, "dataset")
+      sim.dates <- sim$Dates
       init.dates <- mems <- NULL
       if (multi.member) {
             init.dates <- sim$InitializationDates

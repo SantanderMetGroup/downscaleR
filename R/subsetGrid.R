@@ -5,6 +5,7 @@
 #' (possibly multimember grids) as returned e.g. by \code{loadeR.ECOMS::loadECOMS}.
 #' @param var Character vector indicating the variables(s) to be extracted. (Used for multigrid subsetting). See details.
 #' @param members An integer vector indicating \strong{the position} of the members to be subset.
+#' @param runtime An integer vector indicating \strong{the position} of the runtimes to be subset.
 #' @param years The years to be selected. Note that this can be either a continuous or discontinuous
 #' series of years, the latter option often used in a cross-validation framework.
 #'  See details for year-crossing seasons. Default to \code{NULL} (no subsetting is performed on the time dimension).
@@ -13,6 +14,7 @@
 #' @param lonLim Vector of length = 2, with minimum and maximum longitude coordinates, in decimal degrees,
 #'  of the bounding box defining the subset. For single-point subsets, a numeric value with the
 #'  longitude coordinate. If \code{NULL} (default), no subsetting is performed on the longitude dimension
+#' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @return A new grid object that is a logical subset of the input grid along the specified dimensions.
 #' @details
 #' 
@@ -76,22 +78,26 @@
 #' plotMeanGrid(sub2)
 
 
-subsetGrid <- function(grid, var = NULL, members = NULL, years = NULL, season = NULL, latLim = NULL, lonLim = NULL) {
+subsetGrid <- function(grid, var = NULL, runtime = NULL, members = NULL, years = NULL, season = NULL, latLim = NULL, lonLim = NULL, drop = TRUE) {
       if (!is.null(var)) {
-            grid <- subsetVar(grid, var)
+            grid <- subsetVar(grid, var, drop)
+      }
+      if (!is.null(runtime)) {
+            grid <- subsetRuntime(grid, runtime, drop)
       }
       if (!is.null(members)) {
-            grid <- subsetMembers(grid, members)
+            grid <- subsetMembers(grid, members, drop)
       }
       if (!is.null(years)) {
-            grid <- subsetYears(grid, years)
+            grid <- subsetYears(grid, years, drop)
       }
       if (!is.null(season)) {
-            grid <- subsetSeason(grid, season)
+            grid <- subsetSeason(grid, season, drop)
       }
       if (!is.null(lonLim) | !is.null(latLim)) {
-            grid <- subsetSpatial(grid, lonLim, latLim)
+            grid <- subsetSpatial(grid, lonLim, latLim, drop)
       }
+      
       return(grid)
 }
 # End
@@ -103,6 +109,7 @@ subsetGrid <- function(grid, var = NULL, members = NULL, years = NULL, season = 
 #'
 #' @param multiGrid Input multigrid to be subset 
 #' @param var Character vector indicating the variables(s) to be extracted
+#' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @return Either a (multimember)grid or (multimember)multigrid if one ore more variables
 #' are selected respectively.
 #' @details Argument \code{var} is insensitive to the order of the variables, i.e.: variables
@@ -116,7 +123,7 @@ subsetGrid <- function(grid, var = NULL, members = NULL, years = NULL, season = 
 #' @author J. Bedia 
 #' @family subsetting
 
-subsetVar <- function(multiGrid, var) {
+subsetVar <- function(multiGrid, var, drop = TRUE) {
       if (length(multiGrid$Variable$varName) == 1) {
             warning("Argument 'var' was ignored: Input grid is not a multigrid object")
             return(multiGrid)
@@ -130,7 +137,7 @@ subsetVar <- function(multiGrid, var) {
       }
       var.dim <- grep("var", attr(multiGrid$Data, "dimensions"))
       dimNames <- attr(multiGrid$Data, "dimensions")
-      multiGrid$Data <- asub(multiGrid$Data, idx = var.idx, dims = var.dim, drop = TRUE)                  
+      multiGrid$Data <- asub(multiGrid$Data, idx = var.idx, dims = var.dim, drop = drop)                  
       mf <- FALSE
       attr(multiGrid$Data, "dimensions") <- if (length(dim(multiGrid$Data)) == length(dimNames)) {
             mf <- TRUE
@@ -159,6 +166,7 @@ subsetVar <- function(multiGrid, var) {
 #'
 #' @param mmGrid Input multimember grid to be subset (possibly a multimember multigrid).
 #' @param members An integer vector indicating \strong{the position} of the members to be subset.
+#' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @return A grid (or multigrid) that is a logical subset of the input grid along its 'member' dimension.
 #' @details An attribute 'subset' with value 'subsetMembers' is added to the Members slot of the output subset.
 #' @importFrom abind asub
@@ -167,7 +175,7 @@ subsetVar <- function(multiGrid, var) {
 #' @author J. Bedia 
 #' @family subsetting
 
-subsetMembers <- function(mmGrid, members = NULL) {
+subsetMembers <- function(mmGrid, members = NULL, drop = TRUE) {
       dimNames <- attr(mmGrid$Data, "dimensions")
       if (length(grep("member", dimNames)) == 0) {
             warning("Argument 'members' was ignored: Input grid is not a multimember grid object")
@@ -177,7 +185,7 @@ subsetMembers <- function(mmGrid, members = NULL) {
       if (!all(members %in% (1:dim(mmGrid$Data)[mem.dim]))) {
             stop("'members' dimension subscript out of bounds")
       }
-      mmGrid$Data <- asub(mmGrid$Data, idx = members, dims = mem.dim, drop = TRUE)                  
+      mmGrid$Data <- asub(mmGrid$Data, idx = members, dims = mem.dim, drop = drop)                  
       mf <- FALSE
       attr(mmGrid$Data, "dimensions") <- if (length(dim(mmGrid$Data)) == length(dimNames)) {
             mf <- TRUE
@@ -194,6 +202,51 @@ subsetMembers <- function(mmGrid, members = NULL) {
 }
 # End
 
+#' Runtime subsets from a grid
+#' 
+#' Retrieves a grid that is a logical subset of a multiruntime grid along its 'runtime' dimension.
+#'  Multiruntime multigrids are supported. Subroutine of \code{\link{subsetGrid}}.
+#'
+#' @param mmGrid Input multiruntime grid to be subset.
+#' @param runtime An integer vector indicating \strong{the position} of the runtimes to be subset.
+#' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
+#' @return A grid (or multigrid) that is a logical subset of the input grid along its 'runtime' dimension.
+#' @details An attribute 'subset' with value 'subsetRuntime' is added to the Runtime slot of the output subset.
+#' @importFrom abind asub
+#' @keywords internal
+#' @export
+#' @author M. Iturbide
+#' @family subsetting
+
+subsetRuntime <- function(mmGrid, runtime = NULL, drop = TRUE) {
+      dimNames <- attr(mmGrid$Data, "dimensions")
+      if (length(grep("runtime", dimNames)) == 0) {
+            warning("Argument 'runtime' was ignored: Input grid is not a multiruntime grid object")
+            return(mmGrid)
+      }      
+      run.dim <- grep("runtime", attr(mmGrid$Data, "dimensions"))
+      if (!all(runtime %in% (1:dim(mmGrid$Data)[run.dim]))) {
+            stop("'runtime' dimension subscript out of bounds")
+      }
+      mmGrid$Data <- asub(mmGrid$Data, idx = runtime, dims = run.dim, drop = drop)                  
+      mf <- FALSE
+      attr(mmGrid$Data, "dimensions") <- if (length(dim(mmGrid$Data)) == length(dimNames)) {
+            mf <- TRUE
+            dimNames
+      } else {
+            dimNames[-run.dim]
+      }
+      mmGrid$Runtime <- mmGrid$Members[runtime]
+      if (is.list(mmGrid$InitializationDates)) { # e.g. CFSv2 (members defined through lagged runtimes)
+            mmGrid$InitializationDates <- mmGrid$InitializationDates[runtime]
+      } 
+      attr(mmGrid$Runtime, "subset") <- "subsetRuntime"
+      return(mmGrid)
+}
+# End
+
+
+
 
 #' Year subsets from a multimember grid
 #' 
@@ -202,6 +255,7 @@ subsetMembers <- function(mmGrid, members = NULL) {
 #'
 #' @param grid Input grid to be subset (possibly a multimember/multigrid).
 #' @param years An integer vector indicating the years to be subset.
+#' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @details An attribute 'subset' with value 'subsetYears' is added to the Dates slot of the output subset.
 #' @return A grid (or multigrid) that is a logical subset of the input grid along its 'time' dimension.
 #' @importFrom abind asub
@@ -210,7 +264,7 @@ subsetMembers <- function(mmGrid, members = NULL) {
 #' @author J. Bedia 
 #' @family subsetting
 
-subsetYears <- function(grid, years = NULL) {
+subsetYears <- function(grid, years = NULL, drop = TRUE) {
       dimNames <- attr(grid$Data, "dimensions")
       all.years <- getYearsAsINDEX(grid)
       aux.year.ind <- match(years, unique(all.years))
@@ -221,7 +275,7 @@ subsetYears <- function(grid, years = NULL) {
             stop("Some subset time boundaries outside the current grid extent")
       }
       time.ind <- which(all.years %in% years)
-      grid$Data <- asub(grid$Data, time.ind, grep("time", dimNames))
+      grid$Data <- asub(grid$Data, time.ind, grep("time", dimNames), drop = drop)
       attr(grid$Data, "dimensions") <- dimNames
       # Verification Date adjustment
       grid$Dates <- if (any(grepl("var", dimNames))) {
@@ -254,6 +308,7 @@ subsetYears <- function(grid, years = NULL) {
 #'  of the bounding box defining the subset. For single-point subsets, a numeric value with the
 #'  longitude coordinate. If \code{NULL} (default), no subsetting is performed on the longitude dimension
 #' @param latLim Same as \code{lonLim} argument, but for latitude.
+#' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @details An attribute 'subset' with value 'subsetSpatial' is added to the xyCoords slot of the output subset.
 #' @return A grid (or multigrid) that is a logical spatial subset of the input grid.
 #' @importFrom abind asub
@@ -262,7 +317,7 @@ subsetYears <- function(grid, years = NULL) {
 #' @author J. Bedia 
 #' @family subsetting
 #' 
-subsetSpatial <- function(grid, lonLim = NULL, latLim = NULL) {
+subsetSpatial <- function(grid, lonLim = NULL, latLim = NULL, drop = TRUE) {
       dimNames <- attr(grid$Data, "dimensions")
       if (!is.null(lonLim)) {
             if (!is.vector(lonLim) | length(lonLim) > 2) {
@@ -284,7 +339,7 @@ subsetSpatial <- function(grid, lonLim = NULL, latLim = NULL) {
                   grid$Data <- asub(grid$Data, lon.ind, grep("lon", dimNames))
                   attr(grid$Data, "dimensions") <- dimNames
             } else {
-                  grid$Data <- asub(grid$Data, lon.ind, grep("lon", dimNames), drop = TRUE)
+                  grid$Data <- asub(grid$Data, lon.ind, grep("lon", dimNames), drop = drop)
                   attr(grid$Data, "dimensions") <- dimNames[grep("lon", dimNames, invert = TRUE)]
                   dimNames <- attr(grid$Data, "dimensions")
             }
@@ -310,7 +365,7 @@ subsetSpatial <- function(grid, lonLim = NULL, latLim = NULL) {
                   grid$Data <- asub(grid$Data, lat.ind, grep("lat", dimNames))
                   attr(grid$Data, "dimensions") <- dimNames
             } else {
-                  grid$Data <- asub(grid$Data, lat.ind, grep("lat", dimNames), drop = TRUE)
+                  grid$Data <- asub(grid$Data, lat.ind, grep("lat", dimNames), drop = drop)
                   attr(grid$Data, "dimensions") <- dimNames[grep("lat", dimNames, invert = TRUE)]
                   dimNames <- attr(grid$Data, "dimensions")
             }
@@ -329,6 +384,7 @@ subsetSpatial <- function(grid, lonLim = NULL, latLim = NULL) {
 #'
 #' @param grid Input grid to be subset (possibly a multimember/multigrid).
 #' @param season An integer vector indicating the months to be subset.
+#' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @details An attribute 'subset' with value 'subsetSeason' is added to the Dates slot of the output subset.
 #' @return A grid (or multigrid) that is a logical subset of the input grid along its 'time' dimension.
 #' @importFrom abind asub
@@ -337,7 +393,7 @@ subsetSpatial <- function(grid, lonLim = NULL, latLim = NULL) {
 #' @author J. Bedia 
 #' @family subsetting
 
-subsetSeason <- function(grid, season = NULL) {
+subsetSeason <- function(grid, season = NULL, drop = TRUE) {
       dimNames <- attr(grid$Data, "dimensions")
       season0 <- getSeason(grid)
       if (!all(season %in% season0)) stop("Month selection outside original season values")      
@@ -347,7 +403,7 @@ subsetSeason <- function(grid, season = NULL) {
             as.POSIXlt(grid$Dates$start)$mon + 1
       }
       time.ind <- which(mon %in% season)
-      grid$Data <- asub(grid$Data, time.ind, grep("time", dimNames))
+      grid$Data <- asub(grid$Data, time.ind, grep("time", dimNames), drop = drop)
       attr(grid$Data, "dimensions") <- dimNames
       # Verification Date adjustment
       grid$Dates <- if (any(grepl("var", dimNames))) {
@@ -371,6 +427,7 @@ subsetSeason <- function(grid, season = NULL) {
 #' (possibly multimember multigrids) as returned e.g. by \code{loadECOMS}, from package \pkg{loadeR.ECOMS}.
 #' @param dimension Character vector indicating the dimension along which the positions indicated by the \code{indices} paraneter.
 #' @param indices An integer vector indicating \strong{the positions} of the dimension to be extracted.
+#' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @return A new grid object that is a logical subset of the input grid along the specified dimension.
 #' @details
 #' The attribute \code{subset} will be added taking the value of the \code{dimension} parameter.
@@ -388,10 +445,10 @@ subsetSeason <- function(grid, season = NULL) {
 #'                    indices = c(1,3))
 #' plotMeanGrid(sub, multi.member = TRUE)
 
-subsetDimension <- function(grid, dimension = NULL, indices = NULL) {
+subsetDimension <- function(grid, dimension = NULL, indices = NULL, drop = TRUE) {
       dimNames <- attr(grid$Data, "dimensions")
       if (!is.null(indices)) {
-            grid$Data <- asub(grid$Data, indices, grep(dimension, dimNames))
+            grid$Data <- asub(grid$Data, indices, grep(dimension, dimNames), drop = drop)
             attr(grid$Data, "dimensions") <- dimNames
             if ("time" %in% dimension) {
                   grid$Dates$start <- grid$Dates$start[indices]
