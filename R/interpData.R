@@ -5,7 +5,7 @@
 #' @importFrom fields interp.surface.grid
 #' @param obj A data object coming from \code{loadGridData}, \code{loadStationData} of package \pkg{loadeR}, or the \pkg{loadeR.ECOMS} 
 #' package function \code{loadECOMS}.
-#' @param new.Coordinates Definition of the new coordinates (grid or locations), in the form of a list with the x and y components, in thir order.
+#' @param new.coordinates Definition of the new coordinates (grid or locations), in the form of a list with the x and y components, in thir order.
 #' Each component consists of a vector of length three with components \emph{from}, \emph{to} and \emph{by},
 #'  in this order, similar as the arguments passed to the \code{\link[base]{seq}} function, giving the 
 #'  westernmost, easternmost and grid cell width in the X axis and, in the same way,
@@ -35,7 +35,7 @@
 #' plotMeanGrid(iberia_ncep_ta850)
 #' # Bilinear interpolation to domain centered in Spain using a 0.5 degree resolution 
 #' # in both X and Y axes
-#' t <- interpData(iberia_ncep_ta850, new.Coordinates = list(x = c(-10,5,.5),
+#' t <- interpData(iberia_ncep_ta850, new.coordinates = list(x = c(-10,5,.5),
 #'                                                           y = c(36,44,.5)),
 #'                                    method = "bilinear")
 #' plotMeanGrid(t)
@@ -45,7 +45,7 @@
 #' }
 
 interpData <- function(obj,
-                       new.Coordinates = list(x = NULL, y = NULL),
+                       new.coordinates = list(x = NULL, y = NULL),
                        method = c("nearest", "bilinear"),
                        parallel = FALSE,
                        max.ncores = 16,
@@ -71,61 +71,61 @@ interpData <- function(obj,
                               y = outer(obj$xyCoords$y,obj$xyCoords$x*0,FUN = "+"))$y)
             }
       }
-      if (is.null(new.Coordinates)) {
-            new.Coordinates <- getGrid(obj)
+      if (is.null(new.coordinates)) {
+            new.coordinates <- getGrid(obj)
       } else {
-            if (is.null(new.Coordinates$x)) {
-                  new.Coordinates$x <- x
-            } else if (exists("resX", where = attributes(new.Coordinates))) {
-                  if (length(new.Coordinates$x) != 2 | new.Coordinates$x[2] < new.Coordinates$x[1]) {
+            if (is.null(new.coordinates$x)) {
+                  new.coordinates$x <- x
+            } else if (exists("resX", where = attributes(new.coordinates))) {
+                  if (length(new.coordinates$x) != 2 | new.coordinates$x[2] < new.coordinates$x[1]) {
                         stop("Invalid grid definition in X")
                   }
-                  if ((max(c(new.Coordinates$x[1],new.Coordinates$x[2])) < min(x)) | (min(c(new.Coordinates$x[1],new.Coordinates$x[2])) > max(x))) {
+                  if ((max(c(new.coordinates$x[1],new.coordinates$x[2])) < min(x)) | (min(c(new.coordinates$x[1],new.coordinates$x[2])) > max(x))) {
                         stop("The input and output grids do not overlap\nCheck the input and output grid definitions")
                   }
-                  if (new.Coordinates$x[1] < floor(min(x)) | new.Coordinates$x[2] > ceiling(max(x))) {
+                  if (new.coordinates$x[1] < floor(min(x)) | new.coordinates$x[2] > ceiling(max(x))) {
                         warning("The new longitudes are outside the data extent")
                   }
-                  new.Coordinates$x <- do.call("seq", as.list(c(new.Coordinates$x, attr(new.Coordinates, 'resX'))))
-            } else if (length(new.Coordinates$x) == 3) {
-                  if (new.Coordinates$x[2] < new.Coordinates$x[1]) {
+                  new.coordinates$x <- do.call("seq", as.list(c(new.coordinates$x, attr(new.coordinates, 'resX'))))
+            } else if (length(new.coordinates$x) == 3) {
+                  if (new.coordinates$x[2] < new.coordinates$x[1]) {
                         stop("Invalid grid definition in X")
                   }
-                  if ((max(c(new.Coordinates$x[1],new.Coordinates$x[2])) < min(x)) | (min(c(new.Coordinates$x[1],new.Coordinates$x[2])) > max(x))) {
+                  if ((max(c(new.coordinates$x[1],new.coordinates$x[2])) < min(x)) | (min(c(new.coordinates$x[1],new.coordinates$x[2])) > max(x))) {
                         stop("The input and output grids do not overlap\nCheck the input and output grid definitions")
                   }
-                  if (new.Coordinates$x[1] < floor(min(x)) | new.Coordinates$x[2] > ceiling(max(x))) {
+                  if (new.coordinates$x[1] < floor(min(x)) | new.coordinates$x[2] > ceiling(max(x))) {
                         warning("The new longitudes are outside the data extent")
                   }
-                  if ((new.Coordinates$x[2] > new.Coordinates$x[1]) & (abs(new.Coordinates$x[3]) < abs(new.Coordinates$x[2] - new.Coordinates$x[1]))) {
-                        new.Coordinates$x <- seq(from = new.Coordinates$x[1], to = new.Coordinates$x[2], by = new.Coordinates$x[3])
+                  if ((new.coordinates$x[2] > new.coordinates$x[1]) & (abs(new.coordinates$x[3]) < abs(new.coordinates$x[2] - new.coordinates$x[1]))) {
+                        new.coordinates$x <- seq(from = new.coordinates$x[1], to = new.coordinates$x[2], by = new.coordinates$x[3])
                   }
             }
-            if (is.null(new.Coordinates$y)) {
-                  new.Coordinates$y <- y
-            } else if (exists("resY", where = attributes(new.Coordinates))) {
-                  if (length(new.Coordinates$y) != 2 | new.Coordinates$y[2] < new.Coordinates$y[1]) {
+            if (is.null(new.coordinates$y)) {
+                  new.coordinates$y <- y
+            } else if (exists("resY", where = attributes(new.coordinates))) {
+                  if (length(new.coordinates$y) != 2 | new.coordinates$y[2] < new.coordinates$y[1]) {
                         stop("Invalid grid definition in Y")
                   }
-                  if ((max(c(new.Coordinates$y[1],new.Coordinates$y[2])) < min(y)) | (min(c(new.Coordinates$y[1],new.Coordinates$y[2])) > max(y))) {
+                  if ((max(c(new.coordinates$y[1],new.coordinates$y[2])) < min(y)) | (min(c(new.coordinates$y[1],new.coordinates$y[2])) > max(y))) {
                         stop("The input and output grids do not overlap\nCheck the input and output grid definitions")
                   }
-                  if (new.Coordinates$y[1] < floor(min(y)) | new.Coordinates$y[2] > ceiling(max(y))) {
+                  if (new.coordinates$y[1] < floor(min(y)) | new.coordinates$y[2] > ceiling(max(y))) {
                         warning("The new latitudes are outside the data extent")
                   }
-                  new.Coordinates$y <- do.call("seq", as.list(c(new.Coordinates$y, attr(new.Coordinates, 'resY'))))
-            } else if (length(new.Coordinates$y) == 3) {
-                  if (new.Coordinates$y[2] < new.Coordinates$y[1]) {
+                  new.coordinates$y <- do.call("seq", as.list(c(new.coordinates$y, attr(new.coordinates, 'resY'))))
+            } else if (length(new.coordinates$y) == 3) {
+                  if (new.coordinates$y[2] < new.coordinates$y[1]) {
                         stop("Invalid grid definition in Y")
                   }
-                  if ((max(c(new.Coordinates$y[1],new.Coordinates$y[2])) < min(y)) | (min(c(new.Coordinates$y[1],new.Coordinates$y[2])) > max(y))) {
+                  if ((max(c(new.coordinates$y[1],new.coordinates$y[2])) < min(y)) | (min(c(new.coordinates$y[1],new.coordinates$y[2])) > max(y))) {
                         stop("The input and output grids do not overlap\nCheck the input and output grid definitions")
                   }
-                  if (new.Coordinates$y[1] < floor(min(y)) | new.Coordinates$y[2] > ceiling(max(y))) {
+                  if (new.coordinates$y[1] < floor(min(y)) | new.coordinates$y[2] > ceiling(max(y))) {
                         warning("The new latitudes are outside the data extent")
                   }
-                  if ((new.Coordinates$y[2] > new.Coordinates$y[1]) & (abs(new.Coordinates$y[3]) < abs(new.Coordinates$y[2] - new.Coordinates$y[1]))) {
-                        new.Coordinates$y <- seq(from = new.Coordinates$y[1], to = new.Coordinates$y[2], by = new.Coordinates$y[3])
+                  if ((new.coordinates$y[2] > new.coordinates$y[1]) & (abs(new.coordinates$y[3]) < abs(new.coordinates$y[2] - new.coordinates$y[1]))) {
+                        new.coordinates$y <- seq(from = new.coordinates$y[1], to = new.coordinates$y[2], by = new.coordinates$y[3])
                   }
             }
       }
@@ -165,54 +165,54 @@ interpData <- function(obj,
                   }
                   any_is_NA_or_NAN <- any(is.nan(z) | anyNA(z))
                   if (any_is_NA_or_NAN) message("NOTE: The presence of NAs/NANs may slow down interpolation")
-                  if (any(attr(new.Coordinates,"type") == "location")) {
-                        int <- array(data = NA, dim = length(new.Coordinates$x))
+                  if (any(attr(new.coordinates,"type") == "location")) {
+                        int <- array(data = NA, dim = length(new.coordinates$x))
                   } else {
-                        int <- matrix(data = NA, nrow = length(new.Coordinates$x), ncol = length(new.Coordinates$y))
+                        int <- matrix(data = NA, nrow = length(new.coordinates$x), ncol = length(new.coordinates$y))
                   }
                   if (method == "bilinear" & any_is_NA_or_NAN) {
                         # Due to the presence of NAs or NANs akima::interp must be used (slower)
                         indNoNA <- which(!is.nan(z) | !is.na(z))
-                        int <- interp(x = x[indNoNA], y = y[indNoNA], z[indNoNA], xo = new.Coordinates$x, yo = new.Coordinates$y,
+                        int <- interp(x = x[indNoNA], y = y[indNoNA], z[indNoNA], xo = new.coordinates$x, yo = new.coordinates$y,
                                       linear = TRUE, extrap = FALSE, duplicate = "error", dupfun = NULL, ncp = NULL,
-                                      nx = length(new.Coordinates$x), ny = length(new.Coordinates$y))
-                        if (any(attr(new.Coordinates,"type") == "location")) {
-                              int <- int$z[c(0:(length(new.Coordinates$y) - 1)) * length(new.Coordinates$y) + c(1:length(new.Coordinates$y))]
+                                      nx = length(new.coordinates$x), ny = length(new.coordinates$y))
+                        if (any(attr(new.coordinates,"type") == "location")) {
+                              int <- int$z[c(0:(length(new.coordinates$y) - 1)) * length(new.coordinates$y) + c(1:length(new.coordinates$y))]
                         } else {
                               int <- int$z
                         }
                   }
                   if (method == "bilinear" & !any_is_NA_or_NAN) {
                         # In absence of NAs/NANs we can use fields::interp.surface.grid that is drastically faster than akima::interp
-                        int <- fields::interp.surface.grid(list(x = obj$xyCoords$x, y = obj$xyCoords$y, z = z), grid.list = list(x =  new.Coordinates$x, y  = new.Coordinates$y))
-                        if (any(attr(new.Coordinates,"type") == "location")) {
-                              int <- int[c(0:(length(new.Coordinates$y) - 1)) * length(new.Coordinates$y) + c(1:length(new.Coordinates$y))]
+                        int <- fields::interp.surface.grid(list(x = obj$xyCoords$x, y = obj$xyCoords$y, z = z), grid.list = list(x =  new.coordinates$x, y  = new.coordinates$y))
+                        if (any(attr(new.coordinates,"type") == "location")) {
+                              int <- int[c(0:(length(new.coordinates$y) - 1)) * length(new.coordinates$y) + c(1:length(new.coordinates$y))]
                         } else {
                               int = int$z    
                         }
                   }
                   if (method == "nearest") {
-                        if (any(attr(new.Coordinates,"type") == "location")) {
-                              for (k in 1:length(new.Coordinates$x)) {
+                        if (any(attr(new.coordinates,"type") == "location")) {
+                              for (k in 1:length(new.coordinates$x)) {
                                     if (!any(attr(obj$Data, "dimensions") == "station")) {
-                                          ind.x <- arrayInd(which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[k]) ^ 2)), dim(x))[1]
-                                          ind.y <- arrayInd(which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[k]) ^ 2)), dim(x))[2]
+                                          ind.x <- arrayInd(which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[k]) ^ 2)), dim(x))[1]
+                                          ind.y <- arrayInd(which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[k]) ^ 2)), dim(x))[2]
                                           int[k] <- z[ind.x, ind.y]
                                     } else {
-                                          ind.x <- which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[k]) ^ 2))
+                                          ind.x <- which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[k]) ^ 2))
                                           int[k] <- z[ind.x]
                                     }
                               }
                         } else {
-                              int <- matrix(nrow = length(new.Coordinates$x), ncol = length(new.Coordinates$y))
-                              for (k in 1:length(new.Coordinates$x)) {
-                                    for (l in 1:length(new.Coordinates$y)) {
+                              int <- matrix(nrow = length(new.coordinates$x), ncol = length(new.coordinates$y))
+                              for (k in 1:length(new.coordinates$x)) {
+                                    for (l in 1:length(new.coordinates$y)) {
                                           if (!any(attr(obj$Data, "dimensions") == "station")) {
-                                                ind.x <- arrayInd(which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[l]) ^ 2)), dim(x))[1]
-                                                ind.y <- arrayInd(which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[l]) ^ 2)), dim(x))[2]
+                                                ind.x <- arrayInd(which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[l]) ^ 2)), dim(x))[1]
+                                                ind.y <- arrayInd(which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[l]) ^ 2)), dim(x))[2]
                                                 int[k,l] <- z[ind.x, ind.y]
                                           } else {
-                                                ind.x <- which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[l]) ^ 2))
+                                                ind.x <- which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[l]) ^ 2))
                                                 int[k,l] <- z[ind.x]
                                           }
                                     }
@@ -222,7 +222,7 @@ interpData <- function(obj,
                   z <- NULL
                   return(int)
             })
-            if (any(attr(new.Coordinates,"type") == "location")) {
+            if (any(attr(new.coordinates,"type") == "location")) {
                   obj$Data <- t(unname(do.call("abind", c(interp.list, along = 2))))
                   attr(obj$Data, "dimensions") <- c("time", "station")        
             } else {
@@ -256,56 +256,56 @@ interpData <- function(obj,
                         }
                         any_is_NA_or_NAN <- any(is.nan(z) | anyNA(z))
                         if (any_is_NA_or_NAN) message("NOTE: The presence of NAs/NANs may slow down interpolation")
-                        if (any(attr(new.Coordinates,"type") == "location")) {
-                              int <- array(data = NA, dim = length(new.Coordinates$x))
+                        if (any(attr(new.coordinates,"type") == "location")) {
+                              int <- array(data = NA, dim = length(new.coordinates$x))
                         } else {
-                              int <- matrix(data = NA, nrow = length(new.Coordinates$x), ncol = length(new.Coordinates$y))
+                              int <- matrix(data = NA, nrow = length(new.coordinates$x), ncol = length(new.coordinates$y))
                         }
                         if (method == "bilinear" & any_is_NA_or_NAN) {
                               # Due to the presence of NAs or NANs akima::interp must be used (slower)
                               indNoNA <- which(!is.nan(z) | !is.na(z))
-                              int <- interp(x = x[indNoNA], y = y[indNoNA], z[indNoNA], xo = new.Coordinates$x, yo = new.Coordinates$y,
+                              int <- interp(x = x[indNoNA], y = y[indNoNA], z[indNoNA], xo = new.coordinates$x, yo = new.coordinates$y,
                                             linear = TRUE, extrap = FALSE, duplicate = "error",
-                                            dupfun = NULL, ncp = NULL, nx = length(new.Coordinates$x), ny = length(new.Coordinates$y))
-                              if (any(attr(new.Coordinates,"type") == "location")) {
-                                    int <- int[c(0:(length(new.Coordinates$y) - 1)) * length(new.Coordinates$y) + c(1:length(new.Coordinates$y))]
+                                            dupfun = NULL, ncp = NULL, nx = length(new.coordinates$x), ny = length(new.coordinates$y))
+                              if (any(attr(new.coordinates,"type") == "location")) {
+                                    int <- int[c(0:(length(new.coordinates$y) - 1)) * length(new.coordinates$y) + c(1:length(new.coordinates$y))]
                               } else {
                                     int = int$z    
                               }
                         } 
                         if (method == "bilinear" & !any_is_NA_or_NAN) {
                               # In absence of NAs/NANs we can use fields::interp.surface.grid that is drastically faster than akima::interp
-                              int <- fields::interp.surface.grid(list(x = obj$xyCoords$x, y = obj$xyCoords$y, z = z), grid.list = list(x =  new.Coordinates$x, y  = new.Coordinates$y))
-                              if (any(attr(new.Coordinates,"type") == "location")) {
-                                    int <- int[c(0:(length(new.Coordinates$y) - 1)) * length(new.Coordinates$y) + c(1:length(new.Coordinates$y))]
+                              int <- fields::interp.surface.grid(list(x = obj$xyCoords$x, y = obj$xyCoords$y, z = z), grid.list = list(x =  new.coordinates$x, y  = new.coordinates$y))
+                              if (any(attr(new.coordinates,"type") == "location")) {
+                                    int <- int[c(0:(length(new.coordinates$y) - 1)) * length(new.coordinates$y) + c(1:length(new.coordinates$y))]
                               } else {
                                     int = int$z    
                               }
                               
                         }
                         if (method == "nearest") {
-                              if (any(attr(new.Coordinates,"type") == "location")) {
-                                    int <- array(data = NA, dim = length(new.Coordinates$x))
-                                    for (k in 1:length(new.Coordinates$x)) {
+                              if (any(attr(new.coordinates,"type") == "location")) {
+                                    int <- array(data = NA, dim = length(new.coordinates$x))
+                                    for (k in 1:length(new.coordinates$x)) {
                                           if (!any(attr(obj$Data, "dimensions") == "station")) {
-                                                ind.x <- arrayInd(which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[k]) ^ 2)), dim(x))[1]
-                                                ind.y <- arrayInd(which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[k]) ^ 2)), dim(x))[2]
+                                                ind.x <- arrayInd(which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[k]) ^ 2)), dim(x))[1]
+                                                ind.y <- arrayInd(which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[k]) ^ 2)), dim(x))[2]
                                                 int[k] <- z[ind.x, ind.y]
                                           } else {
-                                                ind.x <- which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[k]) ^ 2))
+                                                ind.x <- which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[k]) ^ 2))
                                                 int[k] <- z[ind.x]
                                           }
                                     }
                               } else {
-                                    int <- matrix(nrow = length(new.Coordinates$x), ncol = length(new.Coordinates$y))
-                                    for (k in 1:length(new.Coordinates$x)) {
-                                          for (l in 1:length(new.Coordinates$y)) {
+                                    int <- matrix(nrow = length(new.coordinates$x), ncol = length(new.coordinates$y))
+                                    for (k in 1:length(new.coordinates$x)) {
+                                          for (l in 1:length(new.coordinates$y)) {
                                                 if (!any(attr(obj$Data, "dimensions") == "station")) {
-                                                      ind.x <- arrayInd(which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[l]) ^ 2)), dim(x))[1]
-                                                      ind.y <- arrayInd(which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[l]) ^ 2)), dim(x))[2]
+                                                      ind.x <- arrayInd(which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[l]) ^ 2)), dim(x))[1]
+                                                      ind.y <- arrayInd(which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[l]) ^ 2)), dim(x))[2]
                                                       int[k,l] <- z[ind.x, ind.y]
                                                 } else {
-                                                      ind.x <- which.min(sqrt((x - new.Coordinates$x[k]) ^ 2 + (y - new.Coordinates$y[l]) ^ 2))
+                                                      ind.x <- which.min(sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[l]) ^ 2))
                                                       int[k,l] <- z[ind.x]
                                                 }
                                           }
@@ -316,14 +316,14 @@ interpData <- function(obj,
                         return(int)
                   })
                   
-                  if (any(attr(new.Coordinates,"type") == "location")) {
+                  if (any(attr(new.coordinates,"type") == "location")) {
                         aux.list[[i]] <- unname(do.call("abind", c(interp.list, along = 2)))
                   } else {
                         aux.list[[i]] <- unname(do.call("abind", c(interp.list, along = 3)))
                   }
                   interp.list <- NULL
             }
-            if (any(attr(new.Coordinates,"type") == "location")) {
+            if (any(attr(new.coordinates,"type") == "location")) {
                   obj$Data <- unname(do.call("abind", c(aux.list, along = 3)))
                   attr(obj$Data, "dimensions") <- c("station", "time", "member")
             }else{
@@ -333,21 +333,21 @@ interpData <- function(obj,
             aux.list <- NULL
       }      
       # Dimension ordering & Coordinate system
-      if (!any(attr(new.Coordinates,"type") == "location")) {
+      if (!any(attr(new.coordinates,"type") == "location")) {
             tab <- c("member", "time", "level", "lat", "lon")
-            obj$xyCoords$x <- new.Coordinates$x
-            obj$xyCoords$y <- new.Coordinates$y
-            attr(obj$xyCoords, "resX") <- abs(new.Coordinates$x[2] - new.Coordinates$x[1])
-            attr(obj$xyCoords, "resY") <- abs(new.Coordinates$y[2] - new.Coordinates$y[1]) 
-            if (is.null(attr(obj$xyCoords, "projection")) & !is.null(attr(new.Coordinates, "projection"))) {
-                  attr(obj$xyCoords, "projection") <- attr(new.Coordinates, "projection")
+            obj$xyCoords$x <- new.coordinates$x
+            obj$xyCoords$y <- new.coordinates$y
+            attr(obj$xyCoords, "resX") <- abs(new.coordinates$x[2] - new.coordinates$x[1])
+            attr(obj$xyCoords, "resY") <- abs(new.coordinates$y[2] - new.coordinates$y[1]) 
+            if (is.null(attr(obj$xyCoords, "projection")) & !is.null(attr(new.coordinates, "projection"))) {
+                  attr(obj$xyCoords, "projection") <- attr(new.coordinates, "projection")
             }
       } else {
             tab <- c("member", "time", "level", "station")
-            obj$xyCoords <- matrix(abind(new.Coordinates$x,new.Coordinates$y), nrow = length(new.Coordinates$x), ncol = 2)
+            obj$xyCoords <- matrix(abind(new.coordinates$x,new.coordinates$y), nrow = length(new.coordinates$x), ncol = 2)
             attr(obj$xyCoords, "type") <- "location"
-            if (!is.null(attr(new.Coordinates, "projection"))) {
-                  attr(obj$xyCoords, "projection") <- attr(new.Coordinates, "projection")
+            if (!is.null(attr(new.coordinates, "projection"))) {
+                  attr(obj$xyCoords, "projection") <- attr(new.coordinates, "projection")
             }
             
       }
