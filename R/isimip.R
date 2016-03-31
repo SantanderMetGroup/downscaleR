@@ -66,7 +66,7 @@
 #'                     season = c(12,1,2), years = 2001:2010)
 #' # Interpolate the observations onto the model's grid. We use the method "nearest" 
 #' # and the getGrid function to ensure spatial consistency:
-#' obs <- interpData(obs, new.Coordinates = getGrid(prd), method = "nearest")
+#' obs <- interpData(obs, new.coordinates = getGrid(prd), method = "nearest")
 #' # Apply the bias correction method:
 #' simBC <- isimip (obs, prd, sim, threshold = 1) # ISI-MIP Method
 #' par(mfrow = c(1,2))

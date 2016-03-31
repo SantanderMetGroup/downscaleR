@@ -77,6 +77,7 @@
 #' ncep <- "mydirectory/Iberia_NCEP/Iberia_NCEP.ncml"
 #' # A multigrid containing a set of variables is loaded (e.g. data for spring spanning the 
 #' # 30-year period 1981--2010):
+#' require(loadeR)
 #' hus <- loadGridData(ncep, var = "hus@@850", season = 3:5, years = 1981:2010)
 #' ta <- loadGridData(ncep, var = "ta@@850", season = 3:5, years = 1981:2010)
 #' psl <- loadGridData(ncep, var = "psl", season = 3:5, years = 1981:2010)
@@ -109,7 +110,7 @@
 #' range(tasmax_forecast$xyCoords$x)
 #' range(tasmax_forecast$xyCoords$y)
 #' multimember <- interpData(tasmax_forecast, 
-#'                               new.Coordinates = list(c(-10,29.5, 2.5), c(35.5, 64.5, 2.5)))
+#'                               new.coordinates = list(c(-10,29.5, 2.5), c(35.5, 64.5, 2.5)))
 #' # In this case we retain the first 15 EOFs:
 #' pca.mm <- prinComp(multimember, n.eofs = 15) 
 #' # Note that now the results of the PCA for the variable are a list, with the results 
@@ -119,7 +120,7 @@
 #' # The most complex situation comes from multimember multigrids:
 #' data(tasmin_forecast)
 #' # We interpolate using an identical grid than the previous example:
-#' multimember2 <- interpData(tasmin_forecast, new.Coordinates = getGrid(multimember))
+#' multimember2 <- interpData(tasmin_forecast, new.coordinates = getGrid(multimember))
 #' # Now the multimember multigrid is constructed
 #' mm.multigrid <- makeMultiGrid(multimember, multimember2)
 #' pca.mm.mf <- prinComp(mm.multigrid, n.eofs = 10)

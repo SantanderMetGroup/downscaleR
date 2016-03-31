@@ -10,7 +10,7 @@
 #' @export
 #' @family loading.grid
 #' @author S. Herrera and J. Bedia 
-#' @examples \donttest{
+#' @examples \dontrun{
 #' # Iberia domain
 #' data(iberia_ncep_hus850)
 #' getGrid(iberia_ncep_hus850)

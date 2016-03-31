@@ -5,7 +5,7 @@ downscaleR 1.0-0
 * Fully independized from the loadeR bundle (yet highly recommended)
 * Enabled parallelization (Linux and Mac OS only)
 * Enhancements in perfect-prog downscaling
-  * Parallel option
+  * Parallelization option
   * Cross validation schemes
   * Monthly mean rescaling
 * Function 'aggregateGrid' for flexible temporal/member aggregations

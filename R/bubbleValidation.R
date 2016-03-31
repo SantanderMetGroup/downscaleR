@@ -51,7 +51,7 @@ bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.pro
       if (!identical(c("time", "lat", "lon"), obs.dimNames)) {
             stop("The observed reference must be a 3D array of the form [time,lat,lon]")
       }
-      obs <- interpData(obs, new.Coordinates = getGrid(mm.obj), method = "nearest")  
+      obs <- interpData(obs, new.coordinates = getGrid(mm.obj), method = "nearest")  
       x.mm <- mm.obj$xyCoords$x
       y.mm <- mm.obj$xyCoords$y
       yrs <- getYearsAsINDEX(mm.obj)
