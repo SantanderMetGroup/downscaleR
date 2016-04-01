@@ -1,6 +1,6 @@
 # downscale.R Perfect-prog downscaling methods
 #
-#     Copyright (C) 2015 Santander Meteorology Group (http://www.meteo.unican.es)
+#     Copyright (C) 2016 Santander Meteorology Group (http://www.meteo.unican.es)
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -112,7 +112,7 @@ downscale <- function(obs,
                                           n.pcs = n.pcs,
                                           simulate = simulate)
             )
-      }else{
+      } else {
             if (!is.null(sim)) {
                   message("'sim' will be ignored for cross-validation")
             }
@@ -122,16 +122,14 @@ downscale <- function(obs,
             years <- getYearsAsINDEX(pred)
             modelPars.orig <- modelPars
             message("[", Sys.time(), "] Fitting models...")
-            
             if (cross.val == "loocv") {
-                  
                   downi <- lapply(1:length(unique(years)), function(i) {
                         year.ind <- which(years == unique(years)[i])
                         modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
                         modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
-                        if(stations == TRUE){
+                        if (stations == TRUE) {
                               obs$Data <- obs.orig$Data[-year.ind,]
-                        }else{
+                        } else {
                               obs$Data <- obs.orig$Data[-year.ind,,]
                         }
                         attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
@@ -145,7 +143,7 @@ downscale <- function(obs,
                                     analog.dates = analog.dates,
                                     parallel.pars = parallel.pars)
                                     )
-                              }else if (method == "glm") {
+                              } else if (method == "glm") {
                                     suppressMessages(
                                     glimpr(obs = obs,
                                     modelPars = modelPars,
@@ -154,26 +152,24 @@ downscale <- function(obs,
                                     simulate = simulate)
                                     )
                               }
-                        })
+                        }
+                  )
                   down <- unname(do.call("abind", c(downi, along = 1)))
-            }else if(cross.val == "kfold"){
-            
-                  if(is.null(folds)){
-                        stop("Folds need to be given")
+            } else if (cross.val == "kfold") {
+                  if (is.null(folds)) {
+                        stop("Fold specification is missing, with no default", call. = FALSE)
                   }
-         
                   downi <- lapply(1:length(folds), function(i) {
                         year.ind <- lapply(1:length(folds[[i]]), function(x){
                               indstep <- which(years == folds[[i]][x])
                               return(indstep)
                         })
                         year.ind <- unname(abind(year.ind, along = 1))
-                                    
                         modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
                         modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
-                        if(stations == TRUE){
+                        if (stations == TRUE) {
                               obs$Data <- obs.orig$Data[-year.ind,]
-                        }else{
+                        } else {
                               obs$Data <- obs.orig$Data[-year.ind,,]
                         }
                         attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
@@ -197,13 +193,8 @@ downscale <- function(obs,
                               }
                         })
                   down <- unname(do.call("abind", c(downi, along = 1)))
-    
-            
             }
       }
-      
-      
-      
       # Data array - rename dims
       dimNames <- renameDims(obs.orig, modelPars$multi.member)
       obs.orig$Data <- down
