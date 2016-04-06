@@ -177,12 +177,12 @@ timeAggregation <- function(grid, aggr.type = c("DD","MM","YY"), aggr.fun, paral
             # Attributes
             attr.all <- attributes(grid$Data)
             mar <- grep("^time", dimNames, invert = TRUE)
-            day <- as.numeric(substr(aux.dates,9,10))
-            mon <- as.numeric(substr(aux.dates,6,7))
+            day <- substr(aux.dates,9,10)
+            mon <- substr(aux.dates,6,7)
             yr <- getYearsAsINDEX(grid)
             fac <- switch(aggr.type,
-                          "DD" = paste0(day,mon,yr),
-                          "MM" = paste0(mon,yr),
+                          "DD" = paste0(yr,mon,day),
+                          "MM" = paste0(yr,mon),
                           "YY" = yr)
             day <- mon <- yr <- aux.dates <- NULL
             arg.list <- c(aggr.fun, list("INDEX" = fac))
