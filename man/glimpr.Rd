@@ -8,18 +8,18 @@ glimpr(obs = obs, modelPars = modelPars, simulate = TRUE,
   wet.threshold = wet.threshold, n.pcs = n.pcs)
 }
 \arguments{
-\item{obs}{A field or station data containing the observed climate data for the training period}
-
 \item{simulate}{Logical. Default is TRUE.}
 
 \item{wet.threshold}{Value below which precipitation amount is considered zero}
 
-\item{pred}{A field containing the simulated climate by the model for the training period. This can be either
+\item{y}{A grid or station data containing the observed climate data for the training period}
+
+\item{x}{A grid containing the simulated climate by the model for the training period. This can be either
 the same variable as \code{obs}, in the case of model calibration (bias correction and related techniques) or MOS (model
  output statistics) approaches, or a set of predictors in the case of \emph{perfect prog} downscaling approaches (possibly
  after principal component analysis via the \code{\link{prinComp}} output).}
 
-\item{sim}{A field containing the simulated climate for the variables used in \code{pred}, but considering the test period.}
+\item{newdata}{A grid containing the simulated climate for the variables used in \code{x}, but considering the test period.}
 
 \item{n.eofs}{Integer indicating the number of EOFs to be used as predictors}
 }
