@@ -128,7 +128,7 @@ memberAggregation <- function(grid, aggr.mem, parallel, max.ncores, ncores) {
                   message("[", Sys.time(), "] - Aggregating members in parallel...")
                   on.exit(parallel::stopCluster(parallel.pars$cl))
                   aggr.mem[["cl"]] <- parallel.pars$cl
-                  do.call("parApply", aggr.mem, envir = )
+                  do.call("parApply", aggr.mem)
             } else {
                   message("[", Sys.time(), "] - Aggregating members...")
                   do.call("apply", aggr.mem)
