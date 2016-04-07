@@ -58,6 +58,9 @@ Aggregatikons need to be specified from bottom to top, so for instance, if the d
 and \code{aggr.d} is not specified, an error will be given for monthly or annual aggregation requests. Similarly,
 annual aggregations require a previous specification of daily and monthly aggregation, when applicable. Special attributes
 in the \code{Variable} component indicate the aggregation undertaken.
+
+In order to preserve the information of the season in annual aggregations, the attribute \code{season} is
+added to the \code{Dates} component.
 }
 \section{Parallel Processing}{
 

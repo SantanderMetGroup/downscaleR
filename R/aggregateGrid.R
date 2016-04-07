@@ -50,6 +50,9 @@
 #' annual aggregations require a previous specification of daily and monthly aggregation, when applicable. Special attributes
 #' in the \code{Variable} component indicate the aggregation undertaken.
 #' 
+#' In order to preserve the information of the season in annual aggregations, the attribute \code{season} is
+#' added to the \code{Dates} component.
+#' 
 #' @template templateParallel
 #' @author M. Iturbide, M. de Felice, J. Bedia 
 #' @export

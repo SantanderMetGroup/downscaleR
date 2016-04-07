@@ -33,7 +33,7 @@
 #' \itemize{
 #' \item \code{climatology:fun}, added to the \code{Data} component of the grid,
 #' indicating the function used to compute the climatology.
-#' \item \code{climatology:season}, added to the \code{Dates} component, in order to provide information
+#' \item \code{season}, added to the \code{Dates} component (if not yet existing), in order to provide information
 #'  on the season for which the climatology has been computed.
 #' }
 #' @importFrom parallel stopCluster
@@ -118,7 +118,7 @@ climatology <- function(grid,
       attr(grid$Data, "dimensions") <- dimNames
       attr(grid$Data, "climatology:fun") <- clim.fun[["FUN"]]
       ## Date adjustment
-      attr(grid$Dates, "climatology:season") <- getSeason(grid)
+      attr(grid$Dates, "season") <- getSeason(grid)
       grid$Dates$start <- grid$Dates$start[1]
       grid$Dates$end <- tail(grid$Dates$end, 1)
       return(grid)
