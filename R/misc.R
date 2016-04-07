@@ -9,11 +9,15 @@
 #' getSeason(iberia_ncep_ta850) # Boreal winter (DJF)
 
 getSeason <- function(obj) {
-      dimNames <- attr(obj$Data, "dimensions")
-      aux <- if (any(grepl("var", dimNames))) {
-            as.POSIXlt(obj$Dates[[1]]$start)$mon + 1      
+      if ("season" %in% attributes(obj$Dates)) {
+            aux <- attr(obj$Dates, "season")
       } else {
-            as.POSIXlt(obj$Dates$start)$mon + 1      
+            dimNames <- attr(obj$Data, "dimensions")
+            aux <- if (any(grepl("var", dimNames))) {
+                  as.POSIXlt(obj$Dates[[1]]$start)$mon + 1      
+            } else {
+                  as.POSIXlt(obj$Dates$start)$mon + 1      
+            }
       }
       return(unique(aux))
 }

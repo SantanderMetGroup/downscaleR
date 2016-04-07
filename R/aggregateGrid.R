@@ -171,10 +171,11 @@ timeAggregation <- function(grid, aggr.type = c("DD","MM","YY"), aggr.fun, paral
       } else if (aggr.type == "MM" & dff >= 672) {
             message("Data is already monthly: 'aggr.m' option was ignored.")
       } else if (aggr.type == "YY" & dff >= 8640) {
-            message("Data is already 6annual: 'aggr.y' option was ignored.")
+            message("Data is already annual: 'aggr.y' option was ignored.")
       } else {
             dimNames <- attr(grid$Data, "dimensions")
             # Attributes
+            season <- getSeason(grid)
             attr.all <- attributes(grid$Data)
             mar <- grep("^time", dimNames, invert = TRUE)
             day <- substr(aux.dates,9,10)
@@ -228,6 +229,7 @@ timeAggregation <- function(grid, aggr.type = c("DD","MM","YY"), aggr.fun, paral
             }
             # Temporal aggregation attributes --------
             attr(grid$Variable, paste0(type,"_agg_cellfun")) <- arg.list$FUN
+            if (type == "YY") attr(grid$Dates, "season") <- season
       }
       return(grid)
 }
