@@ -10,7 +10,7 @@
 
 getSeason <- function(obj) {
       if ("season" %in% names(attributes(obj$Dates))) {
-            aux <- attr(obj$Dates, "season")
+            attr(obj$Dates, "season")
       } else {
             dimNames <- attr(obj$Data, "dimensions")
             aux <- if (any(grepl("var", dimNames))) {
@@ -18,8 +18,8 @@ getSeason <- function(obj) {
             } else {
                   as.POSIXlt(obj$Dates$start)$mon + 1      
             }
+            unique(aux)
       }
-      return(unique(aux))
 }
 # End
 
