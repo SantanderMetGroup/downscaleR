@@ -197,7 +197,7 @@ subsetMembers <- function(mmGrid, members = NULL, drop = TRUE) {
       if (is.list(mmGrid$InitializationDates)) { # e.g. CFSv2 (members defined through lagged runtimes)
             mmGrid$InitializationDates <- mmGrid$InitializationDates[members]
       } 
-      attr(mmGrid$Members, "subset") <- "subsetMembers"
+      if(!is.null(mmGrid$Runtime)) attr(mmGrid$Members, "subset") <- "subsetMembers"
       return(mmGrid)
 }
 # End
@@ -240,7 +240,7 @@ subsetRuntime <- function(mmGrid, runtime = NULL, drop = TRUE) {
       if (is.list(mmGrid$InitializationDates)) { # e.g. CFSv2 (members defined through lagged runtimes)
             mmGrid$InitializationDates <- mmGrid$InitializationDates[runtime]
       } 
-      attr(mmGrid$Runtime, "subset") <- "subsetRuntime"
+      if(!is.null(mmGrid$Runtime)) attr(mmGrid$Runtime, "subset") <- "subsetRuntime"
       return(mmGrid)
 }
 # End
