@@ -232,7 +232,7 @@ timeAggregation <- function(grid, aggr.type = c("DD","MM","YY"), aggr.fun, paral
             }
             # Temporal aggregation attributes --------
             attr(grid$Variable, paste0(type,"_agg_cellfun")) <- arg.list$FUN
-            if (type == "YY") attr(grid$Dates, "season") <- season
+            if (aggr.type == "YY") attr(grid$Dates, "season") <- season
       }
       return(grid)
 }

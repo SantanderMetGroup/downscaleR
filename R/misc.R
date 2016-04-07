@@ -9,7 +9,7 @@
 #' getSeason(iberia_ncep_ta850) # Boreal winter (DJF)
 
 getSeason <- function(obj) {
-      if ("season" %in% attributes(obj$Dates)) {
+      if ("season" %in% names(attributes(obj$Dates))) {
             aux <- attr(obj$Dates, "season")
       } else {
             dimNames <- attr(obj$Data, "dimensions")

@@ -240,7 +240,7 @@ subsetRuntime <- function(mmGrid, runtime = NULL, drop = TRUE) {
       if (is.list(mmGrid$InitializationDates)) { # e.g. CFSv2 (members defined through lagged runtimes)
             mmGrid$InitializationDates <- mmGrid$InitializationDates[runtime]
       } 
-      if(!is.null(mmGrid$Runtime)) attr(mmGrid$Runtime, "subset") <- "subsetRuntime"
+      if (!is.null(mmGrid$Runtime)) attr(mmGrid$Runtime, "subset") <- "subsetRuntime"
       return(mmGrid)
 }
 # End
@@ -266,6 +266,7 @@ subsetRuntime <- function(mmGrid, runtime = NULL, drop = TRUE) {
 
 subsetYears <- function(grid, years = NULL, drop = TRUE) {
       dimNames <- attr(grid$Data, "dimensions")
+      season <- getSeason(grid)
       all.years <- getYearsAsINDEX(grid)
       aux.year.ind <- match(years, unique(all.years))
       if (length(intersect(years, all.years)) == 0) {
@@ -293,6 +294,7 @@ subsetYears <- function(grid, years = NULL, drop = TRUE) {
             }
       }
       attr(grid$Dates, "subset") <- "subsetYears"
+      attr(grid$Dates, "season") <- season
       return(grid)
 }
 # End
