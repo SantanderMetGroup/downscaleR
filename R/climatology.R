@@ -118,9 +118,9 @@ climatology <- function(grid,
       attr(grid$Data, "dimensions") <- dimNames
       attr(grid$Data, "climatology:fun") <- clim.fun[["FUN"]]
       ## Date adjustment
+      attr(grid$Dates, "climatology:season") <- getSeason(grid)
       grid$Dates$start <- grid$Dates$start[1]
       grid$Dates$end <- tail(grid$Dates$end, 1)
-      attr(grid$Dates, "climatology:season") <- getSeason(grid)
       return(grid)
 }
 
