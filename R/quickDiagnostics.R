@@ -325,7 +325,11 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
       }
       y <- subsetGrid(sim, lonLim = location[1], latLim = location[2])$Data
       if(!is.null(downscaled)){
-            w <-  subsetGrid(downscaled, lonLim = location[1], latLim = location[2])$Data
+            if(any(attr(obs$Data, "dimensions")=="station")){
+                  w <- downscaled$Data
+            }else{
+                  w <-  subsetGrid(downscaled, lonLim = location[1], latLim = location[2])$Data
+            }
       }
       yran <- if (is.null(ylim)) {
             mi <- 0
@@ -442,3 +446,4 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
 }
 
 #end    
+
