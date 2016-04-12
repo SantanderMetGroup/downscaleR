@@ -157,14 +157,14 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                         
                               p <-subsetGrid(pred, members = l, drop = FALSE)
                               s <-subsetGrid(sim, members = l, drop = FALSE)
-                              message("[", Sys.time(), "] Bias correcting.")
+                              message("[", Sys.time(), "] Bias correcting member ", l, " out of ", n.mem, ".")
                               if(is.null(window)){
                         # Apply bias correction methods
                                           for(i in 1:nrow(ind)){
                               
                                                 mem[,,,ind[i,1],ind[i,2]] <- biasCorrection1D(obs$Data[,ind[i,1],ind[i,2]], 
-                                                            subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], drop = FALSE)$Data[1,1,,1,1], 
-                                                            subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], drop = FALSE)$Data[1,1,,1,1],
+                                                            subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1], 
+                                                            subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1],
                                                             method = method,
                                                             scaling.type = scaling.type,
                                                             precip = precip,
@@ -221,8 +221,8 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                           # Apply bias correction methods
                                           
                                                 o1 <- obs$Data[indObsWindow,ind[i,1],ind[i,2]]
-                                                p1 <- subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], drop = FALSE)$Data[1,1,,1,1][indObsWindow]
-                                                s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], drop = FALSE)$Data[1,1,,1,1][indSim]
+                                                p1 <- subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indObsWindow]
+                                                s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indSim]
                                                 end[indSim,] <- biasCorrection1D(o1, p1, s1, 
                                                                  method = method,
                                                                  scaling.type = scaling.type,
