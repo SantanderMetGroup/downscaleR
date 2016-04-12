@@ -364,7 +364,7 @@ gqm <- function(o, p, s, precip, pr.threshold){
                   nP = NULL
             }
            if (is.null(nP)){
-                 s <- o
+                 s <- rep(NA, length(s))
            }else if(nP < length(o)){
                   ind <- which(o > threshold & !is.na(o))
                   obsGamma <- fitdistr(o[ind],"gamma")
@@ -411,7 +411,7 @@ eqm <- function(o, p, s, precip, pr.threshold, extrapolation){
                         }
            ################################################################################################-
             if(is.null(nP)){
-                  s <- o
+                  s <- rep(NA, length(s))
             }else if(any(!is.na(p)) & any(!is.na(o))){
                   if (length(which(p > Pth)) > 0){ 
                         ##
@@ -460,7 +460,7 @@ eqm <- function(o, p, s, precip, pr.threshold, extrapolation){
             }
        }else{
              if(all(is.na(o))){
-                   s <- o
+                   s <- rep(NA, length(s))
              }else if (any(!is.na(p)) & any(!is.na(o))) {
                         ePrd <- ecdf(p)
                               #################-
@@ -526,7 +526,7 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
                      nP = NULL
                }
                if(is.null(nP)){
-                     s <- o
+                     s <- rep(NA, length(s))
                }else if(nP < length(o)){
                         ind <- which(o > threshold & !is.na(o))
                         indgamma <- ind[which(o[ind] < quantile(o[ind], theta))]
