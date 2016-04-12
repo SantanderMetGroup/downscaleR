@@ -459,7 +459,9 @@ eqm <- function(o, p, s, precip, pr.threshold, extrapolation){
                   }
             }
        }else{
-             if (any(!is.na(p)) & any(!is.na(o))) {
+             if(all(is.na(o))){
+                   s <- o
+             }else if (any(!is.na(p)) & any(!is.na(o))) {
                         ePrd <- ecdf(p)
                               #################-
                               if(extrapolation == "constant"){
