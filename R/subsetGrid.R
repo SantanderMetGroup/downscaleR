@@ -14,6 +14,7 @@
 #' @param lonLim Vector of length = 2, with minimum and maximum longitude coordinates, in decimal degrees,
 #'  of the bounding box defining the subset. For single-point subsets, a numeric value with the
 #'  longitude coordinate. If \code{NULL} (default), no subsetting is performed on the longitude dimension
+#' @param outside if TRUE subset coordinates outside the grid extent are allowed. Default is FALSE.
 #' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @return A new grid object that is a logical subset of the input grid along the specified dimensions.
 #' @details
@@ -310,6 +311,7 @@ subsetYears <- function(grid, years = NULL, drop = TRUE) {
 #'  of the bounding box defining the subset. For single-point subsets, a numeric value with the
 #'  longitude coordinate. If \code{NULL} (default), no subsetting is performed on the longitude dimension
 #' @param latLim Same as \code{lonLim} argument, but for latitude.
+#' @param outside if TRUE subset coordinates outside the grid extent are allowed. Default is FALSE.
 #' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @details An attribute 'subset' with value 'subsetSpatial' is added to the xyCoords slot of the output subset.
 #' @return A grid (or multigrid) that is a logical spatial subset of the input grid.

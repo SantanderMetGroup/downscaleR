@@ -112,7 +112,7 @@
 #' }
 
 biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
-                           multi.member = TRUE, window = NULL,
+                           window = NULL,
                            scaling.type = c("additive", "multiplicative"),
                            pr.threshold = 1, extrapolation = c("no", "constant"), theta = .95){
       obs <- y
