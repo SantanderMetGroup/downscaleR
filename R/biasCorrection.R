@@ -283,7 +283,7 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
 #' @author M. Iturbide
 
 biasCorrection1D <- function(o, p, s, method = c("delta", "scaling", "eqm", "gqm", "gpqm"), 
-                             scaling.type = c("additive", "multiplicative"), precip = NULL, 
+                             scaling.type = c("additive", "multiplicative"), precip = FALSE, 
                              pr.threshold = 1, extrapolation = c("no", "constant"), theta = .95){
       if(method == "delta"){
             bc1d <- delta(o, p, s)
@@ -375,7 +375,6 @@ gqm <- function(o, p, s, precip, pr.threshold){
                   auxF <- pgamma(s[rain], prdGamma$estimate[1], rate = prdGamma$estimate[2])
                   s[rain] <- qgamma(auxF, obsGamma$estimate[1], rate = obsGamma$estimate[2])
                   s[noRain] <- 0
-                  warningNoRain <- FALSE
            }else{
                  warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
            } 
