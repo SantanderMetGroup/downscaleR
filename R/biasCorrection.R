@@ -13,10 +13,11 @@
 #' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
 #' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
 #' selected as the bias correction method.
-#' 
+#' @param n.quantiles Integer indicating the number of quantiles to be considered when method = "eqm". Default is NULL, 
+#' that considers all quantiles, i.e. \code{n.quantiles = length(x[i,j])} (being \code{i} and \code{j} the coordinates in a single location).
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
-#' \code{"sim"} that are out of the range of \code{"x"}. Extrapolation is applied only to the \code{"eqm"} method, 
-#' thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).
+#' \code{newdata} that are out of the range of \code{x}. Extrapolation is applied only to the \code{"eqm"} method, 
+#' thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).
 #' 
 #' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 #' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
@@ -98,8 +99,8 @@
 #' y <- VALUE_Igueldo_tp
 #' x <- NCEP_Iberia_tp
 #' 
-#' eqm1 <- biasCorrection(y = y, x = x, newdata = x, method = "eqm", extrapolation = "no", window = NULL)
-#' eqm1win <- biasCorrection(y = y, x = x, newdata = x, method = "eqm", extrapolation = "no", window = c(90, 1))
+#' eqm1 <- biasCorrection(y = y, x = x, newdata = x, method = "eqm", extrapolation = "none", window = NULL)
+#' eqm1win <- biasCorrection(y = y, x = x, newdata = x, method = "eqm", extrapolation = "none", window = c(90, 1))
 #' NCEP_Igueldo <- subsetGrid(x, latLim = y$xyCoords[,2], lonLim = y$xyCoords[,1])
 #' 
 #' par(mfrow = c(1,3))
@@ -114,7 +115,8 @@
 biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
                            window = NULL,
                            scaling.type = c("additive", "multiplicative"),
-                           pr.threshold = 1, extrapolation = c("no", "constant"), theta = .95){
+                           pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
+                           theta = .95){
       obs <- y
       pred <- x
       sim <- newdata
@@ -142,119 +144,120 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
       pred <- redim(pred)
       sim <- redim(sim)
       
-            n.run <- dim(sim$Data)[1]
-            n.mem <- dim(sim$Data)[2]
+      n.run <- dim(sim$Data)[1]
+      n.mem <- dim(sim$Data)[2]
+      
+      run <- array(dim = c(1, n.mem, dim(sim$Data)[-(1:2)][1], dim(obs$Data)[-1]))
+      lrun <- lapply(1:n.run, function(k){    # loop for runtimes
             
-            run <- array(dim = c(1, n.mem, dim(sim$Data)[-(1:2)][1], dim(obs$Data)[-1]))
-            lrun <- lapply(1:n.run, function(k){    # loop for runtimes
-                 
-                  pre <- subsetGrid(pred, runtime = k, drop = FALSE)
-                  si <- subsetGrid(sim, runtime = k, drop = FALSE)
+            pre <- subsetGrid(pred, runtime = k, drop = FALSE)
+            si <- subsetGrid(sim, runtime = k, drop = FALSE)
+            
+            #                   if(multi.member == TRUE){
+            mem <- array(dim = c(1, 1, dim(sim$Data)[-(1:2)][1], dim(obs$Data)[-1]))
+            lmem <- lapply(1:n.mem, function(l){ # loop for members
                   
-#                   if(multi.member == TRUE){
-                        mem <- array(dim = c(1, 1, dim(sim$Data)[-(1:2)][1], dim(obs$Data)[-1]))
-                        lmem <- lapply(1:n.mem, function(l){ # loop for members
-                        
-                              p <-subsetGrid(pred, members = l, drop = FALSE)
-                              s <-subsetGrid(sim, members = l, drop = FALSE)
-                              message("[", Sys.time(), "] Bias correcting member ", l, " out of ", n.mem, ".")
-                              if(is.null(window)){
+                  p <-subsetGrid(pred, members = l, drop = FALSE)
+                  s <-subsetGrid(sim, members = l, drop = FALSE)
+                  message("[", Sys.time(), "] Bias correcting member ", l, " out of ", n.mem, ".")
+                  if(is.null(window)){
                         # Apply bias correction methods
-                                          for(i in 1:nrow(ind)){
-                              
-                                                mem[,,,ind[i,1],ind[i,2]] <- biasCorrection1D(obs$Data[,ind[i,1],ind[i,2]], 
-                                                            subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1], 
-                                                            subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1],
-                                                            method = method,
-                                                            scaling.type = scaling.type,
-                                                            precip = precip,
-                                                            pr.threshold = pr.threshold,
-                                                            extrapolation = extrapolation,
-                                                            theta = theta)
-                                          }                                                                             
-                              }else{
-                                    step <- window[2]
-                                    window <- window[1]+step
-                                    message("Correcting windows")
-                                    datesList <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
-                                    yearList <- unlist(strsplit(as.character(datesList), "[-]"))
-                                    dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
-                                    dayList <- unique(dayListObs,index.return = datesList)
-                                    indDays <- array(data = NaN, dim = c(length(datesList),1))
-                                    for (d in 1:dim(dayList)[1]){
-                                          indDays[which(sqrt((dayListObs[,1]-dayList[d,1])^2+(dayListObs[,2]-dayList[d,2])^2)==0)] <- d
-                                    }
-                                    datesList <- as.POSIXct(sim$Dates$start, tz="GMT", format="%Y-%m-%d")
-                                    yearList<-unlist(strsplit(as.character(datesList), "[-]"))
-                                    dayListSim <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
-                                    indDaysSim <- array(data = NaN, dim = c(length(datesList),1))
-                                    for (d in 1:dim(dayList)[1]){
-                                          indDaysSim[which(sqrt((dayListSim[,1]-dayList[d,1])^2+(dayListSim[,2]-dayList[d,2])^2)==0)] <- d
-                                    }
-                                    for(i in 1:nrow(ind)){
-                                          end <- indDaysSim
-                                          steps <- floor(dim(dayList)[1]/step)
-                                          for (j in 1:steps){
-                                                days <- ((j-1)*step+1):((j-1)*step+step)
-                                                if(j == steps) days <- days[1]:dim(dayList)[1]
-                                                indObs <- lapply(1:length(days), function(h){
-                                                      which(indDays == days[h])
-                                                })
-                                                indObs <- sort(do.call("abind", indObs))
-                                                indObsWindow <- array(data = NA, dim = c((window)*length(indObs)/step,1))
-                                                breaks <- c(which(diff(indObs) != 1), length(indObs))
-                                                for (d in 1:length(breaks)){
-                                                            if(d == 1) {
-                                                                  piece <- indObs[1:breaks[1]]
-                                                            }else{
-                                                                  piece <- indObs[(breaks[d-1]+1): breaks[d]]
-                                                            }
-                                                            suppressWarnings(indObsWindow[((d-1)*window+1):(d*window)] <- (min(piece, na.rm = T)-floor((window-step)/2)):(max(piece, na.rm = T)+floor((window-step)/2)))
-                                                }
-                                                indObsWindow[which(indObsWindow <= 0)] <- 1
-                                                indObsWindow[which(indObsWindow >  length(indDays))] <- length(indDays)
-                                                indObsWindow <- unique(indObsWindow)
-                                                indSim <- lapply(1:length(days), function(h){
-                                                      which(indDaysSim == days[h])
-                                                })
-                                                indSim <- sort(do.call("abind", indSim))
-                                          # Apply bias correction methods
-                                          
-                                                o1 <- obs$Data[indObsWindow,ind[i,1],ind[i,2]]
-                                                p1 <- subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indObsWindow]
-                                                s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indSim]
-                                                end[indSim,] <- biasCorrection1D(o1, p1, s1, 
-                                                                 method = method,
-                                                                 scaling.type = scaling.type,
-                                                                 precip = precip,
-                                                                 pr.threshold = pr.threshold,
-                                                                 extrapolation = extrapolation,
-                                                                 theta = theta)
+                        for(i in 1:nrow(ind)){
+                              mem[,,,ind[i,1],ind[i,2]] <- biasCorrection1D(obs$Data[,ind[i,1],ind[i,2]], 
+                                                                            subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1], 
+                                                                            subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1],
+                                                                            method = method,
+                                                                            scaling.type = scaling.type,
+                                                                            precip = precip,
+                                                                            pr.threshold = pr.threshold,
+                                                                            n.quantiles = n.quantiles,
+                                                                            extrapolation = extrapolation,
+                                                                            theta = theta)
+                        }                                                                             
+                  }else{
+                        step <- window[2]
+                        window <- window[1]+step
+                        message("Correcting windows")
+                        datesList <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+                        yearList <- unlist(strsplit(as.character(datesList), "[-]"))
+                        dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
+                        dayList <- unique(dayListObs,index.return = datesList)
+                        indDays <- array(data = NaN, dim = c(length(datesList),1))
+                        for (d in 1:dim(dayList)[1]){
+                              indDays[which(sqrt((dayListObs[,1]-dayList[d,1])^2+(dayListObs[,2]-dayList[d,2])^2)==0)] <- d
+                        }
+                        datesList <- as.POSIXct(sim$Dates$start, tz="GMT", format="%Y-%m-%d")
+                        yearList<-unlist(strsplit(as.character(datesList), "[-]"))
+                        dayListSim <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
+                        indDaysSim <- array(data = NaN, dim = c(length(datesList),1))
+                        for (d in 1:dim(dayList)[1]){
+                              indDaysSim[which(sqrt((dayListSim[,1]-dayList[d,1])^2+(dayListSim[,2]-dayList[d,2])^2)==0)] <- d
+                        }
+                        for(i in 1:nrow(ind)){
+                              end <- indDaysSim
+                              steps <- floor(dim(dayList)[1]/step)
+                              for (j in 1:steps){
+                                    days <- ((j-1)*step+1):((j-1)*step+step)
+                                    if(j == steps) days <- days[1]:dim(dayList)[1]
+                                    indObs <- lapply(1:length(days), function(h){
+                                          which(indDays == days[h])
+                                    })
+                                    indObs <- sort(do.call("abind", indObs))
+                                    indObsWindow <- array(data = NA, dim = c((window)*length(indObs)/step,1))
+                                    breaks <- c(which(diff(indObs) != 1), length(indObs))
+                                    for (d in 1:length(breaks)){
+                                          if(d == 1) {
+                                                piece <- indObs[1:breaks[1]]
+                                          }else{
+                                                piece <- indObs[(breaks[d-1]+1): breaks[d]]
                                           }
-                                          mem[,,,ind[i,1],ind[i,2]] <- end
+                                          suppressWarnings(indObsWindow[((d-1)*window+1):(d*window)] <- (min(piece, na.rm = T)-floor((window-step)/2)):(max(piece, na.rm = T)+floor((window-step)/2)))
                                     }
+                                    indObsWindow[which(indObsWindow <= 0)] <- 1
+                                    indObsWindow[which(indObsWindow >  length(indDays))] <- length(indDays)
+                                    indObsWindow <- unique(indObsWindow)
+                                    indSim <- lapply(1:length(days), function(h){
+                                          which(indDaysSim == days[h])
+                                    })
+                                    indSim <- sort(do.call("abind", indSim))
+                                    # Apply bias correction methods
+                                    
+                                    o1 <- obs$Data[indObsWindow,ind[i,1],ind[i,2]]
+                                    p1 <- subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indObsWindow]
+                                    s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indSim]
+                                    end[indSim,] <- biasCorrection1D(o1, p1, s1, 
+                                                                     method = method,
+                                                                     scaling.type = scaling.type,
+                                                                     precip = precip,
+                                                                     pr.threshold = pr.threshold,
+                                                                     n.quantiles = n.quantiles,
+                                                                     extrapolation = extrapolation,
+                                                                     theta = theta)
                               }
-                        return(mem)
-                        
-                        }) #end loop for members
-                       
-#                   }else{
-#                         ############# members jointly
-#                   }
-                  run[,,,,] <- abind(lmem, along = 2)
-                  return(run)
+                              mem[,,,ind[i,1],ind[i,2]] <- end
+                        }
+                  }
+                  return(mem)
+                  
+            }) #end loop for members
             
-            }) #end loop for runtimes
-            bc$Data <- unname(abind(lrun, along = 1))
-            attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
-            ##########################
-            bc <- redim(bc, drop = TRUE)
-            message("[", Sys.time(), "] Done.")
-            ##########################
-            bc$Dates <- sim$Dates
-            bc$InitializationDates <- sim$InitializationDates
-            bc$Members <- sim$Members
-          return(bc)
+            #                   }else{
+            #                         ############# members jointly
+            #                   }
+            run[,,,,] <- abind(lmem, along = 2)
+            return(run)
+            
+      }) #end loop for runtimes
+      bc$Data <- unname(abind(lrun, along = 1))
+      attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
+      ##########################
+      bc <- redim(bc, drop = TRUE)
+      message("[", Sys.time(), "] Done.")
+      ##########################
+      bc$Dates <- sim$Dates
+      bc$InitializationDates <- sim$InitializationDates
+      bc$Members <- sim$Members
+      return(bc)
 }
 
 #end
@@ -274,7 +277,7 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). 
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
 #' \code{"s"} that are out of the range of \code{"p"}. Extrapolation is applied only to the \code{"eqm"} method, 
-#' thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).
+#' thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).
 #' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 #' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 #' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
@@ -284,20 +287,21 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
 
 biasCorrection1D <- function(o, p, s, method = c("delta", "scaling", "eqm", "gqm", "gpqm"), 
                              scaling.type = c("additive", "multiplicative"), precip = FALSE, 
-                             pr.threshold = 1, extrapolation = c("no", "constant"), theta = .95){
+                             pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
+                             theta = .95){
       if(method == "delta"){
             bc1d <- delta(o, p, s)
       }else if(method == "scaling"){
             bc1d <- scaling(o, p, s, scaling.type)
       }else if(method == "eqm"){
-            bc1d <- eqm(o, p, s, precip, pr.threshold, extrapolation)
+            bc1d <- eqm(o, p, s, precip, pr.threshold, n.quantiles, extrapolation)
       }else if(method == "gqm"){
             bc1d <- gqm(o, p, s, precip, pr.threshold)
       }else if(method == "gpqm"){
             bc1d <- gpqm(o, p, s, precip, pr.threshold, theta)
       }
       
-     return(bc1d) 
+      return(bc1d) 
 }
 
 #end
@@ -310,9 +314,9 @@ biasCorrection1D <- function(o, p, s, method = c("delta", "scaling", "eqm", "gqm
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
 delta <- function(o, p, s){
-            corrected <- o + (mean(s) - mean(p))
-            return(corrected)
-            }
+      corrected <- o + (mean(s) - mean(p))
+      return(corrected)
+}
 #end
 
 #' @title Scaling method for bias correction
@@ -326,10 +330,10 @@ delta <- function(o, p, s){
 #' @author S. Herrera and M. Iturbide
 scaling <- function(o, p, s, scaling.type){
       if (scaling.type == "additive"){
-          corrected <- s - mean(p) + mean(o)
+            corrected <- s - mean(p) + mean(o)
             
       }else if(scaling.type == "multiplicative"){
-           corrected <- (s/mean(p))* mean(o)
+            corrected <- (s/mean(p))* mean(o)
             
       }
       return(corrected)
@@ -350,12 +354,12 @@ scaling <- function(o, p, s, scaling.type){
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
 gqm <- function(o, p, s, precip, pr.threshold){
-                
+      
       if (precip == FALSE) {
             stop("method gqm is only applied to precipitation data")
       }else{
             threshold <- pr.threshold
-           if (any(!is.na(o))){
+            if (any(!is.na(o))){
                   params <-  norain(o, p, threshold)
                   p <- params$p
                   nP <- params$nP
@@ -363,9 +367,9 @@ gqm <- function(o, p, s, precip, pr.threshold){
             }else{
                   nP = NULL
             }
-           if (is.null(nP)){
-                 s <- rep(NA, length(s))
-           }else if(nP < length(o)){
+            if (is.null(nP)){
+                  s <- rep(NA, length(s))
+            }else if(nP < length(o)){
                   ind <- which(o > threshold & !is.na(o))
                   obsGamma <- fitdistr(o[ind],"gamma")
                   ind <- which(p > 0 & !is.na(p))
@@ -375,9 +379,9 @@ gqm <- function(o, p, s, precip, pr.threshold){
                   auxF <- pgamma(s[rain], prdGamma$estimate[1], rate = prdGamma$estimate[2])
                   s[rain] <- qgamma(auxF, obsGamma$estimate[1], rate = obsGamma$estimate[2])
                   s[noRain] <- 0
-           }else{
-                 warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
-           } 
+            }else{
+                  warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
+            } 
       }
       return(s)
 }
@@ -394,101 +398,84 @@ gqm <- function(o, p, s, precip, pr.threshold){
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). 
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
 #' \code{"s"} that are out of the range of \code{"p"}. Extrapolation is applied only to the \code{"eqm"} method, 
-#' thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).
+#' thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
-eqm <- function(o, p, s, precip, pr.threshold, extrapolation){
+eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
       if (precip == TRUE) {
             threshold <- pr.threshold
-                        if (any(!is.na(o))){
-                              params <-  norain(o, p, threshold)
-                              p <- params$p
-                              nP <- params$nP
-                              Pth <- params$Pth
-                        }else{
-                              nP = NULL
-                        }
-           ################################################################################################-
+            if (any(!is.na(o))){
+                  params <-  norain(o, p, threshold)
+                  p <- params$p
+                  nP <- params$nP
+                  Pth <- params$Pth
+            }else{
+                  nP = NULL
+            }
             if(is.null(nP)){
                   s <- rep(NA, length(s))
             }else if(any(!is.na(p)) & any(!is.na(o))){
                   if (length(which(p > Pth)) > 0){ 
-                        ##
-                        ePrd<-ecdf(p[which(p > Pth)]) 
-                        ##
                         noRain <- which(s<=Pth & !is.na(s))
                         rain <- which(s > Pth & !is.na(s))
                         drizzle <- which(s > Pth  & s  <= min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))
+                        eFrc<-ecdf(s[rain])
                         if (length(rain) > 0){
-                              eFrc <- ecdf(s[rain]) #eFrc??
-                              ##############################################################################-
+                              if(is.null(n.quantiles)) n.quantiles <- length(p)
+                              bins <- n.quantiles
+                              qo <- quantile(o[which(o > threshold & !is.na(o))], prob = seq(1/bins,1-1/bins,1/bins), na.rm = T)
+                              qp <- quantile(p[which(p > Pth)], prob = seq(1/bins,1-1/bins,1/bins), na.rm = T)
+                              p2o <- approxfun(qp, qo, method = "linear")
+                              smap <- s
+                              smap[rain] <- p2o(s[rain])
+                              # Lineara extrapolation was discarded due to lack of robustness 
                               if(extrapolation == "constant"){
-                                    exupsim <- which(s[rain] > max(range(p, na.rm = TRUE))) #
-                                    exdwnsim <- which(s[rain] < min(range(p, na.rm = TRUE)))  
-                                    ex <- c(exupsim,exdwnsim)
-                                    exC <- setdiff(1:length(rain),ex)
-                                    if (length(exupsim)>0){
-                                          extmin <- max(p, na.rm = TRUE)
-                                          dif <- extmin - max(o[which(o > threshold & !is.na(o))], na.rm = TRUE)
-                                          s[rain[exupsim]] <- s[rain[exupsim]] - dif
-                                    }
-                                    if (length(exdwnsim) > 0){
-                                          extmin <- min(p, na.rm = TRUE)
-                                          dif <- extmin - min(o[which(o > threshold & !is.na(obs))], na.rm = TRUE)
-                                          s[rain[exdwnsim]] <- s[rain[exdwnsim]] - dif
-                                    }
-                                    s[rain[exC]] <- quantile(o[which(o > threshold & !is.na(o))], probs = ePrd(s[rain[exC]]), na.rm = TRUE, type = 4)
+                                    smap[rain][which(s[rain] > max(qp, na.rm = TRUE))] <- s[rain][which(s[rain] > max(qp, na.rm = TRUE))]+(qo[length(qo)]-qp[length(qo)])
+                                    smap[rain][which(s[rain] < min(qp, na.rm = TRUE))] <- s[rain][which(s[rain] < min(qp, na.rm = TRUE))]+(qo[1]-qp[1]) 
                               }else{
-                                    s[rain]<-quantile(o[which(o > threshold & !is.na(o))], probs = ePrd(s[rain]), na.rm = TRUE, type = 4)
+                                    smap[rain][which(s[rain] > max(qp, na.rm = TRUE))] <- qo[length(qo)]
+                                    smap[rain][which(s[rain] < min(qp, na.rm = TRUE))] <- qo[1]
                               }
-                              ####################################################################################-
                         }
                         if (length(drizzle)>0){
-                              s[drizzle]<-quantile(s[which(s > min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))], probs = eFrc(s[drizzle]), na.rm = TRUE, type = 4)
+                              smap[drizzle]<-quantile(smap[which(smap > min(p[which(p > Pth)], na.rm = TRUE) & !is.na(smap))], probs = eFrc(smap[drizzle]), na.rm = TRUE, type = 4)
                         }
-                        s[noRain]<-0
-                  }else{
+                        smap[noRain]<-0
+                  }else{############33???????
                         noRain<-which(s <= Pth & !is.na(s))
                         rain<-which(s > Pth & !is.na(s))
                         if (length(rain)>0){
                               eFrc<-ecdf(s[rain])
                               s[rain]<-quantile(o[which(o > threshold & !is.na(o))], probs = eFrc(s[rain]), na.rm = TRUE, type = 4)
+                              smap <- s
                         }
-                        s[noRain]<-0
+                        smap[noRain]<-0
                   }
             }
-       }else{
-             if(all(is.na(o))){
-                   s <- rep(NA, length(s))
-             }else if (any(!is.na(p)) & any(!is.na(o))) {
-                        ePrd <- ecdf(p)
-                              #################-
-                              if(extrapolation == "constant"){
-                                    exupsim <- which(s > max(range(p, na.rm = TRUE))) 
-                                    exdwnsim <- which(s < min(range(p, na.rm = TRUE)))  
-                                    ex <- c(exupsim,exdwnsim)
-                                    exC <- setdiff(1:length(s),ex)
-                                    if (length(exupsim)>0){
-                                          extmin <- max(p, na.rm = TRUE)
-                                          dif <- extmin - max(o, na.rm = TRUE)
-                                          s[exupsim] <- s[exupsim] - dif
-                                    }
-                                    if (length(exdwnsim)>0){
-                                          extmin <- min(p, na.rm = TRUE)
-                                          dif <- extmin - min(o, na.rm = TRUE)
-                                          s[exdwnsim] <- s[exdwnsim] - dif
-                                    }
-                                    s[exC] <- quantile(o, probs = ePrd(s[exC]), na.rm = TRUE, type = 4)
-                              }else{
-                                    s <- quantile(o, probs = ePrd(s), na.rm = TRUE, type = 4)
-                              }
-                        
-                              #################-
+      }else{
+            if(all(is.na(o))){
+                  s <- rep(NA, length(s))
+            }else if (any(!is.na(p)) & any(!is.na(o))) {
+                  if(is.null(n.quantiles)) n.quantiles <- length(p)
+                  bins <- n.quantiles
+                  qo <- quantile(o, prob = seq(1/bins,1-1/bins,1/bins), na.rm = T)
+                  qp <- quantile(p, prob = seq(1/bins,1-1/bins,1/bins), na.rm = T)
+                  p2o <- approxfun(qp, qo, method = "linear")
+                  smap <- p2o(s)
+                  if(extrapolation == "constant"){
+                        smap[which(s > max(qp, na.rm = TRUE))] <- s[which(s > max(qp, na.rm = TRUE))]+(qo[length(qo)]-qp[length(qo)])
+                        smap[which(s < min(qp, na.rm = TRUE))] <- s[which(s < min(qp, na.rm = TRUE))]+(qo[1]-qp[1]) 
+                  }else{
+                        smap[which(s > max(qp, na.rm = TRUE))] <- qo[length(qo)]
+                        smap[which(s < min(qp, na.rm = TRUE))] <- qo[1]
+                  }
             }
       }
-      return(s)
+      
+      return(smap)
 }
-         
+
+
 #end
 
 #' @title Generalized Quantile Mapping method for bias correction
@@ -511,46 +498,46 @@ eqm <- function(o, p, s, precip, pr.threshold, extrapolation){
 #' @author S. Herrera and M. Iturbide
 
 gpqm <- function(o, p, s, precip, pr.threshold, theta){ 
-         if(precip == FALSE){
-               stop("method gpqm is only applied to precipitation data")
-         }else{
-
-               threshold <- pr.threshold
-               if (any(!is.na(o))){
-                   params <-  norain(o, p, threshold)
-                   p <- params$p
-                   nP <- params$nP
-                   Pth <- params$Pth
-               }else{
-                     nP = NULL
-               }
-               if(is.null(nP)){
-                     s <- rep(NA, length(s))
-               }else if(nP < length(o)){
-                        ind <- which(o > threshold & !is.na(o))
-                        indgamma <- ind[which(o[ind] < quantile(o[ind], theta))]
-                        indpareto <- ind[which(o[ind] >= quantile(o[ind], theta))]
-                        obsGQM <- fitdistr(o[indgamma],"gamma")
-                        obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
-                        ind <- which(p > 0 & !is.na(p))
-                        indgamma <- ind[which(p[ind] < quantile(p[ind],theta))]
-                        indpareto <-ind[which(p[ind] >= quantile(p[ind], theta))]
-                        prdGQM <- fitdistr(p[indgamma], "gamma")
-                        prdGQM2 <- fpot(p[indpareto], quantile(p[ind], theta), "gpd", std.err = FALSE)
-                        rain <- which(s > Pth & !is.na(s))
-                        noRain <- which(s <= Pth & !is.na(s))
-                        indgammasim <- rain[which(s[rain] < quantile(p[ind], theta))]
-                        indparetosim <- rain[which(s[rain] >= quantile(p[ind], theta))]
-                        auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
-                        auxF2 <- pgpd(s[indparetosim], loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
-                        s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
-                        s[indparetosim[which(auxF2<1)]] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
-                        s[indparetosim[which(auxF2==1)]] <- max(o[indpareto], na.rm = TRUE)
-                        s[noRain] <- 0
-                        warningNoRain <- FALSE
-                  }else{
-                        warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
-                  }  
+      if(precip == FALSE){
+            stop("method gpqm is only applied to precipitation data")
+      }else{
+            
+            threshold <- pr.threshold
+            if (any(!is.na(o))){
+                  params <-  norain(o, p, threshold)
+                  p <- params$p
+                  nP <- params$nP
+                  Pth <- params$Pth
+            }else{
+                  nP = NULL
+            }
+            if(is.null(nP)){
+                  s <- rep(NA, length(s))
+            }else if(nP < length(o)){
+                  ind <- which(o > threshold & !is.na(o))
+                  indgamma <- ind[which(o[ind] < quantile(o[ind], theta))]
+                  indpareto <- ind[which(o[ind] >= quantile(o[ind], theta))]
+                  obsGQM <- fitdistr(o[indgamma],"gamma")
+                  obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
+                  ind <- which(p > 0 & !is.na(p))
+                  indgamma <- ind[which(p[ind] < quantile(p[ind],theta))]
+                  indpareto <-ind[which(p[ind] >= quantile(p[ind], theta))]
+                  prdGQM <- fitdistr(p[indgamma], "gamma")
+                  prdGQM2 <- fpot(p[indpareto], quantile(p[ind], theta), "gpd", std.err = FALSE)
+                  rain <- which(s > Pth & !is.na(s))
+                  noRain <- which(s <= Pth & !is.na(s))
+                  indgammasim <- rain[which(s[rain] < quantile(p[ind], theta))]
+                  indparetosim <- rain[which(s[rain] >= quantile(p[ind], theta))]
+                  auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
+                  auxF2 <- pgpd(s[indparetosim], loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
+                  s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
+                  s[indparetosim[which(auxF2<1)]] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
+                  s[indparetosim[which(auxF2==1)]] <- max(o[indpareto], na.rm = TRUE)
+                  s[noRain] <- 0
+                  warningNoRain <- FALSE
+            }else{
+                  warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
+            }  
       }
       return(s)
 }
@@ -568,7 +555,7 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
 #' @author S. Herrera and M. Iturbide
 
 norain <- function(o, p , threshold){
-     nP <- sum(as.double(o <= threshold & !is.na(o)), na.rm = TRUE)
+      nP <- sum(as.double(o <= threshold & !is.na(o)), na.rm = TRUE)
       if (nP >= 0 & nP < length(o)){
             ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
             Ps <- sort(p, decreasing = FALSE, na.last = NA)
@@ -598,7 +585,7 @@ norain <- function(o, p , threshold){
                   Ps[1:ind]<-0
             }
             p[ix] <- Ps
-
+            
       }else{
             if (nP == length(o)){
                   ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
@@ -608,7 +595,7 @@ norain <- function(o, p , threshold){
                   Ps[1:ind] <- 0
                   p[ix] <- Ps
             }
-     }
+      }
       return(list("nP" = nP, "Pth" = Pth, "p" = p)) 
 }
 

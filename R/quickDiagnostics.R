@@ -358,7 +358,7 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
             y <- Reduce("+", yl)/length(yl)
             
             rmse.direct <- sqrt(mean((x - y)^2))
-            bias.direct <-  sum(y - x)/sum(x)
+            bias.direct <-  sum(y - x, na.rm = T)/sum(x, na.rm = T)
             rho.direct <- cor(x = x, y = y, method = "spearman")
             
             lines(1:length(y), 
@@ -372,11 +372,11 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
                   
                   xt <- x[(length(x) -(length(w)-1)):length(x)]
                   yt <- y[(length(x) -(length(w)-1)):length(x)]
-                  rmse.down <- sqrt(mean((xt - w)^2))
-                  bias.down <-  sum(w - xt)/sum(x)
+                  rmse.down <- sqrt(mean((xt - w)^2, na.rm = T))
+                  bias.down <-  sum(w - xt, na.rm = T)/sum(x, na.rm = T)
                   rho.down <- cor(x = xt, y = w, method = "spearman")
-                  rmse.direct <- sqrt(mean((xt - yt)^2))
-                  bias.direct <-  sum(yt - xt)/sum(x)
+                  rmse.direct <- sqrt(mean((xt - yt)^2, na.rm = T))
+                  bias.direct <-  sum(yt - xt, na.rm = T)/sum(x, na.rm = T)
                   rho.direct <- cor(x = xt, y = yt, method = "spearman")
                   lines((length(x) -(length(w)-1)):length(x), 
                         w, col = "blue", lwd = 1)
@@ -405,11 +405,11 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
             if (!is.null(downscaled)) {
                   xt <- x[(length(x) -(length(w)-1)):length(x)]
                   yt <- y[(length(x) -(length(w)-1)):length(x)]
-                  rmse.down <- sqrt(mean((xt - w)^2))
-                  bias.down <-  sum(w - xt)/sum(x)
+                  rmse.down <- sqrt(mean((xt - w)^2, na.rm = T))
+                  bias.down <-  sum(w - xt, na.rm = T)/sum(x, na.rm = T)
                   rho.down <- cor(x = xt, y = w, method = "spearman")
-                  rmse.direct <- sqrt(mean((xt - yt)^2))
-                  bias.direct <-  sum(yt- xt)/sum(x)
+                  rmse.direct <- sqrt(mean((xt - yt)^2, na.rm = T))
+                  bias.direct <-  sum(yt- xt, na.rm = T)/sum(x, na.rm = T)
                   rho.direct <- cor(x = xt, y = yt, method = "spearman")
                   lines((length(x) -(length(w)-1)):length(x), 
                         w, 
@@ -431,16 +431,14 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
             }
       }
       # qq-plot
+      qy <- quantile(y, probs = seq(0.01, .99, 0.01), na.rm = T, , type =4)
+      qw <-  quantile(w, probs = seq(0.01, .99, 0.01), na.rm = T, type =4)
       q1 <- quantile(x, probs = seq(0.01, .99, 0.01), na.rm = T, , type =4)
-      yran <- c(0, max(q1))
-      plot(q1, 
-           quantile(y, probs = seq(0.01, .99, 0.01), na.rm = T, type =4), 
-           col="red", main = "qq-plot", xlab = "obs", ylab = "predicted", ylim = yran)
-      lines(0:max(q1), 0:max(q1))
+      yran <- c(0, max(c(q1, qy, qw)))
+      plot(q1, qy, col="red", main = "qq-plot", xlab = "obs", ylab = "predicted", ylim = yran)
+      lines(0:max(c(q1, qy, qw)), 0:max(c(q1, qy, qw)))
       if(!is.null(downscaled)){
-            points(q1, 
-                   quantile(w, probs = seq(0.01, .99, 0.01), na.rm = T, type =4), 
-                   col="blue")
+            points(q1,qw, col="blue")
       }
       par(mfrow = c(1,1)) 
 }
