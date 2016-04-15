@@ -1,3 +1,20 @@
+##     subsetGrid.R Select an arbitrary subset from a grid
+##
+##     Copyright (C) 2016 Santander Meteorology Group (http://www.meteo.unican.es)
+##
+##     This program is free software: you can redistribute it and/or modify
+##     it under the terms of the GNU General Public License as published by
+##     the Free Software Foundation, either version 3 of the License, or
+##     (at your option) any later version.
+## 
+##     This program is distributed in the hope that it will be useful,
+##     but WITHOUT ANY WARRANTY; without even the implied warranty of
+##     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##     GNU General Public License for more details.
+## 
+##     You should have received a copy of the GNU General Public License
+##     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #' @title Select an arbitrary subset from a grid or multigrid along one or more of its dimensions
 #' @description Create a new grid/multigrid that is a subset of the input grid along the selected dimensions
 #' @param grid The input grid to be subset. This is either a grid, as returned e.g. by \code{loadeR::loadGridData}, a
@@ -79,7 +96,16 @@
 #' plotMeanGrid(sub2)
 
 
-subsetGrid <- function(grid, var = NULL, runtime = NULL, members = NULL, years = NULL, season = NULL, latLim = NULL, lonLim = NULL, outside = FALSE, drop = TRUE) {
+subsetGrid <- function(grid,
+                       var = NULL,
+                       runtime = NULL,
+                       members = NULL,
+                       years = NULL,
+                       season = NULL,
+                       lonLim = NULL,
+                       latLim = NULL,
+                       outside = FALSE,
+                       drop = TRUE) {
       if (!is.null(var)) {
             grid <- subsetVar(grid, var, drop)
       }
@@ -98,7 +124,6 @@ subsetGrid <- function(grid, var = NULL, runtime = NULL, members = NULL, years =
       if (!is.null(lonLim) | !is.null(latLim)) {
             grid <- subsetSpatial(grid, lonLim, latLim, outside, drop)
       }
-      
       return(grid)
 }
 # End
@@ -124,38 +149,38 @@ subsetGrid <- function(grid, var = NULL, runtime = NULL, members = NULL, years =
 #' @author J. Bedia 
 #' @family subsetting
 
-subsetVar <- function(multiGrid, var, drop = TRUE) {
-      if (length(multiGrid$Variable$varName) == 1) {
+subsetVar <- function(grid, var, drop) {
+      if (length(grid$Variable$varName) == 1) {
             warning("Argument 'var' was ignored: Input grid is not a multigrid object")
-            return(multiGrid)
+            return(grid)
       } 
-      var.idx <- grep(paste0("^", var, "$", collapse = "|"), multiGrid$Variable$varName)
+      var.idx <- grep(paste0("^", var, "$", collapse = "|"), grid$Variable$varName)
       if (length(var.idx) == 0) {
             stop("Variables indicated in argument 'var' not found")
       }
       if (length(var.idx) < length(var)) {
             stop("Some variables indicated in argument 'var' not found")
       }
-      var.dim <- grep("var", attr(multiGrid$Data, "dimensions"))
-      dimNames <- attr(multiGrid$Data, "dimensions")
-      multiGrid$Data <- asub(multiGrid$Data, idx = var.idx, dims = var.dim, drop = drop)                  
+      var.dim <- grep("var", attr(grid$Data, "dimensions"))
+      dimNames <- attr(grid$Data, "dimensions")
+      grid$Data <- asub(grid$Data, idx = var.idx, dims = var.dim, drop = drop)                  
       mf <- FALSE
-      attr(multiGrid$Data, "dimensions") <- if (length(dim(multiGrid$Data)) == length(dimNames)) {
+      attr(grid$Data, "dimensions") <- if (length(dim(grid$Data)) == length(dimNames)) {
             mf <- TRUE
             dimNames
       } else {
             dimNames[-1]
       }
-      multiGrid$Variable$varName <- multiGrid$Variable$varName[var.idx]
-      multiGrid$Variable$level <- multiGrid$Variable$level[var.idx]
-      attributes(multiGrid$Variable)[-1] <- lapply(attributes(multiGrid$Variable)[-1], "[", var.idx)
-      multiGrid$Dates <- if (isTRUE(mf)) {
-            multiGrid$Dates[var.idx]
+      grid$Variable$varName <- grid$Variable$varName[var.idx]
+      grid$Variable$level <- grid$Variable$level[var.idx]
+      attributes(grid$Variable)[-1] <- lapply(attributes(grid$Variable)[-1], "[", var.idx)
+      grid$Dates <- if (isTRUE(mf)) {
+            grid$Dates[var.idx]
       } else {
-            multiGrid$Dates[[var.idx]]
+            grid$Dates[[var.idx]]
       }
-      attr(multiGrid$Variable, "subset") <- "subsetVar"
-      return(multiGrid)
+      attr(grid$Variable, "subset") <- "subsetVar"
+      return(grid)
 }
 # End
 
@@ -165,7 +190,7 @@ subsetVar <- function(multiGrid, var, drop = TRUE) {
 #' Retrieves a grid that is a logical subset of a multimember grid along its 'member' dimension.
 #'  Multimember multigrids are supported. Subroutine of \code{\link{subsetGrid}}.
 #'
-#' @param mmGrid Input multimember grid to be subset (possibly a multimember multigrid).
+#' @param grid Input multimember grid to be subset (possibly a multimember multigrid).
 #' @param members An integer vector indicating \strong{the position} of the members to be subset.
 #' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @return A grid (or multigrid) that is a logical subset of the input grid along its 'member' dimension.
@@ -176,30 +201,30 @@ subsetVar <- function(multiGrid, var, drop = TRUE) {
 #' @author J. Bedia 
 #' @family subsetting
 
-subsetMembers <- function(mmGrid, members = NULL, drop = TRUE) {
-      dimNames <- attr(mmGrid$Data, "dimensions")
+subsetMembers <- function(grid, members, drop) {
+      dimNames <- attr(grid$Data, "dimensions")
       if (length(grep("member", dimNames)) == 0) {
             warning("Argument 'members' was ignored: Input grid is not a multimember grid object")
-            return(mmGrid)
+            return(grid)
       }      
-      mem.dim <- grep("member", attr(mmGrid$Data, "dimensions"))
-      if (!all(members %in% (1:dim(mmGrid$Data)[mem.dim]))) {
+      mem.dim <- grep("member", attr(grid$Data, "dimensions"))
+      if (!all(members %in% (1:dim(grid$Data)[mem.dim]))) {
             stop("'members' dimension subscript out of bounds")
       }
-      mmGrid$Data <- asub(mmGrid$Data, idx = members, dims = mem.dim, drop = drop)                  
+      grid$Data <- asub(grid$Data, idx = members, dims = mem.dim, drop = drop)                  
       mf <- FALSE
-      attr(mmGrid$Data, "dimensions") <- if (length(dim(mmGrid$Data)) == length(dimNames)) {
+      attr(grid$Data, "dimensions") <- if (length(dim(grid$Data)) == length(dimNames)) {
             mf <- TRUE
             dimNames
       } else {
             dimNames[-mem.dim]
       }
-      mmGrid$Members <- mmGrid$Members[members]
-      if (is.list(mmGrid$InitializationDates)) { # e.g. CFSv2 (members defined through lagged runtimes)
-            mmGrid$InitializationDates <- mmGrid$InitializationDates[members]
+      grid$Members <- grid$Members[members]
+      if (is.list(grid$InitializationDates)) { # e.g. CFSv2 (members defined through lagged runtimes)
+            grid$InitializationDates <- grid$InitializationDates[members]
       } 
-      if(!is.null(mmGrid$Runtime)) attr(mmGrid$Members, "subset") <- "subsetMembers"
-      return(mmGrid)
+      if (!is.null(grid$Runtime)) attr(grid$Members, "subset") <- "subsetMembers"
+      return(grid)
 }
 # End
 
@@ -208,7 +233,7 @@ subsetMembers <- function(mmGrid, members = NULL, drop = TRUE) {
 #' Retrieves a grid that is a logical subset of a multiruntime grid along its 'runtime' dimension.
 #'  Multiruntime multigrids are supported. Subroutine of \code{\link{subsetGrid}}.
 #'
-#' @param mmGrid Input multiruntime grid to be subset.
+#' @param grid Input multiruntime grid to be subset.
 #' @param runtime An integer vector indicating \strong{the position} of the runtimes to be subset.
 #' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @return A grid (or multigrid) that is a logical subset of the input grid along its 'runtime' dimension.
@@ -219,30 +244,30 @@ subsetMembers <- function(mmGrid, members = NULL, drop = TRUE) {
 #' @author M. Iturbide
 #' @family subsetting
 
-subsetRuntime <- function(mmGrid, runtime = NULL, drop = TRUE) {
-      dimNames <- attr(mmGrid$Data, "dimensions")
+subsetRuntime <- function(grid, runtime, drop) {
+      dimNames <- attr(grid$Data, "dimensions")
       if (length(grep("runtime", dimNames)) == 0) {
             warning("Argument 'runtime' was ignored: Input grid is not a multiruntime grid object")
-            return(mmGrid)
+            return(grid)
       }      
-      run.dim <- grep("runtime", attr(mmGrid$Data, "dimensions"))
-      if (!all(runtime %in% (1:dim(mmGrid$Data)[run.dim]))) {
+      run.dim <- grep("runtime", attr(grid$Data, "dimensions"))
+      if (!all(runtime %in% (1:dim(grid$Data)[run.dim]))) {
             stop("'runtime' dimension subscript out of bounds")
       }
-      mmGrid$Data <- asub(mmGrid$Data, idx = runtime, dims = run.dim, drop = drop)                  
+      grid$Data <- asub(grid$Data, idx = runtime, dims = run.dim, drop = drop)                  
       mf <- FALSE
-      attr(mmGrid$Data, "dimensions") <- if (length(dim(mmGrid$Data)) == length(dimNames)) {
+      attr(grid$Data, "dimensions") <- if (length(dim(grid$Data)) == length(dimNames)) {
             mf <- TRUE
             dimNames
       } else {
             dimNames[-run.dim]
       }
-      mmGrid$Runtime <- mmGrid$Members[runtime]
-      if (is.list(mmGrid$InitializationDates)) { # e.g. CFSv2 (members defined through lagged runtimes)
-            mmGrid$InitializationDates <- mmGrid$InitializationDates[runtime]
+      grid$Runtime <- grid$Members[runtime]
+      if (is.list(grid$InitializationDates)) { # e.g. CFSv2 (members defined through lagged runtimes)
+            grid$InitializationDates <- grid$InitializationDates[runtime]
       } 
-      if (!is.null(mmGrid$Runtime)) attr(mmGrid$Runtime, "subset") <- "subsetRuntime"
-      return(mmGrid)
+      if (!is.null(grid$Runtime)) attr(grid$Runtime, "subset") <- "subsetRuntime"
+      return(grid)
 }
 # End
 
@@ -265,7 +290,7 @@ subsetRuntime <- function(mmGrid, runtime = NULL, drop = TRUE) {
 #' @author J. Bedia 
 #' @family subsetting
 
-subsetYears <- function(grid, years = NULL, drop = TRUE) {
+subsetYears <- function(grid, years, drop) {
       dimNames <- attr(grid$Data, "dimensions")
       season <- getSeason(grid)
       all.years <- getYearsAsINDEX(grid)
@@ -311,9 +336,11 @@ subsetYears <- function(grid, years = NULL, drop = TRUE) {
 #'  of the bounding box defining the subset. For single-point subsets, a numeric value with the
 #'  longitude coordinate. If \code{NULL} (default), no subsetting is performed on the longitude dimension
 #' @param latLim Same as \code{lonLim} argument, but for latitude.
-#' @param outside if TRUE subset coordinates outside the grid extent are allowed. Default is FALSE.
-#' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
-#' @details An attribute 'subset' with value 'subsetSpatial' is added to the xyCoords slot of the output subset.
+#' @param outside Logical. Default to \code{FALSE}. If \code{TRUE}, subset coordinates outside the grid extent 
+#' are allowed. 
+#' @param drop Logical (default to \code{TRUE}). Drop or keep dimensions of length 1.
+#' @details An attribute \code{subset} with value \code{subsetSpatial} is added to the \code{xyCoords}
+#' component of the output grid.
 #' @return A grid (or multigrid) that is a logical spatial subset of the input grid.
 #' @importFrom abind asub
 #' @keywords internal
@@ -321,29 +348,29 @@ subsetYears <- function(grid, years = NULL, drop = TRUE) {
 #' @author J. Bedia 
 #' @family subsetting
 #' 
-subsetSpatial <- function(grid, lonLim = NULL, latLim = NULL, outside = FALSE, drop = TRUE) {
+subsetSpatial <- function(grid, lonLim, latLim, outside, drop) {
       dimNames <- attr(grid$Data, "dimensions")
       if (!is.null(lonLim)) {
             if (!is.vector(lonLim) | length(lonLim) > 2) {
                   stop("Invalid longitudinal boundary definition")
             }
             lons <- getCoordinates(grid)$x
-            if (lonLim[1] < lons[1] | lonLim[1] > tail(lons, 1)){
-                  if(outside == FALSE) {
+            if (lonLim[1] < lons[1] | lonLim[1] > tail(lons, 1)) {
+                  if (outside == FALSE) {
                         stop("Subset longitude boundaries outside the current grid extent: \n(",
                         paste(getGrid(grid)$x, collapse = ","), ")")
-                  }else{
+                  } else {
                         warning("Subset longitude boundaries outside the current grid extent: \n(",
                           paste(getGrid(grid)$x, collapse = ","), ")")
                   }
             }
             lon.ind <- which.min(abs(lons - lonLim[1]))
             if (length(lonLim) > 1) {
-                  if (lonLim[2] < lons[1] | lonLim[2] > tail(lons, 1)){
-                        if(outside == FALSE){
+                  if (lonLim[2] < lons[1] | lonLim[2] > tail(lons, 1)) {
+                        if (outside == FALSE) {
                               stop("Subset longitude boundaries outside the current grid extent: \n(",
                               paste(getGrid(grid)$x, collapse = ","), ")")
-                        }else{
+                        } else {
                               warning("Subset longitude boundaries outside the current grid extent: \n(",
                                 paste(getGrid(grid)$x, collapse = ","), ")")
                         }
@@ -364,22 +391,22 @@ subsetSpatial <- function(grid, lonLim = NULL, latLim = NULL, outside = FALSE, d
                   stop("Invalid latitudinal boundary definition")
             }
             lats <- getCoordinates(grid)$y
-            if (latLim[1] < lats[1] | latLim[1] > tail(lats, 1)){
-                  if(outside == FALSE) {
+            if (latLim[1] < lats[1] | latLim[1] > tail(lats, 1)) {
+                  if (outside == FALSE) {
                         stop("Subset latitude boundaries outside the current grid extent: \n(",
                         paste(getGrid(grid)$y, collapse = ","), ")")
-                  }else {
+                  } else {
                         warning("Subset longitude boundaries outside the current grid extent: \n(",
                           paste(getGrid(grid)$x, collapse = ","), ")")
                   }
             }
             lat.ind <- which.min(abs(lats - latLim[1]))
             if (length(latLim) > 1) {
-                  if (latLim[2] < lats[1] | latLim[2] > tail(lats, 1)){
-                        if(outside == FALSE) {
+                  if (latLim[2] < lats[1] | latLim[2] > tail(lats, 1)) {
+                        if (outside == FALSE) {
                               stop("Subset latitude boundaries outside the current grid extent: \n(",
                               paste(getGrid(grid)$y, collapse = ","), ")")
-                        }else{
+                        } else {
                               warning("Subset longitude boundaries outside the current grid extent: \n(",
                                 paste(getGrid(grid)$x, collapse = ","), ")")
                         }
