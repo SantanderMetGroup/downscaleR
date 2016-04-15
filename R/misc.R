@@ -210,3 +210,14 @@ draw.world.lines <- function(...) {
             lines(node.list[[i]][,1], node.list[[i]][,2], ...)            
       }
 }
+
+#' @title  Retrieve dimensions attribute
+#' @description Retrieve dimensions attribute
+#' @param obj A grid or station object
+#' @return A character vector with the dimensions attribute of the object's \code{Data} component.
+#' @keywords internal
+#' @author J. Bedia
+
+getDim <- function(obj) {
+      attr(obj[["Data"]], "dimensions")
+}
