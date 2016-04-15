@@ -14,6 +14,7 @@
 #' @param lonLim Vector of length = 2, with minimum and maximum longitude coordinates, in decimal degrees,
 #'  of the bounding box defining the subset. For single-point subsets, a numeric value with the
 #'  longitude coordinate. If \code{NULL} (default), no subsetting is performed on the longitude dimension
+#' @param outside if TRUE subset coordinates outside the grid extent are allowed. Default is FALSE.
 #' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @return A new grid object that is a logical subset of the input grid along the specified dimensions.
 #' @details
@@ -78,7 +79,7 @@
 #' plotMeanGrid(sub2)
 
 
-subsetGrid <- function(grid, var = NULL, runtime = NULL, members = NULL, years = NULL, season = NULL, latLim = NULL, lonLim = NULL, drop = TRUE) {
+subsetGrid <- function(grid, var = NULL, runtime = NULL, members = NULL, years = NULL, season = NULL, latLim = NULL, lonLim = NULL, outside = FALSE, drop = TRUE) {
       if (!is.null(var)) {
             grid <- subsetVar(grid, var, drop)
       }
@@ -95,7 +96,7 @@ subsetGrid <- function(grid, var = NULL, runtime = NULL, members = NULL, years =
             grid <- subsetSeason(grid, season, drop)
       }
       if (!is.null(lonLim) | !is.null(latLim)) {
-            grid <- subsetSpatial(grid, lonLim, latLim, drop)
+            grid <- subsetSpatial(grid, lonLim, latLim, outside, drop)
       }
       
       return(grid)
@@ -310,6 +311,7 @@ subsetYears <- function(grid, years = NULL, drop = TRUE) {
 #'  of the bounding box defining the subset. For single-point subsets, a numeric value with the
 #'  longitude coordinate. If \code{NULL} (default), no subsetting is performed on the longitude dimension
 #' @param latLim Same as \code{lonLim} argument, but for latitude.
+#' @param outside if TRUE subset coordinates outside the grid extent are allowed. Default is FALSE.
 #' @param drop Logical (default is TRUE). Drop or keep dimensions of length 1.
 #' @details An attribute 'subset' with value 'subsetSpatial' is added to the xyCoords slot of the output subset.
 #' @return A grid (or multigrid) that is a logical spatial subset of the input grid.
@@ -319,22 +321,32 @@ subsetYears <- function(grid, years = NULL, drop = TRUE) {
 #' @author J. Bedia 
 #' @family subsetting
 #' 
-subsetSpatial <- function(grid, lonLim = NULL, latLim = NULL, drop = TRUE) {
+subsetSpatial <- function(grid, lonLim = NULL, latLim = NULL, outside = FALSE, drop = TRUE) {
       dimNames <- attr(grid$Data, "dimensions")
       if (!is.null(lonLim)) {
             if (!is.vector(lonLim) | length(lonLim) > 2) {
                   stop("Invalid longitudinal boundary definition")
             }
             lons <- getCoordinates(grid)$x
-            if (lonLim[1] < lons[1] | lonLim[1] > tail(lons, 1)) {
-                  stop("Subset longitude boundaries outside the current grid extent: \n(",
-                       paste(getGrid(grid)$x, collapse = ","), ")")
+            if (lonLim[1] < lons[1] | lonLim[1] > tail(lons, 1)){
+                  if(outside == FALSE) {
+                        stop("Subset longitude boundaries outside the current grid extent: \n(",
+                        paste(getGrid(grid)$x, collapse = ","), ")")
+                  }else{
+                        warning("Subset longitude boundaries outside the current grid extent: \n(",
+                          paste(getGrid(grid)$x, collapse = ","), ")")
+                  }
             }
             lon.ind <- which.min(abs(lons - lonLim[1]))
             if (length(lonLim) > 1) {
-                  if (lonLim[2] < lons[1] | lonLim[2] > tail(lons, 1)) {
-                        stop("Subset longitude boundaries outside the current grid extent: \n(",
-                             paste(getGrid(grid)$x, collapse = ","), ")")
+                  if (lonLim[2] < lons[1] | lonLim[2] > tail(lons, 1)){
+                        if(outside == FALSE){
+                              stop("Subset longitude boundaries outside the current grid extent: \n(",
+                              paste(getGrid(grid)$x, collapse = ","), ")")
+                        }else{
+                              warning("Subset longitude boundaries outside the current grid extent: \n(",
+                                paste(getGrid(grid)$x, collapse = ","), ")")
+                        }
                   }
                   lon2 <- which.min(abs(lons - lonLim[2]))
                   lon.ind <- lon.ind:lon2
@@ -352,15 +364,25 @@ subsetSpatial <- function(grid, lonLim = NULL, latLim = NULL, drop = TRUE) {
                   stop("Invalid latitudinal boundary definition")
             }
             lats <- getCoordinates(grid)$y
-            if (latLim[1] < lats[1] | latLim[1] > tail(lats, 1)) {
-                  stop("Subset latitude boundaries outside the current grid extent: \n(",
-                       paste(getGrid(grid)$y, collapse = ","), ")")
+            if (latLim[1] < lats[1] | latLim[1] > tail(lats, 1)){
+                  if(outside == FALSE) {
+                        stop("Subset latitude boundaries outside the current grid extent: \n(",
+                        paste(getGrid(grid)$y, collapse = ","), ")")
+                  }else {
+                        warning("Subset longitude boundaries outside the current grid extent: \n(",
+                          paste(getGrid(grid)$x, collapse = ","), ")")
+                  }
             }
             lat.ind <- which.min(abs(lats - latLim[1]))
             if (length(latLim) > 1) {
-                  if (latLim[2] < lats[1] | latLim[2] > tail(lats, 1)) {
-                        stop("Subset latitude boundaries outside the current grid extent: \n(",
-                             paste(getGrid(grid)$y, collapse = ","), ")")
+                  if (latLim[2] < lats[1] | latLim[2] > tail(lats, 1)){
+                        if(outside == FALSE) {
+                              stop("Subset latitude boundaries outside the current grid extent: \n(",
+                              paste(getGrid(grid)$y, collapse = ","), ")")
+                        }else{
+                              warning("Subset longitude boundaries outside the current grid extent: \n(",
+                                paste(getGrid(grid)$x, collapse = ","), ")")
+                        }
                   }
                   lat2 <- which.min(abs(lats - latLim[2]))
                   lat.ind <- lat.ind:lat2

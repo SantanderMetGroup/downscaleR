@@ -75,7 +75,11 @@
 #' par(mfrow = c(1,1))
 #' }
 
-isimip <- function (obs, pred, sim, threshold = 1, type = c("additive", "multiplicative")) {
+isimip <- function (y, x, newdata, threshold = 1, type = c("additive", "multiplicative")) {
+      
+      obs <- y
+      pred <- x
+      sim <- newdata
       
       if (is.null(obs$Dates$start)){
             datesObs <- as.POSIXct(obs$Dates[[1]]$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
