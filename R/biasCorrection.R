@@ -163,7 +163,8 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                   if(is.null(window)){
                         # Apply bias correction methods
                         for(i in 1:nrow(ind)){
-                              mem[,,,ind[i,1],ind[i,2]] <- biasCorrection1D(obs$Data[,ind[i,1],ind[i,2]], 
+                              suppressWarnings(
+                                    mem[,,,ind[i,1],ind[i,2]] <- biasCorrection1D(obs$Data[,ind[i,1],ind[i,2]], 
                                                                             subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1], 
                                                                             subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1],
                                                                             method = method,
@@ -173,6 +174,7 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                                                             n.quantiles = n.quantiles,
                                                                             extrapolation = extrapolation,
                                                                             theta = theta)
+                              )
                         }                                                                             
                   }else{
                         step <- window[2]
@@ -222,9 +224,19 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                     indSim <- sort(do.call("abind", indSim))
                                     # Apply bias correction methods
                                     
-                                    o1 <- obs$Data[indObsWindow,ind[i,1],ind[i,2]]
-                                    p1 <- subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indObsWindow]
-                                    s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indSim]
+                                    suppressWarnings(
+                                          if(method == "delta"){
+                                                o1 <- obs$Data[indSim,ind[i,1],ind[i,2]]
+                                          }else{
+                                                o1 <- obs$Data[indObsWindow,ind[i,1],ind[i,2]]
+                                          }
+                                    )
+                                    suppressWarnings(
+                                          p1 <- subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indObsWindow]
+                                    )
+                                    suppressWarnings(
+                                          s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indSim]
+                                    )
                                     end[indSim,] <- biasCorrection1D(o1, p1, s1, 
                                                                      method = method,
                                                                      scaling.type = scaling.type,
@@ -233,6 +245,7 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                                                      n.quantiles = n.quantiles,
                                                                      extrapolation = extrapolation,
                                                                      theta = theta)
+                                    
                               }
                               mem[,,,ind[i,1],ind[i,2]] <- end
                         }
@@ -413,7 +426,7 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
                   nP = NULL
             }
             if(is.null(nP)){
-                  s <- rep(NA, length(s))
+                  smap <- rep(NA, length(s))
             }else if(any(!is.na(p)) & any(!is.na(o))){
                   if (length(which(p > Pth)) > 0){ 
                         noRain <- which(s<=Pth & !is.na(s))
@@ -428,7 +441,7 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
                               p2o <- approxfun(qp, qo, method = "linear")
                               smap <- s
                               smap[rain] <- p2o(s[rain])
-                              # Lineara extrapolation was discarded due to lack of robustness 
+                              # Linear extrapolation was discarded due to lack of robustness 
                               if(extrapolation == "constant"){
                                     smap[rain][which(s[rain] > max(qp, na.rm = TRUE))] <- s[rain][which(s[rain] > max(qp, na.rm = TRUE))]+(qo[length(qo)]-qp[length(qo)])
                                     smap[rain][which(s[rain] < min(qp, na.rm = TRUE))] <- s[rain][which(s[rain] < min(qp, na.rm = TRUE))]+(qo[1]-qp[1]) 
@@ -438,18 +451,21 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
                               }
                         }
                         if (length(drizzle)>0){
-                              smap[drizzle]<-quantile(smap[which(smap > min(p[which(p > Pth)], na.rm = TRUE) & !is.na(smap))], probs = eFrc(smap[drizzle]), na.rm = TRUE, type = 4)
+                              smap[drizzle]<-quantile(s[which(s > min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))], probs = eFrc(s[drizzle]), na.rm = TRUE, type = 4)
                         }
                         smap[noRain]<-0
-                  }else{############33???????
-                        noRain<-which(s <= Pth & !is.na(s))
-                        rain<-which(s > Pth & !is.na(s))
-                        if (length(rain)>0){
-                              eFrc<-ecdf(s[rain])
-                              s[rain]<-quantile(o[which(o > threshold & !is.na(o))], probs = eFrc(s[rain]), na.rm = TRUE, type = 4)
-                              smap <- s
-                        }
-                        smap[noRain]<-0
+                  }else{  ## For dry series
+                        smap <- s
+                        warning('No rainy days in the prediction. Bias correction is not applied') 
+#                         noRain<-which(s <= Pth & !is.na(s))
+#                         rain<-which(s > Pth & !is.na(s))
+#                         smap <- s
+#                         if (length(rain)>0){
+#                               eFrc<-ecdf(s[rain])
+#                               smap[rain]<-quantile(o[which(o > threshold & !is.na(o))], probs = eFrc(s[rain]), na.rm = TRUE, type = 4)
+# 
+#                         }
+#                         smap[noRain]<-0
                   }
             }
       }else{

@@ -5,9 +5,9 @@
 \title{Bias correction methods}
 \usage{
 biasCorrection(y, x, newdata, method = c("delta", "scaling", "eqm", "gqm",
-  "gpqm"), multi.member = TRUE, window = NULL,
-  scaling.type = c("additive", "multiplicative"), pr.threshold = 1,
-  extrapolation = c("no", "constant"), theta = 0.95)
+  "gpqm"), window = NULL, scaling.type = c("additive", "multiplicative"),
+  pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none",
+  "constant"), theta = 0.95)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -22,9 +22,6 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.}
 
-\item{multi.member}{Should members be adjusted sepparately (TRUE, default), or jointly (FALSE)?.
-Ignored if the dataset has no members.}
-
 \item{window}{vector of length = 2 specifying the time window width used to calibrate and the target days (days that are being corrected).
  The window is centered on the target day/s.
 Default to \code{NULL}, which considers the whole period available.}
@@ -36,9 +33,12 @@ selected as the bias correction method.}
 \item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
 \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). See details on bias correction for precipitation.}
 
+\item{n.quantiles}{Integer indicating the number of quantiles to be considered when method = "eqm". Default is NULL,
+that considers all quantiles, i.e. \code{n.quantiles = length(x[i,j])} (being \code{i} and \code{j} the coordinates in a single location).}
+
 \item{extrapolation}{Character indicating the extrapolation method to be applied to correct values in
-\code{"sim"} that are out of the range of \code{"x"}. Extrapolation is applied only to the \code{"eqm"} method,
-thus, this argument is ignored if other bias correction method is selected. Default is \code{"no"} (do not extrapolate).}
+\code{newdata} that are out of the range of \code{x}. Extrapolation is applied only to the \code{"eqm"} method,
+thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).}
 
 \item{theta}{numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed)
 above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD).
@@ -109,8 +109,8 @@ data(NCEP_Iberia_tp)
 y <- VALUE_Igueldo_tp
 x <- NCEP_Iberia_tp
 
-eqm1 <- biasCorrection(y = y, x = x, newdata = x, method = "eqm", extrapolation = "no", window = NULL)
-eqm1win <- biasCorrection(y = y, x = x, newdata = x, method = "eqm", extrapolation = "no", window = c(90, 1))
+eqm1 <- biasCorrection(y = y, x = x, newdata = x, method = "eqm", extrapolation = "none", window = NULL)
+eqm1win <- biasCorrection(y = y, x = x, newdata = x, method = "eqm", extrapolation = "none", window = c(90, 1))
 NCEP_Igueldo <- subsetGrid(x, latLim = y$xyCoords[,2], lonLim = y$xyCoords[,1])
 
 par(mfrow = c(1,3))

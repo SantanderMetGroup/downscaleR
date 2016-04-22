@@ -321,14 +321,14 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), m
       if(any(attr(obs$Data, "dimensions")=="station")){
             x <- obs$Data
       }else{
-            x <- subsetGrid(obs, lonLim = location[1], latLim = location[2])$Data
+            x <- subsetGrid(obs, lonLim = location[1], latLim = location[2], outside = T)$Data
       }
-      y <- subsetGrid(sim, lonLim = location[1], latLim = location[2])$Data
+      y <- subsetGrid(sim, lonLim = location[1], latLim = location[2], outside = T)$Data
       if(!is.null(downscaled)){
             if(any(attr(obs$Data, "dimensions")=="station")){
                   w <- downscaled$Data
             }else{
-                  w <-  subsetGrid(downscaled, lonLim = location[1], latLim = location[2])$Data
+                  w <-  subsetGrid(downscaled, lonLim = location[1], latLim = location[2], outside = T)$Data
             }
       }
       yran <- if (is.null(ylim)) {
