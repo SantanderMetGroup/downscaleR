@@ -143,18 +143,27 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
       bc <- obs
       pred <- redim(pred)
       sim <- redim(sim)
+      if(dim(obs$Data)[1]!=dim(pred$Data)[-(1:2)][1]) stop("y and x do not have the same time series length")
       
       n.run <- dim(sim$Data)[1]
       n.mem <- dim(sim$Data)[2]
       
-      run <- array(dim = c(1, n.mem, dim(sim$Data)[-(1:2)][1], dim(obs$Data)[-1]))
+      if(method == "delta"){
+            run <- array(dim = c(1, n.mem, dim(obs$Data)))
+      }else{
+            run <- array(dim = c(1, n.mem, dim(sim$Data)[-(1:2)][1], dim(obs$Data)[-1]))
+      }
       lrun <- lapply(1:n.run, function(k){    # loop for runtimes
             
             pre <- subsetGrid(pred, runtime = k, drop = FALSE)
             si <- subsetGrid(sim, runtime = k, drop = FALSE)
             
             #                   if(multi.member == TRUE){
-            mem <- array(dim = c(1, 1, dim(sim$Data)[-(1:2)][1], dim(obs$Data)[-1]))
+            if(method == "delta"){
+                  mem <- array(dim = c(1, 1, dim(obs$Data)))
+            }else{
+                  mem <- array(dim = c(1, 1, dim(sim$Data)[-(1:2)][1], dim(obs$Data)[-1]))
+            }
             lmem <- lapply(1:n.mem, function(l){ # loop for members
                   
                   p <-subsetGrid(pred, members = l, drop = FALSE)
@@ -164,9 +173,9 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                         # Apply bias correction methods
                         for(i in 1:nrow(ind)){
                               suppressWarnings(
-                                    mem[,,,ind[i,1],ind[i,2]] <- biasCorrection1D(obs$Data[,ind[i,1],ind[i,2]], 
-                                                                            subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1], 
-                                                                            subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1],
+                                   mem[,,,ind[i,1],ind[i,2]] <- biasCorrection1D(obs$Data[,ind[i,1],ind[i,2]],
+                                                                            subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1],
+                                                                            subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1], 
                                                                             method = method,
                                                                             scaling.type = scaling.type,
                                                                             precip = precip,
@@ -175,6 +184,7 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                                                             extrapolation = extrapolation,
                                                                             theta = theta)
                               )
+                              
                         }                                                                             
                   }else{
                         step <- window[2]
@@ -196,7 +206,11 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                               indDaysSim[which(sqrt((dayListSim[,1]-dayList[d,1])^2+(dayListSim[,2]-dayList[d,2])^2)==0)] <- d
                         }
                         for(i in 1:nrow(ind)){
-                              end <- indDaysSim
+                              if(method == "delta"){
+                                    end <- indDays
+                              }else{
+                                    end <- indDaysSim
+                              }
                               steps <- floor(dim(dayList)[1]/step)
                               for (j in 1:steps){
                                     days <- ((j-1)*step+1):((j-1)*step+step)
@@ -226,7 +240,7 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                     
                                     suppressWarnings(
                                           if(method == "delta"){
-                                                o1 <- obs$Data[indSim,ind[i,1],ind[i,2]]
+                                                o1 <- obs$Data[indObs,ind[i,1],ind[i,2]]
                                           }else{
                                                 o1 <- obs$Data[indObsWindow,ind[i,1],ind[i,2]]
                                           }
@@ -237,6 +251,7 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                     suppressWarnings(
                                           s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indSim]
                                     )
+                                    if(method == "delta") indSim <- indObs
                                     end[indSim,] <- biasCorrection1D(o1, p1, s1, 
                                                                      method = method,
                                                                      scaling.type = scaling.type,
@@ -384,9 +399,9 @@ gqm <- function(o, p, s, precip, pr.threshold){
                   s <- rep(NA, length(s))
             }else if(nP < length(o)){
                   ind <- which(o > threshold & !is.na(o))
-                  obsGamma <- fitdistr(o[ind],"gamma")
+                  obsGamma <-  tryCatch({fitdistr(o[ind],"gamma")}, error = function(err){stop("There are not precipitation days in y for the window length selected in one or more locations. Try to enlarge the window")})
                   ind <- which(p > 0 & !is.na(p))
-                  prdGamma <- fitdistr(p[ind],"gamma")
+                  prdGamma <- tryCatch({fitdistr(p[ind],"gamma")}, error = function(err){stop("There are not precipitation days in x for the window length selected in one or more locations. Try to enlarge the window")})
                   rain <- which(s > Pth & !is.na(s))
                   noRain <- which(s <= Pth & !is.na(s))
                   auxF <- pgamma(s[rain], prdGamma$estimate[1], rate = prdGamma$estimate[2])
