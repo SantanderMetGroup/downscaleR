@@ -138,7 +138,7 @@ interpData <- function(obj,
       time.ind <- grep("^time", attr(obj$Data, "dimensions"))
       if (!any(attr(obj$Data, "dimensions") == "station")) {
             # Handles reverse ordering of lon-lat (i.e. lat-lon)
-            ind.order <- match(c("lon", "lat"), attr(obj$Data, "dimensions"))
+            ind.order <- match(c("lat", "lon"), attr(obj$Data, "dimensions"))
             transpose <- ifelse(!identical(sort(ind.order), ind.order), TRUE, FALSE)
       } else {
             transpose <- FALSE
@@ -219,7 +219,7 @@ interpData <- function(obj,
                               }
                         }
                   }
-                  z <- NULL
+#                   z <- NULL
                   return(int)
             })
             if (any(attr(new.coordinates,"type") == "location")) {
@@ -357,6 +357,11 @@ interpData <- function(obj,
       x <- x[b]
       obj$Data <- aperm(obj$Data, perm = b)    
       attr(obj$Data, "dimensions")  <- x
+      if(!is.null(attr(new.coordinates, "projection"))){
+            attr(obj$xyCoords, "projection") <- attr(new.coordinates, "projection")
+      }else{
+            attr(obj$xyCoords, "projection") <- "undefined"
+      }
       message("[", Sys.time(), "] Done")
       return(obj)
 }
