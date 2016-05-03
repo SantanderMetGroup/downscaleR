@@ -381,7 +381,6 @@ scaling <- function(o, p, s, scaling.type){
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
 gqm <- function(o, p, s, precip, pr.threshold){
-      
       if (precip == FALSE) {
             stop("method gqm is only applied to precipitation data")
       }else{
