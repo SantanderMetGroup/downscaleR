@@ -84,7 +84,7 @@ aggregateGrid <- function(grid,
                           aggr.m = list(FUN = NULL),
                           aggr.y = list(FUN = NULL),
                           aggr.lat = list(FUN = NULL),
-                          aggr.lon = aggr.lat,
+                          aggr.lon = list(FUN = NULL),
                           parallel = FALSE,
                           max.ncores = 16,
                           ncores = NULL) {
@@ -99,6 +99,12 @@ aggregateGrid <- function(grid,
       }
       if (!is.null(aggr.y$FUN)) {
             grid <- timeAggregation(grid, "YY", aggr.y, parallel, max.ncores, ncores)
+      }
+      if (!is.null(aggr.lat$FUN)) {
+            grid <- latAggregation(grid, aggr.lat, parallel, max.ncores, ncores)
+      }
+      if (!is.null(aggr.lon$FUN)) {
+            grid <- lonAggregation(grid, aggr.lon, parallel, max.ncores, ncores)
       }
       return(grid)
 }
@@ -238,5 +244,56 @@ timeAggregation <- function(grid, aggr.type = c("DD","MM","YY"), aggr.fun, paral
 }
                   
                   
-                  
+latAggregation <- function(grid, aggr.fun, parallel, max.ncores, ncores){
+      dimNames <- getDim(grid)
+      if (!"lat" %in% dimNames) {
+            message("There is not lat dimension: 'aggr.lat' option was ignored.")
+      }else{
+            parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
+            mar <- grep("lat", dimNames, invert = TRUE)
+            aggr.fun[["MARGIN"]] <- mar
+            aggr.fun[["X"]] <- grid$Data
+            out <- if (parallel.pars$hasparallel) {
+                  message("[", Sys.time(), "] - Aggregating lat dimension in parallel...")
+                  on.exit(parallel::stopCluster(parallel.pars$cl))
+                  aggr.fun[["cl"]] <- parallel.pars$cl
+                  do.call("parApply", aggr.fun)
+            }else{
+                  message("[", Sys.time(), "] - Aggregating lat dimension...")
+                  do.call("apply", aggr.fun)
+            }
+            grid$Data <- out
+            attr(grid$Data, "dimensions") <- dimNames[mar]
+            message("[", Sys.time(), "] - Done.")
+      }
+      return(grid)
+}
+
+
+lonAggregation <- function(grid, aggr.fun, parallel, max.ncores, ncores){
+      dimNames <- getDim(grid)
+      if (!"lon" %in% dimNames) {
+            message("There is not lat dimension: 'aggr.lon' option was ignored.")
+      }else{
+            parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
+            mar <- grep("lon", dimNames, invert = TRUE)
+            aggr.fun[["MARGIN"]] <- mar
+            aggr.fun[["X"]] <- grid$Data
+            out <- if (parallel.pars$hasparallel) {
+                  message("[", Sys.time(), "] - Aggregating lon dimension in parallel...")
+                  on.exit(parallel::stopCluster(parallel.pars$cl))
+                  aggr.fun[["cl"]] <- parallel.pars$cl
+                  do.call("parApply", aggr.fun)
+            }else{
+                  message("[", Sys.time(), "] - Aggregating lon dimension...")
+                  do.call("apply", aggr.fun)
+            }
+            grid$Data <- out
+            attr(grid$Data, "dimensions") <- dimNames[mar]
+            message("[", Sys.time(), "] - Done.")
+      }
+      return(grid)
+}
+
+
 
