@@ -184,7 +184,6 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                                                             extrapolation = extrapolation,
                                                                             theta = theta)
                               )
-                              
                         }                                                                             
                   }else{
                         step <- window[2]
@@ -485,7 +484,7 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
             }
       }else{
             if(all(is.na(o))){
-                  s <- rep(NA, length(s))
+                  smap <- rep(NA, length(s))
             }else if (any(!is.na(p)) & any(!is.na(o))) {
                   if(is.null(n.quantiles)) n.quantiles <- length(p)
                   bins <- n.quantiles
