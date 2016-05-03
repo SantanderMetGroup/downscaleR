@@ -109,8 +109,7 @@ J Bedia and M Iturbide
 \code{loadGridData} and \code{loadStationData}, from package \pkg{loadeR}, for loading grids and station data respectively.
 
 Other downscaling: \code{\link{analogs}},
-  \code{\link{biasCorrection}},
-  \code{\link{calibrateProj}}, \code{\link{glimpr}},
+  \code{\link{biasCorrection}}, \code{\link{glimpr}},
   \code{\link{isimip}}
 }
 

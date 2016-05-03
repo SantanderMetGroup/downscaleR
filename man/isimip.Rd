@@ -4,15 +4,9 @@
 \alias{isimip}
 \title{Bias correction ISI-MIP method}
 \usage{
-isimip(obs, pred, sim, threshold = 1, type = c("additive",
-  "multiplicative"))
+isimip(y, x, newdata, threshold = 1, type = c("additive", "multiplicative"))
 }
 \arguments{
-\item{threshold}{The minimum value that is considered as a non-occurrence (e.g. precipitation). Default to 1.}
-
-\item{type}{Type of bias correction approach, either multiplicative (e.g. precipitation, \code{type = "multiplicative"})
-or additive (e.g. temperature, \code{type = "additive"}, the default).}
-
 \item{y}{A grid or station data containing the observed climate data for the training period}
 
 \item{x}{A grid containing the simulated climate by the model for the training period. This can be either
@@ -21,6 +15,11 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
  after principal component analysis via the \code{\link{prinComp}} output).}
 
 \item{newdata}{A grid containing the simulated climate for the variables used in \code{x}, but considering the test period.}
+
+\item{threshold}{The minimum value that is considered as a non-occurrence (e.g. precipitation). Default to 1.}
+
+\item{type}{Type of bias correction approach, either multiplicative (e.g. precipitation, \code{type = "multiplicative"})
+or additive (e.g. temperature, \code{type = "additive"}, the default).}
 }
 \value{
 A calibrated object of the same spatio-temporal extent of the input grid
@@ -97,8 +96,7 @@ S. Herrera \email{sixto@predictia.es}
 \code{\link{biasCorrection}} for details on other standard methods for bias correction
 
 Other downscaling: \code{\link{analogs}},
-  \code{\link{biasCorrection}},
-  \code{\link{calibrateProj}}, \code{\link{downscale}},
+  \code{\link{biasCorrection}}, \code{\link{downscale}},
   \code{\link{glimpr}}
 }
 

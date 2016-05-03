@@ -4,14 +4,14 @@
 \alias{subsetVar}
 \title{Extract a grid from a multigrid object}
 \usage{
-subsetVar(multiGrid, var, drop = TRUE)
+subsetVar(grid, var, drop)
 }
 \arguments{
-\item{multiGrid}{Input multigrid to be subset}
-
 \item{var}{Character vector indicating the variables(s) to be extracted}
 
 \item{drop}{Logical (default is TRUE). Drop or keep dimensions of length 1.}
+
+\item{multiGrid}{Input multigrid to be subset}
 }
 \value{
 Either a (multimember)grid or (multimember)multigrid if one ore more variables

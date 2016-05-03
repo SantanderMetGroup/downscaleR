@@ -4,7 +4,7 @@
 \alias{subsetYears}
 \title{Year subsets from a multimember grid}
 \usage{
-subsetYears(grid, years = NULL, drop = TRUE)
+subsetYears(grid, years, drop)
 }
 \arguments{
 \item{grid}{Input grid to be subset (possibly a multimember/multigrid).}
