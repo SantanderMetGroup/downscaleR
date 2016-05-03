@@ -31,8 +31,7 @@ J Bedia, M Iturbide
 }
 \seealso{
 Other downscaling: \code{\link{analogs}},
-  \code{\link{biasCorrection}},
-  \code{\link{calibrateProj}}, \code{\link{downscale}},
+  \code{\link{biasCorrection}}, \code{\link{downscale}},
   \code{\link{isimip}}
 }
 \keyword{internal}

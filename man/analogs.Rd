@@ -71,8 +71,8 @@ Bedia, J. \emph{et al.}, 2013. Robust projections of Fire Weather Index in the M
 \code{loadGridData} and \code{loadStationData}, from package \pkg{loadeR}, for loading grids and station data respectively.
 
 Other downscaling: \code{\link{biasCorrection}},
-  \code{\link{calibrateProj}}, \code{\link{downscale}},
-  \code{\link{glimpr}}, \code{\link{isimip}}
+  \code{\link{downscale}}, \code{\link{glimpr}},
+  \code{\link{isimip}}
 }
 \keyword{internal}
 

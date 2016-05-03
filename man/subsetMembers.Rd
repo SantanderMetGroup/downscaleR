@@ -4,10 +4,10 @@
 \alias{subsetMembers}
 \title{Member subsets from a multimember grid}
 \usage{
-subsetMembers(mmGrid, members = NULL, drop = TRUE)
+subsetMembers(grid, members, drop)
 }
 \arguments{
-\item{mmGrid}{Input multimember grid to be subset (possibly a multimember multigrid).}
+\item{grid}{Input multimember grid to be subset (possibly a multimember multigrid).}
 
 \item{members}{An integer vector indicating \strong{the position} of the members to be subset.}
 

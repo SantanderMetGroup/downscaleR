@@ -4,7 +4,7 @@
 \alias{subsetSpatial}
 \title{Spatial subset from a grid}
 \usage{
-subsetSpatial(grid, lonLim = NULL, latLim = NULL, drop = TRUE)
+subsetSpatial(grid, lonLim, latLim, outside, drop)
 }
 \arguments{
 \item{grid}{Input grid to be subset (possibly a multimember multigrid).}
@@ -15,7 +15,10 @@ longitude coordinate. If \code{NULL} (default), no subsetting is performed on th
 
 \item{latLim}{Same as \code{lonLim} argument, but for latitude.}
 
-\item{drop}{Logical (default is TRUE). Drop or keep dimensions of length 1.}
+\item{outside}{Logical. Default to \code{FALSE}. If \code{TRUE}, subset coordinates outside the grid extent 
+are allowed.}
+
+\item{drop}{Logical (default to \code{TRUE}). Drop or keep dimensions of length 1.}
 }
 \value{
 A grid (or multigrid) that is a logical spatial subset of the input grid.
@@ -25,7 +28,8 @@ Retrieves a grid that is a logical subset of the input grid along its 'lat' and 
  Multimember multigrids are supported. Subroutine of \code{\link{subsetGrid}}.
 }
 \details{
-An attribute 'subset' with value 'subsetSpatial' is added to the xyCoords slot of the output subset.
+An attribute \code{subset} with value \code{subsetSpatial} is added to the \code{xyCoords}
+component of the output grid.
 }
 \author{
 J. Bedia

@@ -5,8 +5,8 @@
 \title{Select an arbitrary subset from a grid or multigrid along one or more of its dimensions}
 \usage{
 subsetGrid(grid, var = NULL, runtime = NULL, members = NULL,
-  years = NULL, season = NULL, latLim = NULL, lonLim = NULL,
-  drop = TRUE)
+  years = NULL, season = NULL, lonLim = NULL, latLim = NULL,
+  outside = FALSE, drop = TRUE)
 }
 \arguments{
 \item{grid}{The input grid to be subset. This is either a grid, as returned e.g. by \code{loadeR::loadGridData}, a
@@ -25,11 +25,13 @@ series of years, the latter option often used in a cross-validation framework.
 
 \item{season}{An integer vector indicating the months to be subset.}
 
-\item{latLim}{Same as \code{lonLim} argument, but for latitude.}
-
 \item{lonLim}{Vector of length = 2, with minimum and maximum longitude coordinates, in decimal degrees,
 of the bounding box defining the subset. For single-point subsets, a numeric value with the
 longitude coordinate. If \code{NULL} (default), no subsetting is performed on the longitude dimension}
+
+\item{latLim}{Same as \code{lonLim} argument, but for latitude.}
+
+\item{outside}{if TRUE subset coordinates outside the grid extent are allowed. Default is FALSE.}
 
 \item{drop}{Logical (default is TRUE). Drop or keep dimensions of length 1.}
 }

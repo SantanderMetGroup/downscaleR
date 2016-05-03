@@ -4,10 +4,10 @@
 \alias{subsetRuntime}
 \title{Runtime subsets from a grid}
 \usage{
-subsetRuntime(mmGrid, runtime = NULL, drop = TRUE)
+subsetRuntime(grid, runtime, drop)
 }
 \arguments{
-\item{mmGrid}{Input multiruntime grid to be subset.}
+\item{grid}{Input multiruntime grid to be subset.}
 
 \item{runtime}{An integer vector indicating \strong{the position} of the runtimes to be subset.}
 
