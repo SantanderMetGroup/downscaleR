@@ -22,7 +22,7 @@
 #' @template templateObsPredSim
 #' @param method Downscaling method
 #' @param simulate Logical. Default is TRUE.
-#' @param n.neigh Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.
+#' @param n.analogs Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.
 #' @param sel.fun Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n.neig = 1}.
 #' Current values are \code{"random"} (the default) and \code{"mean"}. See details.
 #' @param analog.dates Logical flag indicating whether the dates of the analogs should be returned. See the analogs section.
@@ -38,7 +38,7 @@
 #' 
 #' \strong{Spatial consistency}
 #' 
-#' Several checks of spatial consistency are performed. In particular, note that both \code{pred} (reanalysis) and \code{sim}
+#' Several checks of spatial consistency are performed. In particular, note that both \code{x} (reanalysis) and \code{newdata}
 #'  (model simulations) should be in the same grid. This consistency must be ensured by the user prior to entering these arguments,
 #' for instance by means of the \code{\link{interpData}} function in conjunction with the \code{\link{getGrid}} method.
 #' 
@@ -56,13 +56,13 @@
 #' \strong{Construction of analogs using multiple neighbours}
 #' 
 #' The argument \code{sel.fun} controls how the analogs are constructed when considering more than the first neighbour (argument
-#' \code{n.neigh} > 1). In this case the \code{"random"} choice randomly selects one of the \code{n.neigh} neighbours,
+#' \code{n.analogs} > 1). In this case the \code{"random"} choice randomly selects one of the \code{n.analogs} neighbours,
 #'  while the \code{"mean"} choice will compute their average.
 #' 
 #' \strong{Analog dates}
 #' 
 #' If the argument \code{analog.dates} is set to TRUE, these will be returned as a global attribute named \code{"analog.dates"}.
-#' Note that the analog dates can be only returned for one single neighbour selections (i.e. \code{n.neigh = 1}),
+#' Note that the analog dates can be only returned for one single neighbour analog selections (i.e. \code{n.analogs = 1}),
 #'  otherwise giving an error. The analog dates are different for each member in case of 
 #'  multimember downscaling, and are returned as a list, each element of the list corresponding to one member. 
 #' @template templateParallel
@@ -74,12 +74,12 @@
 #' @family downscaling
 #' @author J Bedia and M Iturbide
 
-downscale <- function(obs,
-                      pred,
-                      sim = NULL,
+downscale <- function(y,
+                      x,
+                      newdata = NULL,
                       method = c("analogs", "glm"),
                       simulate = TRUE,
-                      n.neigh = 1,
+                      n.analogs = 1,
                       sel.fun = c("random", "mean"),
                       analog.dates = FALSE,
                       wet.threshold = .1,
@@ -91,35 +91,35 @@ downscale <- function(obs,
                       ncores = NULL) {
       cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
-      modelPars <- ppModelSetup(obs, pred, sim)
-      obs.orig <- obs
-      if ("station" %in% attr(obs$Data, "dimensions")){
+      modelPars <- ppModelSetup(y, x, newdata)
+      obs.orig <- y
+      if ("station" %in% attr(y$Data, "dimensions")){
             stations <-  TRUE
       } else {
             stations <- FALSE
       }
       if (cross.val == "none") {
             down <- switch(method,
-                           "analogs" = analogs(obs = obs,
+                           "analogs" = analogs(y = y,
                                                modelPars = modelPars,
-                                               n.neigh = n.neigh,
+                                               n.analogs = n.analogs,
                                                sel.fun = sel.fun,
                                                analog.dates = analog.dates,
                                                parallel.pars = parallel.pars),
-                           "glm" = glimpr(obs = obs,
+                           "glm" = glimpr(y = y,
                                           modelPars = modelPars,
                                           wet.threshold = wet.threshold,
                                           n.pcs = n.pcs,
                                           simulate = simulate)
             )
       } else {
-            if (!is.null(sim)) {
-                  message("'sim' will be ignored for cross-validation")
+            if (!is.null(newdata)) {
+                  message("'newdata' will be ignored for cross-validation")
             }
-            if ("scaled:method" %in% names(attributes(pred))) {
-                  pred$Dates$start <- attr(pred, "dates_start")
+            if ("scaled:method" %in% names(attributes(x))) {
+                  x$Dates$start <- attr(x, "dates_start")
             }
-            years <- getYearsAsINDEX(pred)
+            years <- getYearsAsINDEX(x)
             modelPars.orig <- modelPars
             message("[", Sys.time(), "] Fitting models...")
             if (cross.val == "loocv") {
@@ -128,24 +128,24 @@ downscale <- function(obs,
                         modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
                         modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
                         if (stations == TRUE) {
-                              obs$Data <- obs.orig$Data[-year.ind,]
+                              y$Data <- obs.orig$Data[-year.ind,]
                         } else {
-                              obs$Data <- obs.orig$Data[-year.ind,,]
+                              y$Data <- obs.orig$Data[-year.ind,,]
                         }
-                        attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
+                        attr(y$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
                         message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
                               if (method == "analogs") {
                                     suppressMessages(
-                                    analogs(obs = obs,
+                                    analogs(y = y,
                                     modelPars = modelPars,
-                                    n.neigh = n.neigh,
+                                    n.analogs = n.analogs,
                                     sel.fun = sel.fun,
                                     analog.dates = analog.dates,
                                     parallel.pars = parallel.pars)
                                     )
                               } else if (method == "glm") {
                                     suppressMessages(
-                                    glimpr(obs = obs,
+                                    glimpr(y = y,
                                     modelPars = modelPars,
                                     wet.threshold = wet.threshold,
                                     n.pcs = n.pcs,
@@ -160,32 +160,32 @@ downscale <- function(obs,
                         stop("Fold specification is missing, with no default", call. = FALSE)
                   }
                   downi <- lapply(1:length(folds), function(i) {
-                        year.ind <- lapply(1:length(folds[[i]]), function(x){
-                              indstep <- which(years == folds[[i]][x])
+                        year.ind <- lapply(1:length(folds[[i]]), function(k){
+                              indstep <- which(years == folds[[i]][k])
                               return(indstep)
                         })
                         year.ind <- unname(abind(year.ind, along = 1))
                         modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
                         modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
                         if (stations == TRUE) {
-                              obs$Data <- obs.orig$Data[-year.ind,]
+                              y$Data <- obs.orig$Data[-year.ind,]
                         } else {
-                              obs$Data <- obs.orig$Data[-year.ind,,]
+                              y$Data <- obs.orig$Data[-year.ind,,]
                         }
-                        attr(obs$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
+                        attr(y$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
                         message("Validation ", i, ", ", length(folds) - i, " remaining")
                               if (method == "analogs") {
                                     suppressMessages(
-                                          analogs(obs = obs,
+                                          analogs(y = y,
                                                 modelPars = modelPars,
-                                                n.neigh = n.neigh,
+                                                n.analogs = n.analogs,
                                                 sel.fun = sel.fun,
                                                 analog.dates = analog.dates,
                                                 parallel.pars = parallel.pars)
                                     )
                               } else if (method == "glm") {
                                     suppressMessages(
-                                          glimpr(obs = obs,
+                                          glimpr(y = y,
                                                 modelPars = modelPars,
                                                 wet.threshold = wet.threshold,
                                                 n.pcs = n.pcs)

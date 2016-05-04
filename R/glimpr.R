@@ -1,6 +1,7 @@
 #' @title GLM downscaling
 #' @description Implementation of GLM's to downscale precipitation data
-#' @template templateObsPredSim
+#' @param y A grid or station data containing the observed climate data for the training period
+#' @param modelPars Output object from function ppModelSetup containing the predictors and test data
 #' @param simulate Logical. Default is TRUE.
 #' @param wet.threshold Value below which precipitation amount is considered zero 
 #' @param n.eofs Integer indicating the number of EOFs to be used as predictors 
@@ -9,8 +10,8 @@
 #' @importFrom abind abind
 #' @keywords internal
 
-glimpr <- function(obs = obs, modelPars = modelPars, simulate = TRUE, wet.threshold = wet.threshold, n.pcs = n.pcs) {
-      #modelPars <- ppModelSetup(obs, pred, sim)
+glimpr <- function(y = y, modelPars = modelPars, simulate = TRUE, return.models = FALSE, wet.threshold = wet.threshold, n.pcs = n.pcs) {
+      #modelPars <- ppModelSetup(y, x, sim)
       if (is.null(n.pcs)) {
             n.pcs <-  dim(modelPars$pred.mat)[2]
       }
@@ -18,12 +19,12 @@ glimpr <- function(obs = obs, modelPars = modelPars, simulate = TRUE, wet.thresh
       #sim <- NULL
       # Prepare predictand matrix
       ymat <- if (isTRUE(modelPars$stations)) {
-            obs$Data
+            y$Data
       } else {
-            if (is.null(dim(obs$Data))) {
-                  as.matrix(obs$Data)
+            if (is.null(dim(y$Data))) {
+                  as.matrix(y$Data)
             } else {
-                  array3Dto2Dmat(obs$Data)
+                  array3Dto2Dmat(y$Data)
             }
       }
       # binarize      
@@ -44,12 +45,13 @@ glimpr <- function(obs = obs, modelPars = modelPars, simulate = TRUE, wet.thresh
       message("[", Sys.time(), "] Fitting models ...")
       err <- numeric()
       pred.list <- list()
-            
+      mod.bin <- list()
+      mod.gamma <- list()  
       suppressWarnings(
-            for (x in 1:length(cases)){
-            mod.bin <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))           
+           for (x in 1:length(cases)){
+            mod.bin.x <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))           
             sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
-                        pred <- predict(mod.bin, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
+                        pred <- predict(mod.bin.x, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
                         if(simulate == TRUE){
                               rnd <- runif(length(pred), min = 0, max = 1)
                               ind01 <- which(pred > rnd)
@@ -63,60 +65,61 @@ glimpr <- function(obs = obs, modelPars = modelPars, simulate = TRUE, wet.thresh
                         return(pred)
                   })
             
-
-            mod.bin <- NULL
+            if(return.models == FALSE)  mod.bin <- NULL
             wet <- which(ymat[ ,cases[x]] >= wet.threshold)
             # TODO: handle exception when model is over-specified (https://stat.ethz.ch/pipermail/r-help/2000-January/009833.html)
             
             Npcs <- n.pcs+1
-            mod.gamma = NULL
+            mod.gamma.x = NULL
             
             ###########
             
-            while(is.null(mod.gamma) & Npcs > 1) {
+            while(is.null(mod.gamma.x) & Npcs > 1) {
                   Npcs <-Npcs -1
 #                   print(Npcs)
-                  mod.gamma <- tryCatch(expr = {
+                  mod.gamma.x <- tryCatch(expr = {
                         glm(ymat[ ,cases[x]] ~., data = as.data.frame(modelPars$pred.mat)[ ,1:Npcs], family = Gamma(link = "log"), subset = wet)
                   },
                   error = function(err) {                
-                        mod.gamma <- NULL
+                        mod.gamma.x <- NULL
                   })
             }
-
             
-            if(length(mod.gamma$model)-1 < n.pcs){
+           
+            if(length(mod.gamma.x$model)-1 < n.pcs){
                   err[x] <- 1 
             }else{
                   err[x] <- 0
             }
             
-        
+            
             ###########
             
-            if (is.null(mod.gamma)){
+            if (is.null(mod.gamma.x)){
                   sims <-  sapply(1:length(modelPars$sim.mat), function(i) {
                         matrix(NA, ncol = 1, nrow = nrow(modelPars$sim.mat[[i]]))
                   })
             }else{
                   sims <- sapply(1:length(modelPars$sim.mat), function(i) {
                         if(simulate == TRUE){
-                              predg <- unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response"))
+                              predg <- unname(predict(mod.gamma.x, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response"))
 #                               predg[which(predg<=wet.threshold)] <- 0
-                              rgamma(n = length(predg), shape = 1/summary(mod.gamma)$dispersion, scale = summary(mod.gamma)$dispersion * predg) * sims.bin[,i] 
+                              rgamma(n = length(predg), shape = 1/summary(mod.gamma.x)$dispersion, scale = summary(mod.gamma.x)$dispersion * predg) * sims.bin[,i] 
                         }else{
-                               unname(predict(mod.gamma, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") ) * sims.bin[,i] 
+                               unname(predict(mod.gamma.x, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") ) * sims.bin[,i] 
                         }
                   })
             }
-         
+      if(return.models == FALSE)  mod.gamma.x <- NULL
       
       pred.list[[x]] <- unname(sims)
       sims <- NULL
-
+      mod.bin[[x]] <- mod.bin.x 
+      mod.gamma[[x]] <- mod.gamma.x
       })
-
-     
+      
+      mod <- list("binary" = mod.bin, "gamma" = mod.gamma)
+      
       n.err <- length(which(err==1))
 
       if(n.err > 0){
@@ -144,8 +147,8 @@ glimpr <- function(obs = obs, modelPars = modelPars, simulate = TRUE, wet.thresh
             aux.list <- NULL
       }
       
-      x.obs <- getCoordinates(obs)$x
-      y.obs <- getCoordinates(obs)$y
+      x.obs <- getCoordinates(y)$x
+      y.obs <- getCoordinates(y)$y
       aux.list <- lapply(1:length(modelPars$sim.mat), function (i) {
             aux <- lapply(1:length(pred.list), function(j) {
                   pred.list[[j]][ ,i]
@@ -168,6 +171,7 @@ glimpr <- function(obs = obs, modelPars = modelPars, simulate = TRUE, wet.thresh
       #       obs$Dates <- modelPars$sim.dates 
       message("[", Sys.time(), "] Done.")
       #       return(obs)
+      if(return.models == TRUE) o <- list(o, "models" = mod)
  return(o)
 # return(sims.bin)
 }

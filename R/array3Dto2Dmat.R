@@ -12,7 +12,6 @@
 #' @author J. Bedia 
 #' @export
 #' @seealso \code{\link{mat2Dto3Darray}}, which performs the inverse operation
-# #' @seealso \code{\link{grid3Dto2Dmat}}, exported for the user.
 
 
 array3Dto2Dmat <- function(array3D) {
