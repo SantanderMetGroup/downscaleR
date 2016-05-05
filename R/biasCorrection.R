@@ -71,7 +71,7 @@
 #'  
 #'  The precipitation subroutines are switched-on when the variable name of the grid 
 #'  (i.e., the value returned by \code{gridData$Variable$varName}) is one of the following: 
-#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (\code{\link[loadeR]{showVocabulary}}), \code{"precipitation"} or \code{"precip"}.
+#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (\code{\link[loadeR]{UDG.vocabulary}}), \code{"precipitation"} or \code{"precip"}.
 #'  Thus, caution must be taken to ensure that the correct bias correction is being undertaken when dealing with
 #'  non-standard variables.
 #'     

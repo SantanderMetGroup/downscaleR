@@ -129,6 +129,7 @@ interpData <- function(obj,
                   }
             }
       }
+      obj <- redim(obj, runtime = F)
       if (any(grepl("member", attr(obj$Data, "dimensions")))) {
             mem.ind <- grep("member", attr(obj$Data, "dimensions"))
             n.members <- dim(obj$Data)[mem.ind]
