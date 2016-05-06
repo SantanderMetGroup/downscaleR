@@ -128,9 +128,10 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
       
       if("station" %in% attr(obs$Data, "dimensions")){
             station <- TRUE
-            obs <- redim(obs)
+            obs <- redim(obs, member = F)
             x <- obs$xyCoords[,1]
             y <- obs$xyCoords[,2]
+            ito <- which(getDim(obs) == "time")
             ind <- cbind(1:dim(obs$Data)[2], rep(1, dim(obs$Data)[2]), 1:dim(obs$Data)[2])
       }else{
             station <- FALSE
@@ -141,8 +142,8 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
       }
       
       bc <- obs
-      pred <- redim(pred, runtime = T)
-      sim <- redim(sim, runtime = T)
+      pred <- redim(pred, member = T, runtime = T)
+      sim <- redim(sim, member = T, runtime = T)
       itp <- which(getDim(pred) == "time")
       ito <- which(getDim(obs) == "time")
       if(dim(obs$Data)[ito]!=dim(pred$Data)[itp]) stop("y and x do not have the same time series length")

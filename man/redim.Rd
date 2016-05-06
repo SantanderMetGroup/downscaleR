@@ -4,10 +4,12 @@
 \alias{redim}
 \title{Complete missing dimensions of Grid or Station objects}
 \usage{
-redim(obj, runtime = FALSE, drop = FALSE)
+redim(obj, member = TRUE, runtime = FALSE, drop = FALSE)
 }
 \arguments{
 \item{obj}{A grid or station data}
+
+\item{member}{logical. Add member dimension (default = TRUE)}
 
 \item{runtime}{logical. Add runtime dimension (default = FALSE)}
 
