@@ -8,7 +8,7 @@
 #' @importFrom abind abind
 #' @author M. Iturbide
 
-redim <- function(obj, runtime = TRUE, drop = FALSE) {
+redim <- function(obj, runtime = FALSE, drop = FALSE) {
       if (drop == FALSE) {
             if ("station" %in% attr(obj$Data, "dimensions")) {
                   ind <- which(attr(obj$Data, "dimensions") == "station")
@@ -45,16 +45,12 @@ redim <- function(obj, runtime = TRUE, drop = FALSE) {
                   }
             }
       }
-      if(runtime == FALSE){
-            dimNames <- c( "member","time","lat","lon")
-      }else{
-            dimNames <- c("runtime", "member","time","lat","lon")
-      }
+      dimNames <- c("runtime", "member","time","lat","lon")
       dimNames.aux <- attr(obj$Data, "dimensions")
       perm <- na.omit(match(dimNames, dimNames.aux))
       obj$Data <- aperm(obj$Data, perm)
       obj[["Data"]] <- unname(obj$Data)
-      attr(obj[["Data"]], "dimensions") <- dimNames
+      attr(obj[["Data"]], "dimensions") <- dimNames.aux[perm]
       return(obj) 
 }
 #End
