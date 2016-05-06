@@ -141,9 +141,11 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
       }
       
       bc <- obs
-      pred <- redim(pred)
-      sim <- redim(sim)
-      if(dim(obs$Data)[1]!=dim(pred$Data)[-(1:2)][1]) stop("y and x do not have the same time series length")
+      pred <- redim(pred, runtime = T)
+      sim <- redim(sim, runtime = T)
+      itp <- which(getDim(pred) == "time")
+      ito <- which(getDim(obs) == "time")
+      if(dim(obs$Data)[ito]!=dim(pred$Data)[itp]) stop("y and x do not have the same time series length")
       
       n.run <- dim(sim$Data)[1]
       n.mem <- dim(sim$Data)[2]
@@ -151,7 +153,8 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
       if(method == "delta"){
             run <- array(dim = c(1, n.mem, dim(obs$Data)))
       }else{
-            run <- array(dim = c(1, n.mem, dim(sim$Data)[-(1:2)][1], dim(obs$Data)[-1]))
+            its <- which(getDim(sim) == "time")
+            run <- array(dim = c(1, n.mem, dim(sim$Data)[its], dim(obs$Data)[-ito]))
       }
       lrun <- lapply(1:n.run, function(k){    # loop for runtimes
             
@@ -162,7 +165,7 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
             if(method == "delta"){
                   mem <- array(dim = c(1, 1, dim(obs$Data)))
             }else{
-                  mem <- array(dim = c(1, 1, dim(sim$Data)[-(1:2)][1], dim(obs$Data)[-1]))
+                  mem <- array(dim = c(1, 1, dim(sim$Data)[its], dim(obs$Data)[-ito]))
             }
             lmem <- lapply(1:n.mem, function(l){ # loop for members
                   
@@ -278,7 +281,7 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
       bc$Data <- unname(abind(lrun, along = 1))
       attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
       ##########################
-      bc <- redim(bc, drop = TRUE)
+      bc <- redim(bc, runtime = TRUE, drop = TRUE)
       message("[", Sys.time(), "] Done.")
       ##########################
       bc$Dates <- sim$Dates

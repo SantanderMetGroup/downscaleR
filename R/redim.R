@@ -35,6 +35,12 @@ redim <- function(obj, runtime = FALSE, drop = FALSE) {
                         attr(obj$Data, "dimensions") <- dimNames
                   }
             }
+            dimNames <- c("runtime", "member","time","lat","lon")
+            dimNames.aux <- attr(obj$Data, "dimensions")
+            perm <- na.omit(match(dimNames, dimNames.aux))
+            obj$Data <- aperm(obj$Data, perm)
+            obj[["Data"]] <- unname(obj$Data)
+            attr(obj[["Data"]], "dimensions") <- dimNames.aux[perm]
       } else {
             if (1 %in% dim(obj$Data)) {
                   dimNames <- attr(obj$Data, "dimensions")[-which(dim(obj$Data) == 1)]
@@ -45,12 +51,6 @@ redim <- function(obj, runtime = FALSE, drop = FALSE) {
                   }
             }
       }
-      dimNames <- c("runtime", "member","time","lat","lon")
-      dimNames.aux <- attr(obj$Data, "dimensions")
-      perm <- na.omit(match(dimNames, dimNames.aux))
-      obj$Data <- aperm(obj$Data, perm)
-      obj[["Data"]] <- unname(obj$Data)
-      attr(obj[["Data"]], "dimensions") <- dimNames.aux[perm]
       return(obj) 
 }
 #End
