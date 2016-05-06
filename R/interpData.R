@@ -26,7 +26,7 @@
 #' @template templateParallel
 #' @note To avoid unnecessary NA values, the function will not extrapolate using a new grid outside the
 #' current extent of the dataset, returning an error message.
-#' @author J. Bedia, S. Herrera, M. de Felice
+#' @author J. Bedia, S. Herrera, M. de Felice, M. Iturbide
 #' @export
 #' @examples \dontrun{
 #' # Load air temperature at 850 mb isobaric pressure level for boreal winter (DJF) 1991-2010
