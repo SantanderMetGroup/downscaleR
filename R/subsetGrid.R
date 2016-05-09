@@ -67,7 +67,7 @@
 #'   they are in the original multigrid.
 #'  
 #' @importFrom abind asub
-#' @author J. Bedia 
+#' @author J. Bedia, M. Iturbide
 #' @export
 #' @family subsetting
 #' @examples
@@ -372,7 +372,7 @@ subsetSpatial <- function(grid, lonLim, latLim, outside, drop) {
                               paste(getGrid(grid)$x, collapse = ","), ")")
                         } else {
                               warning("Subset longitude boundaries outside the current grid extent: \n(",
-                                paste(getGrid(grid)$x, collapse = ","), ")")
+                              paste(getGrid(grid)$x, collapse = ","), ")")
                         }
                   }
                   lon2 <- which.min(abs(lons - lonLim[2]))
