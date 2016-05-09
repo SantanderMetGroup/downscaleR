@@ -2,17 +2,16 @@
 % Please edit documentation in R/interpData.R
 \name{interpData}
 \alias{interpData}
-\title{Interpolate a dataset}
+\title{Grid interpolation}
 \usage{
-interpData(obj, new.coordinates = list(x = NULL, y = NULL),
-  method = c("nearest", "bilinear"), parallel = FALSE, max.ncores = 16,
-  ncores = NULL)
+interpData(grid, new.coordinates = list(x = NULL, y = NULL),
+  method = c("nearest", "bilinear"), bilin.method = NULL,
+  parallel = FALSE, max.ncores = 16, ncores = NULL)
 }
 \arguments{
-\item{obj}{A data object coming from \code{loadGridData}, \code{loadStationData} of package \pkg{loadeR}, or the \pkg{loadeR.ECOMS} 
-package function \code{loadECOMS}.}
+\item{grid}{An input grid to be interpolated/regridded.}
 
-\item{new.coordinates}{Definition of the new coordinates (grid or locations), in the form of a list with the x and y components, in thir order.
+\item{new.coordinates}{Definition of the new grid coordinates, in the form of a list with the x and y components, in thir order.
 Each component consists of a vector of length three with components \emph{from}, \emph{to} and \emph{by},
  in this order, similar as the arguments passed to the \code{\link[base]{seq}} function, giving the 
  westernmost, easternmost and grid cell width in the X axis and, in the same way,
@@ -20,6 +19,10 @@ Each component consists of a vector of length three with components \emph{from},
 
 \item{method}{Method for interpolation. Currently implemented methods are either \code{"bilinear"},
 for bilinear interpolation, and \code{"nearest"}, for nearest-neighbor interpolation (default).}
+
+\item{bilin.method}{Algorithm chosen for bilinear interpolation. Two options available: \code{"akima"} uses \code{\link[akima]{interp}} and
+\code{"fields"} the \code{\link[fields]{interp.surface.grid}} algorithm. In case any missing values exist in the input data matrix, 
+the \code{"fields"} option, able to handle missing values, need to be used. Otherwise, the \code{"akima"} option performs much faster.}
 
 \item{parallel}{Logical. Should parallel execution be used?}
 
@@ -38,7 +41,6 @@ Interpolation of gridded datasets into a user-defined grid using nearest-neighbo
 In case of default definition of either x, y or both grid coordinates, the default grid
 is calculated taking the corners of the current grid and assuming x and y resolutions equal to 
 the default \code{by} argument value in function \code{\link[base]{seq}}: \emph{by = ((to - from)/(length.out - 1))}.
-The bilinear interpolator uses the \code{\link[akima]{interp}} algorithm. 
 The output has special attributes in the \code{xyCoords} element that indicate that the object
  has been interpolated. These attributes are \code{interpolation}, which indicates the method used and
  \code{resX} and \code{resY}, for the grid-cell resolutions in the X and Y axes respectively.
@@ -75,7 +77,8 @@ plotMeanGrid(iberia_ncep_ta850)
 # in both X and Y axes
 t <- interpData(iberia_ncep_ta850, new.coordinates = list(x = c(-10,5,.5),
                                                           y = c(36,44,.5)),
-                                   method = "bilinear")
+                                   method = "bilinear",
+                                   bilin.method = "akima")
 plotMeanGrid(t)
 par(mfrow=c(1,1))
 # New attributes indicate that the data have been interpolated:

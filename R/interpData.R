@@ -3,7 +3,7 @@
 #' @importFrom akima interp
 #' @importFrom abind abind
 #' @importFrom fields interp.surface.grid
-#' @param obj An input grid to be interpolated/regridded.
+#' @param grid An input grid to be interpolated/regridded.
 #' @param new.coordinates Definition of the new grid coordinates, in the form of a list with the x and y components, in thir order.
 #' Each component consists of a vector of length three with components \emph{from}, \emph{to} and \emph{by},
 #'  in this order, similar as the arguments passed to the \code{\link[base]{seq}} function, giving the 
@@ -11,16 +11,14 @@
 #'  the southernmost, northernmost and grid cell resolution in the Y axis. See details.
 #' @param method Method for interpolation. Currently implemented methods are either \code{"bilinear"},
 #' for bilinear interpolation, and \code{"nearest"}, for nearest-neighbor interpolation (default).
-#' @param bilin.method Algorithm chosen for bilinear interpolation. Two options available: \code{"akima"} uses \code{\link{akima::interp}} and
-#' \code{"fields"} the \code{\link{fields::interp.surface.grid}} algorithm. In case any missing values exist in the input data matrix, 
-#' the \code{"interp.surface.grid"} option need to be used, able to handle missing values.
-#'  Otherwise, the \code{"akima"} performs much faster.
+#' @param bilin.method Algorithm chosen for bilinear interpolation. Two options available: \code{"akima"} uses \code{\link[akima]{interp}} and
+#' \code{"fields"} the \code{\link[fields]{interp.surface.grid}} algorithm. In case any missing values exist in the input data matrix, 
+#' the \code{"fields"} option, able to handle missing values, need to be used. Otherwise, the \code{"akima"} option performs much faster.
 #' @template templateParallelParams 
 #' @return An interpolated object preserving the structure of the input
 #' @details  In case of default definition of either x, y or both grid coordinates, the default grid
 #' is calculated taking the corners of the current grid and assuming x and y resolutions equal to 
 #' the default \code{by} argument value in function \code{\link[base]{seq}}: \emph{by = ((to - from)/(length.out - 1))}.
-#' The bilinear interpolator uses the \code{\link[akima]{interp}} algorithm. 
 #' The output has special attributes in the \code{xyCoords} element that indicate that the object
 #'  has been interpolated. These attributes are \code{interpolation}, which indicates the method used and
 #'  \code{resX} and \code{resY}, for the grid-cell resolutions in the X and Y axes respectively.
@@ -40,14 +38,15 @@
 #' # in both X and Y axes
 #' t <- interpData(iberia_ncep_ta850, new.coordinates = list(x = c(-10,5,.5),
 #'                                                           y = c(36,44,.5)),
-#'                                    method = "bilinear")
+#'                                    method = "bilinear",
+#'                                    bilin.method = "akima")
 #' plotMeanGrid(t)
 #' par(mfrow=c(1,1))
 #' # New attributes indicate that the data have been interpolated:
 #' attributes(t$xyCoords)
 #' }
 
-interpData <- function(obj,
+interpData <- function(grid,
                        new.coordinates = list(x = NULL, y = NULL),
                        method = c("nearest", "bilinear"),
                        bilin.method = NULL,
@@ -58,22 +57,22 @@ interpData <- function(obj,
       if (method == "nearest" & !is.null(bilin.method)) message("NOTE: argument 'bilin.method' ignored for nearest neighbour interpolation")
       if (method == "bilinear") bilin.method <- match.arg(bilin.method, choices = c("akima", "fields"))
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
-      x <- obj$xyCoords$x
-      y <- obj$xyCoords$y
-      if (!is.null(attr(obj$xyCoords, which = "projection"))) {
-            if (attr(obj$xyCoords, which = "projection") == "RotatedPole") {
-                  x <- obj$xyCoords$lon
-                  y <- obj$xyCoords$lat
+      x <- grid$xyCoords$x
+      y <- grid$xyCoords$y
+      if (!is.null(attr(grid$xyCoords, which = "projection"))) {
+            if (attr(grid$xyCoords, which = "projection") == "RotatedPole") {
+                  x <- grid$xyCoords$lon
+                  y <- grid$xyCoords$lat
             }
       }
       if (is.vector(x) & is.vector(y)) {
-            x <- t(list(x = outer(obj$xyCoords$y*0,obj$xyCoords$x, FUN = "+"),
-                        y = outer(obj$xyCoords$y,obj$xyCoords$x*0, FUN = "+"))$x)
-            y <- t(list(x = outer(obj$xyCoords$y*0,obj$xyCoords$x, FUN = "+"),
-                        y = outer(obj$xyCoords$y,obj$xyCoords$x*0, FUN = "+"))$y)
+            x <- t(list(x = outer(grid$xyCoords$y*0,grid$xyCoords$x, FUN = "+"),
+                        y = outer(grid$xyCoords$y,grid$xyCoords$x*0, FUN = "+"))$x)
+            y <- t(list(x = outer(grid$xyCoords$y*0,grid$xyCoords$x, FUN = "+"),
+                        y = outer(grid$xyCoords$y,grid$xyCoords$x*0, FUN = "+"))$y)
       }
       if (is.null(new.coordinates)) {
-            new.coordinates <- getGrid(obj)
+            new.coordinates <- getGrid(grid)
       } else {
             if (is.null(new.coordinates$x)) {
                   new.coordinates$x <- x
@@ -140,11 +139,11 @@ interpData <- function(obj,
             apply_fun <- lapply
       }
       # redim object
-      obj <- redim(obj, runtime = FALSE)
-      mem.ind <- grep("member", getDim(obj))
-      n.members <- dim(obj$Data)[mem.ind]
-      time.ind <- grep("^time", getDim(obj))
-      n.times <- dim(obj$Data)[time.ind]
+      grid <- redim(grid, runtime = FALSE)
+      mem.ind <- grep("member", getDim(grid))
+      n.members <- dim(grid$Data)[mem.ind]
+      time.ind <- grep("^time", getDim(grid))
+      n.times <- dim(grid$Data)[time.ind]
       # nearest indices
       if (method == "nearest") {
             ind.NN <- matrix(nrow = length(new.coordinates$x), ncol = length(new.coordinates$y))
@@ -165,7 +164,7 @@ interpData <- function(obj,
                         for (l in 1:length(new.coordinates$y)) {
                               ind.x <- arrayInd(ind.NN[k,l], dim(x))[1]
                               ind.y <- arrayInd(ind.NN[k,l], dim(x))[2]
-                              int[,l,k] <- obj$Data[i,,ind.y, ind.x]
+                              int[,l,k] <- grid$Data[i,,ind.y, ind.x]
                         }
                   }
                   aux.list[[i]] <- int
@@ -175,7 +174,7 @@ interpData <- function(obj,
             if (method == "bilinear") {
                   dimNames.ref <- c("member", "time", "lon", "lat")
                   interp.list <- apply_fun(1:n.times, function(j) { # iterates in time (inefficient!, to be changed)
-                        z <- asub(obj$Data, idx = list(i,j), dims = c(mem.ind, time.ind))
+                        z <- asub(grid$Data, idx = list(i,j), dims = c(mem.ind, time.ind))
                         any_is_NA_or_NAN <- any(!is.finite(z))
                         if (bilin.method == "akima") {
                               if (any_is_NA_or_NAN) stop("The input grid contains missing values\nConsider using 'bilin.method=\"fields\"' instead", call. = FALSE)
@@ -186,8 +185,8 @@ interpData <- function(obj,
                                                    nx = length(new.coordinates$x), ny = length(new.coordinates$y))$z
                         } else if (bilin.method == "fields") {
                               if (!any_is_NA_or_NAN & i == 1 & j == 1) message("NOTE: No missing values present in the input grid\nConsider using 'bilin.method=\"akima\"' for improved speed")
-                              int <- fields::interp.surface.grid(list(x = obj$xyCoords$x,
-                                                                      y = obj$xyCoords$y,
+                              int <- fields::interp.surface.grid(list(x = grid$xyCoords$x,
+                                                                      y = grid$xyCoords$y,
                                                                       z = t(z)),
                                                                  grid.list = list(x = new.coordinates$x,
                                                                                   y = new.coordinates$y))$z
@@ -199,30 +198,30 @@ interpData <- function(obj,
                   interp.list <- NULL
             }
       }
-      obj$Data <- unname(do.call("abind", c(aux.list, along = -1L)))
-      attr(obj$Data, "dimensions") <- dimNames.ref
+      grid$Data <- unname(do.call("abind", c(aux.list, along = -1L)))
+      attr(grid$Data, "dimensions") <- dimNames.ref
       aux.list <- NULL
       # Dimension ordering & Coordinate system
       tab <- c("member", "time", "level", "lat", "lon")
-      obj$xyCoords$x <- new.coordinates$x
-      obj$xyCoords$y <- new.coordinates$y
-      attr(obj$xyCoords, "resX") <- abs(new.coordinates$x[2] - new.coordinates$x[1])
-      attr(obj$xyCoords, "resY") <- abs(new.coordinates$y[2] - new.coordinates$y[1]) 
-      if (is.null(attr(obj$xyCoords, "projection")) & !is.null(attr(new.coordinates, "projection"))) {
-            attr(obj$xyCoords, "projection") <- attr(new.coordinates, "projection")
+      grid$xyCoords$x <- new.coordinates$x
+      grid$xyCoords$y <- new.coordinates$y
+      attr(grid$xyCoords, "resX") <- abs(new.coordinates$x[2] - new.coordinates$x[1])
+      attr(grid$xyCoords, "resY") <- abs(new.coordinates$y[2] - new.coordinates$y[1]) 
+      if (is.null(attr(grid$xyCoords, "projection")) & !is.null(attr(new.coordinates, "projection"))) {
+            attr(grid$xyCoords, "projection") <- attr(new.coordinates, "projection")
       }
-      attr(obj$xyCoords, "interpolation") <-  method
-      x <- getDim(obj)
+      attr(grid$xyCoords, "interpolation") <-  method
+      x <- getDim(grid)
       b <- na.exclude(match(tab, x))
       x <- x[b]
-      obj$Data <- aperm(obj$Data, perm = b)
-      attr(obj$Data, "dimensions")  <- x
-      if (is.null(attr(obj$xyCoords, "projection"))) {
-            attr(obj$xyCoords, "projection") <- "undefined"
+      grid$Data <- aperm(grid$Data, perm = b)
+      attr(grid$Data, "dimensions")  <- x
+      if (is.null(attr(grid$xyCoords, "projection"))) {
+            attr(grid$xyCoords, "projection") <- "undefined"
       }
-      obj <- redim(obj, drop = TRUE)
+      grid <- redim(grid, drop = TRUE)
       message("[", Sys.time(), "] Done")
-      return(obj)
+      return(grid)
 }
 # End
 

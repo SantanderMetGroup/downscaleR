@@ -12,6 +12,9 @@ downscaleR 1.0-0
 * Function 'subsetGrid' for flexible grid subsetting along selected dimensions 
 * Function 'detrendGrid' for grid linear detrending
 * Function 'climatology', for flexible climatology calculation
+* Enhancements in 'interpData' for regridding/interpolation:
+  * Improved efficiency of neasrest neighbour algorithm
+  * New options for bilinear algorithm choice, including the fast interpolator from package akima
 * Other minor bug fixes and enhancements
 
 

@@ -98,7 +98,7 @@ sub2 <- subsetGrid(mm.mf, var = c("tp", "tasmax"))
 plotMeanGrid(sub2)
 }
 \author{
-J. Bedia
+J. Bedia, M. Iturbide
 }
 \seealso{
 Other subsetting: \code{\link{subsetDimension}},

@@ -109,10 +109,15 @@ data(NCEP_Iberia_tp)
 y <- VALUE_Igueldo_tp
 x <- NCEP_Iberia_tp
 
-eqm1 <- biasCorrection(y = y, x = x, newdata = x, method = "eqm", extrapolation = "none", window = NULL)
-eqm1win <- biasCorrection(y = y, x = x, newdata = x, method = "eqm", extrapolation = "none", window = c(90, 1))
+eqm1 <- biasCorrection(y = y, x = x, newdata = x,
+                       method = "eqm",
+                       extrapolation = "none",
+                       window = NULL)
+eqm1win <- biasCorrection(y = y, x = x, newdata = x,
+                          method = "eqm",
+                          extrapolation = "none",
+                          window = c(90, 1))
 NCEP_Igueldo <- subsetGrid(x, latLim = y$xyCoords[,2], lonLim = y$xyCoords[,1])
-
 par(mfrow = c(1,3))
 qqplot(y$Data, NCEP_Igueldo$Data)
 lines(c(0,100), c(0,100))
@@ -120,6 +125,7 @@ qqplot(y$Data, eqm1$Data)
 lines(c(0,100), c(0,100))
 qqplot(y$Data, eqm1win$Data)
 lines(c(0,100), c(0,100))
+par(mfrow = c(1,1))
 }
 }
 \author{
