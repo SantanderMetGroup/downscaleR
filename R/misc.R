@@ -106,9 +106,9 @@ getYearsAsINDEX <- function(obj) {
       season <- getSeason(obj)
       dimNames <- attr(obj$Data, "dimensions")
       aux.dates <- if (any(grepl("var", dimNames))) {
-            as.POSIXlt(obj$Dates[[1]]$start)
+            obj$Dates[[1]]$start
       } else {
-            as.POSIXlt(obj$Dates$start)
+            obj$Dates$start
       }
       yrs <- as.numeric(substr(aux.dates,1,4))
       mon <- as.numeric(substr(aux.dates,6,7))
