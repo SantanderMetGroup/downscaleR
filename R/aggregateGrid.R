@@ -78,6 +78,7 @@
 #'                aggr.m = list(FUN = "mean", na.rm = TRUE))
 #' }
 
+
 aggregateGrid <- function(grid,
                           aggr.mem = list(FUN = NULL),
                           aggr.d = list(FUN = NULL),
@@ -182,7 +183,7 @@ timeAggregation <- function(grid, aggr.type = c("DD","MM","YY"), aggr.fun, paral
       } else if (aggr.type == "YY" & dff >= 8640) {
             message("Data is already annual: 'aggr.y' option was ignored.")
       } else {
-            dimNames <- attr(grid$Data, "dimensions")
+            dimNames <- getDim(grid)
             # Attributes
             season <- getSeason(grid)
             attr.all <- attributes(grid$Data)
@@ -195,6 +196,7 @@ timeAggregation <- function(grid, aggr.type = c("DD","MM","YY"), aggr.fun, paral
                           "MM" = paste0(yr,mon),
                           "YY" = yr)
             day <- mon <- yr <- aux.dates <- NULL
+            fac <- factor(fac, levels = unique(fac), ordered = TRUE)
             arg.list <- c(aggr.fun, list("INDEX" = fac))
             type <- switch(aggr.type,
                           "DD" = "daily",
