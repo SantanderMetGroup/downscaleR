@@ -67,15 +67,6 @@
 #' }
 
 
-# load("~/workspace/EUPORIAS/data/NCEP_psl_monthly_JA_1950_2010.rda", verbose = TRUE)
-# load("~/workspace/EUPORIAS/data/S4_15_psl_monthly_JA_1981_2010_nnNCEPgrid.rda", verbose = TRUE)
-# grid = psl.s4
-# clim.fun = list(FUN = "mean", na.rm = TRUE)
-# by.member = TRUE
-# parallel = TRUE
-# max.ncores = 16
-# ncores = NULL
-
 climatology <- function(grid,
                         clim.fun = list(FUN = "mean", na.rm = TRUE),
                         by.member = TRUE,
@@ -83,9 +74,10 @@ climatology <- function(grid,
                         max.ncores = 16,
                         ncores = NULL) {
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
+      grid <- redim(grid, runtime = FALSE)
       dimNames <- attr(grid[["Data"]], "dimensions")
       ## Member aggregation 
-      if ("member" %in% dimNames && !isTRUE(by.member)) {
+      if (!isTRUE(by.member)) {
             grid <- memberAggregation(grid,
                                       aggr.mem = list(FUN = "mean", na.rm = TRUE),
                                       parallel,
@@ -112,7 +104,7 @@ climatology <- function(grid,
       attr(clim, "dimensions") <- dimNames.aux
       ## Dimension reordering
       perm <- na.omit(match(c("member","time","lat","lon"), dimNames.aux))
-      clim <- aperm(clim,perm)
+      clim <- aperm(clim, perm)
       grid[["Data"]] <- unname(clim)
       ## Attributes of Data
       attr(grid$Data, "dimensions") <- dimNames
