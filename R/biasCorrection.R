@@ -455,7 +455,7 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
                         noRain <- which(s<=Pth & !is.na(s))
                         rain <- which(s > Pth & !is.na(s))
                         drizzle <- which(s > Pth  & s  <= min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))
-                        eFrc<-ecdf(s[rain])
+                        eFrc<-tryCatch({ecdf(s[rain])}, error = function(err){stop("There are not precipitation days in newdata for the step length selected in one or more locations. Try to enlarge the window step")})
                         if (length(rain) > 0){
                               if(is.null(n.quantiles)) n.quantiles <- length(p)
                               bins <- n.quantiles
