@@ -1,6 +1,7 @@
 #' @title Plot a map of the mean value of a grid dataset
 #' @description Plot the spatial mean of a gridded variable, or variables in the case of multigrids.
 #' @importFrom fields image.plot
+#' @importFrom graphics title mtext
 #' @param gridData A grid dataset
 #' @param multi.member Should members be plotted sepparately (TRUE), or just a plot
 #'  of the multi-member mean (FALSE, default)?. Ignored if the dataset has no members.
@@ -35,7 +36,7 @@
 #' 
 
 plotMeanGrid <- function(gridData, multi.member = FALSE) {
-      dimNames <- attr(gridData$Data, "dimensions")
+      dimNames <- getDim(gridData)
       if (is.null(dimNames)) stop("Attribute 'dimensions' undefined")
       mar <- match(c("lon", "lat"), dimNames)
       if (length(mar) != 2) {
@@ -76,23 +77,29 @@ plotMeanGrid <- function(gridData, multi.member = FALSE) {
 #' multi-member displays respectively
 #' @return Prints the graphical display
 #' @importFrom abind asub
+#' @importFrom graphics par title mtext
 #' @importFrom fields image.plot
 #' @keywords internal
 #' @author J Bedia 
 
 
 multiPlot <- function(gridData, split.dim.name, titles, multi.member) {
-      dimNames <- attr(gridData$Data, "dimensions")
+      dimNames <- getDim(gridData)
       index <- grep(split.dim.name, dimNames, fixed = TRUE)
       n <- dim(gridData$Data)[index]
+      n.times <- dim(gridData$Data)[grep("^time$", dimNames)]
       nrows <- ifelse(sqrt(n) < round(sqrt(n)), ceiling(sqrt(n)), floor(sqrt(n)))
       mat <- matrix(1, ncol = ceiling(sqrt(n)), nrow = nrows)
+      mar <- match(c("lon", "lat"), dimNames[-index])
       def.par <- par(no.readonly = TRUE)
       par(mfrow = dim(mat))
       for (i in 1:n) {
             aux <- asub(gridData$Data, idx = i, dims = index)
-            mar <- match(c("lon", "lat"), dimNames[-index])
-            aux <- apply(aux, mar, mean, na.rm = TRUE)
+            aux <- if (n.times > 1) {
+                  apply(aux, mar, mean, na.rm = TRUE)      
+            } else {
+                  t(aux)
+            }
             image.plot(gridData$xyCoords$x, gridData$xyCoords$y, aux, xlab = "", ylab = "", asp = 1, horizontal = TRUE, cex.axis = .75) #, axes = axes)
             title("")
             if (i == 1 & isTRUE(multi.member)) {
