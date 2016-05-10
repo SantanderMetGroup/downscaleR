@@ -7,6 +7,7 @@
 #' @return The same object with all the dimensions (i.e. member, time, station)
 #' @keywords internal
 #' @importFrom abind abind
+#' @importFrom stats na.omit
 #' @author M. Iturbide
 
 redim <- function(obj, member = TRUE, runtime = FALSE, drop = FALSE) {

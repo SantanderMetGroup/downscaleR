@@ -7,7 +7,7 @@
 getGrid(gridData)
 }
 \arguments{
-\item{gridData}{A grid data object coming from \code{loadGridData} (package \pkg{loadeR}) or \code{\link{interpData}}
+\item{gridData}{A grid data object coming from \code{loadGridData} (package \pkg{loadeR}) or \code{\link{interpGrid}}
 or the function \code{loadECOMS} of package \pkg{loadeR.ECOMS}.}
 }
 \value{
@@ -32,11 +32,11 @@ data(tasmin_forecast)
 getGrid(tasmin_forecast)
 plotMeanGrid(tasmin_forecast)
 # Interpolate NCEP onto the System4 grid:
-int <- interpData(iberia_ncep_hus850, getGrid(tasmin_forecast), "bilinear")
+int <- interpGrid(iberia_ncep_hus850, getGrid(tasmin_forecast), "bilinear")
 # Note the warnings because of the non-overlapping domain extents
 plotMeanGrid(int)
 # The other way round, using nearest neighbour interpolation:
-int2 <- interpData(tasmin_forecast, getGrid(iberia_ncep_hus850))
+int2 <- interpGrid(tasmin_forecast, getGrid(iberia_ncep_hus850))
 plotMeanGrid(int2)
 # In this case, the mismatch in domain extent occurs only in the longitudes (to the west)
 }

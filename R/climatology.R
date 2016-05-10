@@ -38,6 +38,8 @@
 #' }
 #' @importFrom parallel stopCluster
 #' @importFrom parallel parApply
+#' @importFrom stats na.omit
+#' @importFrom utils tail
 #' @author J. Bedia
 #' @export
 #' @examples \dontrun{

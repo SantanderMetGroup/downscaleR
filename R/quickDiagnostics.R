@@ -17,19 +17,25 @@
 
 
 quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), na.tolerance = .3, ylim = NULL, main = NULL){
-      
       if (type == "daily") {
             if (!is.null(downscaled)) {
-                  if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
+                  if (difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
                         stop("downscaled data is not daily, try with type = 'interannual'")
                   }
             }
-            dailyOutlook (obs, sim, downscaled, location, ylim)
+            dailyOutlook(obs, sim, downscaled, location, ylim)
       } else if (type == "interannual") {
-            interannualOutlook (obs, sim, downscaled, location, na.tolerance = na.tolerance, ylim, main)
+            interannualOutlook(obs, sim, downscaled, location, na.tolerance = na.tolerance, ylim, main)
       }
 }
 #end
+
+
+#' @importFrom stats cor
+#' @importFrom graphics par plot axis text polygon lines legend points
+#' @importFrom stats sd cor
+#' @importFrom grDevices rgb
+#' @keywords internal
 
 interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), na.tolerance = .3, ylim = NULL, main = NULL){
       par(mfrow = c(1,2))
@@ -317,18 +323,25 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
 }
 #end
 
+
+#' @importFrom stats cor quantile
+#' @importFrom graphics par plot lines legend points
+#' @importFrom stats sd cor
+#' @importFrom grDevices rgb
+#' @keywords internal
+
 dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), member = NULL, ylim = NULL){
-      if(any(attr(obs$Data, "dimensions")=="station")){
+      if (any(attr(obs$Data, "dimensions") == "station")) {
             x <- obs$Data
-      }else{
+      } else {
             x <- subsetGrid(obs, lonLim = location[1], latLim = location[2], outside = T)$Data
       }
       y <- subsetGrid(sim, lonLim = location[1], latLim = location[2], outside = T)$Data
-      if(!is.null(downscaled)){
-            if(any(attr(obs$Data, "dimensions")=="station")){
+      if (!is.null(downscaled)) {
+            if (any(attr(obs$Data, "dimensions") == "station")) {
                   w <- downscaled$Data
-            }else{
-                  w <-  subsetGrid(downscaled, lonLim = location[1], latLim = location[2], outside = T)$Data
+            } else {
+                  w <- subsetGrid(downscaled, lonLim = location[1], latLim = location[2], outside = T)$Data
             }
       }
       yran <- if (is.null(ylim)) {

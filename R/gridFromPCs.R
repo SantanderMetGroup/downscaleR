@@ -12,6 +12,7 @@
 #'   the \code{Dates} object) is lost, and should be retrieved from the original grid/multigrid
 #'   object used to compute the PC/EOF analysis.
 #' @importFrom abind abind
+#' @importFrom utils tail
 #' @export
 #' @author J. Bedia 
 #' @seealso \code{\link{prinComp}}, \code{\link{plotEOF}}

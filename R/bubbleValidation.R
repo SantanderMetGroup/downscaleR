@@ -11,6 +11,8 @@
 #'  in the plot. See details. 
 #' @importFrom scales alpha
 #' @importFrom verification roc.area
+#' @importFrom graphics par plot points legend
+#' @importFrom stats complete.cases quantile
 #' @export
 #' @details 
 #' For each member, the daily predictions are averaged to obtain a single seasonal forecast. The corresponding terciles 
@@ -51,7 +53,7 @@ bubbleValidation <- function(mm.obj, obs, select.year, score = TRUE, size.as.pro
       if (!identical(c("time", "lat", "lon"), obs.dimNames)) {
             stop("The observed reference must be a 3D array of the form [time,lat,lon]")
       }
-      obs <- interpData(obs, new.coordinates = getGrid(mm.obj), method = "nearest")  
+      obs <- interpGrid(obs, new.coordinates = getGrid(mm.obj), method = "nearest")  
       x.mm <- mm.obj$xyCoords$x
       y.mm <- mm.obj$xyCoords$y
       yrs <- getYearsAsINDEX(mm.obj)

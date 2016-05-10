@@ -388,8 +388,10 @@ scaling <- function(o, p, s, scaling.type){
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). 
 #' @importFrom MASS fitdistr
+#' @importFrom stats pgamma qgamma
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
+
 gqm <- function(o, p, s, precip, pr.threshold){
       if (precip == FALSE) {
             stop("method gqm is only applied to precipitation data")
@@ -436,7 +438,9 @@ gqm <- function(o, p, s, precip, pr.threshold){
 #' \code{"s"} that are out of the range of \code{"p"}. Extrapolation is applied only to the \code{"eqm"} method, 
 #' thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).
 #' @keywords internal
+#' @importFrom stats approxfun ecdf quantile
 #' @author S. Herrera and M. Iturbide
+
 eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
       if (precip == TRUE) {
             threshold <- pr.threshold
@@ -531,8 +535,8 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
 #' percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.
 #' @importFrom evd fpot
 #' @importFrom MASS fitdistr
-#' @importFrom evd qgpd
-#' @importFrom evd pgpd
+#' @importFrom evd qgpd pgpd
+#' @importFrom stats quantile pgamma qgamma
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
 
@@ -591,6 +595,7 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). 
 #' @importFrom MASS fitdistr
 #' @keywords internal
+#' @importFrom stats rgamma
 #' @author S. Herrera and M. Iturbide
 
 norain <- function(o, p , threshold){

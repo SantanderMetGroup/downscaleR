@@ -56,7 +56,7 @@ Workhorse function to call the different perfect-prog downscaling methods
 
 Several checks of spatial consistency are performed. In particular, note that both \code{x} (reanalysis) and \code{newdata}
  (model simulations) should be in the same grid. This consistency must be ensured by the user prior to entering these arguments,
-for instance by means of the \code{\link{interpData}} function in conjunction with the \code{\link{getGrid}} method.
+for instance by means of the \code{\link{interpGrid}} function in conjunction with the \code{\link{getGrid}} method.
 
 \strong{Scaling and centering}
 

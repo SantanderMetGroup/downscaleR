@@ -19,16 +19,16 @@
 #'  The spatial consistency of the input grids is also checked. In order to avoid possible errors from the user, the spatial
 #'   consistency (i.e., equal XY coordinates) of the input grids must be ensured before attempting the creation of the multigrid,
 #'   otherwise giving an error. This can be achieved either through the specification of the same 'lonLim' and 'latLim' argument
-#'   values when loading the grids, or using the \code{\link{interpData}} interpolator in conjuntion with the \code{\link{getGrid}}
+#'   values when loading the grids, or using the \code{\link{interpGrid}} interpolator in conjuntion with the \code{\link{getGrid}}
 #'   method.
 #'  
 #'  
-#' @note A multigrid can not be passed to the interpolator \code{\link{interpData}} directly. Instead, the 
+#' @note A multigrid can not be passed to the interpolator \code{\link{interpGrid}} directly. Instead, the 
 #' multimember grids should be interpolated individually prior to multigrid construction.  
 #' @export
 #' @importFrom abind abind
 #' @author J. bedia 
-#' @seealso \code{\link{interpData}} for spatial consistency of input grids.
+#' @seealso \code{\link{interpGrid}} for spatial consistency of input grids.
 #' 
 #' @examples 
 #' # Creation of a multigrid from three different grids:

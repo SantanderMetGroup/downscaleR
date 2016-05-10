@@ -21,11 +21,12 @@
 #' @author J. Bedia 
 #' @keywords internal
 #' @importFrom abind asub
+#' @importFrom stats sd
 
 
 
 ppModelSetup <- function(y, x, newdata) {
-      stations <- ifelse ("station" %in% attr(y$Data, "dimensions"), TRUE, FALSE)
+      stations <- ifelse("station" %in% attr(y$Data, "dimensions"), TRUE, FALSE)
       if ("scaled:method" %in% names(attributes(x))) {
             use.PCs <- TRUE
             x.pred <- attr(x, "xCoords")

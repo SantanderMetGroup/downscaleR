@@ -1,4 +1,4 @@
-downscaleR 1.0-0
+downscaleR 0.10-0
 =================
 * New function/object nomenclature (non-backwards compatibility)
   * The term field is replaced by more generic 'grid'

@@ -343,6 +343,7 @@ subsetYears <- function(grid, years, drop) {
 #' component of the output grid.
 #' @return A grid (or multigrid) that is a logical spatial subset of the input grid.
 #' @importFrom abind asub
+#' @importFrom utils tail
 #' @keywords internal
 #' @export
 #' @author J. Bedia 

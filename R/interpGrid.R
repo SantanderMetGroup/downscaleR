@@ -3,6 +3,7 @@
 #' @importFrom akima interp
 #' @importFrom abind abind
 #' @importFrom fields interp.surface.grid
+#' @importFrom stats na.exclude
 #' @param grid An input grid to be interpolated/regridded.
 #' @param new.coordinates Definition of the new grid coordinates, in the form of a list with the x and y components, in thir order.
 #' Each component consists of a vector of length three with components \emph{from}, \emph{to} and \emph{by},

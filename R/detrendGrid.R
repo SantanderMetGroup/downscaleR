@@ -26,6 +26,7 @@
 #' @export
 #' @importFrom parallel stopCluster
 #' @importFrom parallel parApply
+#' @importFrom stats lm
 #' @export
 #' @author J Bedia
 #' @examples 

@@ -29,6 +29,8 @@
 #'  
 #' @return A calibrated object of the same spatio-temporal extent of the input grid
 #' 
+#' @importFrom stats lm coef nls runif na.omit resid predict
+#' 
 #' @family downscaling
 #' 
 #' @references
@@ -36,7 +38,7 @@
 #' \itemize{
 #' \item Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F. (2013) A trend-preserving bias correction: the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236
 #' }
-#' @author S. Herrera \email{sixto@@predictia.es}
+#' @author S. Herrera 
 #' @export
 #' @examples \dontrun{
 #' # Download VALUE (station data) and NCEP (model data) datasets 
@@ -66,7 +68,7 @@
 #'                     season = c(12,1,2), years = 2001:2010)
 #' # Interpolate the observations onto the model's grid. We use the method "nearest" 
 #' # and the getGrid function to ensure spatial consistency:
-#' obs <- interpData(obs, new.coordinates = getGrid(prd), method = "nearest")
+#' obs <- interpGrid(obs, new.coordinates = getGrid(prd), method = "nearest")
 #' # Apply the bias correction method:
 #' simBC <- isimip (obs, prd, sim, threshold = 1) # ISI-MIP Method
 #' par(mfrow = c(1,2))

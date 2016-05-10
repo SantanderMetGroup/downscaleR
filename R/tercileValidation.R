@@ -13,6 +13,8 @@
 #' @importFrom abind asub
 #' @importFrom verification roc.area
 #' @importFrom fields image.plot
+#' @importFrom graphics par axis points mtext image
+#' @importFrom stats quantile
 #' 
 #' @export
 #' 

@@ -40,8 +40,8 @@
 #' or the hindcast data for the training period in s2d applications. Note that by default \code{ref = NULL}. In this 
 #' case it will be assumed to be the \code{pred} grid. This can be used for instance when train and test correspond
 #' to the same model.
-#' @importFrom abind asub
-#' @importFrom abind abind
+#' @importFrom abind abind asub
+#' @importFrom stats na.omit
 #' @return A rescaled grid
 #' @export
 

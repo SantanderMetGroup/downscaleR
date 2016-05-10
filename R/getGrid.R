@@ -1,6 +1,6 @@
 #' @title Get regular grid definition 
 #' @description Get the (regular) grid definition from an existing (gridded) dataset
-#' @param gridData A grid data object coming from \code{loadGridData} (package \pkg{loadeR}) or \code{\link{interpData}}
+#' @param gridData A grid data object coming from \code{loadGridData} (package \pkg{loadeR}) or \code{\link{interpGrid}}
 #'  or the function \code{loadECOMS} of package \pkg{loadeR.ECOMS}.
 #' @return A list of two named components, \code{x} and \code{y}, consisting of a vector of length two each one, defining
 #' the x/y lower and upper bounds. The grid-cell resolution is given by the attributes \code{'resX'} and
@@ -8,6 +8,7 @@
 #' @details In case of irregular grid definitions, the function forces the grid to regularity.
 #' The returned grid object inherits the attributes from the input \code{xyCoords} definition.
 #' @export
+#' @importFrom utils tail
 #' @family loading.grid
 #' @author S. Herrera and J. Bedia 
 #' @examples \dontrun{
@@ -19,11 +20,11 @@
 #' getGrid(tasmin_forecast)
 #' plotMeanGrid(tasmin_forecast)
 #' # Interpolate NCEP onto the System4 grid:
-#' int <- interpData(iberia_ncep_hus850, getGrid(tasmin_forecast), "bilinear")
+#' int <- interpGrid(iberia_ncep_hus850, getGrid(tasmin_forecast), "bilinear")
 #' # Note the warnings because of the non-overlapping domain extents
 #' plotMeanGrid(int)
 #' # The other way round, using nearest neighbour interpolation:
-#' int2 <- interpData(tasmin_forecast, getGrid(iberia_ncep_hus850))
+#' int2 <- interpGrid(tasmin_forecast, getGrid(iberia_ncep_hus850))
 #' plotMeanGrid(int2)
 #' # In this case, the mismatch in domain extent occurs only in the longitudes (to the west)
 #' }
