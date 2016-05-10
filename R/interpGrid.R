@@ -36,7 +36,7 @@
 #' plotMeanGrid(iberia_ncep_ta850)
 #' # Bilinear interpolation to domain centered in Spain using a 0.5 degree resolution 
 #' # in both X and Y axes
-#' t <- interpData(iberia_ncep_ta850, new.coordinates = list(x = c(-10,5,.5),
+#' t <- interpGrid(iberia_ncep_ta850, new.coordinates = list(x = c(-10,5,.5),
 #'                                                           y = c(36,44,.5)),
 #'                                    method = "bilinear",
 #'                                    bilin.method = "akima")
@@ -46,7 +46,7 @@
 #' attributes(t$xyCoords)
 #' }
 
-interpData <- function(grid,
+interpGrid <- function(grid,
                        new.coordinates = list(x = NULL, y = NULL),
                        method = c("nearest", "bilinear"),
                        bilin.method = NULL,
