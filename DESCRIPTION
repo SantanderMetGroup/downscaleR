@@ -17,8 +17,8 @@ Suggests:
     loadeR.ECOMS
 Type: Package
 Title: Climate data manipulation, bias correction and statistical downscaling
-Version: 0.10-0
-Date: 2016-05-09
+Version: 1.0-0
+Date: 2016-05-11
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
