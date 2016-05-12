@@ -28,7 +28,7 @@ parallelCheck <- function(parallel, max.ncores = 16, ncores = NULL) {
                   .cl <- try(parallel::makeCluster(ncores, type = 'FORK'), silent = TRUE)
                   if (!"try-error" %in% class(.cl)) {
                         hasparallel <- TRUE
-                        message("Parallel computing enabled\nNumber of cores to be used: ", ncores)
+                        message("Parallel computing enabled\nNumber of workers: ", ncores)
                   } else {
                         .cl <- NULL
                   }

@@ -145,6 +145,9 @@ interpGrid <- function(grid,
       n.times <- dim(grid$Data)[time.ind]
       # nearest indices
       if (method == "nearest") {
+            if (parallel.pars$hasparallel) {
+                  message("NOTE: parallel option skipped for nearest method")
+            }
             message("[", Sys.time(), "] Calculating nearest neighbors...")
             ind.NN.x <- matrix(nrow = length(new.coordinates$x), ncol = length(new.coordinates$y))
             ind.NN.y <- ind.NN.x
