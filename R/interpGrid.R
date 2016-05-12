@@ -60,17 +60,15 @@ interpGrid <- function(grid,
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
       x <- grid$xyCoords$x
       y <- grid$xyCoords$y
-      if (!is.null(attr(grid$xyCoords, which = "projection"))) {
-            if (attr(grid$xyCoords, which = "projection") == "RotatedPole") {
+      if (exists("lon", grid$xyCoords) && exists("lat", grid$xyCoords)) {
                   x <- grid$xyCoords$lon
                   y <- grid$xyCoords$lat
-            }
       }
       if (is.vector(x) & is.vector(y)) {
-            x <- t(list(x = outer(grid$xyCoords$y*0,grid$xyCoords$x, FUN = "+"),
-                        y = outer(grid$xyCoords$y,grid$xyCoords$x*0, FUN = "+"))$x)
-            y <- t(list(x = outer(grid$xyCoords$y*0,grid$xyCoords$x, FUN = "+"),
-                        y = outer(grid$xyCoords$y,grid$xyCoords$x*0, FUN = "+"))$y)
+            x <- list(x = outer(grid$xyCoords$y*0,grid$xyCoords$x, FUN = "+"),
+                        y = outer(grid$xyCoords$y,grid$xyCoords$x*0, FUN = "+"))$x
+            y <- list(x = outer(grid$xyCoords$y*0,grid$xyCoords$x, FUN = "+"),
+                        y = outer(grid$xyCoords$y,grid$xyCoords$x*0, FUN = "+"))$y
       }
       if (is.null(new.coordinates)) {
             new.coordinates <- getGrid(grid)
@@ -147,13 +145,19 @@ interpGrid <- function(grid,
       n.times <- dim(grid$Data)[time.ind]
       # nearest indices
       if (method == "nearest") {
-            ind.NN <- matrix(nrow = length(new.coordinates$x), ncol = length(new.coordinates$y))
+            message("[", Sys.time(), "] Calculating nearest neighbors...")
+            ind.NN.x <- matrix(nrow = length(new.coordinates$x), ncol = length(new.coordinates$y))
+            ind.NN.y <- ind.NN.x
             for (k in 1:length(new.coordinates$x)) {
                   for (l in 1:length(new.coordinates$y)) {
                         distK <- sqrt((x - new.coordinates$x[k]) ^ 2 + (y - new.coordinates$y[l]) ^ 2)
-                        ind.NN[k,l] <- which.min(distK)
+                        # ind.NN[k,l] <- which.min(distK)
+                        aux.ind <- which(distK == min(distK), arr.ind = TRUE)
+                        ind.NN.x[k,l] <- aux.ind[2]
+                        ind.NN.y[k,l] <- aux.ind[1]
                   }
             }
+            # message("[", Sys.time(), "] Done")
       }
       message("[", Sys.time(), "] Performing ", method, " interpolation... may take a while")
       aux.list <- list()
@@ -163,9 +167,10 @@ interpGrid <- function(grid,
                   int <- array(dim = c(n.times, length(new.coordinates$y), length(new.coordinates$x)))
                   for (k in 1:length(new.coordinates$x)) {
                         for (l in 1:length(new.coordinates$y)) {
-                              ind.x <- arrayInd(ind.NN[k,l], dim(x))[1]
-                              ind.y <- arrayInd(ind.NN[k,l], dim(x))[2]
-                              int[,l,k] <- grid$Data[i,,ind.y, ind.x]
+                              # ind.x <- arrayInd(ind.NN[k,l], dim(x))[1]
+                              # ind.y <- arrayInd(ind.NN[k,l], dim(x))[2]
+                              int[,l,k] <- grid$Data[i,,ind.NN.y[k,l],ind.NN.x[k,l]]
+                              # int[,l,k] <- grid$Data[i,,ind.y,ind.x]
                         }
                   }
                   aux.list[[i]] <- int
@@ -180,12 +185,12 @@ interpGrid <- function(grid,
                         if (bilin.method == "akima") {
                               if (any_is_NA_or_NAN) stop("The input grid contains missing values\nConsider using 'bilin.method=\"fields\"' instead", call. = FALSE)
                               indNoNA <- which(is.finite(z))
-                              int <- akima::interp(x = x[indNoNA], y = y[indNoNA], t(z)[indNoNA],
+                              int <- akima::interp(x = x[indNoNA], y = y[indNoNA], z[indNoNA],#t(z)[indNoNA]
                                                    xo = new.coordinates$x, yo = new.coordinates$y,
                                                    linear = TRUE, extrap = FALSE, duplicate = "error",
                                                    nx = length(new.coordinates$x), ny = length(new.coordinates$y))$z
                         } else if (bilin.method == "fields") {
-                              if (!any_is_NA_or_NAN & i == 1 & j == 1) message("NOTE: No missing values present in the input grid\nConsider using 'bilin.method=\"akima\"' for improved speed")
+                              if (!any_is_NA_or_NAN & i == 1 & j == 1) message("NOTE: No missing values present in the input grid\nConsider using the option bilin.method=\"akima\" for improved speed")
                               int <- fields::interp.surface.grid(list(x = grid$xyCoords$x,
                                                                       y = grid$xyCoords$y,
                                                                       z = t(z)),
