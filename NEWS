@@ -1,20 +1,6 @@
-downscaleR 1.0-0
+downscaleR 1.0-1
 =================
-* New function/object nomenclature (non-backwards compatibility)
-  * The term field is replaced by more generic 'grid'
-* Fully independized from the loadeR bundle (yet highly recommended)
-* Parallelization enabled (Linux and Mac OS only)
-* Enhancements in perfect-prog downscaling
-  * Parallelization option
-  * Cross validation schemes
-  * Monthly mean rescaling of simulation fields
-* Function 'aggregateGrid' for flexible temporal/member aggregations
-* Function 'subsetGrid' for flexible grid subsetting along selected dimensions 
-* Function 'detrendGrid' for grid linear detrending
-* Function 'climatology', for flexible climatology calculation
-* Enhancements in 'interpGrid' (formerly 'interpData') for regridding/interpolation:
-  * Improved efficiency of neasrest neighbour algorithm
-  * New options for bilinear algorithm choice, including the fast interpolator from package akima
+* Bug fix in nearest interpolation of rotated grids
 * Other minor bug fixes and enhancements
 
 
