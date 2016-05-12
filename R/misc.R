@@ -203,6 +203,7 @@ which.leap <- function(years) {
 #' @source Postprocessed from the original shapefile from Natural Earth (http://www.naturalearthdata.com/downloads/110m-physical-vectors/)
 #' @author J. Bedia
 #' @keywords internal
+#' @export
 
 draw.world.lines <- function(...) {
       load(file.path(find.package("downscaleR"), "wrl.Rda"))
