@@ -25,6 +25,9 @@ Perform a linear detrending along the time dimension of a grid
 \details{
 Performs a simple linear detrending by fitting a linear model and retaining the residuals.
 An attribute indicating the linear detrending is added to the \code{Variable} component of the output grid.
+
+In the presence of missing data in the time series, it operates by filtering them prior to linear model fitting. The
+missing data positions are then restored back to the output detrended series.
 }
 \section{Parallel Processing}{
 

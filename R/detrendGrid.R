@@ -22,10 +22,13 @@
 #' @return A detrended grid. Values are residuals.
 #' @details  Performs a simple linear detrending by fitting a linear model and retaining the residuals.
 #' An attribute indicating the linear detrending is added to the \code{Variable} component of the output grid.
+#' 
+#' In the presence of missing data in the time series, it operates by filtering them prior to linear model fitting. The
+#' missing data positions are then restored back to the output detrended series.
+#' 
 #' @template templateParallel
 #' @export
-#' @importFrom parallel stopCluster
-#' @importFrom parallel parApply
+#' @importFrom parallel stopCluster parApply
 #' @importFrom stats lm
 #' @export
 #' @author J Bedia
