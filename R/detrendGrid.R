@@ -42,43 +42,43 @@
 detrendGrid <- function(grid, parallel = FALSE, max.ncores = 16, ncores = NULL) {
       arr <- grid$Data
       refdim <- dim(arr)
-      dimNames <- attr(arr, "dimensions")
-      # grid$Data <- NULL
-      mar <- grep("time", attr(arr, "dimensions"), invert = TRUE)
-      ntimes <- dim(arr)[grep("time", attr(arr, "dimensions"))]
+      dimNames <- getDim(grid)
+      mar <- grep("^time$", dimNames, invert = TRUE)
+      ntimes <- dim(arr)[grep("^time$", dimNames)]
       x <- 1:ntimes
       message("[", Sys.time(), "] - Detrending...")
       arr <- if (isTRUE(parallel)) {
             parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
             on.exit(parallel::stopCluster(parallel.pars$cl))
-            unname(parallel::parApply(cl = parallel.pars$cl, arr, MARGIN = mar, FUN = function(y) {
-                  out <- rep(NA, length(y))
-                  ind <- intersect(which(!is.na(y)), which(!is.na(x)))
-                  print(mean(y, na.rm = TRUE))
+                  unname(parallel::parApply(cl = parallel.pars$cl, arr, MARGIN = mar, FUN = function(y) {
+                  out <- rep(NA, ntimes)
+                  ind <- intersect(which(!is.na(y)), x)
                   out[ind] <- tryCatch(expr = summary(lm(y ~ I(x)))$resid + mean(y, na.rm = TRUE),
                                        error = function(err) {
-                                             rep(NA,ntimes)
+                                             out
                                        })
+                  return(out)
                   })
+                  
             )
       } else {
             unname(apply(arr, MARGIN = mar, FUN = function(y) {
-                  out <- rep(NA, length(y))
-                  ind <- intersect(which(!is.na(y)), which(!is.na(x)))
-                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x)))$resid + mean(y, na.rm = TRUE),
+                  out <- rep(NA, ntimes)
+                  ind <- intersect(which(!is.na(y)), x)
+                  out[ind] <- tryCatch(expr = summary(lm(y ~ I(x), subset = ind))$resid + mean(y, na.rm = TRUE),
                                        error = function(err) {
-                                             rep(NA,ntimes)
+                                             out
                                        })
+                  return(out)
                   })
             )
       }
       message("[", Sys.time(), "] - Done.")
       newdim <- dim(arr)
-      if (any(newdim != refdim)) arr <- aperm(arr, perm = match(newdim, refdim))
+      if (!identical(newdim, refdim))  arr <- aperm(arr, perm = match(newdim, refdim))
       grid$Data <- arr
       attr(grid$Data, "dimensions") <- dimNames
       attr(grid$Variable, "detrended:method") <- "linear"
-      attr(grid$Variable, "units")
       return(grid)
 }
 # End
