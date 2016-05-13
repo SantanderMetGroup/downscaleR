@@ -7,14 +7,16 @@ Imports:
     RCurl,
     fields,
     MASS,
-    verification,
-    scales,
     evd,
     parallel,
-    akima
+    akima,
+    grDevices,
+    graphics,
+    stats
 Suggests:
     loadeR,
-    loadeR.ECOMS
+    loadeR.ECOMS,
+    visualizeR
 Type: Package
 Title: Climate data manipulation, bias correction and statistical downscaling
 Version: 1.0-1

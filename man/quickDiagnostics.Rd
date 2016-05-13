@@ -36,8 +36,6 @@ Plots daily/annual series and the annual correlation map of different grid objec
 M. Iturbide
 }
 \seealso{
-Other visualization: \code{\link{bubbleValidation}},
-  \code{\link{plotMeanGrid}},
-  \code{\link{tercileValidation}}
+Other visualization: \code{\link{plotMeanGrid}}
 }
 

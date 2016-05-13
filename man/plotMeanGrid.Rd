@@ -51,8 +51,6 @@ plotMeanGrid(mm.mf) # Note: multi-member not supported in this case
 J Bedia
 }
 \seealso{
-Other visualization: \code{\link{bubbleValidation}},
-  \code{\link{quickDiagnostics}},
-  \code{\link{tercileValidation}}
+Other visualization: \code{\link{quickDiagnostics}}
 }
 
