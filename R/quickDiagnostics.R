@@ -17,6 +17,7 @@
 
 
 quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), na.tolerance = .3, ylim = NULL, main = NULL){
+      type <- match.arg(type, choices = c("daily", "interannual"))
       if (type == "daily") {
             if (!is.null(downscaled)) {
                   if (difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){

@@ -123,6 +123,9 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                            scaling.type = c("additive", "multiplicative"),
                            pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
                            theta = .95){
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm"))
+      scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
+      extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
       obs <- y
       pred <- x
       sim <- newdata
