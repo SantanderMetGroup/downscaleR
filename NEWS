@@ -1,9 +1,6 @@
-downscaleR 1.0-1
+downscaleR 1.0-2
 =================
-* Bug fix in nearest interpolation of rotated grids
-* Bug fix in grid grid detrending in the presence of sparse missing data
-* Internal change to export draw.world.lines() for visualizeR
-* bubbleValidation and tercileValidation removed (superseded by visualizeR functions)
+* Added new functionality in `aggregateGrid` for weighted areal averaging 
 * Other minor bug fixes and enhancements
 
 

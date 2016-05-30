@@ -19,8 +19,8 @@ Suggests:
     visualizeR
 Type: Package
 Title: Climate data manipulation, bias correction and statistical downscaling
-Version: 1.0-1
-Date: 2016-05-13
+Version: 1.0-2
+Date: 2016-05-30
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
@@ -34,6 +34,7 @@ Authors@R: as.person(c(
     "Sixto Herrera <sixto@predictia.es> [ctb]",
     "Maialen Iturbide <miturbide@ifca.unican.es> [ctb]",
     "Rodrigo Manzanas <rmanzanas@ifca.unican.es> [ctb]",
+    "Stefan Siegert <S.Siegert@exeter.ac.uk> [ctb]",
     "Max Tuni <max@predictia.es> [ctb]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
