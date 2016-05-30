@@ -106,7 +106,7 @@
 #' eqm1win <- biasCorrection(y = y, x = x, newdata = x,
 #'                           method = "eqm",
 #'                           extrapolation = "none",
-#'                           window = c(90, 1))
+#'                           window = c(90, 10))
 #' NCEP_Igueldo <- subsetGrid(x, latLim = y$xyCoords[,2], lonLim = y$xyCoords[,1])
 #' par(mfrow = c(1,3))
 #' qqplot(y$Data, NCEP_Igueldo$Data)
@@ -129,20 +129,20 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
       obs <- y
       pred <- x
       sim <- newdata
-      if (!any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))){
+      if (!any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))) {
             precip <- FALSE    
-      }else{
+      } else {
             precip <- TRUE
       } 
       
-      if("station" %in% attr(obs$Data, "dimensions")){
+      if ("station" %in% attr(obs$Data, "dimensions")) {
             station <- TRUE
             obs <- redim(obs, member = F)
             x <- obs$xyCoords[,1]
             y <- obs$xyCoords[,2]
             ito <- which(getDim(obs) == "time")
             ind <- cbind(1:dim(obs$Data)[2], rep(1, dim(obs$Data)[2]), 1:dim(obs$Data)[2])
-      }else{
+      } else {
             station <- FALSE
             x <- obs$xyCoords$x
             y <- obs$xyCoords$y
@@ -155,36 +155,36 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
       sim <- redim(sim, member = T, runtime = T)
       itp <- which(getDim(pred) == "time")
       ito <- which(getDim(obs) == "time")
-      if(dim(obs$Data)[ito]!=dim(pred$Data)[itp]) stop("y and x do not have the same time series length")
+      if (dim(obs$Data)[ito] != dim(pred$Data)[itp]) stop("y and x do not have the same time series length")
       
       n.run <- dim(sim$Data)[1]
       n.mem <- dim(sim$Data)[2]
       
-      if(method == "delta"){
+      if (method == "delta") {
             run <- array(dim = c(1, n.mem, dim(obs$Data)))
-      }else{
+      } else {
             its <- which(getDim(sim) == "time")
             run <- array(dim = c(1, n.mem, dim(sim$Data)[its], dim(obs$Data)[-ito]))
       }
-      lrun <- lapply(1:n.run, function(k){    # loop for runtimes
+      lrun <- lapply(1:n.run, function(k) {    # loop for runtimes
             
             pre <- subsetGrid(pred, runtime = k, drop = FALSE)
             si <- subsetGrid(sim, runtime = k, drop = FALSE)
             
             #                   if(multi.member == TRUE){
-            if(method == "delta"){
+            if (method == "delta") {
                   mem <- array(dim = c(1, 1, dim(obs$Data)))
-            }else{
+            } else {
                   mem <- array(dim = c(1, 1, dim(sim$Data)[its], dim(obs$Data)[-ito]))
             }
             lmem <- lapply(1:n.mem, function(l){ # loop for members
                   
-                  p <-subsetGrid(pred, members = l, drop = FALSE)
-                  s <-subsetGrid(sim, members = l, drop = FALSE)
+                  p <- subsetGrid(pred, members = l, drop = FALSE)
+                  s <- subsetGrid(sim, members = l, drop = FALSE)
                   message("[", Sys.time(), "] Bias correcting member ", l, " out of ", n.mem, ".")
-                  if(is.null(window)){
+                  if (is.null(window)) {
                         # Apply bias correction methods
-                        for(i in 1:nrow(ind)){
+                        for (i in 1:nrow(ind)) {
                               suppressWarnings(
                                    mem[,,,ind[i,1],ind[i,2]] <- biasCorrection1D(obs$Data[,ind[i,1],ind[i,2]],
                                                                             subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1],
@@ -198,48 +198,48 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                                                             theta = theta)
                               )
                         }                                                                             
-                  }else{
+                  } else {
                         step <- window[2]
-                        window <- window[1]+step
+                        window <- window[1] + step
                         message("Correcting windows")
                         datesList <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
                         yearList <- unlist(strsplit(as.character(datesList), "[-]"))
                         dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
                         dayList <- unique(dayListObs,index.return = datesList)
                         indDays <- array(data = NaN, dim = c(length(datesList),1))
-                        for (d in 1:dim(dayList)[1]){
-                              indDays[which(sqrt((dayListObs[,1]-dayList[d,1])^2+(dayListObs[,2]-dayList[d,2])^2)==0)] <- d
+                        for (d in 1:dim(dayList)[1]) {
+                              indDays[which(sqrt((dayListObs[,1] - dayList[d,1]) ^ 2 + (dayListObs[,2] - dayList[d,2]) ^ 2) == 0)] <- d
                         }
-                        datesList <- as.POSIXct(sim$Dates$start, tz="GMT", format="%Y-%m-%d")
-                        yearList<-unlist(strsplit(as.character(datesList), "[-]"))
+                        datesList <- as.POSIXct(sim$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+                        yearList <- unlist(strsplit(as.character(datesList), "[-]"))
                         dayListSim <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
                         indDaysSim <- array(data = NaN, dim = c(length(datesList),1))
-                        for (d in 1:dim(dayList)[1]){
-                              indDaysSim[which(sqrt((dayListSim[,1]-dayList[d,1])^2+(dayListSim[,2]-dayList[d,2])^2)==0)] <- d
+                        for (d in 1:dim(dayList)[1]) {
+                              indDaysSim[which(sqrt((dayListSim[,1] - dayList[d,1]) ^ 2 + (dayListSim[,2] - dayList[d,2]) ^ 2) == 0)] <- d
                         }
-                        for(i in 1:nrow(ind)){
-                              if(method == "delta"){
+                        for (i in 1:nrow(ind)) {
+                              if (method == "delta") {
                                     end <- indDays
-                              }else{
+                              } else {
                                     end <- indDaysSim
                               }
                               steps <- floor(dim(dayList)[1]/step)
-                              for (j in 1:steps){
-                                    days <- ((j-1)*step+1):((j-1)*step+step)
-                                    if(j == steps) days <- days[1]:dim(dayList)[1]
+                              for (j in 1:steps) {
+                                    days <- ((j - 1) * step + 1):((j - 1) * step + step)
+                                    if (j == steps) days <- days[1]:dim(dayList)[1]
                                     indObs <- lapply(1:length(days), function(h){
                                           which(indDays == days[h])
                                     })
                                     indObs <- sort(do.call("abind", indObs))
                                     indObsWindow <- array(data = NA, dim = c((window)*length(indObs)/step,1))
                                     breaks <- c(which(diff(indObs) != 1), length(indObs))
-                                    for (d in 1:length(breaks)){
-                                          if(d == 1) {
+                                    for (d in 1:length(breaks)) {
+                                          if (d == 1) {
                                                 piece <- indObs[1:breaks[1]]
-                                          }else{
-                                                piece <- indObs[(breaks[d-1]+1): breaks[d]]
+                                          } else {
+                                                piece <- indObs[(breaks[d - 1] + 1):breaks[d]]
                                           }
-                                          suppressWarnings(indObsWindow[((d-1)*window+1):(d*window)] <- (min(piece, na.rm = T)-floor((window-step)/2)):(max(piece, na.rm = T)+floor((window-step)/2)))
+                                          suppressWarnings(indObsWindow[((d - 1)*window + 1):(d*window)] <- (min(piece, na.rm = T) - floor((window - step) / 2)):(max(piece, na.rm = T) + floor((window - step) / 2)))
                                     }
                                     indObsWindow[which(indObsWindow <= 0)] <- 1
                                     indObsWindow[which(indObsWindow >  length(indDays))] <- length(indDays)
@@ -251,9 +251,9 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                     # Apply bias correction methods
                                     
                                     suppressWarnings(
-                                          if(method == "delta"){
+                                          if (method == "delta") {
                                                 o1 <- obs$Data[indObs,ind[i,1],ind[i,2]]
-                                          }else{
+                                          } else {
                                                 o1 <- obs$Data[indObsWindow,ind[i,1],ind[i,2]]
                                           }
                                     )
@@ -263,7 +263,7 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                     suppressWarnings(
                                           s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indSim]
                                     )
-                                    if(method == "delta") indSim <- indObs
+                                    if (method == "delta") indSim <- indObs
                                     end[indSim,] <- biasCorrection1D(o1, p1, s1, 
                                                                      method = method,
                                                                      scaling.type = scaling.type,
@@ -272,21 +272,17 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
                                                                      n.quantiles = n.quantiles,
                                                                      extrapolation = extrapolation,
                                                                      theta = theta)
-                                    
                               }
                               mem[,,,ind[i,1],ind[i,2]] <- end
                         }
                   }
                   return(mem)
-                  
             }) #end loop for members
-            
             #                   }else{
             #                         ############# members jointly
             #                   }
             run[,,,,] <- abind(lmem, along = 2)
             return(run)
-            
       }) #end loop for runtimes
       bc$Data <- unname(abind(lrun, along = 1))
       attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
@@ -299,7 +295,6 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
       bc$Members <- sim$Members
       return(bc)
 }
-
 #end
 
 
@@ -325,25 +320,26 @@ biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", 
 #' @keywords internal
 #' @author M. Iturbide
 
-biasCorrection1D <- function(o, p, s, method = c("delta", "scaling", "eqm", "gqm", "gpqm"), 
-                             scaling.type = c("additive", "multiplicative"), precip = FALSE, 
-                             pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
-                             theta = .95){
-      if(method == "delta"){
-            bc1d <- delta(o, p, s)
-      }else if(method == "scaling"){
-            bc1d <- scaling(o, p, s, scaling.type)
-      }else if(method == "eqm"){
-            bc1d <- eqm(o, p, s, precip, pr.threshold, n.quantiles, extrapolation)
-      }else if(method == "gqm"){
-            bc1d <- gqm(o, p, s, precip, pr.threshold)
-      }else if(method == "gpqm"){
-            bc1d <- gpqm(o, p, s, precip, pr.threshold, theta)
+biasCorrection1D <- function(o, p, s,
+                             method = method, 
+                             scaling.type = scaling.type,
+                             precip = FALSE, 
+                             pr.threshold = 1,
+                             n.quantiles = NULL,
+                             extrapolation = extrapolation, 
+                             theta = .95) {
+      if (method == "delta") {
+            delta(o, p, s)
+      } else if (method == "scaling") {
+            scaling(o, p, s, scaling.type)
+      } else if (method == "eqm") {
+            eqm(o, p, s, precip, pr.threshold, n.quantiles, extrapolation)
+      } else if (method == "gqm") {
+            gqm(o, p, s, precip, pr.threshold)
+      } else if (method == "gpqm") {
+            gpqm(o, p, s, precip, pr.threshold, theta)
       }
-      
-      return(bc1d) 
 }
-
 #end
 
 #' @title Delta method for bias correction
@@ -369,16 +365,12 @@ delta <- function(o, p, s){
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
 scaling <- function(o, p, s, scaling.type){
-      if (scaling.type == "additive"){
-            corrected <- s - mean(p) + mean(o)
-            
-      }else if(scaling.type == "multiplicative"){
-            corrected <- (s/mean(p))* mean(o)
-            
+      if (scaling.type == "additive") {
+            s - mean(p) + mean(o)
+      } else if (scaling.type == "multiplicative") {
+            (s/mean(p)) * mean(o)
       }
-      return(corrected)
 }
-
 #end
 
 
@@ -398,19 +390,19 @@ scaling <- function(o, p, s, scaling.type){
 gqm <- function(o, p, s, precip, pr.threshold){
       if (precip == FALSE) {
             stop("method gqm is only applied to precipitation data")
-      }else{
+      } else {
             threshold <- pr.threshold
-            if (any(!is.na(o))){
+            if (any(!is.na(o))) {
                   params <-  norain(o, p, threshold)
                   p <- params$p
                   nP <- params$nP
                   Pth <- params$Pth
-            }else{
+            } else {
                   nP = NULL
             }
-            if (is.null(nP)){
+            if (is.null(nP)) {
                   s <- rep(NA, length(s))
-            }else if(nP < length(o)){
+            } else if (nP < length(o)) {
                   ind <- which(o > threshold & !is.na(o))
                   obsGamma <-  tryCatch({fitdistr(o[ind],"gamma")}, error = function(err){stop("There are not precipitation days in y for the window length selected in one or more locations. Try to enlarge the window")})
                   ind <- which(p > 0 & !is.na(p))
@@ -420,7 +412,7 @@ gqm <- function(o, p, s, precip, pr.threshold){
                   auxF <- pgamma(s[rain], prdGamma$estimate[1], rate = prdGamma$estimate[2])
                   s[rain] <- qgamma(auxF, obsGamma$estimate[1], rate = obsGamma$estimate[2])
                   s[noRain] <- 0
-            }else{
+            } else {
                   warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
             } 
       }
@@ -447,44 +439,44 @@ gqm <- function(o, p, s, precip, pr.threshold){
 eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
       if (precip == TRUE) {
             threshold <- pr.threshold
-            if (any(!is.na(o))){
+            if (any(!is.na(o))) {
                   params <-  norain(o, p, threshold)
                   p <- params$p
                   nP <- params$nP
                   Pth <- params$Pth
-            }else{
+            } else {
                   nP = NULL
             }
-            if(is.null(nP)){
+            if (is.null(nP)) {
                   smap <- rep(NA, length(s))
-            }else if(any(!is.na(p)) & any(!is.na(o))){
-                  if (length(which(p > Pth)) > 0){ 
-                        noRain <- which(s<=Pth & !is.na(s))
+            } else if (any(!is.na(p)) & any(!is.na(o))) {
+                  if (length(which(p > Pth)) > 0) { 
+                        noRain <- which(s <= Pth & !is.na(s))
                         rain <- which(s > Pth & !is.na(s))
                         drizzle <- which(s > Pth  & s  <= min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))
-                        eFrc<-tryCatch({ecdf(s[rain])}, error = function(err){stop("There are not precipitation days in newdata for the step length selected in one or more locations. Try to enlarge the window step")})
-                        if (length(rain) > 0){
-                              if(is.null(n.quantiles)) n.quantiles <- length(p)
+                        eFrc <- tryCatch({ecdf(s[rain])}, error = function(err) {stop("There are not precipitation days in newdata for the step length selected in one or more locations. Try to enlarge the window step")})
+                        if (length(rain) > 0) {
+                              if (is.null(n.quantiles)) n.quantiles <- length(p)
                               bins <- n.quantiles
-                              qo <- quantile(o[which(o > threshold & !is.na(o))], prob = seq(1/bins,1-1/bins,1/bins), na.rm = T)
-                              qp <- quantile(p[which(p > Pth)], prob = seq(1/bins,1-1/bins,1/bins), na.rm = T)
+                              qo <- quantile(o[which(o > threshold & !is.na(o))], prob = seq(1/bins,1 - 1/bins,1/bins), na.rm = T)
+                              qp <- quantile(p[which(p > Pth)], prob = seq(1/bins,1 - 1/bins,1/bins), na.rm = T)
                               p2o <- approxfun(qp, qo, method = "linear")
                               smap <- s
                               smap[rain] <- p2o(s[rain])
                               # Linear extrapolation was discarded due to lack of robustness 
-                              if(extrapolation == "constant"){
-                                    smap[rain][which(s[rain] > max(qp, na.rm = TRUE))] <- s[rain][which(s[rain] > max(qp, na.rm = TRUE))]+(qo[length(qo)]-qp[length(qo)])
-                                    smap[rain][which(s[rain] < min(qp, na.rm = TRUE))] <- s[rain][which(s[rain] < min(qp, na.rm = TRUE))]+(qo[1]-qp[1]) 
-                              }else{
+                              if (extrapolation == "constant") {
+                                    smap[rain][which(s[rain] > max(qp, na.rm = TRUE))] <- s[rain][which(s[rain] > max(qp, na.rm = TRUE))] + (qo[length(qo)] - qp[length(qo)])
+                                    smap[rain][which(s[rain] < min(qp, na.rm = TRUE))] <- s[rain][which(s[rain] < min(qp, na.rm = TRUE))] + (qo[1] - qp[1]) 
+                              } else {
                                     smap[rain][which(s[rain] > max(qp, na.rm = TRUE))] <- qo[length(qo)]
                                     smap[rain][which(s[rain] < min(qp, na.rm = TRUE))] <- qo[1]
                               }
                         }
-                        if (length(drizzle)>0){
-                              smap[drizzle]<-quantile(s[which(s > min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))], probs = eFrc(s[drizzle]), na.rm = TRUE, type = 4)
+                        if (length(drizzle) > 0) {
+                              smap[drizzle] <- quantile(s[which(s > min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))], probs = eFrc(s[drizzle]), na.rm = TRUE, type = 4)
                         }
-                        smap[noRain]<-0
-                  }else{  ## For dry series
+                        smap[noRain] <- 0
+                  } else {## For dry series
                         smap <- s
                         warning('No rainy days in the prediction. Bias correction is not applied') 
 #                         noRain<-which(s <= Pth & !is.na(s))
@@ -498,30 +490,27 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
 #                         smap[noRain]<-0
                   }
             }
-      }else{
-            if(all(is.na(o))){
+      } else {
+            if (all(is.na(o))) {
                   smap <- rep(NA, length(s))
-            }else if (any(!is.na(p)) & any(!is.na(o))) {
-                  if(is.null(n.quantiles)) n.quantiles <- length(p)
+            } else if (any(!is.na(p)) & any(!is.na(o))) {
+                  if (is.null(n.quantiles)) n.quantiles <- length(p)
                   bins <- n.quantiles
-                  qo <- quantile(o, prob = seq(1/bins,1-1/bins,1/bins), na.rm = T)
-                  qp <- quantile(p, prob = seq(1/bins,1-1/bins,1/bins), na.rm = T)
+                  qo <- quantile(o, prob = seq(1/bins,1 - 1/bins,1/bins), na.rm = TRUE)
+                  qp <- quantile(p, prob = seq(1/bins,1 - 1/bins,1/bins), na.rm = TRUE)
                   p2o <- approxfun(qp, qo, method = "linear")
                   smap <- p2o(s)
-                  if(extrapolation == "constant"){
-                        smap[which(s > max(qp, na.rm = TRUE))] <- s[which(s > max(qp, na.rm = TRUE))]+(qo[length(qo)]-qp[length(qo)])
-                        smap[which(s < min(qp, na.rm = TRUE))] <- s[which(s < min(qp, na.rm = TRUE))]+(qo[1]-qp[1]) 
-                  }else{
+                  if (extrapolation == "constant") {
+                        smap[which(s > max(qp, na.rm = TRUE))] <- s[which(s > max(qp, na.rm = TRUE))] + (qo[length(qo)] - qp[length(qo)])
+                        smap[which(s < min(qp, na.rm = TRUE))] <- s[which(s < min(qp, na.rm = TRUE))] + (qo[1] - qp[1]) 
+                  } else {
                         smap[which(s > max(qp, na.rm = TRUE))] <- qo[length(qo)]
                         smap[which(s < min(qp, na.rm = TRUE))] <- qo[1]
                   }
             }
       }
-      
       return(smap)
 }
-
-
 #end
 
 #' @title Generalized Quantile Mapping method for bias correction

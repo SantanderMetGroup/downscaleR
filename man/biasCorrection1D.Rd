@@ -4,10 +4,9 @@
 \alias{biasCorrection1D}
 \title{Bias correction methods on 1D data}
 \usage{
-biasCorrection1D(o, p, s, method = c("delta", "scaling", "eqm", "gqm",
-  "gpqm"), scaling.type = c("additive", "multiplicative"), precip = FALSE,
-  pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none",
-  "constant"), theta = 0.95)
+biasCorrection1D(o, p, s, method = method, scaling.type = scaling.type,
+  precip = FALSE, pr.threshold = 1, n.quantiles = NULL,
+  extrapolation = extrapolation, theta = 0.95)
 }
 \arguments{
 \item{o}{A vector (e.g. station data) containing the observed climate data for the training period}
