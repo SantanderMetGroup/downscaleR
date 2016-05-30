@@ -59,8 +59,8 @@ glimpr <- function(y = y, modelPars = modelPars, simulate = TRUE, return.models 
                               pred[ind01] <- 1
                               pred[-ind01] <- 0
                         }else{
-#                               pred[which(pred >= quantile(pred, 1 - wet.prob[cases[x]], na.rm = TRUE))] <- 1L
-                              pred[which(pred >= 0.5)] <- 1L
+                              pred[which(pred >= quantile(mod.bin.x$fitted.values, 1 - wet.prob[cases[x]], na.rm = TRUE))] <- 1L
+                              #pred[which(pred >= 0.5)] <- 1L
                               pred <- as.integer(pred)
                         }
                         return(pred)
