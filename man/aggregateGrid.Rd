@@ -24,7 +24,7 @@ aggregation function in first place, and other optional arguments to be passed t
 \item{aggr.lat}{Same as \code{aggr.d}, indicating the aggregation function to be applied along latitude.}
 
 \item{weight.by.lat}{Logical. Should latitudinal averages be weighted by the cosine of latitude?.
-Default to \code{FALSE}. Ignored if no code{aggr.lat} function is indicated, or a function different from \code{"mean"}
+Default to \code{FALSE}. Ignored if no \code{aggr.lat} function is indicated, or a function different from \code{"mean"}
 is applied.}
 
 \item{aggr.lon}{Same as \code{aggr.lat}, but for longitude.}
