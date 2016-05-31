@@ -2,7 +2,7 @@
 #' @description Implementation of GLM's to downscale precipitation data
 #' @param y A grid or station data containing the observed climate data for the training period
 #' @param modelPars Output object from function ppModelSetup containing the predictors and test data
-#' @param simulate Logical. Default is TRUE.
+#' @param simulate Character. Options are "no", "yes" or "occurrence". The last option simulates the occurrence but not the amount.
 #' @param wet.threshold Value below which precipitation amount is considered zero 
 #' @param n.eofs Integer indicating the number of EOFs to be used as predictors 
 #' @family downscaling
@@ -11,7 +11,7 @@
 #' @importFrom stats glm binomial predict runif Gamma rgamma na.exclude
 #' @keywords internal
 
-glimpr <- function(y = y, modelPars = modelPars, simulate = TRUE, return.models = FALSE, wet.threshold = wet.threshold, n.pcs = n.pcs) {
+glimpr <- function(y = y, modelPars = modelPars, simulate =  c("none", "loocv", "kfold"), return.models = FALSE, wet.threshold = wet.threshold, n.pcs = n.pcs) {
       #modelPars <- ppModelSetup(y, x, sim)
       if (is.null(n.pcs)) {
             n.pcs <-  dim(modelPars$pred.mat)[2]
@@ -53,7 +53,7 @@ glimpr <- function(y = y, modelPars = modelPars, simulate = TRUE, return.models 
             mod.bin.x <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))           
             sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
                         pred <- predict(mod.bin.x, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
-                        if(simulate == TRUE){
+                        if(simulate != "no"){
                               rnd <- runif(length(pred), min = 0, max = 1)
                               ind01 <- which(pred > rnd)
                               pred[ind01] <- 1
@@ -102,7 +102,7 @@ glimpr <- function(y = y, modelPars = modelPars, simulate = TRUE, return.models 
                   })
             }else{
                   sims <- sapply(1:length(modelPars$sim.mat), function(i) {
-                        if(simulate == TRUE){
+                        if(simulate == "yes"){
                               predg <- unname(predict(mod.gamma.x, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response"))
 #                               predg[which(predg<=wet.threshold)] <- 0
                               rgamma(n = length(predg), shape = 1/summary(mod.gamma.x)$dispersion, scale = summary(mod.gamma.x)$dispersion * predg) * sims.bin[,i] 

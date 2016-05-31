@@ -21,7 +21,7 @@
 #' 
 #' @template templateObsPredSim
 #' @param method Downscaling method
-#' @param simulate Logical. Default is TRUE.
+#' @param simulate Character. Options are "no", "yes" or "occurrence". The last option simulates the occurrence but not the amount.
 #' @param n.analogs Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.
 #' @param sel.fun Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n.neig = 1}.
 #' Current values are \code{"random"} (the default) and \code{"mean"}. See details.
@@ -78,7 +78,7 @@ downscale <- function(y,
                       x,
                       newdata = NULL,
                       method = c("analogs", "glm"),
-                      simulate = TRUE,
+                      simulate = c("no", "yes", "occurrence"),
                       n.analogs = 1,
                       sel.fun = c("random", "mean"),
                       analog.dates = FALSE,
@@ -89,6 +89,7 @@ downscale <- function(y,
                       parallel = FALSE,
                       max.ncores = 16,
                       ncores = NULL) {
+      simulate <- match.arg(simulate, choices = c("no", "yes", "occurrence"))
       cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
       modelPars <- ppModelSetup(y, x, newdata)

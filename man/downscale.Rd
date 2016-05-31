@@ -5,10 +5,11 @@
 \title{Perfect-prog downscaling}
 \usage{
 downscale(y, x, newdata = NULL, method = c("analogs", "glm"),
-  simulate = TRUE, n.analogs = 1, sel.fun = c("random", "mean"),
-  analog.dates = FALSE, wet.threshold = 0.1, n.pcs = NULL,
-  cross.val = c("none", "loocv", "kfold"), folds = NULL, parallel = FALSE,
-  max.ncores = 16, ncores = NULL)
+  simulate = c("no", "yes", "occurrence"), n.analogs = 1,
+  sel.fun = c("random", "mean"), analog.dates = FALSE,
+  wet.threshold = 0.1, n.pcs = NULL, cross.val = c("none", "loocv",
+  "kfold"), folds = NULL, parallel = FALSE, max.ncores = 16,
+  ncores = NULL)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -22,7 +23,7 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 
 \item{method}{Downscaling method}
 
-\item{simulate}{Logical. Default is TRUE.}
+\item{simulate}{Character. Options are "no", "yes" or "occurrence". The last option simulates the occurrence but not the amount.}
 
 \item{n.analogs}{Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.}
 

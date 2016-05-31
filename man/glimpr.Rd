@@ -4,15 +4,16 @@
 \alias{glimpr}
 \title{GLM downscaling}
 \usage{
-glimpr(y = y, modelPars = modelPars, simulate = TRUE,
-  return.models = FALSE, wet.threshold = wet.threshold, n.pcs = n.pcs)
+glimpr(y = y, modelPars = modelPars, simulate = c("none", "loocv",
+  "kfold"), return.models = FALSE, wet.threshold = wet.threshold,
+  n.pcs = n.pcs)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
 
 \item{modelPars}{Output object from function ppModelSetup containing the predictors and test data}
 
-\item{simulate}{Logical. Default is TRUE.}
+\item{simulate}{Character. Options are "no", "yes" or "occurrence". The last option simulates the occurrence but not the amount.}
 
 \item{wet.threshold}{Value below which precipitation amount is considered zero}
 
