@@ -6,8 +6,8 @@
 \usage{
 aggregateGrid(grid, aggr.mem = list(FUN = NULL), aggr.d = list(FUN = NULL),
   aggr.m = list(FUN = NULL), aggr.y = list(FUN = NULL),
-  aggr.lat = list(FUN = NULL), aggr.lon = list(FUN = NULL),
-  parallel = FALSE, max.ncores = 16, ncores = NULL)
+  aggr.lat = list(FUN = NULL), weight.by.lat = FALSE, aggr.lon = list(FUN
+  = NULL), parallel = FALSE, max.ncores = 16, ncores = NULL)
 }
 \arguments{
 \item{grid}{a grid or multigrid to be aggregated.}
@@ -22,6 +22,10 @@ aggregation function in first place, and other optional arguments to be passed t
 \item{aggr.y}{Same as \code{aggr.d}, but indicating the annual aggregation function.}
 
 \item{aggr.lat}{Same as \code{aggr.d}, indicating the aggregation function to be applied along latitude.}
+
+\item{weight.by.lat}{Logical. Should latitudinal averages be weighted by the cosine of latitude?.
+Default to \code{FALSE}. Ignored if no \code{aggr.lat} function is indicated, or a function different from \code{"mean"}
+is applied.}
 
 \item{aggr.lon}{Same as \code{aggr.lat}, but for longitude.}
 

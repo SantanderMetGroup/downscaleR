@@ -1,4 +1,4 @@
-# aggregateGrid.R Grid aggregation along selected dimensions
+#     ggregateGrid.R Grid aggregation along selected dimensions
 #
 #     Copyright (C) 2016 Santander Meteorology Group (http://www.meteo.unican.es)
 #
@@ -25,6 +25,9 @@
 #' @param aggr.y Same as \code{aggr.d}, but indicating the annual aggregation function. 
 #' @param aggr.mem Same as \code{aggr.d}, but indicating the function for computinh the member aggregation.
 #' @param aggr.lat Same as \code{aggr.d}, indicating the aggregation function to be applied along latitude.
+#' @param weight.by.lat Logical. Should latitudinal averages be weighted by the cosine of latitude?.
+#' Default to \code{FALSE}. Ignored if no \code{aggr.lat} function is indicated, or a function different from \code{"mean"}
+#' is applied.
 #' @param aggr.lon Same as \code{aggr.lat}, but for longitude.
 #' @template templateParallelParams
 #' @return A grid or multigrid aggregated along the chosen dimension(s).
@@ -85,6 +88,7 @@ aggregateGrid <- function(grid,
                           aggr.m = list(FUN = NULL),
                           aggr.y = list(FUN = NULL),
                           aggr.lat = list(FUN = NULL),
+                          weight.by.lat = FALSE,
                           aggr.lon = list(FUN = NULL),
                           parallel = FALSE,
                           max.ncores = 16,
@@ -102,7 +106,7 @@ aggregateGrid <- function(grid,
             grid <- timeAggregation(grid, "YY", aggr.y, parallel, max.ncores, ncores)
       }
       if (!is.null(aggr.lat$FUN)) {
-            grid <- latAggregation(grid, aggr.lat, parallel, max.ncores, ncores)
+            grid <- latAggregation(grid, aggr.lat, weight.by.lat, parallel, max.ncores, ncores)
       }
       if (!is.null(aggr.lon$FUN)) {
             grid <- lonAggregation(grid, aggr.lon, parallel, max.ncores, ncores)
@@ -246,11 +250,18 @@ timeAggregation <- function(grid, aggr.type = c("DD","MM","YY"), aggr.fun, paral
 }
                   
                   
-latAggregation <- function(grid, aggr.fun, parallel, max.ncores, ncores){
+latAggregation <- function(grid, aggr.fun, weight.by.lat, parallel, max.ncores, ncores) {
       dimNames <- getDim(grid)
       if (!"lat" %in% dimNames) {
             message("There is not lat dimension: 'aggr.lat' option was ignored.")
-      }else{
+      } else {
+            if (isTRUE(weight.by.lat)) {
+                  message("Calculating areal weights...")
+                  lat.weights <- latWeighting(grid)
+                  if (aggr.fun[["FUN"]] == "mean") {
+                        aggr.fun <- list(FUN = "weighted.mean", w = lat.weights, na.rm = TRUE)
+                  }
+            }
             parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
             mar <- grep("lat", dimNames, invert = TRUE)
             aggr.fun[["MARGIN"]] <- mar
@@ -260,7 +271,7 @@ latAggregation <- function(grid, aggr.fun, parallel, max.ncores, ncores){
                   on.exit(parallel::stopCluster(parallel.pars$cl))
                   aggr.fun[["cl"]] <- parallel.pars$cl
                   do.call("parApply", aggr.fun)
-            }else{
+            } else {
                   message("[", Sys.time(), "] - Aggregating lat dimension...")
                   do.call("apply", aggr.fun)
             }
@@ -298,4 +309,15 @@ lonAggregation <- function(grid, aggr.fun, parallel, max.ncores, ncores){
 }
 
 
+#' @title Weight as a function of latitude cosine
+#' @description Computes weights as a function of latitude to compute areal averages
+#' @author J. Bedia, S. Siegert
+#' @keywords internal
 
+latWeighting <- function(grid) {
+      if (!is.null(grid$xyCoords$lat)) {
+            stop("Rotated grids are not yet supported")
+      }
+      lats <- grid$xyCoords$y
+      cos(lats / 360 * 2 * pi)
+}
