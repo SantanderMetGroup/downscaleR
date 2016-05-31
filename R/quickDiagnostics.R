@@ -4,11 +4,12 @@
 #' @param sim grid of model data.
 #' @param downscaled Optional. grid of the downscaling output.  
 #' @param location Coordinates of a location in the geographic domain of the grid.
+#' @param type Character value, either \code{"daily"} or \code{"interannual"}, indicating is the assessment is to
+#' be performed on a daily or interannual basis.
+#' @param members An integer vector indicating \strong{the position} of the members to be subset.
 #' @param na.tolerance proportion of NAs in a grid cell (location) that are allowed to calculate correlation. 
 #' @param ylim 'ylim' argument passed to the time series plot.
 #' @param main 'main' argument passed to the plot.
-#' @param type Character value, either \code{"daily"} or \code{"interannual"}, indicating is the assessment is to
-#' be performed on a daily or interannual basis.
 #' @family visualization
 #' @importFrom fields image.plot
 #' @return Two diagnostic plots with observed, simulated and (possibly) downscaled time series, and a QQ-plot by percentlies.
@@ -16,8 +17,12 @@
 #' @export
 
 
-quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), na.tolerance = .3, ylim = NULL, main = NULL){
+quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), members = NULL, na.tolerance = .3, ylim = NULL, main = NULL){
       type <- match.arg(type, choices = c("daily", "interannual"))
+      if(!is.null(members)){
+            sim <- subsetGrid(sim, members = members)
+            downscaled <- subsetGrid(downscaled, members = members)
+      }
       if (type == "daily") {
             if (!is.null(downscaled)) {
                   if (difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
@@ -331,7 +336,7 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
 #' @importFrom grDevices rgb
 #' @keywords internal
 
-dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), member = NULL, ylim = NULL){
+dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), ylim = NULL){
       if (any(attr(obs$Data, "dimensions") == "station")) {
             x <- obs$Data
       } else {
