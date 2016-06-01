@@ -86,8 +86,9 @@ makeMultiGrid <- function(..., spatial.tolerance = 1e-3) {
                   stop("Inconsistent 'dimensions' attribute")
             }
       }
+      ## $Variable attrs ----------
       aux.list <- lapply(1:length(field.list), function(x) field.list[[x]]$Variable)
-      varName <- sapply(1:length(aux.list), function(x) aux.list[[x]]$varName)      
+      varName <- vapply(1:length(aux.list), FUN.VALUE = character(1), FUN = function(x) aux.list[[x]]$varName)      
       level <- sapply(1:length(aux.list), function(x) ifelse(is.null(aux.list[[x]]$level), NA, aux.list[[x]]$level))      
       attr.mf <- lapply(1:length(aux.list), function(x) attributes(aux.list[[x]]))
       aux.list <- NULL
@@ -98,10 +99,14 @@ makeMultiGrid <- function(..., spatial.tolerance = 1e-3) {
       names(attr.list) <- names(attr.mf[[1]])[-1]
       attributes(field.list[[1]]$Variable) <- attr.list 
       names(field.list[[1]]$Variable) <- c("varName", "level")
+      ## Climatologies ----------
+      climfun <- attr(field.list[[1]]$Data, "climatology:fun")
+      ## $Dates -------------------
       field.list[[1]]$Dates <- lapply(1:length(field.list), function(x) field.list[[x]]$Dates)
       dimNames <- attr(field.list[[1]]$Data, "dimensions")
       field.list[[1]]$Data <- unname(do.call("abind", c(lapply(1:length(field.list), function(x) field.list[[x]]$Data), along = -1))) 
       attr(field.list[[1]]$Data, "dimensions") <- c("var", dimNames)
+      if (!is.null(climfun)) attr(field.list[[1]]$Data, "climatology:fun") <- climfun 
       return(field.list[[1]])
 }
 # End
