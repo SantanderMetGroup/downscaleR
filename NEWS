@@ -1,6 +1,8 @@
-downscaleR 1.1-0
+downscaleR 1.2-0
 =================
 * Added new functionality in `aggregateGrid` for weighted areal averaging 
+* New function `plotClimatology` for trellis climatological plots
+* New option in GLM downscaling simulation for precipitation
 * Other minor bug fixes and enhancements
 
 
