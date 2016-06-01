@@ -2,6 +2,7 @@ downscaleR 1.2-1
 =================
 * Minor bug fix in `makeMultiField` to preserve the climatology attributes
 * Bug fix in attribute inheritance after member aggregation
+* New bridging function `easyVeri2grid` to convert `easyVerification` matrices to climatological grids
 * Other minor bug fixes and enhancements
 
 
