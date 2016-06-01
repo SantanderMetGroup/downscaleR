@@ -127,7 +127,7 @@ aggregateGrid <- function(grid,
 #' @author J. Bedia
 
 memberAggregation <- function(grid, aggr.mem, parallel, max.ncores, ncores) {
-      dimNames <- attr(grid$Data, "dimensions")
+      dimNames <- attr(grid$Data, "dimensions", exact = TRUE)
       if (!"member" %in% dimNames) {
             message("Not a multimember grid: 'aggr.mem' option was ignored.")
       } else {
@@ -149,8 +149,11 @@ memberAggregation <- function(grid, aggr.mem, parallel, max.ncores, ncores) {
             }
             message("[", Sys.time(), "] - Done.")
             grid[["Data"]] <- out
-            if (any(names(attr.all) != "dim" & names(attr.all) != "dimensions")) {
-                  attributes(grid$Data) <- attr.all[grep("^dim$|^dimensions$", names(attr.all), invert = TRUE)]
+            # Data attributes
+            attrs <- setdiff(names(attr.all), c("dim", "dimensions"))
+            for (i in 1:length(attrs)) {
+                  ind <- grep(attrs[i], names(attr.all))
+                  attr(grid[["Data"]], attrs[i]) <- attr.all[ind]
             }
             dimNames <- dimNames[-grep("member", dimNames)]
             attr(grid$Data, "dimensions") <- dimNames
