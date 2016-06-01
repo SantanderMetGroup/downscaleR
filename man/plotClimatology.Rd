@@ -40,6 +40,17 @@ The function applies the \code{\link[sp]{spplot}} method after conversion of the
  
  Current implemented options are \code{"none"} and \code{"coastline"}, which contains
  a simplied vector theme delineating the world coastlines.
+ 
+ \strong{Controlling graphical parameters}
+ 
+ Many different aspects of the map can be controlled passing the relevant arguments to 
+ spplot. Fine control of graphical parameters for the trellis display can
+ be also controlled using \code{\link{lattice}{trellis.par.set}}.
+ 
+ @return 
+ 
+ As spplot, \code{plotClimatology} returns a lattice plot of class \dQuote{trellis}. 
+ If you fail to \dQuote{see} it, explicitly call \code{print(plotClimatology(...))}.
 }
 \examples{
 \donttest{
@@ -87,6 +98,7 @@ plotClimatology(clim,
                 contour = TRUE,
                 main = "tasmax Predictions July Ensemble Mean")
 }
+
 }
 \author{
 J. Bedia

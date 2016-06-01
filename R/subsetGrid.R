@@ -73,13 +73,12 @@
 #' @examples
 #' # Example 1 - Spatial / member subset
 #' data(tasmax_forecast)
-#' plotMeanGrid(tasmax_forecast, TRUE)
 #' # Selection of a smaller domain over the Iberian Peninsula and members 3 and 7
 #' sub <- subsetGrid(tasmax_forecast,
 #'                    members = c(3,7),
 #'                    lonLim = c(-10,5),
 #'                    latLim = c(36,44))
-#' plotMeanGrid(sub, multi.member = TRUE)
+#' plotClimatology(climatology(sub, by.member = TRUE), tol = 0.005, contour = TRUE)
 #' ## Example 2 - Subsetting a multimember multigrid by variables
 #' # Multimember multigrid creation
 #' data(tasmax_forecast)
@@ -490,7 +489,6 @@ subsetSeason <- function(grid, season = NULL, drop = TRUE) {
 #' @examples
 #' # Example - Member subset
 #' data(tasmax_forecast)
-#' plotMeanGrid(tasmax_forecast, TRUE)
 #' # Selection of a smaller domain over the Iberian Peninsula and members 3 and 7
 #' sub <- subsetDimension(tasmax_forecast,
 #'                    dimension = "member",

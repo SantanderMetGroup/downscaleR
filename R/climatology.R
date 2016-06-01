@@ -65,9 +65,9 @@
 #' data("NCEP_Iberia_tp")
 #' tpmax <- climatology(NCEP_Iberia_tp,
 #'                     clim.fun = list(FUN = "max"))
-#' plotMeanGrid(tpmax)
+#' plotClimatology(tpmax, tolerance = 0.0005, backdrop.theme = "countries",
+#' main = "Maximum daily precip DJF 2000")
 #' }
-
 
 climatology <- function(grid,
                         clim.fun = list(FUN = "mean", na.rm = TRUE),

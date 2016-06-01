@@ -25,6 +25,18 @@
 #'  Current implemented options are \code{"none"} and \code{"coastline"}, which contains
 #'  a simplied vector theme delineating the world coastlines.
 #'  
+#'  \strong{Controlling graphical parameters}
+#'  
+#'  Many different aspects of the map can be controlled passing the relevant arguments to 
+#'  spplot. Fine control of graphical parameters for the trellis display can
+#'  be also controlled using \code{\link{lattice}{trellis.par.set}}.
+#
+#'  
+#'  @return 
+#'  
+#'  As spplot, \code{plotClimatology} returns a lattice plot of class \dQuote{trellis}. 
+#'  If you fail to \dQuote{see} it, explicitly call \code{print(plotClimatology(...))}.
+#'  
 #' @importFrom abind abind
 #' @importClassesFrom sp SpatialGridDataFrame SpatialPoints
 #' @importFrom sp points2grid gridded coordinates spplot
@@ -80,11 +92,15 @@
 #'                 contour = TRUE,
 #'                 main = "tasmax Predictions July Ensemble Mean")
 #' }
+#' 
 
 plotClimatology <- function(grid,
                             tolerance = sqrt(.Machine$double.eps),
                             backdrop.theme = "none",
                             ...) {
+      if (is.null(attr(grid[["Data"]], "climatology:fun"))) {
+            stop("The input grid is not a climatology: Use function 'climatology' first")
+      }
       arg.list <- list(...)
       bt <- match.arg(backdrop.theme, choices = c("none", "coastline", "countries"))
       dimNames <- getDim(grid)
@@ -112,6 +128,7 @@ plotClimatology <- function(grid,
             attr(z, "dimensions") <- c("time", "lat", "lon")
             array3Dto2Dmat(z)
       })
+      # Panel 
       if (is.multigrid) {
             vname <- attr(grid$Variable, "longname")
             if (!is.null(grid$Variable$level)) {
@@ -151,7 +168,7 @@ plotClimatology <- function(grid,
       ## Other args --------
       arg.list[["obj"]] <- df
       arg.list[["asp"]] <- 1
-      print(do.call("spplot", arg.list))
+      do.call("spplot", arg.list)
 }      
 
 

@@ -30,7 +30,6 @@ The attribute \code{subset} will be added taking the value of the \code{dimensio
 \examples{
 # Example - Member subset
 data(tasmax_forecast)
-plotMeanGrid(tasmax_forecast, TRUE)
 # Selection of a smaller domain over the Iberian Peninsula and members 3 and 7
 sub <- subsetDimension(tasmax_forecast,
                    dimension = "member",
