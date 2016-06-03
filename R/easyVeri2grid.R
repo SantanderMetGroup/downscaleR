@@ -42,7 +42,7 @@ easyVeri2grid <- function(easyVeri.mat, obs.grid, verifun = NULL) {
       attr(obs.grid$Data, "dimensions") <- c("lat", "lon")
       obs.grid <- redim(obs.grid, member = FALSE)
       # Fake climatology:fun attribute
-      clim.att <- ifelse(is.null(verifun), "easiVeri", verifun)
+      clim.att <- ifelse(is.null(verifun), "easyVeri", verifun)
       attr(obs.grid[["Data"]], "climatology:fun") <- clim.att
       return(obs.grid)
 }
