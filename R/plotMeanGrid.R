@@ -36,6 +36,9 @@
 #' 
 
 plotMeanGrid <- function(gridData, multi.member = FALSE) {
+      .Deprecated(new = "plotClimatology", 
+                  msg = "'plotMeanGrid' is deprecated\nConsider using function 'climatology' in combination with 'plotClimatology' instead.
+                  Type help('plotClimatology') for details")
       dimNames <- getDim(gridData)
       if (is.null(dimNames)) stop("Attribute 'dimensions' undefined")
       mar <- match(c("lon", "lat"), dimNames)
