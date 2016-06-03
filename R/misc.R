@@ -222,3 +222,25 @@ draw.world.lines <- function(...) {
 getDim <- function(obj) {
       attr(obj[["Data"]], "dimensions")
 }
+
+#' @title  Retrieve array shape 
+#' @description Retrieve array attributes 'dimensions' and 'dim'
+#' @param obj A grid or station object
+#' @return An integer vector with dim values, labelled with the \code{"dimension"} attribute names
+#' @keywords internal
+#' @author J. Bedia
+
+getShape <- function(obj, dimension = NULL) {
+      dimNames <- getDim(obj)
+      shape <- dim(obj[["Data"]])
+      if (!is.null(dimension)) {
+            ind <- match(dimension, dimNames)
+            if (anyNA(ind)) stop("Input 'dimension' value not found")
+            shape <- shape[ind]
+            dimNames <- dimNames[ind]
+      }
+      names(shape) <- dimNames
+      return(shape)
+}
+
+
