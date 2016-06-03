@@ -1,4 +1,4 @@
-#     ggregateGrid.R Grid aggregation along selected dimensions
+#     aggregateGrid.R Grid aggregation along selected dimensions
 #
 #     Copyright (C) 2016 Santander Meteorology Group (http://www.meteo.unican.es)
 #
@@ -151,10 +151,12 @@ memberAggregation <- function(grid, aggr.mem, parallel, max.ncores, ncores) {
             grid[["Data"]] <- out
             # Data attributes
             attrs <- setdiff(names(attr.all), c("dim", "dimensions"))
-            for (i in 1:length(attrs)) {
-                  ind <- grep(attrs[i], names(attr.all))
-                  attr(grid[["Data"]], attrs[i]) <- attr.all[ind]
-            }
+            if (length(attrs) > 0) {
+                  for (i in 1:length(attrs)) {
+                        ind <- grep(attrs[i], names(attr.all))
+                        attr(grid[["Data"]], attrs[i]) <- attr.all[ind]
+                  }
+            }      
             dimNames <- dimNames[-grep("member", dimNames)]
             attr(grid$Data, "dimensions") <- dimNames
             attr(grid$Variable, "member_agg_cellfun") <- aggr.mem[[1]]
