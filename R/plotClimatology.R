@@ -1,7 +1,25 @@
+#     plotClimatology.R Lattice plot methods for climatological grids
+#
+#     Copyright (C) 2016 Santander Meteorology Group (http://www.meteo.unican.es)
+#
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+
 #' @title Lattice plot methods for climatological grids
 #' @description A wrapper for the lattice (trellis) plot methods for spatial data in \code{sp::spplot}
 #' @param grid Input grid
-#' @param tolerance Precision, used to which extent points are exactly on a grid. See details.
 #' @param backdrop.theme Reference geographical lines to be added to the plot. See Details. 
 #' @param ... Further arguments passed to \code{spplot}
 #' @details The function applies the \code{\link[sp]{spplot}} method after conversion of the climatological map(s) to a
@@ -15,15 +33,11 @@
 #'  the function will internally compute the ensemble mean of each variable in the multigrid
 #'   for representation (with a message).
 #'  
-#'  \strong{Tolerance parameter}
-#'   
-#'   In case of not perfectly regular grids, an error will raise suggesting a minimum value to be passed to
-#'  \code{tolerance}. This argument is passed to \code{\link[sp]{points2grid}}.
-#'  
 #'  \strong{Backdrop theme}
 #'  
 #'  Current implemented options are \code{"none"} and \code{"coastline"}, which contains
-#'  a simplied vector theme delineating the world coastlines.
+#'  a simplied vector theme delineating the world coastlines. Any other themes can be introduced
+#'  by the user using the \code{sp.layout} options in \code{spplot}.
 #'  
 #'  \strong{Controlling graphical parameters}
 #'  
@@ -31,15 +45,11 @@
 #'  spplot. Fine control of graphical parameters for the trellis display can
 #'  be also controlled using \code{\link{lattice}{trellis.par.set}}.
 #
-#'  
-#'  @return 
-#'  
-#'  As spplot, \code{plotClimatology} returns a lattice plot of class \dQuote{trellis}. 
+#' @return As spplot, \code{plotClimatology} returns a lattice plot of class \dQuote{trellis}. 
 #'  If you fail to \dQuote{see} it, explicitly call \code{print(plotClimatology(...))}.
 #'  
 #' @importFrom abind abind
-#' @importClassesFrom sp SpatialGridDataFrame SpatialPoints
-#' @importFrom sp points2grid gridded coordinates spplot
+#' @importFrom sp spplot SpatialGridDataFrame GridTopology
 #' @importFrom grDevices colorRampPalette
 #' 
 #' @export
@@ -51,24 +61,19 @@
 #' data(tasmax_forecast)
 #' # Climatology is computed:
 #' clim <- climatology(tasmax_forecast, by.member = TRUE)
-#' # Some grids not perfectly regular (e.g. CFSv2) may yield a spatial tolerance error:
-#' try(plotClimatology(clim))
-#' # A tolerance value is suggested:
-#' plotClimatology(clim, tolerance = 0.00056)
+#' plotClimatology(clim)
 #' # Geographical lines can be added using the argument 'backdrop.theme':
-#' plotClimatology(clim, tolerance = 0.00056, backdrop.theme = "coastline")
+#' plotClimatology(clim, backdrop.theme = "coastline")
 #' 
 #' # Further arguments can be passed to 'spplot'...
 #' 
 #' # ... a subset of members to be displayed, using 'zcol':
 #' plotClimatology(clim,
-#'                 tolerance = 0.00056,
 #'                 backdrop.theme = "coastline",
 #'                 zcol = 1:4)
 #'                 
-#' # ... regional focuses (e.g. the Iberian Peninsula):
+#' # ... regional focuses (e.g. the Iberian Peninsula). 
 #' plotClimatology(clim,
-#'                 tolerance = 0.00056,
 #'                 backdrop.theme = "countries",
 #'                 xlim = c(-10,5), ylim = c(35,44),
 #'                 zcol = 1:4,
@@ -76,28 +81,22 @@
 #' 
 #' # Changing the default color palette and ranges:
 #' plotClimatology(clim,
-#'                 tolerance = 0.00056,
 #'                 backdrop.theme = "coastline",
 #'                 zcol = 1:4,
-#'                 col.regions = heat.colors(27), at = seq(10,37,1))
+#'                 col.regions = cm.colors(27), at = seq(10,37,1))
 #'                 
 #' # For ensemble means climatology should be called with 'by.member' set to FALSE:
 #' clim <- climatology(tasmax_forecast, by.member = FALSE)
 #' 
 #' # Adding contours to the plot is direct with argument 'contour':
-#' 
 #' plotClimatology(clim,
-#'                 tolerance = 0.00056,
 #'                 scales = list(draw = TRUE),
 #'                 contour = TRUE,
 #'                 main = "tasmax Predictions July Ensemble Mean")
 #' }
 #' 
 
-plotClimatology <- function(grid,
-                            tolerance = sqrt(.Machine$double.eps),
-                            backdrop.theme = "none",
-                            ...) {
+plotClimatology <- function(grid, backdrop.theme = "none", ...) {
       if (is.null(attr(grid[["Data"]], "climatology:fun"))) {
             stop("The input grid is not a climatology: Use function 'climatology' first")
       }
@@ -128,7 +127,10 @@ plotClimatology <- function(grid,
             attr(z, "dimensions") <- c("time", "lat", "lon")
             array3Dto2Dmat(z)
       })
-      # Panel 
+      # Data reordering to match SpatialGrid coordinates
+      aux <- aux[order(-co[,2], co[,1]), ] 
+      aux <- data.frame(aux)
+      # Panel names 
       if (is.multigrid) {
             vname <- attr(grid$Variable, "longname")
             if (!is.null(grid$Variable$level)) {
@@ -139,15 +141,16 @@ plotClimatology <- function(grid,
       } else {
             vname <- paste0("Member_", 1:n.mem)
       }
-      colnames(aux) <- vname
-      aux <- data.frame(aux)
-      co <- sp::coordinates(sp::points2grid(sp::SpatialPoints(co), tolerance = tolerance))
-      co <- co[order(co[,1], co[,2]),]
-      df <- cbind.data.frame(co, aux)
-      sp::coordinates(df) <- c(1,2)
-      sp::gridded(df) <- TRUE
-      df <- as(df, "SpatialGridDataFrame")            
-      ## Backdrop theme -----
+      names(aux) <- vname
+      # Defining grid topology -----------------
+      aux.grid <- getGrid(grid)
+      cellcentre.offset <- vapply(aux.grid, FUN = "[", 1L, FUN.VALUE = numeric(1L))
+      cellsize <- vapply(c("resX", "resY"), FUN.VALUE = numeric(1L), FUN = function(x) attr(aux.grid, which = x))
+      aux.grid <- getCoordinates(grid)
+      cells.dim <- vapply(aux.grid, FUN.VALUE = integer(1L), FUN = "length")
+      grd <- sp::GridTopology(cellcentre.offset, cellsize, cells.dim)
+      df <- sp::SpatialGridDataFrame(grd, aux)
+      ## Backdrop theme ---------------------
       if (bt != "none") {
             uri <- switch(bt,
                           "coastline" = system.file("coastline.rda", package = "downscaleR"),
@@ -159,11 +162,11 @@ plotClimatology <- function(grid,
                   arg.list[["sp.layout"]][[length(arg.list[["sp.layout"]]) + 1]] <- l1
             } 
       }
-      ## Default colorbar -------
+      ## Default colorbar --------------
       if (is.null(arg.list[["col.regions"]])) {
             jet.colors <- colorRampPalette(c("#00007F", "blue", "#007FFF", "cyan",
                                              "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"))
-            arg.list[["col.regions"]] <- jet.colors(31)
+            arg.list[["col.regions"]] <- jet.colors(101)
       }
       ## Other args --------
       arg.list[["obj"]] <- df
