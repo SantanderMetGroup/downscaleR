@@ -56,7 +56,7 @@ redim <- function(obj,
                   dimNames <- dimNames[-match(1, shp)]
                   obj$Data <- drop(obj$Data)
                   attr(obj$Data, "dimensions") <- dimNames
-                  if (!("lat" %in% dimNames && "lon" %in% dimNames)) {
+                  if ("lat" %in% dimNames & !("lon" %in% dimNames)) {
                         attr(obj$Data, "dimensions")[attr(obj$Data, "dimensions") == "lat"] <- "station"
                   }
             }
