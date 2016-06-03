@@ -17,7 +17,7 @@ detrendGrid(grid, parallel = FALSE, max.ncores = 16, ncores = NULL)
 cores is used when \code{ncpus = NULL} (the default), or when \code{maxcores} exceeds the default \code{ncores} value.}
 }
 \value{
-A detrended grid. Values are residuals.
+A detrended grid.
 }
 \description{
 Perform a linear detrending along the time dimension of a grid

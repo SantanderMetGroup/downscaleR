@@ -19,7 +19,7 @@
 #' @description Perform a linear detrending along the time dimension of a grid
 #' @param grid Input grid (possibly multimember)
 #' @template templateParallelParams
-#' @return A detrended grid. Values are residuals.
+#' @return A detrended grid. 
 #' @details  Performs a simple linear detrending by fitting a linear model and retaining the residuals.
 #' An attribute indicating the linear detrending is added to the \code{Variable} component of the output grid.
 #' 

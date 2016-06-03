@@ -4,17 +4,18 @@
 \alias{plotClimatology}
 \title{Lattice plot methods for climatological grids}
 \usage{
-plotClimatology(grid, tolerance = sqrt(.Machine$double.eps),
-  backdrop.theme = "none", ...)
+plotClimatology(grid, backdrop.theme = "none", ...)
 }
 \arguments{
 \item{grid}{Input grid}
 
-\item{tolerance}{Precision, used to which extent points are exactly on a grid. See details.}
-
 \item{backdrop.theme}{Reference geographical lines to be added to the plot. See Details.}
 
 \item{...}{Further arguments passed to \code{spplot}}
+}
+\value{
+As spplot, \code{plotClimatology} returns a lattice plot of class \dQuote{trellis}. 
+ If you fail to \dQuote{see} it, explicitly call \code{print(plotClimatology(...))}.
 }
 \description{
 A wrapper for the lattice (trellis) plot methods for spatial data in \code{sp::spplot}
@@ -31,50 +32,36 @@ The function applies the \code{\link[sp]{spplot}} method after conversion of the
  the function will internally compute the ensemble mean of each variable in the multigrid
   for representation (with a message).
  
- \strong{Tolerance parameter}
-  
-  In case of not perfectly regular grids, an error will raise suggesting a minimum value to be passed to
- \code{tolerance}. This argument is passed to \code{\link[sp]{points2grid}}.
- 
  \strong{Backdrop theme}
  
  Current implemented options are \code{"none"} and \code{"coastline"}, which contains
- a simplied vector theme delineating the world coastlines.
+ a simplied vector theme delineating the world coastlines. Any other themes can be introduced
+ by the user using the \code{sp.layout} options in \code{spplot}.
  
  \strong{Controlling graphical parameters}
  
  Many different aspects of the map can be controlled passing the relevant arguments to 
  spplot. Fine control of graphical parameters for the trellis display can
  be also controlled using \code{\link{lattice}{trellis.par.set}}.
- 
- @return 
- 
- As spplot, \code{plotClimatology} returns a lattice plot of class \dQuote{trellis}. 
- If you fail to \dQuote{see} it, explicitly call \code{print(plotClimatology(...))}.
 }
 \examples{
 \donttest{
 data(tasmax_forecast)
 # Climatology is computed:
 clim <- climatology(tasmax_forecast, by.member = TRUE)
-# Some grids not perfectly regular (e.g. CFSv2) may yield a spatial tolerance error:
-try(plotClimatology(clim))
-# A tolerance value is suggested:
-plotClimatology(clim, tolerance = 0.00056)
+plotClimatology(clim)
 # Geographical lines can be added using the argument 'backdrop.theme':
-plotClimatology(clim, tolerance = 0.00056, backdrop.theme = "coastline")
+plotClimatology(clim, backdrop.theme = "coastline")
 
 # Further arguments can be passed to 'spplot'...
 
 # ... a subset of members to be displayed, using 'zcol':
 plotClimatology(clim,
-                tolerance = 0.00056,
                 backdrop.theme = "coastline",
                 zcol = 1:4)
                 
-# ... regional focuses (e.g. the Iberian Peninsula):
+# ... regional focuses (e.g. the Iberian Peninsula). 
 plotClimatology(clim,
-                tolerance = 0.00056,
                 backdrop.theme = "countries",
                 xlim = c(-10,5), ylim = c(35,44),
                 zcol = 1:4,
@@ -82,18 +69,15 @@ plotClimatology(clim,
 
 # Changing the default color palette and ranges:
 plotClimatology(clim,
-                tolerance = 0.00056,
                 backdrop.theme = "coastline",
                 zcol = 1:4,
-                col.regions = heat.colors(27), at = seq(10,37,1))
+                col.regions = cm.colors(27), at = seq(10,37,1))
                 
 # For ensemble means climatology should be called with 'by.member' set to FALSE:
 clim <- climatology(tasmax_forecast, by.member = FALSE)
 
 # Adding contours to the plot is direct with argument 'contour':
-
 plotClimatology(clim,
-                tolerance = 0.00056,
                 scales = list(draw = TRUE),
                 contour = TRUE,
                 main = "tasmax Predictions July Ensemble Mean")
