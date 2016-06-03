@@ -19,13 +19,19 @@
 #' @description Apply a filter along the time dimension of a grid
 #' @param grid Input grid (possibly multimember)
 #' @template templateParallelParams
-#' @param filter A vector of filter coefficients (see \code{filter for details})
-#' @param method Either \code{"convolution"} or \code{"recursive"} (see \code{filter} for details)
+#' @param window.width An integer specifying the moving window width. This is in the same temporal units 
+#' as the input grid. The function internally converts this value to a vector of filter coefficients of the
+#' form \code{rep(1/n,n)}. See \code{\link{filter}} for details.
+#' @param method Either \code{"convolution"} or \code{"recursive"}. The \code{"convolution"}
+#' option (Default) performs a \emph{moving average}, while \code{"recursive"} applies an autoregressive model.
+#' See \code{\link{filter}} for details.
 #' @template templateParallel
-#' @param sides For convolution filters only. If \code{sides = 1} the filter coefficients
+#' @param sides Used for \code{"convolution"} filters only. If \code{sides = 1} the filter coefficients
 #' are for past values only; if \code{sides = 2} they are centred around lag 0.
 #' See \code{filter} for more details.
-#' @param ... Further arguments passed to \code{filter}.
+#' @param ... Further arguments passed to \code{filter}. Worth to mention here the \code{circular} argument,
+#' used in moving averages. See \code{\link{filter}} for details.
+#' 
 #' @return A time-filtered grid. 
 #' @details  A wrapper of function \code{\link{filter}}
 #' 
@@ -38,14 +44,17 @@
 #' @examples
 #' data(iberia_ncep_ta850)
 #' plot(iberia_ncep_ta850[["Data"]][,3,3], ty = 'l')
-#' fgrid30 <- filterGrid(iberia_ncep_ta850, method = "convolution", filter = rep(1/30,30), sides = 1)
+#' # Apply a moving average considering 2 different window widths of 30 and 90 days
+#' fgrid30 <- filterGrid(iberia_ncep_ta850, method = "convolution", window.width = 30, sides = 1)
 #' lines(fgrid30[["Data"]][,3,3], col = 'red')
-#' fgrid90 <- filterGrid(iberia_ncep_ta850, method = "convolution", filter = rep(1/90,90), sides = 1)
+#' fgrid90 <- filterGrid(iberia_ncep_ta850, method = "convolution", window.width = 90, sides = 1)
 #' lines(fgrid90[["Data"]][,3,3], col = 'green')
-#' legend("top", c("raw","30 day MA", "90-day MA"), lty = 1, col = c(1,2,3), ncol = 3)
+#' legend("top", c("raw","30-day MA", "90-day MA"), lty = 1, col = c(1,2,3), ncol = 3)
 
-filterGrid <- function(grid, filter, method = c("convolution", "recursive"), sides = 1,
+filterGrid <- function(grid, window.width, method = c("convolution", "recursive"), sides = 1,
                        parallel = FALSE, max.ncores = 16, ncores = NULL, ...) {
+      stopifnot(is.numeric(window.width))
+      filter <- rep(1 / window.width, window.width)
       arg.list <- list(...)
       arg.list[["method"]] <- match.arg(method, choices = c("convolution", "recursive"))
       arg.list[["filter"]] <- filter
