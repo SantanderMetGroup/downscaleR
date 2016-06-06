@@ -4,7 +4,11 @@
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 #'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.
-#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
+#' @param cross.val Should cross-validation be performed? methods available are leave-one-out ("loocv") and k-fold ("kfold"). The default 
+#' option ("none") does not perform cross-validation.
+#' @param folds Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
+#' the corresponding fold.
+#' @param wet.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). See details on bias correction for precipitation.
 #' @param window vector of length = 2 specifying the time window width used to calibrate and the target days (days that are being corrected).
 #'  The window is centered on the target day/s. 
@@ -118,7 +122,66 @@
 #' par(mfrow = c(1,1))
 #' }
 
-biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
+
+biasCorrection <- function(y, x, newdata, 
+                           method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
+                           cross.val = c("none", "loocv", "kfold"),
+                           folds = NULL,
+                           window = NULL,
+                           scaling.type = c("additive", "multiplicative"),
+                           wet.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
+                           theta = .95){
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm"))
+      cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
+      scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
+      extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
+      if(cross.val == "none"){
+            output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
+                                       method = method,
+                                       window = window,
+                                       scaling.type = scaling.type,
+                                       pr.threshold = wet.threshold, 
+                                       n.quantiles = n.quantiles, 
+                                       extrapolation = extrapolation, 
+                                       theta = theta)
+      }else{
+            if (!is.null(newdata)) {
+                  message("'newdata' will be ignored for cross-validation")
+            }
+            if(cross.val == "loocv"){
+                  years <- as.list(unique(getYearsAsINDEX(x)))
+            }else if(cross.val == "kfold" & !is.null(folds)){
+                  years <- folds
+            }else if(cross.val == "kfold" & is.null(folds)){
+                  stop("Please, specify folds for kfold cross validation")
+            }
+            output.list <- lapply(1:length(years), function(i) {
+                        target.year <-years[[i]]
+                        rest.years <- setdiff(unlist(years), target.year)
+                        yy <- redim(y, member = F)
+                        yy <- subsetGrid(yy, years = rest.years, drop = FALSE)
+                        yy <- redim(yy, drop = T)
+                        if(length(getDim(yy)) == 1){attr(yy$Data, "dimensions") <- c(getDim(yy), "station")}
+                        newdata2 <- subsetGrid(x, years = target.year)
+                        xx <- subsetGrid(x, years = rest.years)
+                        message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
+                        biasCorrectionXD(y = yy, x = xx, newdata = newdata2, method = method,
+                                          window = window,
+                                          scaling.type = scaling.type,
+                                          pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
+                                          theta = theta)
+                  })
+                  al <- which(getDim(newdata) == "time")
+                  Data <- sapply(output.list, function(x) unname(x$Data))
+                  bindata <- unname(do.call("abind", c(Data, along = al)))
+                  output <- output.list[[1]]
+                  output$Data <- bindata
+                  output$Dates <- x$Dates
+      }
+      return(output)
+}
+
+biasCorrectionXD <- function(y, x, newdata, method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
                            window = NULL,
                            scaling.type = c("additive", "multiplicative"),
                            pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
