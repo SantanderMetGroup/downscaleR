@@ -26,9 +26,14 @@
 #' @param spatial.tolerance numeric. Coordinate differences smaller than \code{spatial.tolerance} will be considered equal 
 #' coordinates. Default to 0.001 --assuming that degrees are being used it seems a reasonable rounding error after interpolation--.
 #' This value is passed to the \code{\link{identical}} function to check for spatial consistency of the input grids.
+#' @param skip.temporal.check Logical. Should temporal matching check of input fields be skipped?
+#' Default to \code{FALSE}. This option can be useful in order to construct multigrids 
+#' from grids of different temporal characteristics. See details.
+#'  (e.g., a multi-seasonal multifield), to be passed to \code{\link{plotClimatology}}
 #' @return A (multimember) multigrid object encompassing the different input (multimember) grids
 #' @details The function makes a number of checks in order to test the spatiotemporal compatibility of the input multi-member grids.
-#'  Regarding the temporal concordance, it is implicitly assumed that all temporal data from the different
+#'  Regarding the temporal concordance, it can be skipped by setting the argument \code{skip.temporal.check} to \code{TRUE}.
+#'  It is implicitly assumed that all temporal data from the different
 #'  multimember grids correspond to the same time zone ("GMT"). The time zone itself is not important, as long as it is the
 #'  same across datasets, because temporal consistency is checked on a daily basis (not hourly), allowing the inclusion of 
 #'  predictors with different verification times and temporal aggregations. For instance, instantaneous geopotential at 12:00 
@@ -83,8 +88,9 @@
 #' plotMeanGrid(mm.mf)
 
 
-makeMultiGrid <- function(..., spatial.tolerance = 1e-3) {
+makeMultiGrid <- function(..., spatial.tolerance = 1e-3, skip.temporal.check = FALSE) {
       field.list <- list(...)
+      stopifnot(is.logical(skip.temporal.check))
       if (length(field.list) < 2) {
             stop("The input must be a list of at least two grids")
       }
@@ -95,8 +101,10 @@ makeMultiGrid <- function(..., spatial.tolerance = 1e-3) {
                   stop("Input data is not spatially consistent")
             }
             # temporal test
-            if (!identical(as.POSIXlt(field.list[[1]]$Dates$start)$yday, as.POSIXlt(field.list[[i]]$Dates$start)$yday) | !identical(as.POSIXlt(field.list[[1]]$Dates$start)$year, as.POSIXlt(field.list[[i]]$Dates$start)$year)) {
-                  stop("Input data is not temporally consistent")
+            if (!skip.temporal.check) {
+                  if (!identical(as.POSIXlt(field.list[[1]]$Dates$start)$yday, as.POSIXlt(field.list[[i]]$Dates$start)$yday) | !identical(as.POSIXlt(field.list[[1]]$Dates$start)$year, as.POSIXlt(field.list[[i]]$Dates$start)$year)) {
+                        stop("Input data is not temporally consistent")
+                  }
             }
             # data dimensionality
             if (!identical(dim(field.list[[1]]$Data), dim(field.list[[i]]$Data))) {
