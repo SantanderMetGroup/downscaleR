@@ -3,6 +3,7 @@ downscaleR 1.3-1
 
 * Added internal `make.names`in plot climatology to avoid duplicate panel names
 * Bug fix in `getYearsAsINDEX` in annually aggregated grids
+* Bug fix in dimnames attribute adjustment for single-year subsetting via `subsetGrid`
 * New option in `makeMultiGrid`to skip temporal consistency checks
 * Other minor bug fixes and enhancements
 

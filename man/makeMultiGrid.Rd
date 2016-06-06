@@ -14,8 +14,9 @@ coordinates. Default to 0.001 --assuming that degrees are being used it seems a 
 This value is passed to the \code{\link{identical}} function to check for spatial consistency of the input grids.}
 
 \item{skip.temporal.check}{Logical. Should temporal matching check of input fields be skipped?
-Default to \code{FALSE}. This option can be useful in order to construct multigrid from different temporal 
-characteristics (e.g., a multi-seasonal multifield), to be passed to \code{\link{plotClimatology}}}
+Default to \code{FALSE}. This option can be useful in order to construct multigrids 
+from grids of different temporal characteristics. See details.
+ (e.g., a multi-seasonal multifield), to be passed to \code{\link{plotClimatology}}}
 }
 \value{
 A (multimember) multigrid object encompassing the different input (multimember) grids
@@ -27,7 +28,8 @@ A multigrid can be considered as a \dQuote{stack} of grids with similar spatiote
 }
 \details{
 The function makes a number of checks in order to test the spatiotemporal compatibility of the input multi-member grids.
- Regarding the temporal concordance, it is implicitly assumed that all temporal data from the different
+ Regarding the temporal concordance, it can be skipped by setting the argument \code{skip.temporal.check} to \code{TRUE}.
+ It is implicitly assumed that all temporal data from the different
  multimember grids correspond to the same time zone ("GMT"). The time zone itself is not important, as long as it is the
  same across datasets, because temporal consistency is checked on a daily basis (not hourly), allowing the inclusion of 
  predictors with different verification times and temporal aggregations. For instance, instantaneous geopotential at 12:00 
