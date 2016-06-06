@@ -112,7 +112,7 @@ getYearsAsINDEX <- function(obj) {
       }
       yrs <- as.numeric(substr(aux.dates,1,4))
       mon <- as.numeric(substr(aux.dates,6,7))
-      if (!is.null(attr(obj$Variable, "annual_agg_cellfun"))) {
+      if (yrs == unique(yrs)) {
           yrs
       } else {    
           if (!identical(season, sort(season))) {
