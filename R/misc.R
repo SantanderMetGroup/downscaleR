@@ -112,15 +112,19 @@ getYearsAsINDEX <- function(obj) {
       }
       yrs <- as.numeric(substr(aux.dates,1,4))
       mon <- as.numeric(substr(aux.dates,6,7))
-      if (!identical(season, sort(season))) {
-            yy <- unique(yrs)[-1]
-            aux <- match(mon, season)
-            brks <- c(1, which(diff(aux) < 0) + 1, length(aux) + 1)
-            l <- lapply(1:(length(brks) - 1), function(x) {
+      if (!is.null(attr(obj$Variable, "annual_agg_cellfun"))) {
+          yrs
+      } else {    
+          if (!identical(season, sort(season))) {
+              yy <- unique(yrs)[-1]
+              aux <- match(mon, season)
+              brks <- c(1, which(diff(aux) < 0) + 1, length(aux) + 1)
+              l <- lapply(1:(length(brks) - 1), function(x) {
                   a <- yrs[brks[x]:(brks[x + 1] - 1)]
                   return(rep(yy[x], length(a)))
-            })
-            yrs  <- do.call("c", l)
+              })
+              yrs  <- do.call("c", l)
+          }
       }
       return(yrs)
 }
