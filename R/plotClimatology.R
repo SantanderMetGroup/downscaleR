@@ -102,23 +102,23 @@ plotClimatology <- function(grid, backdrop.theme = "none", ...) {
       }
       arg.list <- list(...)
       bt <- match.arg(backdrop.theme, choices = c("none", "coastline", "countries"))
-      dimNames <- getDim(grid)
+      dimNames <- downscaleR:::getDim(grid)
       ## Multigrids are treated as realizations, previously aggregated by members if present
       is.multigrid <- "var" %in% dimNames
       if (is.multigrid) {
             if ("member" %in% dimNames) {
                   mem.ind <- grep("member", dimNames)
-                  n.mem <- dim(grid[["Data"]])[mem.ind]
+                  n.mem <- downscaleR:::getShape(grid, "member")
                   if (n.mem > 1) message("NOTE: The multimember mean will be displayed for each variable in the multigrid")
                   grid <- aggregateGrid(grid, aggr.mem = list(FUN = "mean", na.rm = TRUE))
-                  dimNames <- getDim(grid)
+                  dimNames <- downscaleR:::getDim(grid)
             }
             attr(grid[["Data"]], "dimensions") <- gsub("var", "member", dimNames)      
       }
       grid <- redim(grid, drop = FALSE)
-      dimNames <- getDim(grid)
+      dimNames <- downscaleR:::getDim(grid)
       mem.ind <- grep("member", dimNames)
-      n.mem <- dim(grid[["Data"]])[mem.ind]
+      n.mem <- downscaleR:::getShape(grid, "member")
       co <- expand.grid(grid$xyCoords$y, grid$xyCoords$x)[2:1]
       le <- nrow(co)
       aux <- vapply(1:n.mem, FUN.VALUE = numeric(le), FUN = function(x) {
@@ -138,6 +138,7 @@ plotClimatology <- function(grid, backdrop.theme = "none", ...) {
                   vname <- gsub("@NA", "", auxstr)
             }
             vname <- gsub("\\s", "_", vname)
+            vname <- make.names(vname, unique = TRUE)
       } else {
             vname <- paste0("Member_", 1:n.mem)
       }
