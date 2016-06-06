@@ -171,8 +171,8 @@ biasCorrection <- function(y, x, newdata,
                                           pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
                                           theta = theta)
                   })
-                  al <- which(getDim(newdata) == "time")
-                  Data <- sapply(output.list, function(x) unname(x$Data))
+                  al <- which(getDim(x) == "time")
+                  Data <- sapply(output.list, function(n) unname(n$Data), simplify = F)
                   bindata <- unname(do.call("abind", c(Data, along = al)))
                   output <- output.list[[1]]
                   output$Data <- bindata
