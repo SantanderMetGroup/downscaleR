@@ -4,7 +4,7 @@
 \alias{makeMultiGrid}
 \title{Multigrid constructor}
 \usage{
-makeMultiGrid(..., spatial.tolerance = 0.001)
+makeMultiGrid(..., spatial.tolerance = 0.001, skip.temporal.check = FALSE)
 }
 \arguments{
 \item{...}{Input grids to form the multigrid. These must be compatible in time and space (see details).}
@@ -12,6 +12,10 @@ makeMultiGrid(..., spatial.tolerance = 0.001)
 \item{spatial.tolerance}{numeric. Coordinate differences smaller than \code{spatial.tolerance} will be considered equal 
 coordinates. Default to 0.001 --assuming that degrees are being used it seems a reasonable rounding error after interpolation--.
 This value is passed to the \code{\link{identical}} function to check for spatial consistency of the input grids.}
+
+\item{skip.temporal.check}{Logical. Should temporal matching check of input fields be skipped?
+Default to \code{FALSE}. This option can be useful in order to construct multigrid from different temporal 
+characteristics (e.g., a multi-seasonal multifield), to be passed to \code{\link{plotClimatology}}}
 }
 \value{
 A (multimember) multigrid object encompassing the different input (multimember) grids
