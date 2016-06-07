@@ -19,7 +19,7 @@
 parallelCheck <- function(parallel, max.ncores = 16, ncores = NULL) {
       hasparallel <- FALSE
       .cl <- NULL
-      if (parallel && grepl("windows", .Platform$OS.type, ignore.case = TRUE)) {
+      if (parallel & grepl("windows", .Platform$OS.type, ignore.case = TRUE)) {
             message("Parallelization is not supported on Windows machines")    
       } 
       if (parallel && requireNamespace("parallel", quietly = TRUE)) {
