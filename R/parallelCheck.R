@@ -19,7 +19,9 @@
 parallelCheck <- function(parallel, max.ncores = 16, ncores = NULL) {
       hasparallel <- FALSE
       .cl <- NULL
-      if (grepl("windows", .Platform$OS.type, ignore.case = TRUE)) message("Parallelization is not supported on Windows machines")
+      if (parallel && grepl("windows", .Platform$OS.type, ignore.case = TRUE)) {
+            message("Parallelization is not supported on Windows machines")    
+      } 
       if (parallel && requireNamespace("parallel", quietly = TRUE)) {
             if (is.null(ncores)) {
                   ncores <- min(max(parallel::detectCores() - 1, 1), max.ncores)
