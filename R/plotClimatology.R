@@ -93,6 +93,23 @@
 #'                 scales = list(draw = TRUE),
 #'                 contour = TRUE,
 #'                 main = "tasmax Predictions July Ensemble Mean")
+#'                 
+#'                 
+#' ## Example of multigrid plotting
+#' data("iberia_ncep_psl")
+#' ## Winter data are split into monthly climatologies
+#' monthly.clim.grids <- lapply(getSeason(iberia_ncep_psl), function(x) {
+#'       climatology(subsetGrid(iberia_ncep_psl, season = x))
+#' })
+#' ## Skip the temporal checks, as grids correspond to different time slices
+#' mg <- do.call("makeMultiGrid",
+#'               c(monthly.clim.grids, skip.temporal.check = TRUE))
+#'               ## We change the panel names
+#' plotClimatology(mg, 
+#'                 backdrop.theme = "coastline",
+#'                 names.attr = c("DEC","JAN","FEB"),
+#'                 main = "Mean PSL climatology 1991-2010",
+#'                 scales = list(draw = TRUE))                
 #' }
 #' 
 
@@ -110,7 +127,7 @@ plotClimatology <- function(grid, backdrop.theme = "none", ...) {
                   mem.ind <- grep("member", dimNames)
                   n.mem <- downscaleR:::getShape(grid, "member")
                   if (n.mem > 1) message("NOTE: The multimember mean will be displayed for each variable in the multigrid")
-                  grid <- aggregateGrid(grid, aggr.mem = list(FUN = "mean", na.rm = TRUE))
+                  grid <- suppressMessages(aggregateGrid(grid, aggr.mem = list(FUN = "mean", na.rm = TRUE)))
                   dimNames <- downscaleR:::getDim(grid)
             }
             attr(grid[["Data"]], "dimensions") <- gsub("var", "member", dimNames)      
