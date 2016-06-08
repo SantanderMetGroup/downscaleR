@@ -26,6 +26,19 @@ redim <- function(obj,
                   obj$Data <- unname(abind(obj$Data, NULL, along = ind + 1))
                   attr(obj$Data, "dimensions") <- dimNames
             }
+            
+            # Add fake 'lat' dimension  -------
+            if (!("lat" %in% dimNames)) {
+                  dimNames <- c("lat", dimNames)
+                  obj$Data <- unname(abind(obj$Data, NULL, along = 0))
+                  attr(obj$Data, "dimensions") <- dimNames
+            }
+            # Add fake 'lon' dimension  -------
+            if (!("lon" %in% dimNames)) {
+                  dimNames <- c("lon", dimNames)
+                  obj$Data <- unname(abind(obj$Data, NULL, along = 0))
+                  attr(obj$Data, "dimensions") <- dimNames
+            }
             # Add fake 'time' dimension  -------
             if (!("time" %in% dimNames)) {
                   dimNames <- c("time", dimNames)
@@ -44,7 +57,7 @@ redim <- function(obj,
                   obj$Data <- unname(abind(obj$Data, NULL, along = -1))    
                   attr(obj$Data, "dimensions") <- dimNames
             }
-            dimNames <- c("runtime", "member", "time", "lat", "lon")
+            dimNames <- c( "var", "runtime", "member", "time", "lat", "lon")
             dimNames.aux <- attr(obj$Data, "dimensions")
             perm <- na.omit(match(dimNames, dimNames.aux))
             obj$Data <- aperm(obj$Data, perm)
