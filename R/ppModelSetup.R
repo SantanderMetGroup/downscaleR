@@ -21,6 +21,7 @@
 #' @author J. Bedia 
 #' @keywords internal
 #' @importFrom abind asub
+#' @importFrom abind adrop
 #' @importFrom stats sd
 
 
