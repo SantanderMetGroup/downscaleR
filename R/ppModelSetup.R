@@ -121,7 +121,7 @@ ppModelSetup <- function(y, x, newdata) {
       if ("var" %in% dimNames.sim) { 
             mes <- FALSE
             var.dim.index <- grep("var", dimNames.sim)
-            simsc.list.pre <- lapply(1:n.vars, function(idx) asub(newdata$Data, idx, var.dim.index))
+            simsc.list.pre <- lapply(1:n.vars, function(idx) adrop(asub(newdata$Data, idx, var.dim.index, drop = F), drop = var.dim.index))
             if ("member" %in% dimNames.sim) { 
                   multi.member <- TRUE
                   mem.dim.index <- grep("member", dimNames.sim[-var.dim.index])
@@ -135,7 +135,7 @@ ppModelSetup <- function(y, x, newdata) {
                         }
                         if (o != i) mes <- TRUE
                         simsc.list[[i]] <- lapply(1:n.mem, function(id.mem) {
-                              aux <- asub(simsc.list.pre[[o]], id.mem, mem.dim.index)
+                              aux <- adrop(asub(simsc.list.pre[[o]], id.mem, mem.dim.index, drop = F), drop = mem.dim.index)
                               attr(aux, "dimensions") <- dimNames.sim[-match(c("var","member"), dimNames.sim)]
                               aux <- array3Dto2Dmat(aux)
                               aux <- (aux - mu.list[[i]]) / sigma.list[[i]]
@@ -144,7 +144,7 @@ ppModelSetup <- function(y, x, newdata) {
                   }
             } else { 
                   multi.member <- FALSE
-                  simsc.list.pre <- lapply(1:n.vars, function(idx) {asub(newdata$Data, idx, var.dim.index)})
+                  simsc.list.pre <- lapply(1:n.vars, function(idx) {adrop(asub(newdata$Data, idx, var.dim.index, drop = F), drop = var.dim.index)})
                   simsc.list <- lapply(1:n.vars, function(k) {
                         o <- if (isTRUE(use.PCs)) {
                               which(newdata$Variable$varName == names(x)[-length(x)][k])      
@@ -165,7 +165,7 @@ ppModelSetup <- function(y, x, newdata) {
                   mem.dim.index <- grep("member", dimNames.sim)
                   n.mem <- dim(newdata$Data)[mem.dim.index]
                   simsc.list <- lapply(1:n.mem, function(k) {  
-                        aux <- asub(newdata$Data, k, mem.dim.index) 
+                        aux <- adrop(asub(newdata$Data, k, mem.dim.index, drop = F), drop = mem.dim.index) 
                         attr(aux, "dimensions") <- dimNames.sim[-mem.dim.index]
                         aux <- array3Dto2Dmat(aux)
                         aux <- (aux - mu.list[[1]]) / sigma.list[[1]]
