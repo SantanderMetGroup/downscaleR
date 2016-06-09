@@ -87,7 +87,7 @@ ppModelSetup <- function(y, x, newdata) {
                   var.dim.index <- grep("var", dimNames)
                   n.vars <- dim(x$Data)[var.dim.index]
                   Xsc.list <- lapply(1:n.vars, function(idx) {
-                        aux <- asub(x$Data, idx, var.dim.index)
+                        aux <- adrop(asub(x$Data, idx, var.dim.index, drop = FALSE), drop = var.dim.index)
                         attr(aux, "dimensions") <- dimNames[-var.dim.index]
                         aux <- array3Dto2Dmat(aux)   
                         mu <- mean(aux, na.rm = TRUE)
