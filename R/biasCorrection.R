@@ -4,6 +4,7 @@
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 #'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.
+#' @param precipitation Logical indicating if the data to be corrected is precipitation data.
 #' @param cross.val Should cross-validation be performed? methods available are leave-one-out ("loocv") and k-fold ("kfold"). The default 
 #' option ("none") does not perform cross-validation.
 #' @param folds Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
@@ -123,7 +124,7 @@
 #' }
 
 
-biasCorrection <- function(y, x, newdata, 
+biasCorrection <- function(y, x, newdata, precipitation,
                            method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
                            cross.val = c("none", "loocv", "kfold"),
                            folds = NULL,
@@ -137,6 +138,7 @@ biasCorrection <- function(y, x, newdata,
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
       if(cross.val == "none"){
             output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
+                                       precipitation,
                                        method = method,
                                        window = window,
                                        scaling.type = scaling.type,
@@ -165,7 +167,8 @@ biasCorrection <- function(y, x, newdata,
                         newdata2 <- subsetGrid(x, years = target.year)
                         xx <- subsetGrid(x, years = rest.years)
                         message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
-                        biasCorrectionXD(y = yy, x = xx, newdata = newdata2, method = method,
+                        biasCorrectionXD(y = yy, x = xx, newdata = newdata2, precipitation = precipitation,
+                                          method = method,
                                           window = window,
                                           scaling.type = scaling.type,
                                           pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
@@ -181,7 +184,8 @@ biasCorrection <- function(y, x, newdata,
       return(output)
 }
 
-biasCorrectionXD <- function(y, x, newdata, method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
+biasCorrectionXD <- function(y, x, newdata, precipitation, 
+                           method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
                            window = NULL,
                            scaling.type = c("additive", "multiplicative"),
                            pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
@@ -192,12 +196,12 @@ biasCorrectionXD <- function(y, x, newdata, method = c("delta", "scaling", "eqm"
       obs <- y
       pred <- x
       sim <- newdata
-      if (!any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))) {
-            precip <- FALSE    
-      } else {
-            precip <- TRUE
-      } 
-      
+#       if (!any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))) {
+#             precip <- FALSE    
+#         } else {
+#             precip <- TRUE
+#         }
+      precip <- precipitation
       if ("station" %in% attr(obs$Data, "dimensions")) {
             station <- TRUE
             obs <- redim(obs, member = F)
