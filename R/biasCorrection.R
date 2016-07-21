@@ -124,7 +124,7 @@
 #' }
 
 
-biasCorrection <- function(y, x, newdata, precipitation,
+biasCorrection <- function(y, x, newdata, precipitation = FALSE,
                            method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
                            cross.val = c("none", "loocv", "kfold"),
                            folds = NULL,
@@ -138,7 +138,7 @@ biasCorrection <- function(y, x, newdata, precipitation,
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
       if(cross.val == "none"){
             output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
-                                       precipitation,
+                                       precipitation = precipitation,
                                        method = method,
                                        window = window,
                                        scaling.type = scaling.type,
