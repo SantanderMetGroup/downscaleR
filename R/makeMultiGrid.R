@@ -116,7 +116,7 @@ makeMultiGrid <- function(..., spatial.tolerance = 1e-3, skip.temporal.check = F
       }
       ## $Variable attrs ----------
       aux.list <- lapply(1:length(field.list), function(x) field.list[[x]]$Variable)
-      varName <- vapply(1:length(aux.list), FUN.VALUE = character(1), FUN = function(x) aux.list[[x]]$varName)      
+      varName <- vapply(1:length(aux.list), FUN.VALUE = character(1), FUN = function(x) paste(aux.list[[x]]$varName, aux.list[[x]]$level, sep = ""))
       level <- sapply(1:length(aux.list), function(x) ifelse(is.null(aux.list[[x]]$level), NA, aux.list[[x]]$level))      
       attr.mf <- lapply(1:length(aux.list), function(x) attributes(aux.list[[x]]))
       aux.list <- NULL
