@@ -193,7 +193,7 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
                        nlevel = 10, lab.breaks = c("=<0",as.character(seq(0.1,1,0.1))),
                        xlab = "longitude", ylab = "latitude")
             
-            
+            draw.world.lines()
             
             points(location[1], location[2], cex = 2, pch = 17)
       } else {
