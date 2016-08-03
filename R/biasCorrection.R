@@ -3,13 +3,8 @@
 #'
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.
-#' @param precipitation Logical indicating if the data to be corrected is precipitation data.
-#' @param cross.val Should cross-validation be performed? methods available are leave-one-out ("loocv") and k-fold ("kfold"). The default 
-#' option ("none") does not perform cross-validation.
-#' @param folds Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
-#' the corresponding fold.
-#' @param wet.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
+#'  \code{"scaling"}, \code{"gqm"}, \code{"gpqm"} \code{"variance"}, \code{"loci"} and \code{"ptr"}. See details.
+#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). See details on bias correction for precipitation.
 #' @param window vector of length = 2 specifying the time window width used to calibrate and the target days (days that are being corrected).
 #'  The window is centered on the target day/s. 
@@ -32,7 +27,9 @@
 #' @details
 #' 
 #' The methods available are \code{"eqm"}, \code{"delta"}, 
-#' \code{"scaling"}, \code{"gqm"}, \code{"gpqm"} (the two latter used only for precipitation).
+#' \code{"scaling"},\code{"gqm"}, \code{"gpqm"},\code{"loci"}, 
+#' \code{"ptr"}  (the four latter used only for precipitation) and 
+#' \code{"variance"} (only for temperature).
 #'  These are next briefly described: 
 #'  
 #' \strong{Delta}
@@ -67,7 +64,24 @@
 #' Generalized Quantile Mapping. This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a 
 #' gamma distribution to values under the threshold given by the 95th percentile (following Yang et al. 2010) and a general Pareto 
 #' distribution (GPD) to values above the threshold.
+#' 
+#' \strong{variance}
+#' 
+#' Variance scaling of temperature. This method is described in Chen et al. 2011. It is applicable only to temperature. It corrects
+#' the mean and variance of temperature time series.
+#' 
+#' \strong{loci}
+#' 
+#' Local intensity scaling of precipitation. This methode is described in Schmidli et al. 2006. It adjust the mean as well as both wet-day frequencies and wet-day intensities.
+#' The precipitation threshold is calculated such that the number of simulated days exceeding this threshold matches the number of observed days with precipitation larger than zero.
+#' 
+#'\strong{ptr}
 #'
+#' Power transformation of precipitation. This method is described in Leander and Buishand 2007 and is applicable only to precipitation. It adjusts the variance statistics of precipitation
+#' time series in an exponential form. The power parameter is estimated on a monthly basis using a 90-day window centered on the interval. The power is defined by matching the coefficient
+#' of variation of corrected daily simulated precipitation with the coefficient of variation of observed daily precipitation. It is calculated by root-finding algorithm using Brent's method.
+#'  
+#'                
 #' @section Note on the bias correction of precipitation:
 #' 
 #' In the case of precipitation a frequency adaptation has been implemented in all versions of 
@@ -95,7 +109,13 @@
 #' \item C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
 #'
 #' \item O. Gutjahr and G. Heinemann (2013) Comparing precipitation bias correction methods for high-resolution regional climate simulations using COSMO-CLM, Theoretical and Applied Climatology, 114, 511-529
-#' }
+#'
+#' \item J. Chen, F. P. Brissette, R. Leconte (2011) Uncertainty of downscaling method in quantifying the impact of climate change on hydrology, J. Hydrol. 401, (3-4), 190-202
+#' 
+#' \item J. Schmidli, C. Frei, P. L. Vidale (2006) Downscaling from GCM precipitation: a benchmark for dynamical and statistical downscaling methods, Int. J. Climatol. 26 (5), 679-689
+#'       
+#' \item R. Leander, T. A. Buishand (2007) Resampling of regional climate model output for the simulation of extreme river flows, J. Hydrol. 332 (3-4), 487-496}
+#' 
 #' @author S. Herrera and M. Iturbide
 #' @export
 #' @examples \dontrun{
@@ -123,85 +143,24 @@
 #' par(mfrow = c(1,1))
 #' }
 
-
-biasCorrection <- function(y, x, newdata, precipitation = FALSE,
-                           method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
-                           cross.val = c("none", "loocv", "kfold"),
-                           folds = NULL,
-                           window = NULL,
-                           scaling.type = c("additive", "multiplicative"),
-                           wet.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
-                           theta = .95){
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm"))
-      cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
-      scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
-      extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
-      if(cross.val == "none"){
-            output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
-                                       precipitation = precipitation,
-                                       method = method,
-                                       window = window,
-                                       scaling.type = scaling.type,
-                                       pr.threshold = wet.threshold, 
-                                       n.quantiles = n.quantiles, 
-                                       extrapolation = extrapolation, 
-                                       theta = theta)
-      }else{
-            if (!is.null(newdata)) {
-                  message("'newdata' will be ignored for cross-validation")
-            }
-            if(cross.val == "loocv"){
-                  years <- as.list(unique(getYearsAsINDEX(x)))
-            }else if(cross.val == "kfold" & !is.null(folds)){
-                  years <- folds
-            }else if(cross.val == "kfold" & is.null(folds)){
-                  stop("Please, specify folds for kfold cross validation")
-            }
-            output.list <- lapply(1:length(years), function(i) {
-                        target.year <-years[[i]]
-                        rest.years <- setdiff(unlist(years), target.year)
-                        yy <- redim(y, member = F)
-                        yy <- subsetGrid(yy, years = rest.years, drop = FALSE)
-                        yy <- redim(yy, drop = T)
-                        if(length(getDim(yy)) == 1){attr(yy$Data, "dimensions") <- c(getDim(yy), "station")}
-                        newdata2 <- subsetGrid(x, years = target.year)
-                        xx <- subsetGrid(x, years = rest.years)
-                        message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
-                        biasCorrectionXD(y = yy, x = xx, newdata = newdata2, precipitation = precipitation,
-                                          method = method,
-                                          window = window,
-                                          scaling.type = scaling.type,
-                                          pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
-                                          theta = theta)
-                  })
-                  al <- which(getDim(x) == "time")
-                  Data <- sapply(output.list, function(n) unname(n$Data), simplify = F)
-                  bindata <- unname(do.call("abind", c(Data, along = al)))
-                  output <- output.list[[1]]
-                  output$Data <- bindata
-                  output$Dates <- x$Dates
-      }
-      return(output)
-}
-
-biasCorrectionXD <- function(y, x, newdata, precipitation, 
-                           method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
+biasCorrection <- function(y, x, newdata, method = c("delta", "scaling", "eqm", "gqm", "gpqm","variance","loci","ptr"),
                            window = NULL,
                            scaling.type = c("additive", "multiplicative"),
                            pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
-                           theta = .95){
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm"))
+                           theta = .95 ){
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm","variance","loci","ptr"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
       obs <- y
       pred <- x
       sim <- newdata
-#       if (!any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))) {
-#             precip <- FALSE    
-#         } else {
-#             precip <- TRUE
-#         }
-      precip <- precipitation
+      if (!any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))) {
+            precip <- FALSE    
+      } else {
+            precip <- TRUE
+      } 
+      
+      
       if ("station" %in% attr(obs$Data, "dimensions")) {
             station <- TRUE
             obs <- redim(obs, member = F)
@@ -216,6 +175,42 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
             ind1 <- expand.grid(1:length(y), 1:length(x))
             ind <- cbind(ind1, ind1[,2])
       }
+      
+       
+      
+      
+#      if(method == "variance" & method == "loci" & method == "ptr"){
+#        if(method == "loci") {
+#          if (method =="ptr"){ # elimination of leap year from observation (obs) and from model (pred) and (sim)
+#      datesList <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+#      yearList <- unlist(strsplit(as.character(datesList), "[-]"))
+#      dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
+#      leap_o <-array(0,c(nrow(dayListObs),1))
+#      k_o <- which(dayListObs[,1]==2 & dayListObs[,2]==29)
+#      leap_o[k_o] <- 1
+#      leap_o <- which(leap_o ==0)
+#      obs$Data <- obs$Data[leap_o,,]
+      
+#      datesList1 <- as.POSIXct(pred$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+#      yearList1 <- unlist(strsplit(as.character(datesList1), "[-]"))
+#      dayListPred <- array(data = c(as.numeric(yearList1[seq(2,length(yearList1),3)]),as.numeric(yearList1[seq(3,length(yearList1),3)])), dim = c(length(datesList1),2))
+#      leap_p <- array(0,c(nrow(dayListPred),1))
+#      k_p <- which(dayListPred[,1]==2 & dayListPred[,2]==29)
+#      leap_p[k_p] <- 1
+#      leap_p <- which(leap_p ==0)
+#      pred$Data <- pred$Data[leap_p,,]
+#      
+#      datesList2 <- as.POSIXct(sim$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+#      yearList2 <- unlist(strsplit(as.character(datesList2), "[-]"))
+#      dayListSim <- array(data = c(as.numeric(yearList2[seq(2,length(yearList2),3)]),as.numeric(yearList2[seq(3,length(yearList2),3)])), dim = c(length(datesList2),2))
+#      leap_s <- array(0,c(nrow(dayListSim),1))
+#      k_s <- which(dayListSim[,1]==2 & dayListSim[,2]==29)
+#      leap_s[k_s] <- 1
+#      leap_s <- which(leap_s ==0)
+#      sim$Data <-sim$Data[leap_s,,]
+          
+#        }
+#      }
       
       bc <- obs
       pred <- redim(pred, member = T, runtime = T)
@@ -357,6 +352,14 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       bc <- redim(bc, runtime = TRUE, drop = TRUE)
       message("[", Sys.time(), "] Done.")
       ##########################
+#      if(method == "variance" & method == "loci" & method == "ptr"){
+#        I=rep(0,nrow[dayListObs],ncol[bc$Data])
+#        lyidx = dayListObs[,1] ==2 & dayListObs[,2] ==29
+#        I[!lyidx,]=bc$Data
+#        I[lyidx,]=NaN
+#        rm(bc$Data)
+#        bc$Data=I
+#      }
       bc$Dates <- sim$Dates
       bc$InitializationDates <- sim$InitializationDates
       bc$Members <- sim$Members
@@ -371,7 +374,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. 
+#'  \code{"scaling"}, \code{"gqm"}, \code{"gpqm"}, \code{"variance"}, \code{"loci"} and \code{"ptr"}. 
 #' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
 #' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not selected as the bias correction method.
 #' @param precip Logical indicating if o, p, s is precipitation data.
@@ -405,7 +408,13 @@ biasCorrection1D <- function(o, p, s,
             gqm(o, p, s, precip, pr.threshold)
       } else if (method == "gpqm") {
             gpqm(o, p, s, precip, pr.threshold, theta)
-      }
+      } else if (method == "variance") {
+            variance(o, p, s, precip)
+      } else if (method == "loci") {
+            loci(o, p, s, precip, pr.threshold)
+      } else if (method == "ptr") {
+            ptr(o, p, s, precip)
+        }
 }
 #end
 
@@ -646,6 +655,258 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
 
 #end
 
+#' @title Variance scaling of temperature
+#' @description Implementation of Variance scaling of temperature method for bias correction
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
+#' @param precip Logical indicating if o, p, s is temperature data.
+#' @author B. Szabo-Takacs
+
+variance <- function(o, p, s, precip){
+       if(precip==FALSE){
+         
+
+#          b <- c(31,28,31,30,31,30,31,31,30,31,30,31)
+#          a <- c(1,2,3,4,5,6,7,8,9,10,11,12)
+#                        seas <- rep(a,b)
+#              nt <- length(o)
+#              ls <-length(seas)
+#              nyear <- nt/ls
+#              month <- rep(seas,times = nyear)
+              
+           datesList <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+           yearList <- unlist(strsplit(as.character(datesList), "[-]"))
+           dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
+              
+          datesList1 <- as.POSIXct(pred$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+          yearList1 <- unlist(strsplit(as.character(datesList1), "[-]"))
+          dayListPred <- array(data = c(as.numeric(yearList1[seq(2,length(yearList1),3)]),as.numeric(yearList1[seq(3,length(yearList1),3)])), dim = c(length(datesList1),2))
+              
+          datesList2 <- as.POSIXct(sim$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+          yearList2 <- unlist(strsplit(as.character(datesList2), "[-]"))
+          dayListSim <- array(data = c(as.numeric(yearList2[seq(2,length(yearList2),3)]),as.numeric(yearList2[seq(3,length(yearList2),3)])), dim = c(length(datesList2),2))
+          
+              o_m <- rep(NaN,12)
+              p_m <- rep(NaN,12)
+              t_dif <- rep(NaN,12)
+              t1_m <- rep(NaN,12)
+              o_s <- rep(NaN,12)
+              t2_s <- rep(NaN,12)
+              tsig <- rep(NaN,12)
+              t1 <- rep(NaN,length(p))
+              t2 <- rep(NaN,length(p))
+          for (m in 1:12){
+            iot=dayListObs[,1]==m
+            ipt=dayListPred[,1]==m
+            io=which(iot==TRUE)
+            ip= which(ipt==TRUE)
+            
+            
+#              indDates <- which(month==m)
+              o_m[m] <- mean(o[io],na.rm=TRUE) 
+              p_m[m] <- mean(p[ip],na.rm=TRUE)
+              t_dif[m] <- o_m[m]-p_m[m]
+              t1[ip] <- p[ip]+rep(t_dif[m],length(ip),1)
+              t1_m[m] <- mean(t1[ip],na.rm=TRUE) 
+              t2[ip] <- t1[ip]-rep(t1_m[m],length(ip),1)
+              o_s[m] <- sd(o[io],na.rm=TRUE) 
+              t2_s[m] <- sd(t2[ip],na.rm=TRUE) 
+              tsig[m] <- o_s[m]/t2_s[m]}
+              
+             rm(o_m,p_m,t1,t1_m,t2,o_s,t2_s)
+             
+             
+               t1_m <- rep(NaN,12)
+               t1 <- rep(NaN,length(s))
+               t2 <- rep(NaN,length(s))
+               t3 <- rep(NaN,length(s))
+               tC <- rep(NaN,length(s))
+               
+            for (m in 1:12){
+              ist=dayListSim[,1]==m
+              is=which(ist==TRUE)
+#               indDates=which(month==m)
+               t1[is] <- s[is]+rep(t_dif[m],length(is),1)
+               t1_m[m] <- mean(t1[is],na.rm=TRUE)
+               t2[is] <- t1[is]-rep(t1_m[m],length(is),1)
+               t3[is] <- t2[is]*rep(tsig[m],length(is),1)
+               tC[is] <- t3[is]+rep(t1_m[m],length(is),1)
+               }
+               rm(t1,t1_m,t2,t3)
+               
+               return(tC)}
+  
+               else {stop("method variance is only applied to temperature data")}
+}
+#end
+
+#' @title Local intensity scaling of precipitation
+#' @description Implementation of Local intensity scaling of precipitation method for bias correction based on Vincent Moron’s local_scaling function in weaclim toolbox in Matlab
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training or test period. 
+#' @param precip Logical indicating if o, p, s is precipitation data.
+#' @param pr.threshold The minimum value that is considered as a non-zero precipitation.
+#' @importFrom matlab flipud
+#' @author B. Szabo-Takacs
+   
+loci <- function(o, p, s, precip, pr.threshold){
+  if(precip==FALSE){ 
+    stop("method loci is only applied to precipitation data")
+  }else{
+    
+
+#    b <- c(31,28,31,30,31,30,31,31,30,31,30,31)
+#    a <- c(1,2,3,4,5,6,7,8,9,10,11,12)
+#    seas <- rep(a,b)
+    
+#    nt=length(o)
+#    ls <-length(seas)
+#    nyear <- nt/ls
+#    Se <- rep(seas,times=nyear)
+#    lm=max(seas)
+    datesList <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+    yearList <- unlist(strsplit(as.character(datesList), "[-]"))
+    dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
+    
+    datesList1 <- as.POSIXct(pred$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+    yearList1 <- unlist(strsplit(as.character(datesList1), "[-]"))
+    dayListPred <- array(data = c(as.numeric(yearList1[seq(2,length(yearList1),3)]),as.numeric(yearList1[seq(3,length(yearList1),3)])), dim = c(length(datesList1),2))
+    
+    datesList2 <- as.POSIXct(sim$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+    yearList2 <- unlist(strsplit(as.character(datesList2), "[-]"))
+    dayListSim <- array(data = c(as.numeric(yearList2[seq(2,length(yearList2),3)]),as.numeric(yearList2[seq(3,length(yearList2),3)])), dim = c(length(datesList2),2))
+    
+    threshold <- pr.threshold
+    GCM2 <- rep(NaN,length(s))
+    Pgcm <- rep(NaN,12)
+    scaling <- rep(NaN,12)
+    for (k in 1:12) {
+      iot=dayListObs[,1]==k
+      ipt=dayListPred[,1]==k
+      ist=dayListSim[,1]==k
+      io=which(iot==TRUE)
+      ip= which(ipt==TRUE)
+      is=which(ist==TRUE)
+      
+      PO <- o[io]     # scaling on each months 
+      G1 <- p[ip]
+      G <- s[is]
+      l <- length(which(PO > threshold))
+      gcmr <- sort(G)
+      gcmr <- flipud(gcmr)
+      Pgcm[k] <- gcmr[l+1]
+# local scaling factor
+      mobs <- PO[which(PO > threshold)]
+      mobs <- mean(mobs,na.rm=TRUE)
+      mgcm <- G[which(G > Pgcm[k])]
+      mgcm <- mean(mgcm,na.rm=TRUE)
+      scaling[k] <- (mobs-threshold)/(mgcm-Pgcm[k])
+      GCM <- (scaling[k]*(G-Pgcm[k]))+threshold
+      GCM[which(GCM < threshold)] <- array(0,length(which(GCM < threshold)))
+      GCM2[is] <- GCM
+      
+    }
+  }
+  return(GCM2)
+}
+
+#end
+
+#' @title Power transformation of precipitation
+#' @description Implementation of Power transformation of precipitation method for bias correction 
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
+#' @param precip Logical indicating if o, p, s is precipitation data.
+#' @importFrom pracma fzero
+#' @author S. Herrera and B. Szabo-Takacs
+
+ptr <- function(o, p, s, precip) {
+  if(precip==FALSE){ 
+    stop("method power transformation is only applied to precipitation data")
+  } else{
+  
+
+# calculation of power value in monthly basis using a 90-day window centered on the interval
+#b is identified by matching the coefficient of variation (cv) of the corrected daily modeled precipitation #(P^b) with the cv of observed daily precipitation
+#    d <- c(31,28,31,30,31,30,31,31,30,31,30,31)
+#    a <- c(1,2,3,4,5,6,7,8,9,10,11,12)
+#    seas <- rep(a,d)
+#    nt <- length(o)
+#    ls <-length(seas)
+#    nyear <- nt/ls
+#    month <- rep(seas,times = nyear)
+    b <- rep(NaN,12) 
+    
+    datesList <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+    yearList <- unlist(strsplit(as.character(datesList), "[-]"))
+    dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
+    
+    datesList1 <- as.POSIXct(pred$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+    yearList1 <- unlist(strsplit(as.character(datesList1), "[-]"))
+    dayListPred <- array(data = c(as.numeric(yearList1[seq(2,length(yearList1),3)]),as.numeric(yearList1[seq(3,length(yearList1),3)])), dim = c(length(datesList1),2))
+    
+    datesList2 <- as.POSIXct(sim$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+    yearList2 <- unlist(strsplit(as.character(datesList2), "[-]"))
+    dayListSim <- array(data = c(as.numeric(yearList2[seq(2,length(yearList2),3)]),as.numeric(yearList2[seq(3,length(yearList2),3)])), dim = c(length(datesList2),2)) 
+    for (m in 1:12) {
+      if (m==1) 
+        indDates <- which(is.element(dayListObs, c(12, 1, 2)))
+      else if (m==12) 
+        indDates <- which(is.element(dayListObs, c(11, 12, 1)))
+      else 
+        indDates <- which(is.element(dayListObs, c(m-1, m, m+1)))
+      cvO <- sd(o[indDates],na.rm=TRUE)/mean(o[indDates], na.rm=TRUE)
+      if (!is.na(cvO)) {
+        bi <- try(fzero(function(x)
+          varCoeficient(x,abs(p[indDates]),cvO),1),silent=T)
+        if ("try-error" %in% class(bi)) {  # an error occurred
+          b[m] <- NA
+        } else {
+          b[m] <- bi$x
+        }
+      }
+    }
+    
+    if (p < 0){
+      p <- 0}
+    if (s < 0){
+      s <- 0}
+    prC <- rep(NaN,length(s))
+    for (m in 1:12) {
+      iot=dayListObs[,1]==m
+      ipt=dayListPred[,1]==m
+      ist=dayListSim[,1]==m
+      io=which(iot==TRUE)
+      ip= which(ipt==TRUE)
+      is=which(ist==TRUE)
+#      indDates <- which(is.element(dayListObs==m))
+#      indDatesS <- which(is.element(dayListSim==m))                 
+      aux_c <- p[ip]^rep(b[m],length(ip),1)
+      aux <- s[is]^rep(b[m],length(is),1)
+      prC[is] <- aux*rep((mean(o[io], na.rm=TRUE)/mean(aux_c, na.rm=TRUE)), length(is),1)
+       }
+    rm(indDates, aux, aux_c)}
+  
+  return(prC)
+  }
+
+#end
+
+#' @title VarCoeficient
+#' @description preprocess to power transformation of precipitation
+#' @param delta A vector of power parameter
+#' @param data A vector containing the simulated climate by the model for training period
+#' @param cv A vector containing coefficient of variation of observed climate data
+#' @author S. Herrera and B. Szabo-Takacs
+
+varCoeficient <- function(delta,data,cv){
+  y <- cv-sd((data^delta),na.rm=TRUE)/mean((data^delta),na.rm=TRUE)
+  return(y)}
+#end
+
+         
 #' @title norain
 #' @description presprocess to bias correct precipitation data
 #' @param o A vector (e.g. station data) containing the observed climate data for the training period
