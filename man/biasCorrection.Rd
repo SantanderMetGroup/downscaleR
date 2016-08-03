@@ -5,10 +5,9 @@
 \title{Bias correction methods}
 \usage{
 biasCorrection(y, x, newdata, method = c("delta", "scaling", "eqm", "gqm",
-  "gpqm"), cross.val = c("none", "loocv", "kfold"), folds = NULL,
-  window = NULL, scaling.type = c("additive", "multiplicative"),
-  wet.threshold = 1, n.quantiles = NULL, extrapolation = c("none",
-  "constant"), theta = 0.95)
+  "gpqm", "variance", "loci", "ptr"), window = NULL,
+  scaling.type = c("additive", "multiplicative"), pr.threshold = 1,
+  n.quantiles = NULL, extrapolation = c("none", "constant"), theta = 0.95)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -21,13 +20,7 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 \item{newdata}{A grid containing the simulated climate for the variables used in \code{x}, but considering the test period.}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-\code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.}
-
-\item{cross.val}{Should cross-validation be performed? methods available are leave-one-out ("loocv") and k-fold ("kfold"). The default 
-option ("none") does not perform cross-validation.}
-
-\item{folds}{Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
-the corresponding fold.}
+\code{"scaling"}, \code{"gqm"}, \code{"gpqm"} \code{"variance"}, \code{"loci"} and \code{"ptr"}. See details.}
 
 \item{window}{vector of length = 2 specifying the time window width used to calibrate and the target days (days that are being corrected).
  The window is centered on the target day/s. 
@@ -37,7 +30,7 @@ Default to \code{NULL}, which considers the whole period available.}
 or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
 selected as the bias correction method.}
 
-\item{wet.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
+\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
 \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). See details on bias correction for precipitation.}
 
 \item{n.quantiles}{Integer indicating the number of quantiles to be considered when method = "eqm". Default is NULL, 
@@ -60,7 +53,9 @@ Implementation of several standard bias correction methods
 }
 \details{
 The methods available are \code{"eqm"}, \code{"delta"}, 
-\code{"scaling"}, \code{"gqm"}, \code{"gpqm"} (the two latter used only for precipitation).
+\code{"scaling"},\code{"gqm"}, \code{"gpqm"},\code{"loci"}, 
+\code{"ptr"}  (the four latter used only for precipitation) and 
+\code{"variance"} (only for temperature).
  These are next briefly described: 
  
 \strong{Delta}
@@ -95,6 +90,22 @@ that uses the theorical instead of the empirical distribution.
 Generalized Quantile Mapping. This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a 
 gamma distribution to values under the threshold given by the 95th percentile (following Yang et al. 2010) and a general Pareto 
 distribution (GPD) to values above the threshold.
+
+\strong{variance}
+
+Variance scaling of temperature. This method is described in Chen et al. 2011. It is applicable only to temperature. It corrects
+the mean and variance of temperature time series.
+
+\strong{loci}
+
+Local intensity scaling of precipitation. This methode is described in Schmidli et al. 2006. It adjust the mean as well as both wet-day frequencies and wet-day intensities.
+The precipitation threshold is calculated such that the number of simulated days exceeding this threshold matches the number of observed days with precipitation larger than zero.
+
+\strong{ptr}
+
+Power transformation of precipitation. This method is described in Leander and Buishand 2007 and is applicable only to precipitation. It adjusts the variance statistics of precipitation
+time series in an exponential form. The power parameter is estimated on a monthly basis using a 90-day window centered on the interval. The power is defined by matching the coefficient
+of variation of corrected daily simulated precipitation with the coefficient of variation of observed daily precipitation. It is calculated by root-finding algorithm using Brent's method.
 }
 \section{Note on the bias correction of precipitation}{
 
@@ -147,7 +158,12 @@ S. Herrera and M. Iturbide
 \item C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
 
 \item O. Gutjahr and G. Heinemann (2013) Comparing precipitation bias correction methods for high-resolution regional climate simulations using COSMO-CLM, Theoretical and Applied Climatology, 114, 511-529
-}
+
+\item J. Chen, F. P. Brissette, R. Leconte (2011) Uncertainty of downscaling method in quantifying the impact of climate change on hydrology, J. Hydrol. 401, (3-4), 190-202
+
+\item J. Schmidli, C. Frei, P. L. Vidale (2006) Downscaling from GCM precipitation: a benchmark for dynamical and statistical downscaling methods, Int. J. Climatol. 26 (5), 679-689
+      
+\item R. Leander, T. A. Buishand (2007) Resampling of regional climate model output for the simulation of extreme river flows, J. Hydrol. 332 (3-4), 487-496}
 }
 \seealso{
 \code{\link{isimip}} for a trend-preserving method of model calibration
