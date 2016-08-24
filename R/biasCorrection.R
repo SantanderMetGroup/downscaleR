@@ -353,6 +353,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       }) #end loop for runtimes
       bc$Data <- unname(abind(lrun, along = 1))
       attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
+      attr(bc$Variable, "correction") <- method
       ##########################
       bc <- redim(bc, runtime = TRUE, drop = TRUE)
       message("[", Sys.time(), "] Done.")
