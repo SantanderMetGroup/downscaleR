@@ -747,7 +747,6 @@ variance <- function(o, p, s, precip){
 #' @param p A vector containing the simulated climate by the model for the training or test period. 
 #' @param precip Logical indicating if o, p, s is precipitation data.
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation.
-#' @importFrom matlab flipud
 #' @author B. Szabo-Takacs
    
 loci <- function(o, p, s, precip, pr.threshold){
@@ -794,7 +793,7 @@ loci <- function(o, p, s, precip, pr.threshold){
       G <- s[is]
       l <- length(which(PO > threshold))
       gcmr <- sort(G)
-      gcmr <- flipud(gcmr)
+      gcmr <- rev(gcmr)
       Pgcm[k] <- gcmr[l+1]
 # local scaling factor
       mobs <- PO[which(PO > threshold)]
@@ -819,7 +818,6 @@ loci <- function(o, p, s, precip, pr.threshold){
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param precip Logical indicating if o, p, s is precipitation data.
-#' @importFrom pracma fzero
 #' @author S. Herrera and B. Szabo-Takacs
 
 ptr <- function(o, p, s, precip) {
@@ -859,12 +857,12 @@ ptr <- function(o, p, s, precip) {
         indDates <- which(is.element(dayListObs, c(m-1, m, m+1)))
       cvO <- sd(o[indDates],na.rm=TRUE)/mean(o[indDates], na.rm=TRUE)
       if (!is.na(cvO)) {
-        bi <- try(fzero(function(x)
-          varCoeficient(x,abs(p[indDates]),cvO),1),silent=T)
+        bi <- try(uniroot(function(x)
+          varCoeficient(x,abs(p[indDates]),cvO),c(0,1),extendInt="yes"),silent=T)
         if ("try-error" %in% class(bi)) {  # an error occurred
           b[m] <- NA
         } else {
-          b[m] <- bi$x
+          b[m] <- bi$root
         }
       }
     }
