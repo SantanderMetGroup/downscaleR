@@ -26,7 +26,6 @@ redim <- function(obj,
                   obj$Data <- unname(abind(obj$Data, NULL, along = ind + 1))
                   attr(obj$Data, "dimensions") <- dimNames
             }
-            
             # Add fake 'lat' dimension  -------
             if (!("lat" %in% dimNames)) {
                   dimNames <- c("lat", dimNames)
@@ -64,9 +63,9 @@ redim <- function(obj,
             obj[["Data"]] <- unname(obj$Data)
             attr(obj[["Data"]], "dimensions") <- dimNames.aux[perm]
       } else {
-            shp <- dim(obj[["Data"]])
-            if (1 %in% shp) {
-                  dimNames <- dimNames[-match(1, shp)]
+            shp <- getShape(obj)
+            if (any(shp == 1L)) {
+                  dimNames <- dimNames[-which(shp == 1L)]
                   obj$Data <- drop(obj$Data)
                   attr(obj$Data, "dimensions") <- dimNames
                   if ("lat" %in% dimNames & !("lon" %in% dimNames)) {
