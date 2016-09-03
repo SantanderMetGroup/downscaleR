@@ -140,9 +140,9 @@ interpGrid <- function(grid,
       # redim object
       grid <- redim(grid, runtime = FALSE)
       mem.ind <- grep("member", getDim(grid))
-      n.members <- dim(grid$Data)[mem.ind]
+      n.members <- getShape(grid, "member")
       time.ind <- grep("^time", getDim(grid))
-      n.times <- dim(grid$Data)[time.ind]
+      n.times <- getShape(grid, "time")
       # nearest indices
       if (method == "nearest") {
             if (parallel.pars$hasparallel) {
