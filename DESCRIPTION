@@ -20,8 +20,8 @@ Suggests:
     visualizeR
 Type: Package
 Title: Climate data manipulation, bias correction and statistical downscaling
-Version: 1.3-2
-Date: 2016-06-22
+Version: 1.3-3
+Date: 2016-09-03
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",

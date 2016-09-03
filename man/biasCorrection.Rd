@@ -4,11 +4,11 @@
 \alias{biasCorrection}
 \title{Bias correction methods}
 \usage{
-biasCorrection(y, x, newdata, method = c("delta", "scaling", "eqm", "gqm",
-  "gpqm"), cross.val = c("none", "loocv", "kfold"), folds = NULL,
-  window = NULL, scaling.type = c("additive", "multiplicative"),
-  wet.threshold = 1, n.quantiles = NULL, extrapolation = c("none",
-  "constant"), theta = 0.95)
+biasCorrection(y, x, newdata, precipitation = FALSE, method = c("delta",
+  "scaling", "eqm", "gqm", "gpqm"), cross.val = c("none", "loocv", "kfold"),
+  folds = NULL, window = NULL, scaling.type = c("additive",
+  "multiplicative"), wet.threshold = 1, n.quantiles = NULL,
+  extrapolation = c("none", "constant"), theta = 0.95)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -19,6 +19,8 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
  after principal component analysis via the \code{\link{prinComp}} output).}
 
 \item{newdata}{A grid containing the simulated climate for the variables used in \code{x}, but considering the test period.}
+
+\item{precipitation}{Logical indicating if the data to be corrected is precipitation data.}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.}
