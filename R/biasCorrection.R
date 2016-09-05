@@ -73,7 +73,7 @@
 #' \strong{loci}
 #' 
 #' Local intensity scaling of precipitation. This methode is described in Schmidli et al. 2006. It adjust the mean as well as both wet-day frequencies and wet-day intensities.
-#' The precipitation threshold is calculated such that the number of simulated days exceeding this threshold matches the number of observed days with precipitation larger than zero.
+#' The precipitation threshold is calculated such that the number of simulated days exceeding this threshold matches the number of observed days with precipitation larger than 1 mm.
 #' 
 #'\strong{ptr}
 #'
@@ -742,9 +742,10 @@ variance <- function(o, p, s, precip){
 #end
 
 #' @title Local intensity scaling of precipitation
-#' @description Implementation of Local intensity scaling of precipitation method for bias correction based on Vincent Moron’s local_scaling function in weaclim toolbox in Matlab
+#' @description Implementation of Local intensity scaling of precipitation method for bias correction based on Vincent Morons local_scaling function in weaclim toolbox in Matlab
 #' @param o A vector (e.g. station data) containing the observed climate data for the training period
 #' @param p A vector containing the simulated climate by the model for the training or test period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param precip Logical indicating if o, p, s is precipitation data.
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation.
 #' @author B. Szabo-Takacs
@@ -818,6 +819,7 @@ loci <- function(o, p, s, precip, pr.threshold){
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param precip Logical indicating if o, p, s is precipitation data.
+#' @importFrom stats uniroot
 #' @author S. Herrera and B. Szabo-Takacs
 
 ptr <- function(o, p, s, precip) {
