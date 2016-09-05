@@ -13,9 +13,7 @@ Imports:
     grDevices,
     graphics,
     stats,
-    sp,
-    matlab,
-    pracma
+    sp
 Suggests:
     loadeR,
     loadeR.ECOMS,
