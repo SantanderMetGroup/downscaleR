@@ -561,7 +561,9 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
       } else {
             if (all(is.na(o))) {
                   smap <- rep(NA, length(s))
-            } else if (any(!is.na(p)) & any(!is.na(o))) {
+            }else if (all(is.na(p))){
+                  smap <- rep(NA, length(s))
+            }else if (any(!is.na(p)) & any(!is.na(o))) {
                   if (is.null(n.quantiles)) n.quantiles <- length(p)
                   bins <- n.quantiles
                   qo <- quantile(o, prob = seq(1/bins,1 - 1/bins,1/bins), na.rm = TRUE)
@@ -575,7 +577,7 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
                         smap[which(s > max(qp, na.rm = TRUE))] <- qo[length(qo)]
                         smap[which(s < min(qp, na.rm = TRUE))] <- qo[1]
                   }
-            }
+            } 
       }
       return(smap)
 }

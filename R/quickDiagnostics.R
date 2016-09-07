@@ -352,7 +352,7 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), y
       }
       yran <- if (is.null(ylim)) {
             mi <- 0
-            ma <-  floor(max(x))
+            ma <-  floor(max(x, na.rm = T))
             c(mi, (ma + ma/4))
       } else {
             ylim
@@ -363,7 +363,7 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), y
            x, 
            lwd = 2, ty = "l", lty = 3,  
            ylim = yran, xlim = c(1,dim(obs$Data)[1]),
-           xlab = "Days", ylab = "tp", main = "Daily series")
+           xlab = "Days", ylab = obs$Variable$varName, main = "Daily series")
       
       o <- match(attr(y, "dimensions"),"member")
       mi <- which(!is.na(o))
@@ -378,7 +378,9 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), y
             
             rmse.direct <- sqrt(mean((x - y)^2))
             bias.direct <-  sum(y - x, na.rm = T)/sum(x, na.rm = T)
-            rho.direct <- cor(x = x, y = y, method = "spearman")
+            xcor <- x[which(!is.na(x))]
+            ycor <- y[which(!is.na(x))]
+            rho.direct <- cor(x = xcor, y = ycor, method = "spearman")
             
             lines(1:length(y), 
                   y, 
@@ -393,10 +395,14 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), y
                   yt <- y[(length(x) -(length(w)-1)):length(x)]
                   rmse.down <- sqrt(mean((xt - w)^2, na.rm = T))
                   bias.down <-  sum(w - xt, na.rm = T)/sum(x, na.rm = T)
-                  rho.down <- cor(x = xt, y = w, method = "spearman")
+                  xtcor <- xt[which(!is.na(xt))]
+                  ytcor <- yt[which(!is.na(xt))]
+                  wcor <- w[which(!is.na(xt))]
+                  
+                  rho.down <- cor(x = xtcor, y = wcor, method = "spearman")
                   rmse.direct <- sqrt(mean((xt - yt)^2, na.rm = T))
                   bias.direct <-  sum(yt - xt, na.rm = T)/sum(x, na.rm = T)
-                  rho.direct <- cor(x = xt, y = yt, method = "spearman")
+                  rho.direct <- cor(x = xtcor, y = ytcor, method = "spearman")
                   lines((length(x) -(length(w)-1)):length(x), 
                         w, col = "blue", lwd = 1)
                   legend(0, yran[2] , legend = c("obs",  
