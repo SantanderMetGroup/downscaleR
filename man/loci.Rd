@@ -18,7 +18,7 @@ loci(o, p, s, precip, pr.threshold)
 \item{pr.threshold}{The minimum value that is considered as a non-zero precipitation.}
 }
 \description{
-Implementation of Local intensity scaling of precipitation method for bias correction based on Vincent Morons local_scaling function in weaclim toolbox in Matlab
+Implementation of Local intensity scaling of precipitation method for bias correction based on Vincent Moron's local_scaling function in weaclim toolbox in Matlab
 }
 \author{
 B. Szabo-Takacs
