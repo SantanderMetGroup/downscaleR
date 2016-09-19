@@ -450,9 +450,9 @@ subsetSeason <- function(grid, season = NULL, drop = TRUE) {
       season0 <- getSeason(grid)
       if (!all(season %in% season0)) stop("Month selection outside original season values")      
       mon <- if (any(grepl("var", dimNames))) {
-            as.POSIXlt(grid$Dates[[1]]$start)$mon + 1
+            as.integer(substr(grid$Dates[[1]]$start, 6, 7))
       } else {
-            as.POSIXlt(grid$Dates$start)$mon + 1
+            as.integer(substr(grid$Dates$start, 6, 7))
       }
       time.ind <- which(mon %in% season)
       grid$Data <- asub(grid$Data, time.ind, grep("time", dimNames), drop = drop)
