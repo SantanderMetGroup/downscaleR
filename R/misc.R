@@ -104,7 +104,7 @@ dateReplacement <- function(obs.dates, sim.dates) {
 
 getYearsAsINDEX <- function(obj) {
       season <- getSeason(obj)
-      dimNames <- attr(obj$Data, "dimensions")
+      dimNames <- getDim(obj)
       aux.dates <- if (any(grepl("var", dimNames))) {
             obj$Dates[[1]]$start
       } else {
@@ -114,6 +114,9 @@ getYearsAsINDEX <- function(obj) {
       mon <- as.numeric(substr(aux.dates,6,7))
       if (identical(yrs, unique(yrs))) {
           yrs
+          if (!identical(season, sort(season))) {
+                yrs <- yrs + 1
+          }
       } else {    
           if (!identical(season, sort(season))) {
               yy <- unique(yrs)[-1]
