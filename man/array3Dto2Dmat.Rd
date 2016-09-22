@@ -25,7 +25,7 @@ and rows (latitudes) given the vectorized value of the output at a given time (o
 The function is insensitive to the dimension ordering of the input data array
 }
 \author{
-J. Bedia
+M. de Felice
 }
 \seealso{
 \code{\link{mat2Dto3Darray}}, which performs the inverse operation
