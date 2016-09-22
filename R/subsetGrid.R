@@ -290,7 +290,7 @@ subsetRuntime <- function(grid, runtime, drop) {
 #' @family subsetting
 
 subsetYears <- function(grid, years, drop) {
-      dimNames <- attr(grid$Data, "dimensions")
+      dimNames <- getDim(grid)
       season <- getSeason(grid)
       all.years <- getYearsAsINDEX(grid)
       aux.year.ind <- match(years, unique(all.years))
@@ -309,7 +309,7 @@ subsetYears <- function(grid, years, drop) {
             lapply(1:length(grid$Dates), function(i) {
                   lapply(grid$Dates[[i]], function(x) x[time.ind])})
       } else {
-            lapply(grid$Dates, function(x) x[time.ind])
+            lapply(grid$Dates, FUN="[", time.ind)
       }
       # Initialization time adjustment
       if ("member" %in% dimNames) {
