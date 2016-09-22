@@ -41,6 +41,7 @@
 #' @importFrom stats na.omit
 #' @importFrom utils tail
 #' @author J. Bedia
+#' @seealso \code{\link{plotClimatology}}, for plotting climatologies
 #' @export
 #' @examples \dontrun{
 #' #' # Maximum July surface temp forecast climatology
