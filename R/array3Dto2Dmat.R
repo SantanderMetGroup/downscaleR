@@ -9,7 +9,7 @@
 #' is the most convenient format in order to naturally fill a matrix with the adequate number of columns (longitudes) 
 #' and rows (latitudes) given the vectorized value of the output at a given time (or after time-averaging via rowMeans).
 #' The function is insensitive to the dimension ordering of the input data array 
-#' @author J. Bedia 
+#' @author M. de Felice
 #' @export
 #' @seealso \code{\link{mat2Dto3Darray}}, which performs the inverse operation
 
@@ -17,22 +17,9 @@
 array3Dto2Dmat <- function(array3D) {
       dimNames <- attr(array3D, "dimensions")
       if (is.null(dimNames)) stop("Undefined 'dimensions' attribute")
-      lon.index <- grep("lon", dimNames)
-      n.lon <- dim(array3D)[lon.index]
-      lat.index <- grep("lat", dimNames)
-      n.lat <- dim(array3D)[lat.index]
-      aux.list <- list()
-      indices <- rep(list(bquote()), length(dimNames))
-      for (i in 1:n.lon) {
-            indices[[lon.index]] <- i
-            for (j in 1:n.lat) { 
-                  indices[[lat.index]] <- j
-                  call <- as.call(c(list(as.name("["), quote(array3D)), indices))
-                  aux.list[[length(aux.list) + 1]] <- eval(call)  
-            }
-      }
-      M <- do.call("cbind", aux.list)
-      return(M)
+      X <- aperm(array3D, match(c("time", "lat", "lon"), dimNames))
+      dim(X) = c(dim(X)[1], dim(X)[2] * dim(X)[3])
+      return(X)
 }
 # End
 
