@@ -73,7 +73,7 @@
 #' @export 
 #' @family downscaling
 #' @author J Bedia, M Iturbide
-#' @importFrom transformeR parallelCheck
+#' @importFrom transformeR parallelCheck getYearsAsINDEX
 
 downscale <- function(y,
                       x,

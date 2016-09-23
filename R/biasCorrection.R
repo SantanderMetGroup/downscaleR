@@ -85,7 +85,7 @@
 #' @return A calibrated grid of the same spatio-temporal extent than the input \code{"y"}
 #' @family downscaling
 #' 
-#' @importFrom transformeR redim subsetGrid
+#' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim
 #'
 #' @references
 #'
@@ -188,7 +188,7 @@ biasCorrection <- function(y, x, newdata, precipitation = FALSE,
 }
 
 #' @keywords internal
-#' @importFrom transformeR redim subsetGrid 
+#' @importFrom transformeR redim subsetGrid getDim
 
 biasCorrectionXD <- function(y, x, newdata, precipitation, 
                            method = c("delta", "scaling", "eqm", "gqm", "gpqm"),

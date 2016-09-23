@@ -42,7 +42,7 @@ quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3
 #' @importFrom stats sd cor
 #' @importFrom grDevices rgb
 #' @keywords internal
-#' @importFrom transformeR subsetGrid getCoordinates 
+#' @importFrom transformeR subsetGrid getCoordinates getYearsAsINDEX draw.world.lines
 
 interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), na.tolerance = .3, ylim = NULL, main = NULL){
       par(mfrow = c(1,2))
