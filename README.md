@@ -10,7 +10,7 @@ downscaleR
 The recommended installation procedure is to use the `install_github` command from the devtools R package. 
 
 ```r
-devtools::install_github(c("SantanderMetGroup/downscaleR","SantanderMetGroup/transformeR"))
+devtools::install_github(c("SantanderMetGroup/transformeR", "SantanderMetGroup/downscaleR"))
 ```
 
 Alternatively, you can download the source files until the most recent stable version from the [Releases Tab](https://github.com/SantanderMetGroup/downscaleR/releases)
