@@ -9,6 +9,7 @@
 #' @author J Bedia, M Iturbide
 #' @importFrom abind abind
 #' @importFrom stats glm binomial predict runif Gamma rgamma na.exclude
+#' @importFrom transformeR array3Dto2Dmat getCoordinates mat2Dto3Darray
 #' @keywords internal
 
 glimpr <- function(y = y, modelPars = modelPars, simulate =  c("none", "loocv", "kfold"), return.models = FALSE, wet.threshold = wet.threshold, n.pcs = n.pcs) {

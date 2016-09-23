@@ -40,14 +40,14 @@
 #' 
 #' Several checks of spatial consistency are performed. In particular, note that both \code{x} (reanalysis) and \code{newdata}
 #'  (model simulations) should be in the same grid. This consistency must be ensured by the user prior to entering these arguments,
-#' for instance by means of the \code{\link{interpGrid}} function in conjunction with the \code{\link{getGrid}} method.
+#' for instance by means of the \code{\link[transformeR]{interpGrid}} function in conjunction with the \code{\link[transformeR]{getGrid}} method.
 #' 
 #' \strong{Scaling and centering}
 #' 
 #' When the climate variables are used as predictors instead of the PCs, these are previously centered and scaled
 #' using the mean and sigma parameters globally computed for the whole spatial domain (This is equivalent to the \dQuote{field})
-#' method in the \code{\link{prinComp}} function. The simulation data will use the parameters obtained when scaling and centering
-#' the predictors dataset. In case that the predictors come from a PC analysis object (as returned by \code{\link{prinComp}}), the
+#' method in the \code{\link[transformeR]{prinComp}} function. The simulation data will use the parameters obtained when scaling and centering
+#' the predictors dataset. In case that the predictors come from a PC analysis object (as returned by \code{\link[transformeR]{prinComp}}), the
 #' parameters for rescaling the simulation data are passed by the predictors.
 #' 
 #' 
@@ -66,13 +66,14 @@
 #'  otherwise giving an error. The analog dates are different for each member in case of 
 #'  multimember downscaling, and are returned as a list, each element of the list corresponding to one member. 
 #' @template templateParallel
-#' @seealso \code{\link{prinComp}} for details on principal component/EOF analysis,
+#' @seealso \code{\link[transformeR]{prinComp}} for details on principal component/EOF analysis,
 #' \code{rescaleMonthlyMeans} for data pre-processing,
-#' \code{\link{makeMultiGrid}} for multigrid construction
+#' \code{\link[transformeR]{makeMultiGrid}} for multigrid construction
 #' \code{loadGridData} and \code{loadStationData}, from package \pkg{loadeR}, for loading grids and station data respectively.
 #' @export 
 #' @family downscaling
-#' @author J Bedia and M Iturbide
+#' @author J Bedia, M Iturbide
+#' @importFrom transformeR parallelCheck
 
 downscale <- function(y,
                       x,

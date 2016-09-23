@@ -84,6 +84,8 @@
 #' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration
 #' @return A calibrated grid of the same spatio-temporal extent than the input \code{"y"}
 #' @family downscaling
+#' 
+#' @importFrom transformeR redim subsetGrid
 #'
 #' @references
 #'
@@ -99,6 +101,7 @@
 #' @author S. Herrera and M. Iturbide
 #' @export
 #' @examples \dontrun{
+#' require(transformeR)
 #' data(VALUE_Igueldo_tp)
 #' data(NCEP_Iberia_tp)
 #' y <- VALUE_Igueldo_tp
@@ -183,6 +186,9 @@ biasCorrection <- function(y, x, newdata, precipitation = FALSE,
       }
       return(output)
 }
+
+#' @keywords internal
+#' @importFrom transformeR redim subsetGrid 
 
 biasCorrectionXD <- function(y, x, newdata, precipitation, 
                            method = c("delta", "scaling", "eqm", "gqm", "gpqm"),

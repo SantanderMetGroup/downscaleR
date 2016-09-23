@@ -29,6 +29,7 @@ Warning:
 The function should no be used to extract the vector of actual date years
 }
 \examples{
+require(transformeR)
 data(iberia_ncep_hus850)
 getSeason(iberia_ncep_hus850)
 # Winter 1991-2010

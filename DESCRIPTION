@@ -1,6 +1,7 @@
 Package: downscaleR
 Depends:
-    R(>= 3.1.0)
+    R(>= 3.1.0),
+    transformeR
 Imports:
     abind,
     utils,
@@ -9,20 +10,17 @@ Imports:
     MASS,
     evd,
     parallel,
-    akima,
     grDevices,
     graphics,
-    stats,
-    sp,
-    verification
+    stats
 Suggests:
     loadeR,
     loadeR.ECOMS,
     visualizeR
 Type: Package
 Title: Climate data manipulation, bias correction and statistical downscaling
-Version: 1.3-4
-Date: 2016-09-19
+Version: 2.0-0
+Date: 2016-09-23
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
@@ -40,8 +38,7 @@ Authors@R: as.person(c(
     "Max Tuni <max@predictia.es> [ctb]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
-Description: Tools for climate data analysis and visualization, including
-      model calibration (bias correction, qq-mapping...), and perfect-prog statistical downscaling.
+Description: Tools for climate data calibration (bias correction, qq-mapping...), and perfect-prog statistical downscaling.
       Focused on daily data, the package is conceived for dealing also with forecast (multi-member) data.
 License: GPL (>= 3)
 LazyData: true

@@ -5,6 +5,7 @@
 #' @author J. Bedia 
 #' @export
 #' @examples 
+#' require(transformeR)
 #' data(iberia_ncep_ta850)
 #' getSeason(iberia_ncep_ta850) # Boreal winter (DJF)
 
@@ -79,6 +80,7 @@ dateReplacement <- function(obs.dates, sim.dates) {
 #' @author J. Bedia 
 #' @export
 #' @examples 
+#' require(transformeR)
 #' data(iberia_ncep_hus850)
 #' getSeason(iberia_ncep_hus850)
 #' # Winter 1991-2010
@@ -164,6 +166,7 @@ renameDims <- function(obs, multi.member) {
 #' @description Get the common period of the objects obs and prd
 #' @author S. Herrera
 #' @keywords internal
+#' @importFrom transformeR subsetDimension
 
 getIntersect <- function(obs,prd){
       dimNames <- attr(obs$Data, "dimensions")

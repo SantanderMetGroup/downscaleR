@@ -16,6 +16,7 @@ An integer vector with the season
 Retrieves the season encompassed by a station or grid object
 }
 \examples{
+require(transformeR)
 data(iberia_ncep_ta850)
 getSeason(iberia_ncep_ta850) # Boreal winter (DJF)
 }

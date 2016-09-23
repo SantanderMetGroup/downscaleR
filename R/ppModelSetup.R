@@ -23,6 +23,7 @@
 #' @importFrom abind asub
 #' @importFrom abind adrop
 #' @importFrom stats sd
+#' @importFrom transformeR array3Dto2Dmat
 
 
 

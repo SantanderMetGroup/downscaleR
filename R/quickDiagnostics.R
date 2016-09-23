@@ -42,6 +42,7 @@ quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3
 #' @importFrom stats sd cor
 #' @importFrom grDevices rgb
 #' @keywords internal
+#' @importFrom transformeR subsetGrid getCoordinates 
 
 interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), na.tolerance = .3, ylim = NULL, main = NULL){
       par(mfrow = c(1,2))
@@ -334,6 +335,7 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
 #' @importFrom graphics par plot lines legend points
 #' @importFrom stats sd cor
 #' @importFrom grDevices rgb
+#' @importFrom transformeR subsetGrid
 #' @keywords internal
 
 dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), ylim = NULL){

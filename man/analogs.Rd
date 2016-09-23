@@ -31,14 +31,14 @@ Implementation of the downscaling analogs method
 
 Several checks of spatial consistency are performed. In particular, note that both 'pred' (reanalysis) and 'sim' (model
 simulations) should be in the same grid. This consistency must be ensured by the user prior to entering these arguments,
-for instance by means of the \code{\link{interpGrid}} function in conjunction with the \code{\link{getGrid}} method.
+for instance by means of the \code{\link[transformeR]{interpGrid}} function in conjunction with the \code{\link[transformeR]{getGrid}} method.
 
 \strong{Scaling and centering}
 
 When the climate variables are used as predictors instead of the PCs, these are previously centered and scaled
 using the mean and sigma parameters globally computed for the whole spatial domain (This is equivalent to the \dQuote{field})
-method in the \code{\link{prinComp}} function. The simulation data will use the parameters obtained when scaling and centering
-the predictors dataset. In case that the predictors come from a PC analysis object (as returned by \code{\link{prinComp}}), the
+method in the \code{\link[transformeR]{prinComp}} function. The simulation data will use the parameters obtained when scaling and centering
+the predictors dataset. In case that the predictors come from a PC analysis object (as returned by \code{\link[transformeR]{prinComp}}), the
 parameters for rescaling the simulation data are passed by the predictors.
 
 \strong{Construction of analogs using multiple neighbours}
