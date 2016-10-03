@@ -164,7 +164,11 @@ biasCorrection <- function(y, x, newdata, precipitation = FALSE,
                         target.year <-years[[i]]
                         rest.years <- setdiff(unlist(years), target.year)
                         yy <- redim(y, member = F)
-                        yy <- subsetGrid(yy, years = rest.years, drop = FALSE)
+                        if(method == "delta"){
+                              yy <- subsetGrid(yy, years = target.year, drop = FALSE)
+                        }else{
+                              yy <- subsetGrid(yy, years = rest.years, drop = FALSE)
+                        }
                         yy <- redim(yy, drop = T)
                         if(length(getDim(yy)) == 1){attr(yy$Data, "dimensions") <- c(getDim(yy), "station")}
                         newdata2 <- subsetGrid(x, years = target.year)
@@ -181,7 +185,9 @@ biasCorrection <- function(y, x, newdata, precipitation = FALSE,
                   Data <- sapply(output.list, function(n) unname(n$Data), simplify = F)
                   bindata <- unname(do.call("abind", c(Data, along = al)))
                   output <- output.list[[1]]
+                  dimNames <- names(getShape(output))
                   output$Data <- bindata
+                  attr(output$Data, "dimensions") <- dimNames
                   output$Dates <- x$Dates
       }
       return(output)
@@ -228,7 +234,8 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       sim <- redim(sim, member = T, runtime = T)
       itp <- which(getDim(pred) == "time")
       ito <- which(getDim(obs) == "time")
-      if (dim(obs$Data)[ito] != dim(pred$Data)[itp]) stop("y and x do not have the same time series length")
+      
+      if (method != "delta" & dim(obs$Data)[ito] != dim(pred$Data)[itp]) stop("y and x do not have the same time series length")
       
       n.run <- dim(sim$Data)[1]
       n.mem <- dim(sim$Data)[2]
