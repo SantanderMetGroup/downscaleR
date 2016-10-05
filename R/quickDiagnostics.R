@@ -340,14 +340,22 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
 
 dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), ylim = NULL){
       if (any(attr(obs$Data, "dimensions") == "station")) {
-            x <- obs$Data
+            a <- which(abs(obs$xyCoords[,2] - location[2] ) == min(abs(obs$xyCoords[,2] - location[2])))
+            b <- which(abs(obs$xyCoords[,1] - location[1] ) == min(abs(obs$xyCoords[,1] - location[1]))) 
+            indstation <- which(!is.na(match(a,b)))
+            x <- obs$Data[,indstation]
       } else {
             x <- subsetGrid(obs, lonLim = location[1], latLim = location[2], outside = T)$Data
       }
       y <- subsetGrid(sim, lonLim = location[1], latLim = location[2], outside = T)$Data
       if (!is.null(downscaled)) {
             if (any(attr(obs$Data, "dimensions") == "station")) {
-                  w <- downscaled$Data
+                  wredim <- redim(downscaled, runtime = T, station = TRUE, drop = F)
+                  if (any(attr(wredim$Data, "dimensions") == "station")){
+                        w <- wredim$Data[,,,indstation]      
+                  }else{
+                        w <- wredim$Data     
+                  }
             } else {
                   w <- subsetGrid(downscaled, lonLim = location[1], latLim = location[2], outside = T)$Data
             }
