@@ -3,12 +3,13 @@
 #' @title Conversion to esd (package) object
 #' @description The udg2esd function is a conversion tool between the ecomsUDG server and the ESD package.
 #' @param x grid  
+#' @verbose logical. Default is FALSE.
 #' @return grid object that can be further analysed using the {esd} functionalities.
 #' @author M. Iturbide 
 #' @export
 
 
-udg2esd <- function(x,verbose=FALSE) {
+udg2esd <- function(x, verbose=FALSE) {
       ## load ecomUDG.Raccess library
       ##
       udg3d2field <- function(x) {
