@@ -21,4 +21,5 @@ Implementation of Variance scaling of temperature method for bias correction
 \author{
 B. Szabo-Takacs
 }
+\keyword{internal}
 
