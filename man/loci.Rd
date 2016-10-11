@@ -23,4 +23,5 @@ Implementation of Local intensity scaling of precipitation method for bias corre
 \author{
 B. Szabo-Takacs
 }
+\keyword{internal}
 
