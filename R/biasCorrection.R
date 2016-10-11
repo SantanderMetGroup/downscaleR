@@ -685,6 +685,7 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param precip Logical indicating if o, p, s is temperature data.
+#' @keywords internal
 #' @author B. Szabo-Takacs
 
 variance <- function(o, p, s, precip){
@@ -764,6 +765,7 @@ variance <- function(o, p, s, precip){
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param precip Logical indicating if o, p, s is precipitation data.
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation.
+#' @keywords internal
 #' @author B. Szabo-Takacs
 
 loci <- function(o, p, s, precip, pr.threshold){
@@ -827,6 +829,7 @@ loci <- function(o, p, s, precip, pr.threshold){
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param precip Logical indicating if o, p, s is precipitation data.
 #' @importFrom stats uniroot
+#' @keywords internal
 #' @author S. Herrera and B. Szabo-Takacs
 
 ptr <- function(o, p, s, precip) {
@@ -897,6 +900,7 @@ ptr <- function(o, p, s, precip) {
 #' @param delta A vector of power parameter
 #' @param data A vector containing the simulated climate by the model for training period
 #' @param cv A vector containing coefficient of variation of observed climate data
+#' @keywords internal
 #' @author S. Herrera and B. Szabo-Takacs
 
 varCoeficient <- function(delta,data,cv){
