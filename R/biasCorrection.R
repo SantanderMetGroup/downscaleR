@@ -132,7 +132,7 @@
 
 
 biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
-                           method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
+                           method = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"),
                            cross.val = c("none", "loocv", "kfold"),
                            folds = NULL,
                            window = NULL,
@@ -144,7 +144,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
             newdata <- x 
             nwdatamssg <- FALSE
       }
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm"))
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"))
       cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
@@ -212,12 +212,12 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
 #' @importFrom transformeR redim subsetGrid getDim
 
 biasCorrectionXD <- function(y, x, newdata, precipitation, 
-                             method = c("delta", "scaling", "eqm", "gqm", "gpqm"),
+                             method = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"),
                              window = NULL,
                              scaling.type = c("additive", "multiplicative"),
                              pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
                              theta = .95){
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm"))
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
       obso <- y
@@ -451,6 +451,8 @@ biasCorrection1D <- function(o, p, s,
             gqm(o, p, s, precip, pr.threshold)
       } else if (method == "gpqm") {
             gpqm(o, p, s, precip, pr.threshold, theta)
+      } else if (method == "loci") {
+            loci(o, p , s, precip, pr.threshold)
       }
 }
 #end
@@ -749,5 +751,36 @@ norain <- function(o, p , threshold){
       }
       return(list("nP" = nP, "Pth" = Pth, "p" = p)) 
 }
+
+#end
+
+
+#' @title Local intensity scaling of precipitation
+#' @description Implementation of Local intensity scaling of precipitation method for bias correction based on Vincent Moron's local_scaling function in weaclim toolbox in Matlab
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training or test period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
+#' @param precip Logical indicating if o, p, s is precipitation data.
+#' @param pr.threshold The minimum value that is considered as a non-zero precipitation.
+#' @author B. Szabo-Takacs
+
+loci <- function(o, p, s, precip, pr.threshold){
+      if(precip == FALSE){ 
+            stop("method loci is only applied to precipitation data")
+      }else{
+            threshold <- pr.threshold
+            l <- length(which(o > threshold))
+            gcmr <- rev(sort(s))
+            Pgcm <- gcmr[l+1]
+            # local scaling factor
+            mobs <- mean(o[which(o > threshold)], na.rm=TRUE)
+            mgcm <- mean(s[which(s > Pgcm)],na.rm=TRUE)
+            scaling <- (mobs-threshold)/(mgcm-Pgcm)
+            GCM <- (scaling*(s-Pgcm))+threshold
+            GCM[which(GCM < threshold)] <- 0
+      }
+      return(GCM)
+}
+
 
 #end
