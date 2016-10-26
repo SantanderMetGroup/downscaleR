@@ -240,6 +240,8 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
             ind1 <- expand.grid(1:length(y), 1:length(x))
             ind <- cbind(ind1, ind1[,2])
       }
+
+      
       
       bc <- obs
       pred <- redim(pred, member = T, runtime = T)
@@ -372,6 +374,8 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
             #                   }else{
             #                         ############# members jointly
             #                   }
+          
+            
             run[,,,,] <- abind(lmem, along = 2)
             return(run)
       }) #end loop for runtimes
@@ -690,66 +694,23 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
 
 variance <- function(o, p, s, precip){
   if(precip == FALSE){
+
+      t_dif <- mean(o,na.rm=TRUE)-mean(p,na.rm=TRUE)
+      t1 <- p+rep(t_dif,length(p),1)
+      t1_m <- mean(t1,na.rm=TRUE) 
+      t2 <- t1-rep(t1_m,length(t1),1)
+      o_s <- sd(o,na.rm=TRUE) 
+      t2_s <- sd(t2,na.rm=TRUE) 
+      tsig <- o_s/t2_s
     
+    rm(t1,t1_m,t2,o_s,t2_s)
     
-    datesList <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
-    yearList <- unlist(strsplit(as.character(datesList), "[-]"))
-    dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
-    
-    datesList1 <- as.POSIXct(pred$Dates$start, tz = "GMT", format = "%Y-%m-%d")
-    yearList1 <- unlist(strsplit(as.character(datesList1), "[-]"))
-    dayListPred <- array(data = c(as.numeric(yearList1[seq(2,length(yearList1),3)]),as.numeric(yearList1[seq(3,length(yearList1),3)])), dim = c(length(datesList1),2))
-    
-    datesList2 <- as.POSIXct(sim$Dates$start, tz = "GMT", format = "%Y-%m-%d")
-    yearList2 <- unlist(strsplit(as.character(datesList2), "[-]"))
-    dayListSim <- array(data = c(as.numeric(yearList2[seq(2,length(yearList2),3)]),as.numeric(yearList2[seq(3,length(yearList2),3)])), dim = c(length(datesList2),2))
-    
-    o_m <- rep(NaN,12)
-    p_m <- rep(NaN,12)
-    t_dif <- rep(NaN,12)
-    t1_m <- rep(NaN,12)
-    o_s <- rep(NaN,12)
-    t2_s <- rep(NaN,12)
-    tsig <- rep(NaN,12)
-    t1 <- rep(NaN,length(p))
-    t2 <- rep(NaN,length(p))
-    for (m in 1:12){
-      iot=dayListObs[,1]==m
-      ipt=dayListPred[,1]==m
-      io=which(iot==TRUE)
-      ip= which(ipt==TRUE)
-      
-      
-      
-      o_m[m] <- mean(o[io],na.rm=TRUE) 
-      p_m[m] <- mean(p[ip],na.rm=TRUE)
-      t_dif[m] <- o_m[m]-p_m[m]
-      t1[ip] <- p[ip]+rep(t_dif[m],length(ip),1)
-      t1_m[m] <- mean(t1[ip],na.rm=TRUE) 
-      t2[ip] <- t1[ip]-rep(t1_m[m],length(ip),1)
-      o_s[m] <- sd(o[io],na.rm=TRUE) 
-      t2_s[m] <- sd(t2[ip],na.rm=TRUE) 
-      tsig[m] <- o_s[m]/t2_s[m]}
-    
-    rm(o_m,p_m,t1,t1_m,t2,o_s,t2_s)
-    
-    
-    t1_m <- rep(NaN,12)
-    t1 <- rep(NaN,length(s))
-    t2 <- rep(NaN,length(s))
-    t3 <- rep(NaN,length(s))
-    tC <- rep(NaN,length(s))
-    
-    for (m in 1:12){
-      ist=dayListSim[,1]==m
-      is=which(ist==TRUE)
-      
-      t1[is] <- s[is]+rep(t_dif[m],length(is),1)
-      t1_m[m] <- mean(t1[is],na.rm=TRUE)
-      t2[is] <- t1[is]-rep(t1_m[m],length(is),1)
-      t3[is] <- t2[is]*rep(tsig[m],length(is),1)
-      tC[is] <- t3[is]+rep(t1_m[m],length(is),1)
-    }
+      t1 <- s+rep(t_dif,length(s),1)
+      t1_m <- mean(t1,na.rm=TRUE)
+      t2 <- t1-rep(t1_m,length(t1),1)
+      t3 <- t2*rep(tsig,length(t2),1)
+      tC <- t3+rep(t1_m,length(t3),1)
+
     rm(t1,t1_m,t2,t3)
     
     return(tC)}
@@ -772,52 +733,23 @@ loci <- function(o, p, s, precip, pr.threshold){
        if(precip == FALSE){ 
               stop("method loci is only applied to precipitation data")
         }else{
+          
+      threshold <- pr.threshold
     
-    
-    datesList <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
-    yearList <- unlist(strsplit(as.character(datesList), "[-]"))
-    dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
-    
-    datesList1 <- as.POSIXct(pred$Dates$start, tz = "GMT", format = "%Y-%m-%d")
-    yearList1 <- unlist(strsplit(as.character(datesList1), "[-]"))
-    dayListPred <- array(data = c(as.numeric(yearList1[seq(2,length(yearList1),3)]),as.numeric(yearList1[seq(3,length(yearList1),3)])), dim = c(length(datesList1),2))
-    
-    datesList2 <- as.POSIXct(sim$Dates$start, tz = "GMT", format = "%Y-%m-%d")
-    yearList2 <- unlist(strsplit(as.character(datesList2), "[-]"))
-    dayListSim <- array(data = c(as.numeric(yearList2[seq(2,length(yearList2),3)]),as.numeric(yearList2[seq(3,length(yearList2),3)])), dim = c(length(datesList2),2))
-    
-    threshold <- pr.threshold
-    GCM2 <- rep(NaN,length(s))
-    Pgcm <- rep(NaN,12)
-    scaling <- rep(NaN,12)
-    for (k in 1:12) {
-      iot=dayListObs[,1]==k
-      ipt=dayListPred[,1]==k
-      ist=dayListSim[,1]==k
-      io=which(iot==TRUE)
-      ip= which(ipt==TRUE)
-      is=which(ist==TRUE)
-      
-      PO <- o[io]     # scaling on each months 
-      G1 <- p[ip]
-      G <- s[is]
-      l <- length(which(PO > threshold))
-      gcmr <- sort(G)
-      gcmr <- rev(gcmr)
-      Pgcm[k] <- gcmr[l+1]
+      l <- length(which(o > threshold))
+      gcmr <- rev(sort(s))
+      Pgcm <- gcmr[l+1]
       # local scaling factor
-      mobs <- PO[which(PO > threshold)]
+      mobs <- o[which(o > threshold)]
       mobs <- mean(mobs,na.rm=TRUE)
-      mgcm <- G[which(G > Pgcm[k])]
+      mgcm <- s[which(s > Pgcm)]
       mgcm <- mean(mgcm,na.rm=TRUE)
-      scaling[k] <- (mobs-threshold)/(mgcm-Pgcm[k])
-      GCM <- (scaling[k]*(G-Pgcm[k]))+threshold
-      GCM[which(GCM < threshold)] <- array(0,length(which(GCM < threshold)))
-      GCM2[is] <- GCM
-      
-    }
-  }
-  return(GCM2)
+      scaling <- (mobs-threshold)/(mgcm-Pgcm)
+      GCM <- (scaling*(s-Pgcm))+threshold
+      GCM[which(GCM < threshold)] <- 0
+    
+        }
+  return(GCM)
 }
 
 #end
@@ -836,59 +768,26 @@ ptr <- function(o, p, s, precip) {
   if(precip==FALSE){ 
     stop("method power transformation is only applied to precipitation data")
   } else{
-    
-    
-   
-    b <- rep(NaN,12) 
-    
-    datesList <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
-    yearList <- unlist(strsplit(as.character(datesList), "[-]"))
-    dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
-    
-    datesList1 <- as.POSIXct(pred$Dates$start, tz = "GMT", format = "%Y-%m-%d")
-    yearList1 <- unlist(strsplit(as.character(datesList1), "[-]"))
-    dayListPred <- array(data = c(as.numeric(yearList1[seq(2,length(yearList1),3)]),as.numeric(yearList1[seq(3,length(yearList1),3)])), dim = c(length(datesList1),2))
-    
-    datesList2 <- as.POSIXct(sim$Dates$start, tz = "GMT", format = "%Y-%m-%d")
-    yearList2 <- unlist(strsplit(as.character(datesList2), "[-]"))
-    dayListSim <- array(data = c(as.numeric(yearList2[seq(2,length(yearList2),3)]),as.numeric(yearList2[seq(3,length(yearList2),3)])), dim = c(length(datesList2),2)) 
-    for (m in 1:12) {
-      if (m==1) 
-        indDates <- which(is.element(dayListObs, c(12, 1, 2)))
-      else if (m==12) 
-        indDates <- which(is.element(dayListObs, c(11, 12, 1)))
-      else 
-        indDates <- which(is.element(dayListObs, c(m-1, m, m+1)))
-      cvO <- sd(o[indDates],na.rm=TRUE)/mean(o[indDates], na.rm=TRUE)
+      b <- NaN
+      cvO <- sd(o,na.rm=TRUE)/mean(o, na.rm=TRUE)
       if (!is.na(cvO)) {
         bi <- try(uniroot(function(x)
-          varCoeficient(x,abs(p[indDates]),cvO),c(0,1),extendInt="yes"),silent=T)
+          varCoeficient(x,abs(p),cvO),c(0,1),extendInt="yes"),silent=T)
         if ("try-error" %in% class(bi)) {  # an error occurred
-          b[m] <- NA
+          b <- NA
         } else {
-          b[m] <- bi$root
+          b <- bi$root
         }
       }
-    }
     
-    if (p < 0){
-      p <- 0}
-    if (s < 0){
-      s <- 0}
-    prC <- rep(NaN,length(s))
-    for (m in 1:12) {
-      iot=dayListObs[,1]==m
-      ipt=dayListPred[,1]==m
-      ist=dayListSim[,1]==m
-      io=which(iot==TRUE)
-      ip= which(ipt==TRUE)
-      is=which(ist==TRUE)
-                     
-      aux_c <- p[ip]^rep(b[m],length(ip),1)
-      aux <- s[is]^rep(b[m],length(is),1)
-      prC[is] <- aux*rep((mean(o[io], na.rm=TRUE)/mean(aux_c, na.rm=TRUE)), length(is),1)
-    }
-    rm(indDates, aux, aux_c)}
+    p[p<0] <-  0
+    s[s<0] <-  0
+   
+      aux_c <- p^rep(b,length(p),1)
+      aux <- s^rep(b,length(s),1)
+      prC <- aux*rep((mean(o, na.rm=TRUE)/mean(aux_c, na.rm=TRUE)), length(s),1)
+    
+    rm(aux, aux_c)}
   
   return(prC)
 }
