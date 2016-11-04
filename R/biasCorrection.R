@@ -3,7 +3,7 @@
 #'
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. See details.
+#'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.
 #' @param precipitation Logical indicating if the data to be corrected is precipitation data.
 #' @param cross.val Should cross-validation be performed? methods available are leave-one-out ("loocv") and k-fold ("kfold"). The default 
 #' option ("none") does not perform cross-validation.
@@ -32,7 +32,10 @@
 #' @details
 #' 
 #' The methods available are \code{"eqm"}, \code{"delta"}, 
-#' \code{"scaling"}, \code{"gqm"}, \code{"gpqm"} (the two latter used only for precipitation).
+#' \code{"scaling"}, \code{"gqm"}, \code{"gpqm"}\code{"loci"}, 
+#' \code{"ptr"}  (the four latter used only for precipitation) and 
+#' \code{"variance"} (only for temperature).
+#' 
 #'  These are next briefly described: 
 #'  
 #' \strong{Delta}
@@ -67,6 +70,24 @@
 #' Generalized Quantile Mapping. This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a 
 #' gamma distribution to values under the threshold given by the 95th percentile (following Yang et al. 2010) and a general Pareto 
 #' distribution (GPD) to values above the threshold.
+#' 
+#' 
+#' \strong{variance}
+#' 
+#' Variance scaling of temperature. This method is described in Chen et al. 2011. It is applicable only to temperature. It corrects
+#' the mean and variance of temperature time series.
+#' 
+#' \strong{loci}
+#' 
+#' Local intensity scaling of precipitation. This methode is described in Schmidli et al. 2006. It adjust the mean as well as both wet-day frequencies and wet-day intensities.
+#' The precipitation threshold is calculated such that the number of simulated days exceeding this threshold matches the number of observed days with precipitation larger than 1 mm.
+#' 
+#'\strong{ptr}
+#'
+#' Power transformation of precipitation. This method is described in Leander and Buishand 2007 and is applicable only to precipitation. It adjusts the variance statistics of precipitation
+#' time series in an exponential form. The power parameter is estimated on a monthly basis using a 90-day window centered on the interval. The power is defined by matching the coefficient
+#' of variation of corrected daily simulated precipitation with the coefficient of variation of observed daily precipitation. It is calculated by root-finding algorithm using Brent's method.
+#'
 #'
 #' @section Note on the bias correction of precipitation:
 #' 
@@ -144,7 +165,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
             newdata <- x 
             nwdatamssg <- FALSE
       }
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"))
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci", "ptr", "variance"))
       cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
@@ -217,7 +238,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                              scaling.type = c("additive", "multiplicative"),
                              pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
                              theta = .95){
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"))
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci", "ptr", "variance"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
       obso <- y
@@ -417,7 +438,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. 
+#'  \code{"scaling"}, \code{"gqm"}, \code{"gpqm"}, \code{"variance"}, \code{"loci"} and \code{"ptr"}. 
 #' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
 #' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not selected as the bias correction method.
 #' @param precip Logical indicating if o, p, s is precipitation data.
@@ -451,8 +472,12 @@ biasCorrection1D <- function(o, p, s,
             gqm(o, p, s, precip, pr.threshold)
       } else if (method == "gpqm") {
             gpqm(o, p, s, precip, pr.threshold, theta)
+      } else if (method == "variance") {
+            variance(o, p, s, precip)
       } else if (method == "loci") {
-            loci(o, p , s, precip, pr.threshold)
+            loci(o, p, s, precip, pr.threshold)
+      } else if (method == "ptr") {
+            ptr(o, p, s, precip)
       }
 }
 #end
@@ -754,6 +779,42 @@ norain <- function(o, p , threshold){
 
 #end
 
+#' @title Variance scaling of temperature
+#' @description Implementation of Variance scaling of temperature method for bias correction
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
+#' @param precip Logical indicating if o, p, s is temperature data.
+#' @keywords internal
+#' @author B. Szabo-Takacs
+
+variance <- function(o, p, s, precip){
+      if(precip == FALSE){
+            
+            t_dif <- mean(o,na.rm=TRUE)-mean(p,na.rm=TRUE)
+            t1 <- p+rep(t_dif,length(p),1)
+            t1_m <- mean(t1,na.rm=TRUE) 
+            t2 <- t1-rep(t1_m,length(t1),1)
+            o_s <- sd(o,na.rm=TRUE) 
+            t2_s <- sd(t2,na.rm=TRUE) 
+            tsig <- o_s/t2_s
+            
+            rm(t1,t1_m,t2,o_s,t2_s)
+            
+            t1 <- s+rep(t_dif,length(s),1)
+            t1_m <- mean(t1,na.rm=TRUE)
+            t2 <- t1-rep(t1_m,length(t1),1)
+            t3 <- t2*rep(tsig,length(t2),1)
+            tC <- t3+rep(t1_m,length(t3),1)
+            
+            rm(t1,t1_m,t2,t3)
+            
+            return(tC)
+      } else {
+            stop("method variance is only applied to temperature data")
+      }
+}
+#end
 
 #' @title Local intensity scaling of precipitation
 #' @description Implementation of Local intensity scaling of precipitation method for bias correction based on Vincent Moron's local_scaling function in weaclim toolbox in Matlab
@@ -782,5 +843,59 @@ loci <- function(o, p, s, precip, pr.threshold){
       return(GCM)
 }
 
+#end
+
+#' @title Power transformation of precipitation
+#' @description Implementation of Power transformation of precipitation method for bias correction 
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
+#' @param precip Logical indicating if o, p, s is precipitation data.
+#' @importFrom stats uniroot
+#' @keywords internal
+#' @author S. Herrera and B. Szabo-Takacs
+
+ptr <- function(o, p, s, precip) {
+      if(precip==FALSE){ 
+            stop("method power transformation is only applied to precipitation data")
+      } else{
+            b <- NaN
+            cvO <- sd(o,na.rm=TRUE)/mean(o, na.rm=TRUE)
+            if (!is.na(cvO)) {
+                  bi <- try(uniroot(function(x)
+                        varCoeficient(x,abs(p),cvO),c(0,1),extendInt="yes"),silent=T)
+                  if ("try-error" %in% class(bi)) {  # an error occurred
+                        b <- NA
+                  } else {
+                        b <- bi$root
+                  }
+            }
+            p[p<0] <-  0
+            s[s<0] <-  0
+            aux_c <- p^rep(b,length(p),1)
+            aux <- s^rep(b,length(s),1)
+            prC <- aux*rep((mean(o, na.rm=TRUE)/mean(aux_c, na.rm=TRUE)), length(s),1)
+            
+            rm(aux, aux_c)
+      }
+      return(prC)
+}
 
 #end
+
+#' @title VarCoeficient
+#' @description preprocess to power transformation of precipitation
+#' @param delta A vector of power parameter
+#' @param data A vector containing the simulated climate by the model for training period
+#' @param cv A vector containing coefficient of variation of observed climate data
+#' @keywords internal
+#' @author S. Herrera and B. Szabo-Takacs
+
+varCoeficient <- function(delta,data,cv){
+      y <- cv-sd((data^delta),na.rm=TRUE)/mean((data^delta),na.rm=TRUE)
+      return(y)
+}
+#end
+
+
+
