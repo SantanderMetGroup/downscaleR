@@ -467,11 +467,15 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), y
       }
       # qq-plot
       qy <- quantile(y, probs = seq(0.01, .99, 0.01), na.rm = T, , type =4)
-      qw <-  quantile(w, probs = seq(0.01, .99, 0.01), na.rm = T, type =4)
+      if(!is.null(downscaled)){
+            qw <-  quantile(w, probs = seq(0.01, .99, 0.01), na.rm = T, type =4)
+      }else{
+            qw <- NA
+      }
       q1 <- quantile(x, probs = seq(0.01, .99, 0.01), na.rm = T, , type =4)
-      yran <- c(0, max(c(q1, qy, qw)))
+      yran <- c(0, max(c(q1, qy, qw), na.rm = T))
       plot(q1, qy, col="red", main = "qq-plot", xlab = "obs", ylab = "predicted", ylim = yran)
-      lines(0:max(c(q1, qy, qw)), 0:max(c(q1, qy, qw)))
+      lines(0:max(c(q1, qy, qw), na.rm = T), 0:max(c(q1, qy, qw), na.rm = T))
       if(!is.null(downscaled)){
             points(q1,qw, col="blue")
       }
