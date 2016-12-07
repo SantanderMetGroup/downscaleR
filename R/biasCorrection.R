@@ -697,10 +697,10 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
                   obsGQM <- fitdistr(o[indgamma],"gamma")
                   obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
                   ind <- which(p > 0 & !is.na(p))
-                  indgamma <- ind[which(p[ind] < quantile(p[ind],theta))]
-                  indpareto <-ind[which(p[ind] >= quantile(p[ind], theta))]
-                  prdGQM <- fitdistr(p[indgamma], "gamma")
-                  prdGQM2 <- fpot(p[indpareto], quantile(p[ind], theta), "gpd", std.err = FALSE)
+                  indgammap <- ind[which(p[ind] < quantile(p[ind],theta))]
+                  indparetop <-ind[which(p[ind] >= quantile(p[ind], theta))]
+                  prdGQM <- fitdistr(p[indgammap], "gamma")
+                  prdGQM2 <- fpot(p[indparetop], quantile(p[ind], theta), "gpd", std.err = FALSE)
                   rain <- which(s > Pth & !is.na(s))
                   noRain <- which(s <= Pth & !is.na(s))
                   indgammasim <- rain[which(s[rain] < quantile(p[ind], theta))]
