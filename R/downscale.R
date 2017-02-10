@@ -96,7 +96,6 @@ downscale <- function(y,
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
       modelPars <- ppModelSetup(y, x, newdata)
       obs.orig <- y
-      stations <- ifelse("station" %in% getDim(y), TRUE, FALSE)
       if (cross.val == "none") {
             down <- switch(method,
                            "analogs" = analogs(y = y,
@@ -126,7 +125,7 @@ downscale <- function(y,
                         year.ind <- which(years == unique(years)[i])
                         modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
                         modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
-                        if (isTRUE(stations)) {
+                        if (isTRUE(modelPars$stations)) {
                               y$Data <- obs.orig$Data[-year.ind,]
                         } else {
                               y$Data <- obs.orig$Data[-year.ind,,]
@@ -166,7 +165,7 @@ downscale <- function(y,
                         year.ind <- unname(abind(year.ind, along = 1))
                         modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
                         modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
-                        if (isTRUE(stations)) {
+                        if (isTRUE(modelPars$stations)) {
                               y$Data <- obs.orig$Data[-year.ind,]
                         } else {
                               y$Data <- obs.orig$Data[-year.ind,,]
