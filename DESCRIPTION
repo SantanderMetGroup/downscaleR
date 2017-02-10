@@ -25,16 +25,14 @@ Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
     "Jonas Bhend <Jonas.Bhend@meteoswiss.ch> [ctb]",
-    "Antonio Cofino <antonio.cofino@unican.es> [ctb]",
     "Matteo De Felice <matteo.defelice@enea.it> [ctb]",
     "Jesus Fernandez <fernandej@unican.es> [ctb]",
-    "Wietse Franssen <wietse.franssen@wur.nl> [ctb]",
     "Maria Dolores Frias <friasmd@unican.es> [ctb]",
     "Jose Manuel Gutierrez <gutierjm@unican.es> [ctb]",
     "Sixto Herrera <sixto@predictia.es> [ctb]",
     "Maialen Iturbide <miturbide@ifca.unican.es> [ctb]",
     "Rodrigo Manzanas <rmanzanas@ifca.unican.es> [ctb]",
-    "Stefan Siegert <S.Siegert@exeter.ac.uk> [ctb]",
+    "Beata Szabo-Takacs <szabo.b@czechglobe.cz> [ctb]",
     "Max Tuni <max@predictia.es> [ctb]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
