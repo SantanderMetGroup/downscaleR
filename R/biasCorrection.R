@@ -107,6 +107,7 @@
 #' @family downscaling
 #' 
 #' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim
+#' @importFrom abind adrop
 #'
 #' @references
 #'
@@ -183,29 +184,29 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
             if (nwdatamssg) {
                   message("'newdata' will be ignored for cross-validation")
             }
-            if(cross.val == "loocv"){
+            if (cross.val == "loocv") {
                   years <- as.list(unique(getYearsAsINDEX(x)))
-            }else if(cross.val == "kfold" & !is.null(folds)){
+            } else if (cross.val == "kfold" & !is.null(folds)) {
                   years <- folds
-            }else if(cross.val == "kfold" & is.null(folds)){
-                  stop("Please, specify folds for kfold cross validation")
+            } else if (cross.val == "kfold" & is.null(folds)) {
+                  stop("Fold specification is missing, with no default")
             }
             output.list <- lapply(1:length(years), function(i) {
-                        target.year <-years[[i]]
+                        target.year <- years[[i]]
                         rest.years <- setdiff(unlist(years), target.year)
                         station <- FALSE
                         if ("station" %in% getDim(y)) station <- TRUE
                         yy <- redim(y, member = F)
-                        if(method == "delta"){
+                        if (method == "delta") {
                               yy <- subsetGrid(yy, years = target.year, drop = FALSE)
                         }else{
                               yy <- subsetGrid(yy, years = rest.years, drop = FALSE)
                         }
-                        if(station == TRUE){
+                        if (isTRUE(station)) {
                               yy$Data <- adrop(yy$Data, drop = 3)
                               attr(yy$Data, "dimensions") <- c(setdiff(getDim(yy), c("lat", "lon")), "station")
                         }else{
-                              yy <- redim(yy, drop = T)
+                              yy <- redim(yy, drop = TRUE)
                         }
                         newdata2 <- subsetGrid(x, years = target.year)
                         xx <- subsetGrid(x, years = rest.years)
@@ -218,7 +219,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                           theta = theta)
                   })
                   al <- which(getDim(x) == "time")
-                  Data <- sapply(output.list, function(n) unname(n$Data), simplify = F)
+                  Data <- sapply(output.list, function(n) unname(n$Data), simplify = FALSE)
                   bindata <- unname(do.call("abind", c(Data, along = al)))
                   output <- output.list[[1]]
                   dimNames <- attr(output$Data, "dimensions")
@@ -267,8 +268,8 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       }
       
       bc <- obso
-      pred <- redim(pred, member = T, runtime = T)
-      sim <- redim(sim, member = T, runtime = T)
+      pred <- redim(pred, member = TRUE, runtime = TRUE)
+      sim <- redim(sim, member = TRUE, runtime = TRUE)
       itp <- which(getDim(pred) == "time")
       ito <- which(getDim(obs) == "time")
       
@@ -324,7 +325,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                         dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
                         dayList <- unique(dayListObs,index.return = datesList)
                         annual <- TRUE
-                        if(nrow(dayList)<360) annual <- FALSE
+                        if (nrow(dayList) < 360) annual <- FALSE
                         indDays <- array(data = NaN, dim = c(length(datesList),1))
                         for (d in 1:dim(dayList)[1]) {
                               indDays[which(sqrt((dayListObs[,1] - dayList[d,1]) ^ 2 + (dayListObs[,2] - dayList[d,2]) ^ 2) == 0)] <- d
@@ -354,8 +355,8 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                                     indObs <- sort(do.call("abind", indObs))
                                     head <- window/2
                                     tail <- window/2
-                                    before <- FALSE; after <- FALSE
-                                    if(annual == FALSE){
+                                    before <- after <- FALSE
+                                    if (annual == FALSE) {
                                           before <- min(indDays[indObs]) - 1 - window/2 < 1
                                           if (before) head <- (window/2) + (min(indDays[indObs]) - 1 - window/2) 
                                           after <- max(indDays[indObs]) + window/2 > nrow(dayList)
@@ -369,10 +370,10 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                                           } else {
                                                 piece <- indObs[(breaks[d - 1] + 1):breaks[d]]
                                           }
-                                          suppressWarnings(indObsWindow[((d - 1)*(head + step + tail) + 1):(d*(head + step + tail))] <-  (min(piece, na.rm = T) - floor(head)):(max(piece, na.rm = T) + floor(tail))
+                                          suppressWarnings(indObsWindow[((d - 1)*(head + step + tail) + 1):(d*(head + step + tail))] <-  (min(piece, na.rm = TRUE) - floor(head)):(max(piece, na.rm = TRUE) + floor(tail))
                                           )
                                     }
-                                    if(annual == TRUE){
+                                    if (isTRUE(annual)) {
                                           indObsWindow[which(indObsWindow <= 0)] <- 1
                                           indObsWindow[which(indObsWindow >  length(indDays))] <- length(indDays)
                                           indObsWindow <- unique(indObsWindow)
@@ -390,10 +391,10 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                                           }
                                     )
                                     suppressWarnings(
-                                          p1 <- subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indObsWindow]
+                                          p1 <- subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = TRUE, drop = FALSE)$Data[1,1,,1,1][indObsWindow]
                                     )
                                     suppressWarnings(
-                                          s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indSim]
+                                          s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = TRUE, drop = FALSE)$Data[1,1,,1,1][indSim]
                                     )
                                     if (method == "delta") indSim <- indObs
                                     end[indSim,] <- biasCorrection1D(o1, p1, s1, 

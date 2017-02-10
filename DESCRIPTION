@@ -18,9 +18,9 @@ Suggests:
     loadeR.ECOMS,
     visualizeR
 Type: Package
-Title: Climate data manipulation, bias correction and statistical downscaling
-Version: 2.0-0
-Date: 2016-09-23
+Title: Bias correction and statistical downscaling methods
+Version: 2.1-0
+Date: 2017-02-10
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
@@ -39,7 +39,7 @@ Authors@R: as.person(c(
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
 Description: Tools for climate data calibration (bias correction, qq-mapping...), and perfect-prog statistical downscaling.
-      Focused on daily data, the package is conceived for dealing also with forecast (multi-member) data.
+      Focused on daily data, the package is conceived for dealing also with ensemble seasonal forecasts.
 License: GPL (>= 3)
 LazyData: true
 RoxygenNote: 5.0.1

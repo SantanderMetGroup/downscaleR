@@ -1,3 +1,21 @@
+#     glimpr.R GLM application for downscaling
+#
+#     Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
+#
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 #' @title GLM downscaling
 #' @description Implementation of GLM's to downscale precipitation data
 #' @param y A grid or station data containing the observed climate data for the training period
@@ -50,95 +68,92 @@ glimpr <- function(y = y, modelPars = modelPars, simulate =  c("none", "loocv", 
       mod.bin <- list()
       mod.gamma <- list()  
       suppressWarnings(
-           for (x in 1:length(cases)){
-            mod.bin.x <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))           
-            sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
+            for (x in 1:length(cases)) {
+                  mod.bin.x <- glm(ymat.bin[ ,cases[x]] ~ ., data = as.data.frame(modelPars$pred.mat)[,1:n.pcs], family = binomial(link = "logit"))           
+                  sims.bin <- sapply(1:length(modelPars$sim.mat), function(i) {
                         pred <- predict(mod.bin.x, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response")
-                        if(simulate != "no"){
+                        if (simulate != "no") {
                               rnd <- runif(length(pred), min = 0, max = 1)
                               ind01 <- which(pred > rnd)
                               pred[ind01] <- 1
                               pred[-ind01] <- 0
-                        }else{
+                        } else {
                               pred[which(pred >= quantile(mod.bin.x$fitted.values, 1 - wet.prob[cases[x]], na.rm = TRUE))] <- 1L
                               #pred[which(pred >= 0.5)] <- 1L
                               pred <- as.integer(pred)
                         }
                         return(pred)
                   })
-            
-            if(return.models == FALSE)  mod.bin <- NULL
-            wet <- which(ymat[ ,cases[x]] >= wet.threshold)
-            # TODO: handle exception when model is over-specified (https://stat.ethz.ch/pipermail/r-help/2000-January/009833.html)
-            
-            Npcs <- n.pcs+1
-            mod.gamma.x = NULL
-            
-            ###########
-            
-            while(is.null(mod.gamma.x) & Npcs > 1) {
-                  Npcs <-Npcs -1
-#                   print(Npcs)
-                  mod.gamma.x <- tryCatch(expr = {
-                        glm(ymat[ ,cases[x]] ~., data = as.data.frame(modelPars$pred.mat)[ ,1:Npcs], family = Gamma(link = "log"), subset = wet)
-                  },
-                  error = function(err) {                
-                        mod.gamma.x <- NULL
-                  })
-            }
-            
-           
-            if(length(mod.gamma.x$model)-1 < n.pcs){
-                  err[x] <- 1 
-            }else{
-                  err[x] <- 0
-            }
-            
-            
-            ###########
-            
-            if (is.null(mod.gamma.x)){
-                  sims <-  sapply(1:length(modelPars$sim.mat), function(i) {
-                        matrix(NA, ncol = 1, nrow = nrow(modelPars$sim.mat[[i]]))
-                  })
-            }else{
-                  sims <- sapply(1:length(modelPars$sim.mat), function(i) {
-                        if(simulate == "yes"){
-                              predg <- unname(predict(mod.gamma.x, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response"))
-#                               predg[which(predg<=wet.threshold)] <- 0
-                              rgamma(n = length(predg), shape = 1/summary(mod.gamma.x)$dispersion, scale = summary(mod.gamma.x)$dispersion * predg) * sims.bin[,i] 
-                        }else{
-                               unname(predict(mod.gamma.x, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") ) * sims.bin[,i] 
-                        }
-                  })
-            }
-      if(return.models == FALSE)  mod.gamma.x <- NULL
-      
-      pred.list[[x]] <- unname(sims)
-      sims <- NULL
-      mod.bin[[x]] <- mod.bin.x 
-      mod.gamma[[x]] <- mod.gamma.x
-      })
+                  
+                  if (return.models == FALSE)  mod.bin <- NULL
+                  wet <- which(ymat[ ,cases[x]] >= wet.threshold)
+                  # TODO: handle exception when model is over-specified (https://stat.ethz.ch/pipermail/r-help/2000-January/009833.html)
+                  
+                  Npcs <- n.pcs + 1
+                  mod.gamma.x <- NULL
+                  
+                  ###########
+                  
+                  while (is.null(mod.gamma.x) & Npcs > 1) {
+                        Npcs <- Npcs - 1
+                        mod.gamma.x <- tryCatch(expr = {
+                              glm(ymat[ ,cases[x]] ~., data = as.data.frame(modelPars$pred.mat)[ ,1:Npcs],
+                                  family = Gamma(link = "log"),
+                                  subset = wet)
+                        },
+                        error = function(err) {                
+                              mod.gamma.x <- NULL
+                        })
+                  }
+                  if (length(mod.gamma.x$model) - 1 < n.pcs) {
+                        err[x] <- 1 
+                  } else {
+                        err[x] <- 0
+                  }
+                  
+                  ###########
+                  
+                  if (is.null(mod.gamma.x)) {
+                        sims <-  sapply(1:length(modelPars$sim.mat), function(i) {
+                              matrix(NA, ncol = 1, nrow = nrow(modelPars$sim.mat[[i]]))
+                        })
+                  } else {
+                        sims <- sapply(1:length(modelPars$sim.mat), function(i) {
+                              if (simulate == "yes") {
+                                    predg <- unname(predict(mod.gamma.x, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response"))
+                                    #                               predg[which(predg<=wet.threshold)] <- 0
+                                    rgamma(n = length(predg), shape = 1/summary(mod.gamma.x)$dispersion, scale = summary(mod.gamma.x)$dispersion * predg) * sims.bin[,i] 
+                              } else {
+                                    unname(predict(mod.gamma.x, newdata = as.data.frame(modelPars$sim.mat[[i]])[,1:n.pcs], type = "response") ) * sims.bin[,i] 
+                              }
+                        })
+                  }
+                  if (return.models == FALSE)  mod.gamma.x <- NULL
+                  pred.list[[x]] <- unname(sims)
+                  sims <- NULL
+                  mod.bin[[x]] <- mod.bin.x 
+                  mod.gamma[[x]] <- mod.gamma.x
+            })
       
       mod <- list("binary" = mod.bin, "gamma" = mod.gamma)
       
-      n.err <- length(which(err==1))
-
-      if(n.err > 0){
-      n <- round(n.err/length(err)*100, digits = 2)
-      warning("In ", n,"% of the locations: glm.fit convergence reached after variable number reduction.")
+      n.err <- length(which(err == 1))
+      
+      if (n.err > 0) {
+            n <- round(n.err/length(err)*100, digits = 2)
+            warning("In ", n,"% of the locations: glm.fit convergence reached after variable number reduction.")
       }
       
-
-#       err <- lapply(1:length(pred.list), function(u){
-#             is.logical(pred.list[[u]])
-#       })
-#       
-#       n.err <- length(which(do.call("abind", err)==TRUE))
-#       
-#       if(n.err > 0){
-#             warning("glm.fit did not converge ", n.err, " times, NA returned.")
-#       }
+      
+      #       err <- lapply(1:length(pred.list), function(u){
+      #             is.logical(pred.list[[u]])
+      #       })
+      #       
+      #       n.err <- length(which(do.call("abind", err)==TRUE))
+      #       
+      #       if(n.err > 0){
+      #             warning("glm.fit did not converge ", n.err, " times, NA returned.")
+      #       }
       
       # Refill with NaN series
       #######
@@ -151,7 +166,7 @@ glimpr <- function(y = y, modelPars = modelPars, simulate =  c("none", "loocv", 
       
       x.obs <- getCoordinates(y)$x
       y.obs <- getCoordinates(y)$y
-      aux.list <- lapply(1:length(modelPars$sim.mat), function (i) {
+      aux.list <- lapply(1:length(modelPars$sim.mat), function(i) {
             aux <- lapply(1:length(pred.list), function(j) {
                   pred.list[[j]][ ,i]
             })
@@ -167,14 +182,14 @@ glimpr <- function(y = y, modelPars = modelPars, simulate =  c("none", "loocv", 
       # Data array - rename dims
       
       #       obs$Data <- 
-      o <-drop(unname(do.call("abind", c(aux.list, along = -1))))
+      o <- drop(unname(do.call("abind", c(aux.list, along = -1))))
       aux.list <- NULL
       # Date replacement
       #       obs$Dates <- modelPars$sim.dates 
       message("[", Sys.time(), "] Done.")
       #       return(obs)
-      if(return.models == TRUE) o <- list(o, "models" = mod)
- return(o)
-# return(sims.bin)
+      if (isTRUE(return.models)) o <- list(o, "models" = mod)
+      return(o)
+      # return(sims.bin)
 }
 # End

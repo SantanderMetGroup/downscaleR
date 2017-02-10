@@ -1,6 +1,6 @@
-# downscale.R Perfect-prog downscaling methods
+#     downscale.R Perfect-prog downscaling methods
 #
-#     Copyright (C) 2016 Santander Meteorology Group (http://www.meteo.unican.es)
+#     Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -21,17 +21,18 @@
 #' 
 #' @template templateObsPredSim
 #' @param method Downscaling method
-#' @param simulate Character. Options are "no", "yes" or "occurrence". The last option simulates the occurrence but not the amount.
+#' @param simulate Character. Options are \code{"no"}, \code{"yes"} or \code{"occurrence"}.
+#'  The last option simulates the precipitation occurrence but not the amount.
 #' @param n.analogs Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.
 #' @param sel.fun Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n.neig = 1}.
 #' Current values are \code{"random"} (the default) and \code{"mean"}. See details.
 #' @param analog.dates Logical flag indicating whether the dates of the analogs should be returned. See the analogs section.
 #' @param wet.threshold Value below which precipitation amount is considered zero 
 #' @param n.pcs Integer indicating the number of EOFs to be used as predictors
-#' @param cross.val Should cross-validation be performed? methods available are leave-one-out ("loocv") and k-fold ("kfold"). The default 
-#' option ("none") does not perform cross-validation.
-#' @param folds Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
-#' the corresponding fold.
+#' @param cross.val Should cross-validation be performed? methods available are leave-one-out (\code{"loocv"})
+#'  and k-fold (\code{"kfold"}). Default to \code{"none"}, which does not perform cross-validation.
+#' @param folds Only requiered if \code{cross.val = "kfold"}, otherwise ignored. A list of vectors,
+#'  each containing the years to be grouped in the corresponding fold.
 #' @template templateParallelParams 
 #' 
 #' @details
@@ -73,7 +74,7 @@
 #' @export 
 #' @family downscaling
 #' @author J Bedia, M Iturbide
-#' @importFrom transformeR parallelCheck getYearsAsINDEX
+#' @importFrom transformeR parallelCheck getYearsAsINDEX getDim
 
 downscale <- function(y,
                       x,
@@ -95,11 +96,7 @@ downscale <- function(y,
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
       modelPars <- ppModelSetup(y, x, newdata)
       obs.orig <- y
-      if ("station" %in% attr(y$Data, "dimensions")){
-            stations <-  TRUE
-      } else {
-            stations <- FALSE
-      }
+      stations <- ifelse("station" %in% getDim(y), TRUE, FALSE)
       if (cross.val == "none") {
             down <- switch(method,
                            "analogs" = analogs(y = y,
@@ -129,7 +126,7 @@ downscale <- function(y,
                         year.ind <- which(years == unique(years)[i])
                         modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
                         modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
-                        if (stations == TRUE) {
+                        if (isTRUE(stations)) {
                               y$Data <- obs.orig$Data[-year.ind,]
                         } else {
                               y$Data <- obs.orig$Data[-year.ind,,]
@@ -138,20 +135,20 @@ downscale <- function(y,
                         message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
                               if (method == "analogs") {
                                     suppressMessages(
-                                    analogs(y = y,
-                                    modelPars = modelPars,
-                                    n.analogs = n.analogs,
-                                    sel.fun = sel.fun,
-                                    analog.dates = analog.dates,
-                                    parallel.pars = parallel.pars)
+                                          analogs(y = y,
+                                                  modelPars = modelPars,
+                                                  n.analogs = n.analogs,
+                                                  sel.fun = sel.fun,
+                                                  analog.dates = analog.dates,
+                                                  parallel.pars = parallel.pars)
                                     )
                               } else if (method == "glm") {
                                     suppressMessages(
-                                    glimpr(y = y,
-                                    modelPars = modelPars,
-                                    wet.threshold = wet.threshold,
-                                    n.pcs = n.pcs,
-                                    simulate = simulate)
+                                          glimpr(y = y,
+                                                 modelPars = modelPars,
+                                                 wet.threshold = wet.threshold,
+                                                 n.pcs = n.pcs,
+                                                 simulate = simulate)
                                     )
                               }
                         }
@@ -169,31 +166,31 @@ downscale <- function(y,
                         year.ind <- unname(abind(year.ind, along = 1))
                         modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
                         modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
-                        if (stations == TRUE) {
+                        if (isTRUE(stations)) {
                               y$Data <- obs.orig$Data[-year.ind,]
                         } else {
                               y$Data <- obs.orig$Data[-year.ind,,]
                         }
-                        attr(y$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
+                        attr(y$Data, "dimensions") <- getDim(obs.orig)
                         message("Validation ", i, ", ", length(folds) - i, " remaining")
-                              if (method == "analogs") {
-                                    suppressMessages(
-                                          analogs(y = y,
-                                                modelPars = modelPars,
-                                                n.analogs = n.analogs,
-                                                sel.fun = sel.fun,
-                                                analog.dates = analog.dates,
-                                                parallel.pars = parallel.pars)
-                                    )
-                              } else if (method == "glm") {
-                                    suppressMessages(
-                                          glimpr(y = y,
-                                                modelPars = modelPars,
-                                                wet.threshold = wet.threshold,
-                                                n.pcs = n.pcs)
-                                    )
-                              }
-                        })
+                        if (method == "analogs") {
+                              suppressMessages(
+                                    analogs(y = y,
+                                            modelPars = modelPars,
+                                            n.analogs = n.analogs,
+                                            sel.fun = sel.fun,
+                                            analog.dates = analog.dates,
+                                            parallel.pars = parallel.pars)
+                              )
+                        } else if (method == "glm") {
+                              suppressMessages(
+                                    glimpr(y = y,
+                                           modelPars = modelPars,
+                                           wet.threshold = wet.threshold,
+                                           n.pcs = n.pcs)
+                              )
+                        }
+                  })
                   down <- unname(do.call("abind", c(downi, along = 1)))
             }
       }
