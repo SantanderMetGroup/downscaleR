@@ -1,6 +1,7 @@
-downscaleR 1.3-4
+New in downscaleR
 =================
 
+* Implementation of new bias correction methods
 * Bug fix in getYearsAsIndex for annually-aggregated, year-crossing grids
 * Other minor bug fixes and enhancements
 

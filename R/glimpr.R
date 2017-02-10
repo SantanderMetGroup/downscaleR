@@ -31,12 +31,9 @@
 #' @keywords internal
 
 glimpr <- function(y = y, modelPars = modelPars, simulate =  c("none", "loocv", "kfold"), return.models = FALSE, wet.threshold = wet.threshold, n.pcs = n.pcs) {
-      #modelPars <- ppModelSetup(y, x, sim)
       if (is.null(n.pcs)) {
             n.pcs <-  dim(modelPars$pred.mat)[2]
       }
-      #pred <- NULL
-      #sim <- NULL
       # Prepare predictand matrix
       ymat <- if (isTRUE(modelPars$stations)) {
             y$Data
