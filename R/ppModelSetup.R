@@ -23,8 +23,7 @@
 #' @importFrom abind asub adrop
 #' @importFrom stats sd
 #' @importFrom transformeR array3Dto2Dmat getDim getShape
-
-
+#' @importFrom magrittr %>%
 
 ppModelSetup <- function(y, x, newdata) {
       stations <- ifelse("station" %in% getDim(y), TRUE, FALSE)
@@ -34,62 +33,54 @@ ppModelSetup <- function(y, x, newdata) {
             y.pred <- attr(x, "yCoords")
             time.pred <- attr(x, "dates_start")
       } else {
-            if (length(dim(x$Data)) < 3) {
-                  stop("'x' must be a grid/multigrid\nSingle point selections are not allowed")
+            if (length(getShape(x)) < 3) {
+                  stop("'x' must be a grid/multigrid\nSingle point selections are not allowed", call. = FALSE)
             }
             use.PCs <- FALSE
             x.pred <- x$xyCoords$x
             y.pred <- x$xyCoords$y
-            if (is.null(names(x$Dates))) {
-                  time.pred <- x$Dates[[1]]$start   
-            } else {
-                  time.pred <- x$Dates$start 
-            }
+            time.pred <- x$Dates$start
+            if (is.null(time.pred)) time.pred <- x$Dates[[1]]$start   
       }
       # Georef simulations
-      if (length(dim(newdata$Data)) < 3) {
-            stop("'x' must be a grid/multigrid\nSingle point selections are not allowed")
+      if (length(getShape(newdata)) < 3) {
+            stop("'x' must be a grid/multigrid\nSingle point selections are not allowed", call. = FALSE)
       }
       x.sim <- newdata$xyCoords$x
       y.sim <- newdata$xyCoords$y
       # Spatial consistency check x-newdata
       if (!isTRUE(all.equal(x.pred, x.sim, tolerance = 1e-03)) || !isTRUE(all.equal(y.pred, y.sim, tolerance = 1e-03))) {
-            stop("'x' and 'newdata' datasets are not spatially consistent")
+            stop("'x' and 'newdata' datasets are not spatially consistent", call. = FALSE)
       }
       # Temporal matching check (y-x)
       if (!identical(as.POSIXlt(y$Dates$start)$yday, as.POSIXlt(time.pred)$yday) || !identical(as.POSIXlt(y$Dates$start)$year, as.POSIXlt(time.pred)$year)) {
-            stop("Observed and predicted time series should match in start/end and length")
+            stop("Observed and predicted time series should match in start/end and length", call. = FALSE)
       }     
       # Date replacement
       new.dates <- dateReplacement(y$Dates, newdata$Dates)
       y <- time.pred <- NULL
       # Number of variables x-newdata
-      if (isTRUE(use.PCs)) {
-            n.vars <- ifelse(length(x) > 1, length(x) - 1, 1)
+      n.vars <- if (isTRUE(use.PCs)) {
+            ifelse(length(x) > 1, length(x) - 1, 1)
       } else {
-            n.vars <- length(x$Variable$varName)
+            length(x$Variable$varName)
       }
       if (length(newdata$Variable$varName) != n.vars) {
-            stop("The number of variables of predictor (x) and newdata does not match")      
+            stop("The number of variables of predictor (x) and newdata does not match", call. = FALSE)      
       }
       # Scaling and centering of simulation data. Parameters are inherited from the predictors
       if (isTRUE(use.PCs)) {
-            mu.list <- lapply(1:n.vars, function(k) attributes(x[[k]][[1]]$orig)$"scaled:center")# acceso a los datos x cambiante, comprobar
-            sigma.list <- lapply(1:n.vars, function(k) attributes(x[[k]][[1]]$orig)$"scaled:scale")# acceso a los datos x cambiante, comprobar
+            mu.list <- lapply(1:n.vars, function(k) attributes(x[[k]][[1]]$orig)$"scaled:center")
+            sigma.list <- lapply(1:n.vars, function(k) attributes(x[[k]][[1]]$orig)$"scaled:scale")
             pred.mat <- x$COMBINED[[1]]$PCs
-            if (is.null(pred.mat)) {
-                  pred.mat <- x[[1]][[1]]$PCs
-            }      
+            if (is.null(pred.mat)) pred.mat <- x[[1]][[1]]$PCs
       } else {
-            x <- redim(x, member = FALSE)
+            x <- redim(x, member = FALSE, var = TRUE)
             # x rescaled matrix
-            dimNames <- getDim(x)
-            var.dim.index <- grep("var", dimNames) 
             n.vars <- getShape(x, "var")
+            varNames <- x$Variable$varName
             Xsc.list <- lapply(1:n.vars, function(idx) {
-                  aux <- adrop(asub(x$Data, idx, var.dim.index, drop = FALSE), drop = var.dim.index)
-                  attr(aux, "dimensions") <- dimNames[-var.dim.index]
-                  aux <- array3Dto2Dmat(aux)   
+                  aux <- suppressWarnings(subsetGrid(x, var = varNames[idx], drop = TRUE)[["Data"]]) %>% array3Dto2Dmat()
                   mu <- mean(aux, na.rm = TRUE)
                   sigma <- sd(aux, na.rm = TRUE)
                   aux <- (aux - mu) / sigma
@@ -105,31 +96,15 @@ ppModelSetup <- function(y, x, newdata) {
             Xsc.list <- NULL
       }
       # Scaling and centering of simulation data
-      multi.member <- ifelse("member" %in% getDim(newdata), TRUE, FALSE)
-      newdata <- redim(newdata)
-      dimNames.sim <- getDim(newdata)
-      # if ("var" %in% dimNames.sim) { 
-      # mes <- FALSE
-      var.dim.index <- grep("var", dimNames.sim)
-      simsc.list.pre <- lapply(1:n.vars, function(idx) {
-            adrop(asub(newdata$Data, idx, var.dim.index, drop = FALSE), drop = var.dim.index)
-      })
-      mem.dim.index <- grep("member", dimNames.sim[-var.dim.index])
+      newdata <- redim(newdata, var = TRUE, member = TRUE)
       n.mem <- getShape(newdata, "member")
-      simsc.list <- lapply(1:n.vars, function(i) {
-            o <- if (isTRUE(use.PCs)) {
-                  which(newdata$Variable$varName == names(x)[-length(x)][i])      
-            } else {
-                  which(newdata$Variable$varName == x$Variable$varName[i])
-            }
-            out <- lapply(1:n.mem, function(id.mem) {
-                  aux <- adrop(asub(simsc.list.pre[[o]], id.mem, mem.dim.index, drop = FALSE), drop = mem.dim.index)
-                  attr(aux, "dimensions") <- dimNames.sim[-match(c("var","member"), dimNames.sim)]
-                  aux <- array3Dto2Dmat(aux)
-                  aux <- (aux - mu.list[[i]]) / sigma.list[[i]]
-                  return(aux)
+      varNames <- newdata$Variable$varName
+      simsc.list <- lapply(1:n.vars, function(idx) {
+            a <- suppressWarnings(subsetGrid(newdata, var = varNames[idx], drop = TRUE)) %>% redim(member = TRUE)
+            lapply(1:n.mem, function(id.mem) {
+                  aux <- subsetGrid(a, members = id.mem, drop = TRUE)[["Data"]] %>% array3Dto2Dmat()
+                  (aux - mu.list[[idx]]) / sigma.list[[idx]]
             })
-            return(out)
       })
       # newdata 2D matrix
       sim.mat <- vector("list", n.mem)
@@ -139,12 +114,9 @@ ppModelSetup <- function(y, x, newdata) {
       }
       simsc.list <- NULL
       sim.dataset <- attr(newdata, "dataset")
-      sim.dates <- newdata$Dates
       init.dates <- mems <- NULL
-      if (multi.member) {
-            init.dates <- newdata$InitializationDates
-            mems <- newdata$Members
-      }
+      if (!is.null(newdata$InitializationDates)) init.dates <- newdata$InitializationDates
+      if (!is.null(newdata$Members)) mems <- newdata$Members
       newdata <- NULL
       # Projection of simulated grid onto the predictor EOFs       
       if (isTRUE(use.PCs)) {
@@ -157,6 +129,7 @@ ppModelSetup <- function(y, x, newdata) {
             })
       }
       x <- NULL
+      multi.member <- ifelse(is.null(mems), FALSE, TRUE)
       return(list("stations" = stations,
                   "multi.member" = multi.member,
                   "pred.mat" = pred.mat,
