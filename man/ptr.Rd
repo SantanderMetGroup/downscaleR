@@ -22,4 +22,3 @@ Implementation of Power transformation of precipitation method for bias correcti
 S. Herrera and B. Szabo-Takacs
 }
 \keyword{internal}
-

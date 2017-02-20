@@ -42,4 +42,3 @@ Implementation of several standard bias correction methods
 M. Iturbide
 }
 \keyword{internal}
-

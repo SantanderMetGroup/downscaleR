@@ -84,9 +84,6 @@ plotMeanGrid(simBC)
 par(mfrow = c(1,1))
 }
 }
-\author{
-S. Herrera
-}
 \references{
 \itemize{
 \item Hempel, S., Frieler, K., Warszawski, L., Schewe, J., and Piontek, F. (2013) A trend-preserving bias correction: the ISI-MIP approach, Earth Syst. Dynam., 4, 219-236
@@ -99,4 +96,6 @@ Other downscaling: \code{\link{analogs}},
   \code{\link{biasCorrection}}, \code{\link{downscale}},
   \code{\link{glimpr}}
 }
-
+\author{
+S. Herrera
+}

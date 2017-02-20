@@ -13,7 +13,7 @@
             er <- NULL
             return(er)
       })
-      packageStartupMessage("###################################################################\nIMPORTANT NOTE: Since downscaleR v2.0-0, the new dependency package\ntransformeR is introduced. Data manipulation functions are now part\nof transformeR: <https://github.com/SantanderMetGroup/transformeR>\n###################################################################")
+      # packageStartupMessage("###################################################################\nIMPORTANT NOTE: Since downscaleR v2.0-0, the new dependency package\ntransformeR is introduced. Data manipulation functions are now part\nof transformeR: <https://github.com/SantanderMetGroup/transformeR>\n###################################################################")
       if (!is.null(con)) {
             b <- readLines(textConnection(con))
             latest.ver <- package_version(gsub("Version: ", "", b[grep("Version", b)]))

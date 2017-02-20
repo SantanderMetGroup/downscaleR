@@ -21,4 +21,3 @@ Sets the 'dimensions' attribute of model out Data objects after downscaling
 J. Bedia
 }
 \keyword{internal}
-

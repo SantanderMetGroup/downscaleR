@@ -20,4 +20,3 @@ Implementation of Delta method for bias correction
 S. Herrera and M. Iturbide
 }
 \keyword{internal}
-

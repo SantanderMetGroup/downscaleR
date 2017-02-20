@@ -29,4 +29,3 @@ Implementation of Empirical Quantile Mapping method for bias correction
 S. Herrera and M. Iturbide
 }
 \keyword{internal}
-

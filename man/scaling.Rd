@@ -23,4 +23,3 @@ Implementation of Scaling method for bias correction
 S. Herrera and M. Iturbide
 }
 \keyword{internal}
-

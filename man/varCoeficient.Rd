@@ -20,4 +20,3 @@ preprocess to power transformation of precipitation
 S. Herrera and B. Szabo-Takacs
 }
 \keyword{internal}
-

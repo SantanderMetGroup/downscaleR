@@ -43,4 +43,3 @@ mapping of EOFs onto the newdata grids.
 J. Bedia
 }
 \keyword{internal}
-

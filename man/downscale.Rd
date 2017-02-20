@@ -101,9 +101,7 @@ particular case of large multimember datasets or large grids.
  
 Parallel computing is currently not available for Windows machines.
 }
-\author{
-J Bedia, M Iturbide
-}
+
 \seealso{
 \code{\link[transformeR]{prinComp}} for details on principal component/EOF analysis,
 \code{rescaleMonthlyMeans} for data pre-processing,
@@ -114,4 +112,6 @@ Other downscaling: \code{\link{analogs}},
   \code{\link{biasCorrection}}, \code{\link{glimpr}},
   \code{\link{isimip}}
 }
-
+\author{
+J Bedia, M Iturbide
+}

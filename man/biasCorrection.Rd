@@ -131,6 +131,7 @@ qqmap to alleviate the problems arising when the dry day frequency in the raw mo
  Thus, caution must be taken to ensure that the correct bias correction is being undertaken when dealing with
  non-standard variables.
 }
+
 \examples{
 \dontrun{
 require(transformeR)
@@ -162,9 +163,6 @@ lines(c(0,100), c(0,100))
 par(mfrow = c(1,1))
 }
 }
-\author{
-S. Herrera and M. Iturbide
-}
 \references{
 \itemize{
 \item R.A.I. Wilcke, T. Mendlik and A. Gobiet (2013) Multi-variable error correction of regional climate models. Climatic Change, 120, 871-887
@@ -183,4 +181,6 @@ Other downscaling: \code{\link{analogs}},
   \code{\link{downscale}}, \code{\link{glimpr}},
   \code{\link{isimip}}
 }
-
+\author{
+S. Herrera and M. Iturbide
+}

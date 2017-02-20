@@ -1,8 +1,7 @@
 New in downscaleR
 =================
 
-* Implementation of new bias correction methods
-* Bug fix in getYearsAsIndex for annually-aggregated, year-crossing grids
+* Minor bug fix in ppModelSetup internal
 * Other minor bug fixes and enhancements
 
 

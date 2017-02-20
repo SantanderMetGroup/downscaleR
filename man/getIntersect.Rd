@@ -13,4 +13,3 @@ Get the common period of the objects obs and prd
 S. Herrera
 }
 \keyword{internal}
-

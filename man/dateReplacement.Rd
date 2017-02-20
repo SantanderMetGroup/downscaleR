@@ -29,4 +29,3 @@ that of the downscaled variable (e.g., suppose that instantaneous surface temper
  @keywords internal
  @export
 }
-

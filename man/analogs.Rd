@@ -47,9 +47,6 @@ The argument \code{sel.fun} controls how the analogs are constructed when consid
 \code{n.analogs} > 1). In this case the \code{"random"} choice randomly selects one of the \code{n.analogs} neighbours,
  while the \code{"mean"} choice will compute their average.
 }
-\author{
-J. Bedia
-}
 \references{
 Benestad, R.E., Hanssen-Bauer, I. and Chen, D., 2008. Empirical-Statistical Downscaling,
  1st ed. World Scientific Publishing, Singapore
@@ -69,5 +66,7 @@ Other downscaling: \code{\link{biasCorrection}},
   \code{\link{downscale}}, \code{\link{glimpr}},
   \code{\link{isimip}}
 }
+\author{
+J. Bedia
+}
 \keyword{internal}
-

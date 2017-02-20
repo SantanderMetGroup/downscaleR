@@ -12,15 +12,16 @@ Imports:
     parallel,
     grDevices,
     graphics,
-    stats
+    stats,
+    magrittr
 Suggests:
     loadeR,
     loadeR.ECOMS,
     visualizeR
 Type: Package
 Title: Bias correction and statistical downscaling methods
-Version: 2.0-0
-Date: 2017-02-10
+Version: 2.0-1
+Date: 2017-02-20
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [aut]",
     "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
@@ -40,4 +41,4 @@ Description: Tools for climate data calibration (bias correction, qq-mapping...)
       Focused on daily data, the package is conceived for dealing also with ensemble seasonal forecasts.
 License: GPL (>= 3)
 LazyData: true
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

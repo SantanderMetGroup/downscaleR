@@ -22,13 +22,12 @@ glimpr(y = y, modelPars = modelPars, simulate = c("none", "loocv",
 \description{
 Implementation of GLM's to downscale precipitation data
 }
-\author{
-J Bedia, M Iturbide
-}
 \seealso{
 Other downscaling: \code{\link{analogs}},
   \code{\link{biasCorrection}}, \code{\link{downscale}},
   \code{\link{isimip}}
 }
+\author{
+J Bedia, M Iturbide
+}
 \keyword{internal}
-
