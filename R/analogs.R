@@ -108,10 +108,10 @@ analogs <- function(y = y,
                         }
                         return(aux.mat)
                   })
-                  message("[", Sys.time(), "] Done.")   
+                  # message("[", Sys.time(), "] Done.")   
             } else {
                   out.list <- lapply(1:length(d.list), function(k) y$Data[d.list[[k]], ])
-                  message("[", Sys.time(), "] Done.")   
+                  # message("[", Sys.time(), "] Done.")   
             }
       } else {
             obs.mat <- array3Dto2Dmat(y$Data)
@@ -128,12 +128,12 @@ analogs <- function(y = y,
                         aux.mat <- mat2Dto3Darray(aux.mat, obs.coords$x, obs.coords$y)
                         return(aux.mat)
                   })
-                  message("[", Sys.time(), "] Done.")   
+                  # message("[", Sys.time(), "] Done.")   
             } else {
                   out.list <- lapply(1:length(d.list), function(k) {
                         mat2Dto3Darray(obs.mat[d.list[[k]], ], obs.coords$x, obs.coords$y)
                   })
-                  message("[", Sys.time(), "] Done.")   
+                  # message("[", Sys.time(), "] Done.")   
             }
             obs.mat <- NULL
       }
