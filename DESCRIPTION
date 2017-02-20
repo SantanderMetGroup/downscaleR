@@ -1,7 +1,7 @@
 Package: downscaleR
 Depends:
     R(>= 3.1.0),
-    transformeR(>= 0.0-1)
+    transformeR(>= 0.0-5)
 Imports:
     abind,
     utils,
