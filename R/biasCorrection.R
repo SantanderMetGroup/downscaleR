@@ -23,11 +23,12 @@
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
 #' \code{newdata} that are out of the range of \code{x}. Extrapolation is applied only to the \code{"eqm"} method, 
 #' thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).
-#' 
 #' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 #' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 #' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
 #' percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.
+#' @param join.members Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
+#'  or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).
 #'  
 #' @details
 #' 
@@ -159,10 +160,13 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            folds = NULL,
                            window = NULL,
                            scaling.type = c("additive", "multiplicative"),
-                           wet.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
-                           theta = .95){
+                           wet.threshold = 1,
+                           n.quantiles = NULL,
+                           extrapolation = c("none", "constant"), 
+                           theta = .95,
+                           join.members = FALSE) {
       nwdatamssg <- TRUE
-      if(is.null(newdata)) {
+      if (is.null(newdata)) {
             newdata <- x 
             nwdatamssg <- FALSE
       }
@@ -170,7 +174,12 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
       cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
-      if(cross.val == "none"){
+      stopifnot(is.logical(join.members))
+      if (!"station" %in% getDim(y) & isTRUE(join.members)) {
+            join.members <- FALSE
+            warning("The option 'join.members=TRUE' is currently not supported for station data predictand. It was reset to 'FALSE'.")
+      }
+      if (cross.val == "none") {
             output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
                                        precipitation = precipitation,
                                        method = method,
@@ -179,8 +188,9 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                        pr.threshold = wet.threshold, 
                                        n.quantiles = n.quantiles, 
                                        extrapolation = extrapolation, 
-                                       theta = theta)
-      }else{
+                                       theta = theta,
+                                       join.members = join.members)
+      } else {
             if (nwdatamssg) {
                   message("'newdata' will be ignored for cross-validation")
             }
@@ -196,16 +206,16 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                         rest.years <- setdiff(unlist(years), target.year)
                         station <- FALSE
                         if ("station" %in% getDim(y)) station <- TRUE
-                        yy <- redim(y, member = F)
-                        if (method == "delta") {
-                              yy <- subsetGrid(yy, years = target.year, drop = FALSE)
-                        }else{
-                              yy <- subsetGrid(yy, years = rest.years, drop = FALSE)
+                        yy <- redim(y, member = FALSE)
+                        yy <- if (method == "delta") {
+                              subsetGrid(yy, years = target.year, drop = FALSE)
+                        } else {
+                              subsetGrid(yy, years = rest.years, drop = FALSE)
                         }
                         if (isTRUE(station)) {
                               yy$Data <- adrop(yy$Data, drop = 3)
                               attr(yy$Data, "dimensions") <- c(setdiff(getDim(yy), c("lat", "lon")), "station")
-                        }else{
+                        } else {
                               yy <- redim(yy, drop = TRUE)
                         }
                         newdata2 <- subsetGrid(x, years = target.year)
@@ -216,7 +226,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                           window = window,
                                           scaling.type = scaling.type,
                                           pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
-                                          theta = theta)
+                                          theta = theta, join.members = join.members)
                   })
                   al <- which(getDim(x) == "time")
                   Data <- sapply(output.list, function(n) unname(n$Data), simplify = FALSE)
@@ -238,7 +248,8 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                              window = NULL,
                              scaling.type = c("additive", "multiplicative"),
                              pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
-                             theta = .95){
+                             theta = .95,
+                             join.members = join.members) {
       method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci", "ptr", "variance"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
@@ -251,9 +262,9 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       #             precip <- TRUE
       #         }
       precip <- precipitation
-      if ("station" %in% attr(obso$Data, "dimensions")) {
+      if ("station" %in% getDim(obso)) {
             station <- TRUE
-            obs <- redim(obso, member = F)
+            obs <- redim(obso, member = FALSE)
             x <- obs$xyCoords[,1]
             y <- obs$xyCoords[,2]
             ito <- which(getDim(obs) == "time")
@@ -266,18 +277,26 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
             ind1 <- expand.grid(1:length(y), 1:length(x))
             ind <- cbind(ind1, ind1[,2])
       }
-      
       bc <- obso
-      pred <- redim(pred, member = TRUE, runtime = TRUE)
-      sim <- redim(sim, member = TRUE, runtime = TRUE)
+      if (isTRUE(join.members)) {
+            n.mem.join <- getShape(pred, "member")
+            n.time.join <- getShape(pred, "time")
+            aux.ltime <- lapply(1:n.mem.join, function(x) {
+                  subsetGrid(pred, members = x)
+            })
+            pred <- do.call("bindGrid.time", aux.ltime)
+      }
+      pred <- redim(pred, member = TRUE, runtime = FALSE)
+      sim <- if (!is.null(sim)) {
+            redim(sim, member = TRUE, runtime = FALSE)
+      } else {
+            pred
+      }
       itp <- which(getDim(pred) == "time")
       ito <- which(getDim(obs) == "time")
-      
-      if (method != "delta" & dim(obs$Data)[ito] != dim(pred$Data)[itp]) stop("y and x do not have the same time series length")
-      
+      if (method != "delta" & dim(obs$Data)[ito] != dim(pred$Data)[itp]) stop("y and x do not have the same length")
       n.run <- dim(sim$Data)[1]
       n.mem <- dim(sim$Data)[2]
-      
       if (method == "delta") {
             run <- array(dim = c(1, n.mem, dim(obs$Data)))
       } else {
@@ -296,7 +315,6 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                   mem <- array(dim = c(1, 1, dim(sim$Data)[its], dim(obs$Data)[-ito]))
             }
             lmem <- lapply(1:n.mem, function(l){ # loop for members
-                  
                   p <- subsetGrid(pred, members = l, drop = FALSE)
                   s <- subsetGrid(sim, members = l, drop = FALSE)
                   message("[", Sys.time(), "] Bias correcting member ", l, " out of ", n.mem, ".")
@@ -305,8 +323,8 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                         for (i in 1:nrow(ind)) {
                               suppressWarnings(
                                     mem[,,,ind[i,1],ind[i,2]] <- biasCorrection1D(obs$Data[,ind[i,1],ind[i,2]],
-                                                                                  subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1],
-                                                                                  subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1], 
+                                                                                  subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = TRUE, drop = FALSE)$Data[1,1,,1,1],
+                                                                                  subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = TRUE, drop = FALSE)$Data[1,1,,1,1], 
                                                                                   method = method,
                                                                                   scaling.type = scaling.type,
                                                                                   precip = precip,
@@ -370,8 +388,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                                           } else {
                                                 piece <- indObs[(breaks[d - 1] + 1):breaks[d]]
                                           }
-                                          suppressWarnings(indObsWindow[((d - 1)*(head + step + tail) + 1):(d*(head + step + tail))] <-  (min(piece, na.rm = TRUE) - floor(head)):(max(piece, na.rm = TRUE) + floor(tail))
-                                          )
+                                          suppressWarnings(indObsWindow[((d - 1) * (head + step + tail) + 1):(d * (head + step + tail))] <- (min(piece, na.rm = TRUE) - floor(head)):(max(piece, na.rm = TRUE) + floor(tail)))
                                     }
                                     if (isTRUE(annual)) {
                                           indObsWindow[which(indObsWindow <= 0)] <- 1
@@ -421,10 +438,16 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
 #       attr(bc$Data, "dimensions") <- c(setdiff(attr(sim$Data, "dimensions"), c("lat", "lon")), setdiff(attr(obso$Data, "dimensions"), "time"))
       attr(bc$Variable, "correction") <- method
-      ##########################
+      
+      ## Recover the member dimension in join.member option:
+      if (isTRUE(join.members)) {
+            aux.list <- lapply(1:n.mem.join, function(m) {
+                  subsetDimension(bc, dimension = "time", indices = ((m - 1) * n.time.join + 1):(m * n.time.join))
+            })
+            bc <- do.call("bindGrid.member", aux.list)
+      }
       bc <- redim(bc, drop = TRUE)
       message("[", Sys.time(), "] Done.")
-      ##########################
       bc$Dates <- sim$Dates
       bc$InitializationDates <- sim$InitializationDates
       bc$Members <- sim$Members
