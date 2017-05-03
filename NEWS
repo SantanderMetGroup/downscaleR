@@ -1,7 +1,7 @@
 New in downscaleR
 =================
 
-* Minor bug fix in ppModelSetup internal
+* Added `join.members` option in `biasCorrection` to use the joint ensemble distribution for correction 
 * Other minor bug fixes and enhancements
 
 

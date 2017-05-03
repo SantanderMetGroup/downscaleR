@@ -121,7 +121,7 @@
 #'
 #' \item O. Gutjahr and G. Heinemann (2013) Comparing precipitation bias correction methods for high-resolution regional climate simulations using COSMO-CLM, Theoretical and Applied Climatology, 114, 511-529
 #' }
-#' @author S. Herrera and M. Iturbide
+#' @author S. Herrera, M. Iturbide, J. Bedia
 #' @export
 #' @examples \dontrun{
 #' require(transformeR)
@@ -175,7 +175,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
       stopifnot(is.logical(join.members))
-      if (!"station" %in% getDim(y) & isTRUE(join.members)) {
+      if ("station" %in% getDim(y) & isTRUE(join.members)) {
             join.members <- FALSE
             warning("The option 'join.members=TRUE' is currently not supported for station data predictand. It was reset to 'FALSE'.")
       }
@@ -244,23 +244,15 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
 #' @importFrom transformeR redim subsetGrid getDim
 
 biasCorrectionXD <- function(y, x, newdata, precipitation, 
-                             method = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"),
+                             method = method,
                              window = NULL,
                              scaling.type = c("additive", "multiplicative"),
                              pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
                              theta = .95,
                              join.members = join.members) {
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci", "ptr", "variance"))
-      scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
-      extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
       obso <- y
       pred <- x
       sim <- newdata
-      #       if (!any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))) {
-      #             precip <- FALSE    
-      #         } else {
-      #             precip <- TRUE
-      #         }
       precip <- precipitation
       if ("station" %in% getDim(obso)) {
             station <- TRUE
@@ -279,22 +271,18 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       }
       bc <- obso
       if (isTRUE(join.members)) {
-            n.mem.join <- getShape(pred, "member")
-            n.time.join <- getShape(pred, "time")
-            aux.ltime <- lapply(1:n.mem.join, function(x) {
-                  subsetGrid(pred, members = x)
-            })
-            pred <- do.call("bindGrid.time", aux.ltime)
+            pred <- flatMemberDim(pred)
+            sim <- flatMemberDim(sim)
       }
-      pred <- redim(pred, member = TRUE, runtime = FALSE)
+      pred <- redim(pred, member = TRUE, runtime = TRUE)
       sim <- if (!is.null(sim)) {
-            redim(sim, member = TRUE, runtime = FALSE)
+            redim(sim, member = TRUE, runtime = TRUE)
       } else {
             pred
       }
-      itp <- which(getDim(pred) == "time")
+      # itp <- which(getDim(pred) == "time")
       ito <- which(getDim(obs) == "time")
-      if (method != "delta" & dim(obs$Data)[ito] != dim(pred$Data)[itp]) stop("y and x do not have the same length")
+      # if (method != "delta" & dim(obs$Data)[ito] != dim(pred$Data)[itp]) stop("y and x do not have the same length")
       n.run <- dim(sim$Data)[1]
       n.mem <- dim(sim$Data)[2]
       if (method == "delta") {
@@ -314,10 +302,14 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
             } else {
                   mem <- array(dim = c(1, 1, dim(sim$Data)[its], dim(obs$Data)[-ito]))
             }
-            lmem <- lapply(1:n.mem, function(l){ # loop for members
+            lmem <- lapply(1:n.mem, function(l) { # loop for members
                   p <- subsetGrid(pred, members = l, drop = FALSE)
                   s <- subsetGrid(sim, members = l, drop = FALSE)
-                  message("[", Sys.time(), "] Bias correcting member ", l, " out of ", n.mem, ".")
+                  if (!isTRUE(join.members)) {
+                        message("[", Sys.time(), "] Bias-correcting member ", l, " out of ", n.mem, "...")
+                  } else {
+                        message("[", Sys.time(), "] Bias-correcting ", attr(pred, "orig.mem.shape"), " members considering their joint distribution...")
+                  }
                   if (is.null(window)) {
                         # Apply bias correction methods
                         for (i in 1:nrow(ind)) {
@@ -427,30 +419,32 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                         }
                   }
                   return(mem)
-            }) #end loop for members
-            #                   }else{
-            #                         ############# members jointly
-            #                   }
+            }) 
             run[,,,,] <- abind(lmem, along = 2)
             return(run)
       }) #end loop for runtimes
       bc$Data <- unname(abind(lrun, along = 1))
       attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
-#       attr(bc$Data, "dimensions") <- c(setdiff(attr(sim$Data, "dimensions"), c("lat", "lon")), setdiff(attr(obso$Data, "dimensions"), "time"))
-      attr(bc$Variable, "correction") <- method
-      
-      ## Recover the member dimension in join.member option:
+      ## Recover the member dimension when join.members=TRUE:
       if (isTRUE(join.members)) {
-            aux.list <- lapply(1:n.mem.join, function(m) {
-                  subsetDimension(bc, dimension = "time", indices = ((m - 1) * n.time.join + 1):(m * n.time.join))
+            nmem <- attr(pred, "orig.mem.shape")
+            ntimes <- attr(pred, "orig.time.shape")
+            bc$Dates <- lapply(bc$Dates, "rep", nmem)
+            aux.list <- lapply(1:nmem, function(m) {
+                  aux <- subsetDimension(grid = bc, dimension = "time", indices = ((m - 1) * ntimes + 1):(m * ntimes))
+                  aux$InitializationDates <- newdata$InitializationDates[[m]]
+                  aux$Members <- newdata$Members[[m]]
+                  return(aux)
             })
             bc <- do.call("bindGrid.member", aux.list)
+      } else {
+            bc$Dates <- sim$Dates
+            bc$InitializationDates <- sim$InitializationDates
+            bc$Members <- sim$Members
       }
+      attr(bc$Variable, "correction") <- method
       bc <- redim(bc, drop = TRUE)
       message("[", Sys.time(), "] Done.")
-      bc$Dates <- sim$Dates
-      bc$InitializationDates <- sim$InitializationDates
-      bc$Members <- sim$Members
       return(bc)
 }
 #end
@@ -922,4 +916,16 @@ varCoeficient <- function(delta,data,cv){
 #end
 
 
+flatMemberDim <- function(grid) {
+      grid <- redim(grid, member = TRUE)     
+      n.mem.join <- getShape(grid, "member")
+      n.time.join <- getShape(grid, "time")
+      aux.ltime <- lapply(1:n.mem.join, function(x) {
+            subsetGrid(grid, members = x)
+      })
+      out <- do.call("bindGrid.time", aux.ltime)
+      attr(out, "orig.mem.shape") <- n.mem.join
+      attr(out, "orig.time.shape") <- n.time.join
+      return(out)
+}
 

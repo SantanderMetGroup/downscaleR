@@ -8,7 +8,8 @@ biasCorrection(y, x, newdata = NULL, precipitation = FALSE,
   method = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"),
   cross.val = c("none", "loocv", "kfold"), folds = NULL, window = NULL,
   scaling.type = c("additive", "multiplicative"), wet.threshold = 1,
-  n.quantiles = NULL, extrapolation = c("none", "constant"), theta = 0.95)
+  n.quantiles = NULL, extrapolation = c("none", "constant"), theta = 0.95,
+  join.members = FALSE)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -53,6 +54,9 @@ thus, this argument is ignored if other bias correction method is selected. Defa
 above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
 percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.}
+
+\item{join.members}{Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
+or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).}
 }
 \value{
 A calibrated grid of the same spatio-temporal extent than the input \code{"y"}
@@ -182,5 +186,5 @@ Other downscaling: \code{\link{analogs}},
   \code{\link{isimip}}
 }
 \author{
-S. Herrera and M. Iturbide
+S. Herrera, M. Iturbide, J. Bedia
 }

@@ -1,7 +1,7 @@
 Package: downscaleR
 Depends:
     R(>= 3.1.0),
-    transformeR(>= 0.0-5)
+    transformeR(>= 0.0.9)
 Imports:
     abind,
     utils,
@@ -20,18 +20,18 @@ Suggests:
     visualizeR
 Type: Package
 Title: Bias correction and statistical downscaling methods
-Version: 2.0-1
-Date: 2017-02-20
+Version: 2.0.2
+Date: 2017-05-03
 Authors@R: as.person(c(
-    "Santander Meteorology Group <http://meteo.unican.es> [aut]",
-    "Joaquin Bedia <bediaj@unican.es> [ctb, cre]",
+    "Santander Meteorology Group <http://meteo.unican.es> [ctb]",
+    "Joaquin Bedia <bediaj@unican.es> [aut, cre]",
     "Jonas Bhend <Jonas.Bhend@meteoswiss.ch> [ctb]",
     "Matteo De Felice <matteo.defelice@enea.it> [ctb]",
     "Jesus Fernandez <fernandej@unican.es> [ctb]",
     "Maria Dolores Frias <friasmd@unican.es> [ctb]",
     "Jose Manuel Gutierrez <gutierjm@unican.es> [ctb]",
     "Sixto Herrera <sixto@predictia.es> [ctb]",
-    "Maialen Iturbide <miturbide@ifca.unican.es> [ctb]",
+    "Maialen Iturbide <miturbide@ifca.unican.es> [aut]",
     "Rodrigo Manzanas <rmanzanas@ifca.unican.es> [ctb]",
     "Beata Szabo-Takacs <szabo.b@czechglobe.cz> [ctb]",
     "Max Tuni <max@predictia.es> [ctb]"))
