@@ -137,7 +137,6 @@ qqmap to alleviate the problems arising when the dry day frequency in the raw mo
 }
 
 \examples{
-\dontrun{
 require(transformeR)
 data(VALUE_Igueldo_tp)
 data(NCEP_Iberia_tp)
@@ -165,7 +164,6 @@ lines(c(0,100), c(0,100))
 qqplot(y$Data, eqm1win$Data)
 lines(c(0,100), c(0,100))
 par(mfrow = c(1,1))
-}
 }
 \references{
 \itemize{
