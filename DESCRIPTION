@@ -20,7 +20,7 @@ Suggests:
     visualizeR
 Type: Package
 Title: Bias correction and statistical downscaling methods
-Version: 2.0-2
+Version: 2.0.2
 Date: 2017-06-01
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [ctb]",
