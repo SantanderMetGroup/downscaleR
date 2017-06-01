@@ -165,16 +165,16 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            extrapolation = c("none", "constant"), 
                            theta = .95,
                            join.members = FALSE) {
-      nwdatamssg <- TRUE
-      if (is.null(newdata)) {
-            newdata <- x 
-            nwdatamssg <- FALSE
-      }
       method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci", "ptr", "variance"))
       cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
       stopifnot(is.logical(join.members))
+      nwdatamssg <- TRUE
+      if (is.null(newdata)) {
+            newdata <- x 
+            nwdatamssg <- FALSE
+      }
       if ("station" %in% getDim(y) & isTRUE(join.members)) {
             join.members <- FALSE
             warning("The option 'join.members=TRUE' is currently not supported for station data predictand. It was reset to 'FALSE'.")
@@ -427,16 +427,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
       ## Recover the member dimension when join.members=TRUE:
       if (isTRUE(join.members)) {
-            nmem <- attr(pred, "orig.mem.shape")
-            ntimes <- attr(pred, "orig.time.shape")
-            bc$Dates <- lapply(bc$Dates, "rep", nmem)
-            aux.list <- lapply(1:nmem, function(m) {
-                  aux <- subsetDimension(grid = bc, dimension = "time", indices = ((m - 1) * ntimes + 1):(m * ntimes))
-                  aux$InitializationDates <- newdata$InitializationDates[[m]]
-                  aux$Members <- newdata$Members[[m]]
-                  return(aux)
-            })
-            bc <- do.call("bindGrid.member", aux.list)
+            bc <- recoverMemberDim(pred, bc, newdata)
       } else {
             bc$Dates <- sim$Dates
             bc$InitializationDates <- sim$InitializationDates
@@ -751,48 +742,49 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
 #' @author S. Herrera and M. Iturbide
 
 norain <- function(o, p , threshold){
-      nP <- sum(as.double(o <= threshold & !is.na(o)), na.rm = TRUE)
-      if (nP >= 0 & nP < length(o)){
+      nPo <- sum(as.double(o <= threshold & !is.na(o)), na.rm = TRUE)
+      nPp <- ceiling(length(p) * nPo / length(o))
+      if (nPo >= 0 & nPo < length(o)) {
             ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
             Ps <- sort(p, decreasing = FALSE, na.last = NA)
-            Pth <- Ps[nP + 1]
-            if (Ps[nP + 1]<=threshold){
+            Pth <- Ps[nPp + 1]
+            if (Pth <= threshold) {
                   Os <- sort(o, decreasing = FALSE, na.last = NA)
-                  ind <- which(Ps > threshold & !is.na(Ps))
-                  if (length(ind)==0){
-                        ind <- max(which(!is.na(Ps)))
-                        ind <- min(c(length(Os),ind))
-                  }else{
-                        ind <- min(which(Ps > threshold & !is.na(Ps)))
+                  indP <- which(Ps > threshold & !is.na(Ps))
+                  if (length(indP) == 0) {
+                        indP <- max(which(!is.na(Ps)))
+                        indO <- min(c(length(Os), ceiling(length(Os) * indP/length(Ps))))
+                  } else {
+                        indP <- min(which(Ps > threshold & !is.na(Ps)))
+                        indO <- ceiling(length(Os) * indP/length(Ps))
                   }
                   # [Shape parameter Scale parameter]
-                  if (length(unique(Os[(nP + 1):ind])) < 6){
-                        Ps[(nP + 1):ind] <- mean(Os[(nP + 1):ind], na.rm = TRUE)
-                  }else{
-                        auxOs <- Os[(nP + 1):ind]
+                  if (length(unique(Os[(nPo + 1):indO])) < 6) {
+                        Ps[(nPp + 1):indP] <- mean(Os[(nPo + 1):indO], na.rm = TRUE)
+                  } else {
+                        auxOs <- Os[(nPo + 1):indO]
                         auxOs <- auxOs[which(!is.na(auxOs))]
-                        auxGamma <- fitdistr(auxOs,"gamma")
-                        Ps[(nP + 1):ind]<-rgamma(ind - nP, auxGamma$estimate[1], rate = auxGamma$estimate[2])
+                        auxGamma <- fitdistr(auxOs, "gamma")
+                        Ps[(nPp + 1):indP] <- rgamma(indP - nPp, auxGamma$estimate[1], rate = auxGamma$estimate[2])
                   }
-                  Ps<-sort(Ps, decreasing = FALSE, na.last = NA)
+                  Ps <- sort(Ps, decreasing = FALSE, na.last = NA)
             }
-            if (nP > 0){
-                  ind <- min(nP, length(p))
-                  Ps[1:ind]<-0
+            if (nPo > 0) {
+                  ind <- min(nPp, length(p))
+                  Ps[1:ind] <- 0
             }
             p[ix] <- Ps
-            
-      }else{
-            if (nP == length(o)){
+      } else {
+            if (nPo == length(o)) {
                   ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
                   Ps <- sort(p, decreasing = FALSE, na.last = NA)
-                  Pth <- Ps[nP]
-                  ind <- min(nP, length(p))
+                  Pth <- Ps[nPp]
+                  ind <- min(nPp, length(p))
                   Ps[1:ind] <- 0
                   p[ix] <- Ps
             }
       }
-      return(list("nP" = nP, "Pth" = Pth, "p" = p)) 
+      return(list("nP" = c(nPo,nPp), "Pth" = Pth, "p" = p)) 
 }
 
 #end
@@ -844,7 +836,7 @@ variance <- function(o, p, s, precip){
 #' @author B. Szabo-Takacs
 
 loci <- function(o, p, s, precip, pr.threshold){
-      if(precip == FALSE){ 
+      if(precip == FALSE) { 
             stop("method loci is only applied to precipitation data")
       }else{
             threshold <- pr.threshold
@@ -915,6 +907,13 @@ varCoeficient <- function(delta,data,cv){
 }
 #end
 
+#' @title Concatenate members
+#' @description Concatenate members as a single time series for using their joint distribution in bias correction
+#' @param grid Input (multimember) grid
+#' @return A grid without members, with additional attributes to retrieve the original structure after bias correction
+#' @seealso \code{\link{recoverMemberDim}}, for recovering the original structure after bias correction.
+#' @keywords internal
+#' @author J Bedia
 
 flatMemberDim <- function(grid) {
       grid <- redim(grid, member = TRUE)     
@@ -927,5 +926,30 @@ flatMemberDim <- function(grid) {
       attr(out, "orig.mem.shape") <- n.mem.join
       attr(out, "orig.time.shape") <- n.time.join
       return(out)
+}
+
+#' @title Recover member multimember structure
+#' @description Recover member multimember structure after application of \code{\link{flatMemberDim}}
+#' @param flat.grid A \dQuote{flattened} grid used as predictor in \code{biasCorrection} (the 'pred' object)
+#' @param bc.grid The bias-corrected output (the 'bc' object), still without its member structure 
+#' @param newdata The 'newdata' object, needed to recover relevant metadata (i.e. initialization dates and member names)
+#' @return A (bias-corrected) multimember grid
+#' @keywords internal
+#' @seealso \code{\link{flatMemberDim}}, for \dQuote{flattening} the member structure
+#' @author J Bedia
+
+recoverMemberDim <- function(flat.grid, bc.grid, newdata) {
+      pred <- flat.grid
+      bc <- bc.grid
+      nmem <- attr(pred, "orig.mem.shape")
+      ntimes <- attr(pred, "orig.time.shape")
+      bc$Dates <- lapply(bc$Dates, "rep", nmem)
+      aux.list <- lapply(1:nmem, function(m) {
+            aux <- subsetDimension(grid = bc, dimension = "time", indices = ((m - 1) * ntimes + 1):(m * ntimes))
+            aux$InitializationDates <- newdata$InitializationDates[[m]]
+            aux$Members <- newdata$Members[[m]]
+            return(aux)
+      })
+      do.call("bindGrid.member", aux.list)
 }
 
