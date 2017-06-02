@@ -280,9 +280,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       } else {
             pred
       }
-      # itp <- which(getDim(pred) == "time")
       ito <- which(getDim(obs) == "time")
-      # if (method != "delta" & dim(obs$Data)[ito] != dim(pred$Data)[itp]) stop("y and x do not have the same length")
       n.run <- dim(sim$Data)[1]
       n.mem <- dim(sim$Data)[2]
       if (method == "delta") {
@@ -292,11 +290,8 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
             run <- array(dim = c(1, n.mem, dim(sim$Data)[its], dim(obs$Data)[-ito]))
       }
       lrun <- lapply(1:n.run, function(k) {    # loop for runtimes
-            
             pre <- subsetGrid(pred, runtime = k, drop = FALSE)
             si <- subsetGrid(sim, runtime = k, drop = FALSE)
-            
-            #                   if(multi.member == TRUE){
             if (method == "delta") {
                   mem <- array(dim = c(1, 1, dim(obs$Data)))
             } else {
@@ -438,7 +433,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       message("[", Sys.time(), "] Done.")
       return(bc)
 }
-#end
+
 
 
 #' @title Bias correction methods on 1D data
@@ -489,7 +484,7 @@ biasCorrection1D <- function(o, p, s,
             ptr(o, p, s, precip)
       }
 }
-#end
+
 
 #' @title Delta method for bias correction
 #' @description Implementation of Delta method for bias correction 
@@ -498,11 +493,12 @@ biasCorrection1D <- function(o, p, s,
 #' @param s A vector containing the simulated climate for the variable used in \code{x}, but considering the test period.
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
+
 delta <- function(o, p, s){
       corrected <- o + (mean(s) - mean(p))
       return(corrected)
 }
-#end
+
 
 #' @title Scaling method for bias correction
 #' @description Implementation of Scaling method for bias correction 
@@ -513,6 +509,7 @@ delta <- function(o, p, s){
 #' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not selected as the bias correction method.
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
+
 scaling <- function(o, p, s, scaling.type){
       if (scaling.type == "additive") {
             s - mean(p) + mean(o)
@@ -520,7 +517,7 @@ scaling <- function(o, p, s, scaling.type){
             (s/mean(p)) * mean(o)
       }
 }
-#end
+
 
 
 #' @title Gamma Quantile Mapping method for bias correction
@@ -551,7 +548,7 @@ gqm <- function(o, p, s, precip, pr.threshold){
             }
             if (is.null(nP)) {
                   s <- rep(NA, length(s))
-            } else if (nP < length(o)) {
+            } else if (nP[1] < length(o)) {
                   ind <- which(o > threshold & !is.na(o))
                   obsGamma <-  tryCatch({fitdistr(o[ind],"gamma")}, error = function(err){stop("There are not precipitation days in y for the window length selected in one or more locations. Try to enlarge the window")})
                   ind <- which(p > 0 & !is.na(p))
@@ -562,7 +559,7 @@ gqm <- function(o, p, s, precip, pr.threshold){
                   s[rain] <- qgamma(auxF, obsGamma$estimate[1], rate = obsGamma$estimate[2])
                   s[noRain] <- 0
             } else {
-                  warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
+                  warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) no bias correction has been applied.")
             } 
       }
       return(s)
@@ -625,24 +622,15 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
                               smap[drizzle] <- quantile(s[which(s > min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))], probs = eFrc(s[drizzle]), na.rm = TRUE, type = 4)
                         }
                         smap[noRain] <- 0
-                  } else {## For dry series
+                  } else { ## For dry series
                         smap <- s
                         warning('No rainy days in the prediction. Bias correction is not applied') 
-#                         noRain<-which(s <= Pth & !is.na(s))
-#                         rain<-which(s > Pth & !is.na(s))
-#                         smap <- s
-#                         if (length(rain)>0){
-#                               eFrc<-ecdf(s[rain])
-#                               smap[rain]<-quantile(o[which(o > threshold & !is.na(o))], probs = eFrc(s[rain]), na.rm = TRUE, type = 4)
-# 
-#                         }
-#                         smap[noRain]<-0
                   }
             }
       } else {
             if (all(is.na(o))) {
                   smap <- rep(NA, length(s))
-            }else if (all(is.na(p))){
+            } else if (all(is.na(p))) {
                   smap <- rep(NA, length(s))
             }else if (any(!is.na(p)) & any(!is.na(o))) {
                   if (is.null(n.quantiles)) n.quantiles <- length(p)
@@ -683,23 +671,22 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
 
-gpqm <- function(o, p, s, precip, pr.threshold, theta){ 
-      if(precip == FALSE){
+gpqm <- function(o, p, s, precip, pr.threshold, theta) { 
+      if (precip == FALSE) {
             stop("method gpqm is only applied to precipitation data")
-      }else{
-            
+      } else {
             threshold <- pr.threshold
-            if (any(!is.na(o))){
+            if (any(!is.na(o))) {
                   params <-  norain(o, p, threshold)
                   p <- params$p
                   nP <- params$nP
                   Pth <- params$Pth
-            }else{
+            } else {
                   nP = NULL
             }
-            if(is.null(nP)){
+            if (is.null(nP)) {
                   s <- rep(NA, length(s))
-            }else if(nP < length(o)){
+            } else if (nP[1] < length(o)) {
                   ind <- which(o > threshold & !is.na(o))
                   indgamma <- ind[which(o[ind] < quantile(o[ind], theta))]
                   indpareto <- ind[which(o[ind] >= quantile(o[ind], theta))]
@@ -707,7 +694,7 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
                   obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
                   ind <- which(p > 0 & !is.na(p))
                   indgammap <- ind[which(p[ind] < quantile(p[ind],theta))]
-                  indparetop <-ind[which(p[ind] >= quantile(p[ind], theta))]
+                  indparetop <- ind[which(p[ind] >= quantile(p[ind], theta))]
                   prdGQM <- fitdistr(p[indgammap], "gamma")
                   prdGQM2 <- fpot(p[indparetop], quantile(p[ind], theta), "gpd", std.err = FALSE)
                   rain <- which(s > Pth & !is.na(s))
@@ -717,11 +704,10 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
                   auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
                   auxF2 <- pgpd(s[indparetosim], loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
                   s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
-                  s[indparetosim[which(auxF2<1)]] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
-                  s[indparetosim[which(auxF2==1)]] <- max(o[indpareto], na.rm = TRUE)
+                  s[indparetosim[which(auxF2 < 1)]] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
+                  s[indparetosim[which(auxF2 == 1)]] <- max(o[indpareto], na.rm = TRUE)
                   s[noRain] <- 0
-                  warningNoRain <- FALSE
-            }else{
+            } else {
                   warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
             }  
       }
@@ -798,33 +784,28 @@ norain <- function(o, p , threshold){
 #' @keywords internal
 #' @author B. Szabo-Takacs
 
-variance <- function(o, p, s, precip){
-      if(precip == FALSE){
-            
-            t_dif <- mean(o,na.rm=TRUE)-mean(p,na.rm=TRUE)
-            t1 <- p+rep(t_dif,length(p),1)
-            t1_m <- mean(t1,na.rm=TRUE) 
-            t2 <- t1-rep(t1_m,length(t1),1)
-            o_s <- sd(o,na.rm=TRUE) 
-            t2_s <- sd(t2,na.rm=TRUE) 
+variance <- function(o, p, s, precip) {
+      if (precip == FALSE) {
+            t_dif <- mean(o, na.rm = TRUE) - mean(p, na.rm = TRUE)
+            t1 <- p + rep(t_dif, length(p), 1)
+            t1_m <- mean(t1,na.rm = TRUE) 
+            t2 <- t1 - rep(t1_m,length(t1),1)
+            o_s <- sd(o,na.rm = TRUE) 
+            t2_s <- sd(t2,na.rm = TRUE) 
             tsig <- o_s/t2_s
-            
-            rm(t1,t1_m,t2,o_s,t2_s)
-            
-            t1 <- s+rep(t_dif,length(s),1)
-            t1_m <- mean(t1,na.rm=TRUE)
-            t2 <- t1-rep(t1_m,length(t1),1)
-            t3 <- t2*rep(tsig,length(t2),1)
-            tC <- t3+rep(t1_m,length(t3),1)
-            
-            rm(t1,t1_m,t2,t3)
-            
+            t1 <- t1_m <- t2 <- o_s <- t2_s <- NULL
+            t1 <- s + rep(t_dif, length(s), 1)
+            t1_m <- mean(t1, na.rm = TRUE)
+            t2 <- t1 - rep(t1_m, length(t1), 1)
+            t3 <- t2 * rep(tsig, length(t2), 1)
+            tC <- t3 + rep(t1_m, length(t3), 1)
+            t1 <- t1_m <- t2 <- t3 <- NULL
             return(tC)
       } else {
             stop("method variance is only applied to temperature data")
       }
 }
-#end
+
 
 #' @title Local intensity scaling of precipitation
 #' @description Implementation of Local intensity scaling of precipitation method for bias correction based on Vincent Moron's local_scaling function in weaclim toolbox in Matlab
@@ -836,24 +817,23 @@ variance <- function(o, p, s, precip){
 #' @author B. Szabo-Takacs
 
 loci <- function(o, p, s, precip, pr.threshold){
-      if(precip == FALSE) { 
+      if (precip == FALSE) { 
             stop("method loci is only applied to precipitation data")
-      }else{
+      } else {
             threshold <- pr.threshold
             l <- length(which(o > threshold))
             gcmr <- rev(sort(s))
-            Pgcm <- gcmr[l+1]
+            Pgcm <- gcmr[l + 1]
             # local scaling factor
-            mobs <- mean(o[which(o > threshold)], na.rm=TRUE)
-            mgcm <- mean(s[which(s > Pgcm)],na.rm=TRUE)
-            scaling <- (mobs-threshold)/(mgcm-Pgcm)
-            GCM <- (scaling*(s-Pgcm))+threshold
+            mobs <- mean(o[which(o > threshold)], na.rm = TRUE)
+            mgcm <- mean(s[which(s > Pgcm)], na.rm = TRUE)
+            scaling <- (mobs - threshold) / (mgcm - Pgcm)
+            GCM <- (scaling*(s - Pgcm)) + threshold
             GCM[which(GCM < threshold)] <- 0
       }
       return(GCM)
 }
 
-#end
 
 #' @title Power transformation of precipitation
 #' @description Implementation of Power transformation of precipitation method for bias correction 
@@ -866,32 +846,30 @@ loci <- function(o, p, s, precip, pr.threshold){
 #' @author S. Herrera and B. Szabo-Takacs
 
 ptr <- function(o, p, s, precip) {
-      if(precip==FALSE){ 
+      if (precip == FALSE) { 
             stop("method power transformation is only applied to precipitation data")
-      } else{
+      } else {
             b <- NaN
-            cvO <- sd(o,na.rm=TRUE)/mean(o, na.rm=TRUE)
+            cvO <- sd(o,na.rm = TRUE) / mean(o, na.rm = TRUE)
             if (!is.na(cvO)) {
                   bi <- try(uniroot(function(x)
-                        varCoeficient(x,abs(p),cvO),c(0,1),extendInt="yes"),silent=T)
+                        varCoeficient(x, abs(p), cvO), c(0,1), extendInt = "yes"), silent = TRUE)
                   if ("try-error" %in% class(bi)) {  # an error occurred
                         b <- NA
                   } else {
                         b <- bi$root
                   }
             }
-            p[p<0] <-  0
-            s[s<0] <-  0
+            p[p < 0] <-  0
+            s[s < 0] <-  0
             aux_c <- p^rep(b,length(p),1)
             aux <- s^rep(b,length(s),1)
-            prC <- aux*rep((mean(o, na.rm=TRUE)/mean(aux_c, na.rm=TRUE)), length(s),1)
-            
-            rm(aux, aux_c)
+            prC <- aux * rep((mean(o, na.rm = TRUE) / mean(aux_c, na.rm = TRUE)), length(s), 1)
+            aux <- aux_c <- NULL
       }
       return(prC)
 }
 
-#end
 
 #' @title VarCoeficient
 #' @description preprocess to power transformation of precipitation
@@ -902,10 +880,10 @@ ptr <- function(o, p, s, precip) {
 #' @author S. Herrera and B. Szabo-Takacs
 
 varCoeficient <- function(delta,data,cv){
-      y <- cv-sd((data^delta),na.rm=TRUE)/mean((data^delta),na.rm=TRUE)
+      y <- cv - sd((data^delta), na.rm = TRUE)/mean((data^delta), na.rm = TRUE)
       return(y)
 }
-#end
+
 
 #' @title Concatenate members
 #' @description Concatenate members as a single time series for using their joint distribution in bias correction
@@ -913,6 +891,7 @@ varCoeficient <- function(delta,data,cv){
 #' @return A grid without members, with additional attributes to retrieve the original structure after bias correction
 #' @seealso \code{\link{recoverMemberDim}}, for recovering the original structure after bias correction.
 #' @keywords internal
+#' @importFrom transformeR subsetGrid redim getShape bindGrid.time
 #' @author J Bedia
 
 flatMemberDim <- function(grid) {
@@ -935,6 +914,7 @@ flatMemberDim <- function(grid) {
 #' @param newdata The 'newdata' object, needed to recover relevant metadata (i.e. initialization dates and member names)
 #' @return A (bias-corrected) multimember grid
 #' @keywords internal
+#' @importFrom transformeR subsetDimension bindGrid.member
 #' @seealso \code{\link{flatMemberDim}}, for \dQuote{flattening} the member structure
 #' @author J Bedia
 
