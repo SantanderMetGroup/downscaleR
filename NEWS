@@ -1,8 +1,9 @@
 New in downscaleR
 =================
 
-* Added `join.members` option in `biasCorrection` to use the joint ensemble distribution for correction 
-* Other minor bug fixes and enhancements
+* Bug fix in `biasCorrection`
+* Updated NAMESPACE imports
+* Other documentation updates and enhancements
 
 
 
