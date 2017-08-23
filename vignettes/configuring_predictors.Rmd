@@ -1,0 +1,192 @@
+---
+title: "Preparing predictors in perfect prog downscaling experiments"
+author: "J. Bedia (Santander Meteorology Group)"
+date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_vignette:
+        fig_caption: yes
+vignette: >
+  %\VignetteIndexEntry{Preparing predictors in perfect prog downscaling experiments}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+This is a brief document illustrating the preparation of different predictor configurations in perfect-prog experiments. 
+
+Broadly speaking, there are two main configurations:
+  1. Using atmospheric fields "as they are" for a given spatial domain
+  2. Using principal components obtained from these fields. This can be either a principal component calculated upon a particular variable, or a _combined_ PC considering a combination of different predictor variables. 
+
+Furthermore, in addition to Principal Components that provide a synoptic descriptor, local information can be also as predictor, providing added information to the downscaling method for the surroundings of the target location for a particualr variable (e.g. the surface temperature in the nearest grid cells around a given station). 
+
+The potentially large number of options for a fine-tuning of a downscaling method requires a flexible, yet easily configurable interface enabling users to launch complex experiments testing different predictor setups. `prepare_predictors` has been designed to this aim. A few reproducible examples are presented in this vignette.
+  
+### A note of the terminology used
+
+In the `climate4R` bundle (see e.g. Cofiño _et al._ 2017), atmospheric variables are stored in the so called data _grids_. In order to efficiently handle multiple variables used as predictors in downscaling experiments, "stacks" of grids are used. These are known as _multiGrids_, and can be obtained using the constructor _makeMultiGrid_ from a set of -dimensionally consistent- grids.
+
+
+## Data
+
+### Predictors
+
+Daily data from the NCEP reanalysis (Kalnay _et al._ 1996) are used as example. In particular, a domain centered on the Iberian Peninsula is considered, and three variables (mean sea-level pressure `psl`, specific humidity at 850mb `hus850` and air temperature at 850mb `ta850`) will be used as predictors. These are built-in example datasets from the package `transformeR` of the `climate4R` bundle.
+
+```{r}
+library(transformeR)
+data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
+```
+
+```{r,fig.cap='The mean sea-level pressure field for the Iberian Peninsula. Type `help("<name_of_the_dataset>")` for further details.',fig.show='hold'}
+plotClimatology(climatology(NCEP_Iberia_psl), backdrop.theme = "coastline",
+                main = "Mean DJF SLP (1983-2002)")
+plotClimatology(climatology(NCEP_Iberia_hus850), backdrop.theme = "coastline",
+                main = "Mean DJF hus850 (1983-2002)")
+plotClimatology(climatology(NCEP_Iberia_ta850), backdrop.theme = "coastline",
+                main = "Mean DJF ta850 (1983-2002)")
+```
+
+The grids are already spatially and temporally consistent, so they can be stacked in a multiGrid structure:
+
+```{r}
+x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+```
+
+
+## Predictands
+
+The predictands correspond to the observations used for downscaling. These are typically meteorological station data or interpolated gridded datasets. In this example, we use a subset of stations used in a large intercomparison experiment of downscaling methods performed in the framework of the COST Action [VALUE](http://www.value-cost.eu/) (Maraun _et al._ 2015). The target variable is daily precipitation.
+
+
+```{r}
+data("VALUE_Iberia_tp")
+y <- VALUE_Iberia_tp
+```
+
+```{r,fig.cap='Precipitation observations used as predictand. Type `help("VALUE_Iberia_tp")` for further details.'}
+plotClimatology(climatology(y), backdrop.theme = "countries", cex = 1.5,
+                main = "Mean Winter daily precip (mm/day, 1983-2002")
+```
+
+
+Even though the aim of this example is preparing only the predictors (the predictands are not manipulated), the information of the predictand is always required in order to ensure the spatio-temporal consistency of the experiment. The function handles internally non-overlapping temporal periods, ensuring that there is a perfect match between predictors and predictand prior to model calibration.
+
+## Worked examples
+
+```{r}
+library(downscaleR)
+```
+
+
+### Using the raw predictor variables
+
+In this situation, the multigrid is directly passed to `prepare_predictors`:
+
+```{r}
+out <- prepare_predictors(x = x,
+                          y = y,
+                          subset.vars = NULL,
+                          PCA = NULL,
+                          local.predictors = NULL)
+str(out)
+```
+The output object is a list with different components:
+
+ * `global`: Is the global predictor data matrix. In this example, it is a matrix in which rows correspond to times (days in this case) and the columns to locations, arranged via the internal helper `transformeR::array3Dto2Dmat`. If there is more than one variable as predictor, as in the example, the matrices for each variable are just binded by columns. In other cases, fopr instance when using PCs, this matrix corresponds to the selected combined PC (rows are times, and columns are PCs, in decreasing order of explained variance according to the user specifications).
+ * `local`: in case local predictors are used, the local information is included here. This is a list of matrices, of the same longitude as the number of locations in the predictand, each one containing the local information that will be appended to the `global` matrix. 
+ * `pca`: This element stores the whole PCA (this is the output of the `transformeR::prinComp` function). It contains metadata required in subsequent steps. 
+
+In addition, several attributes are appended to the output to aid in the traceability of the predictor structure:
+
+```{r}
+str(attributes(out))
+```
+
+
+## Using PCs as predictors
+
+In this example, instead of using the raw fields as predictors, we will use principal components. The tuning of the principal component analysis can be undertaken by passing the different possible arguments admitted by `transformeR::prinComp`, which are detailed in the help of the function, to the argument PCA, in the for of a list. Note that here, we will use the first 5, 4 and 3 PCs respectively, of the input variables contained in the multigrid. In case of doubt, the helper `getVarNames` can be used:
+
+```{r}
+getVarNames(x)
+```
+
+Therefore, here we will use the following configuration:
+
+| Variable | Number of PCs |
+|------|-----|
+|hus850| 5|
+|psl| 4|
+|ta850| 3|
+|combined| 5|
+
+```{r, eval=FALSE}
+out <- prepare_predictors(x = x,
+                          y = y,
+                          PCA = list(n.eofs = c(5,5,3,5),
+                                     combined.PC = TRUE),
+                          local.predictors = list(neigh.vars = c("hus850","ta850"),
+                                                  n.neighs = 5,
+                                                  neigh.fun = NULL)
+)
+
+str(out)
+``` 
+
+## Introducing local predictors
+
+```{r, eval=FALSE}
+out <- prepare_predictors(x = x,
+                          y = y,
+                          PCA = list(n.eofs = c(5,5,3),
+                                     v.exp = .975,
+                                     combined.PC = TRUE,
+                                     which.var = c("hus850", "psl")),
+                          local.predictors = list(neigh.vars = c("hus850","ta850"),
+                                                  n.neighs = 5,
+                                                  neigh.fun = NULL)
+)
+``` 
+
+
+
+## References
+
+* Cofiño, A.S., Bedia, J., Iturbide, M., Vega, M., Herrera, S., Fernández, J., Frías, M.D., Manzanas, R., Gutiérrez, J.M., 2017. The ECOMS User Data Gateway: Towards seasonal forecast data provision and research reproducibility in the era of Climate Services. Climate Services. doi:10.1016/j.cliser.2017.07.001
+
+* Kalnay, E., Kanamitsu, M., Kistler, R., Collins, W., Deaven, D., Gandin, L., Iredell, M., Saha, S., White, G., Woollen, J., Zhu, Y., Leetmaa, A., Reynolds, R., Chelliah, M., Ebisuzaki, W., Higgins, W., Janowiak, J., Mo, K.C., Ropelewski, C., Wang, J., Jenne, R., Joseph, D., 1996. The NCEP/NCAR 40-Year Reanalysis Project. Bulletin of the American Meteorological Society 77, 437–471. doi:10.1175/1520-0477(1996)077<0437:TNYRP>2.0.CO;2
+
+* Maraun, D., Widmann, M., Gutiérrez, J.M., Kotlarski, S., Chandler, R.E., Hertig, E., Wibig, J., Huth, R., Wilcke, R.A.I., 2015. VALUE: A framework to validate downscaling approaches for climate change studies. Earth’s Future 3, 2014EF000259. doi:10.1002/2014EF000259
+
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither."
+([via](https://twitter.com/hadleywickham/status/504368538874703872))
