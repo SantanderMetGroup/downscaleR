@@ -2,90 +2,50 @@
 % Please edit documentation in R/prepare_predictors.R
 \name{prepare_predictors}
 \alias{prepare_predictors}
-\title{@title Configuration of predictors for downscaling
- @description Configuration of predictors for flexible downscaling experiment definition
- @param x A grid (usually a multigrid) of predictor fields
- @param subset.vars An optional character vector with the short names of the variables of the input \code{x} 
- multigrid to be retained as global predictors (use the \code{\link{getVarNames}} helper if not sure about variable names).
- This argument just produces a call to \code{\link[transformeR]{subsetGrid}}, but it is included here for better
- flexibility in downscaling experiments (predictor screening...). For instance, it allows to use some 
- specific variables contained in \code{x} as local predictors and the remaining ones, specified in \code{subset.vars},
- as either raw global predictors or to construct the combined PC.
- @param y A grid (usually a stations grid, but not necessarily) of observations (predictands)
- @param PCA Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
- with the arguments to be passed to \code{\link[transformeR]{prinComp}} to perform Principal Component Analysis
- of the predictors grid (\code{x}). See Details on principal component analysis of predictors
- @param local.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
- with the following arguments:
- \itemize{
-   \item \code{neigh.vars}: names of the variables in \code{x} to be used as local predictors
-   \item \code{neigh.fun}: Optional. Aggregation function for the selected local neighbours.
-   The aggregation function is specified as a list, indicating the name of the aggregation function in
-    first place (as character), and other optional arguments to be passed to the aggregation function.
-    For instance, to compute the average skipping missing values: \code{neigh.fun = list(FUN= "mean", na.rm = TRUE)}.
-    Default to NULL, meaning that no aggregation is performed.
-   \item \code{n.neighs}: Integer. Number of nearest neighbours to use. If a single value is introduced, and there is more
-   than one variable in \code{neigh.vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
-   length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
- }
- 
- @return A named list with components \code{global}, \code{local} and \code{pca}, and other attributes. 
- See Examples.
- 
- @examples See the corresponding vignette.
- 
- @details   
- \strong{Temporal consistency}
- Note that \code{x} (predictors) and \code{y} predictands are checked for temporal consistency
-  prior to downscaling. In case of partial temporal overlapping, both are internnaly intersected for exact temporal matching.
- 
- \strong{Principal Component Analysis}
- Always that PCA is used, a combined PC will be returned (unless one single predictor is used, case in which no combination is possible).
- Note that the variables of the predictor grid used to construct the combined PC can be flexibly controlled through the optional argument
- \code{which.combine} in \code{\link[transformeR]{prinComp}}.
- 
- @importFrom transformeR getTemporalIntersection getRefDates getCoordinates getVarNames
- @export
- @author J. Bedia, D. San-Mart\'in and J.M. Guti\'errez}
+\title{Configuration of predictors for downscaling}
 \usage{
 prepare_predictors(x, y, subset.vars = NULL, PCA = NULL,
   local.predictors = NULL)
 }
-\description{
-@title Configuration of predictors for downscaling
- @description Configuration of predictors for flexible downscaling experiment definition
- @param x A grid (usually a multigrid) of predictor fields
- @param subset.vars An optional character vector with the short names of the variables of the input \code{x} 
- multigrid to be retained as global predictors (use the \code{\link{getVarNames}} helper if not sure about variable names).
- This argument just produces a call to \code{\link[transformeR]{subsetGrid}}, but it is included here for better
- flexibility in downscaling experiments (predictor screening...). For instance, it allows to use some 
- specific variables contained in \code{x} as local predictors and the remaining ones, specified in \code{subset.vars},
- as either raw global predictors or to construct the combined PC.
- @param y A grid (usually a stations grid, but not necessarily) of observations (predictands)
- @param PCA Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
- with the arguments to be passed to \code{\link[transformeR]{prinComp}} to perform Principal Component Analysis
- of the predictors grid (\code{x}). See Details on principal component analysis of predictors
- @param local.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
- with the following arguments:
- \itemize{
-   \item \code{neigh.vars}: names of the variables in \code{x} to be used as local predictors
-   \item \code{neigh.fun}: Optional. Aggregation function for the selected local neighbours.
-   The aggregation function is specified as a list, indicating the name of the aggregation function in
-    first place (as character), and other optional arguments to be passed to the aggregation function.
-    For instance, to compute the average skipping missing values: \code{neigh.fun = list(FUN= "mean", na.rm = TRUE)}.
-    Default to NULL, meaning that no aggregation is performed.
-   \item \code{n.neighs}: Integer. Number of nearest neighbours to use. If a single value is introduced, and there is more
-   than one variable in \code{neigh.vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
-   length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
- }
- 
- @return A named list with components \code{global}, \code{local} and \code{pca}, and other attributes. 
+\arguments{
+\item{x}{A grid (usually a multigrid) of predictor fields}
+
+\item{y}{A grid (usually a stations grid, but not necessarily) of observations (predictands)}
+
+\item{subset.vars}{An optional character vector with the short names of the variables of the input \code{x} 
+multigrid to be retained as global predictors (use the \code{\link{getVarNames}} helper if not sure about variable names).
+This argument just produces a call to \code{\link[transformeR]{subsetGrid}}, but it is included here for better
+flexibility in downscaling experiments (predictor screening...). For instance, it allows to use some 
+specific variables contained in \code{x} as local predictors and the remaining ones, specified in \code{subset.vars},
+as either raw global predictors or to construct the combined PC.}
+
+\item{PCA}{Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+with the arguments to be passed to \code{\link[transformeR]{prinComp}} to perform Principal Component Analysis
+of the predictors grid (\code{x}). See Details on principal component analysis of predictors}
+
+\item{local.predictors}{Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+with the following arguments:
+\itemize{
+  \item \code{neigh.vars}: names of the variables in \code{x} to be used as local predictors
+  \item \code{neigh.fun}: Optional. Aggregation function for the selected local neighbours.
+  The aggregation function is specified as a list, indicating the name of the aggregation function in
+   first place (as character), and other optional arguments to be passed to the aggregation function.
+   For instance, to compute the average skipping missing values: \code{neigh.fun = list(FUN= "mean", na.rm = TRUE)}.
+   Default to NULL, meaning that no aggregation is performed.
+  \item \code{n.neighs}: Integer. Number of nearest neighbours to use. If a single value is introduced, and there is more
+  than one variable in \code{neigh.vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
+  length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
+}}
+}
+\value{
+A named list with components \code{global}, \code{local} and \code{pca}, and other attributes. 
  See Examples.
- 
- @examples See the corresponding vignette.
- 
- @details   
- \strong{Temporal consistency}
+}
+\description{
+Configuration of predictors for flexible downscaling experiment definition
+}
+\details{
+\strong{Temporal consistency}
  Note that \code{x} (predictors) and \code{y} predictands are checked for temporal consistency
   prior to downscaling. In case of partial temporal overlapping, both are internnaly intersected for exact temporal matching.
  
@@ -93,8 +53,15 @@ prepare_predictors(x, y, subset.vars = NULL, PCA = NULL,
  Always that PCA is used, a combined PC will be returned (unless one single predictor is used, case in which no combination is possible).
  Note that the variables of the predictor grid used to construct the combined PC can be flexibly controlled through the optional argument
  \code{which.combine} in \code{\link[transformeR]{prinComp}}.
+}
+\examples{
+See the corresponding vignette.
  
- @importFrom transformeR getTemporalIntersection getRefDates getCoordinates getVarNames
- @export
- @author J. Bedia, D. San-Mart\'in and J.M. Guti\'errez
+}
+\seealso{
+Other downscaling.helpers: \code{\link{predictor.nn.indices}},
+  \code{\link{predictor.nn.values}}
+}
+\author{
+J. Bedia, D. San-Mart\'in and J.M. Guti\'errez
 }

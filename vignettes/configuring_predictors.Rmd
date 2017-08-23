@@ -84,7 +84,7 @@ library(downscaleR)
 
 In this situation, the multigrid is directly passed to `prepare_predictors`:
 
-```{r}
+```{r,eval=FALSE}
 out <- prepare_predictors(x = x,
                           y = y,
                           subset.vars = NULL,
@@ -100,7 +100,7 @@ The output object is a list with different components:
 
 In addition, several attributes are appended to the output to aid in the traceability of the predictor structure:
 
-```{r}
+```{r,eval=FALSE}
 str(attributes(out))
 ```
 
@@ -151,7 +151,7 @@ out <- prepare_predictors(x = x,
 ``` 
 
 
-
+  
 ## References
 
 * Cofiño, A.S., Bedia, J., Iturbide, M., Vega, M., Herrera, S., Fernández, J., Frías, M.D., Manzanas, R., Gutiérrez, J.M., 2017. The ECOMS User Data Gateway: Towards seasonal forecast data provision and research reproducibility in the era of Climate Services. Climate Services. doi:10.1016/j.cliser.2017.07.001

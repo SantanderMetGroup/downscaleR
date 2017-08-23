@@ -20,7 +20,8 @@ Constructs the local predictor matrices given their spatial index position
 (as returned by \code{\link{predictor.nn.indices}}) and additional parameters.
 }
 \seealso{
-Other downscaling.helpers: \code{\link{predictor.nn.indices}}
+Other downscaling.helpers: \code{\link{predictor.nn.indices}},
+  \code{\link{prepare_predictors}}
 }
 \author{
 J Bedia

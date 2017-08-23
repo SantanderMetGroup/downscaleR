@@ -1,39 +1,3 @@
-# 
-# # An experiment using predictors from the NCEP reanalysis:
-# data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
-# x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
-# 
-# 
-# data("VALUE_Iberia_tp")
-# y <- VALUE_Iberia_tp
-# newdata = NULL
-# 
-# getVarNames(x)
-# str(x)
-# 
-# out <- prepare_predictors(x = x,
-#                           y = y,
-#                           PCA = list(n.eofs = c(5,5,3),
-#                                      v.exp = .975,
-#                                      combined.PC = TRUE,
-#                                      which.var = c("hus850", "psl")),
-#                           local.predictors = list(neigh.vars = c("hus850","ta850"),
-#                                                   n.neighs = 5,
-#                                                   neigh.fun = NULL)
-# )
-# 
-# str(out)
-# 
-# out <- prepare.predictors(x = x,
-#                           y = y,
-#                           PCA = NULL,
-#                           local.predictors = list(neigh.vars = "hus850",
-#                                                   n.neighs = 5,
-#                                                   neigh.fun = NULL)
-# )
-
-
-
 #   prepare_predictors.R Configuration of predictors for downscaling
 #
 #   Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
@@ -51,20 +15,20 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#'  @title Configuration of predictors for downscaling
-#'  @description Configuration of predictors for flexible downscaling experiment definition
-#'  @param x A grid (usually a multigrid) of predictor fields
-#'  @param subset.vars An optional character vector with the short names of the variables of the input \code{x} 
+#' @title Configuration of predictors for downscaling
+#' @description Configuration of predictors for flexible downscaling experiment definition
+#' @param x A grid (usually a multigrid) of predictor fields
+#' @param subset.vars An optional character vector with the short names of the variables of the input \code{x} 
 #'  multigrid to be retained as global predictors (use the \code{\link{getVarNames}} helper if not sure about variable names).
 #'  This argument just produces a call to \code{\link[transformeR]{subsetGrid}}, but it is included here for better
 #'  flexibility in downscaling experiments (predictor screening...). For instance, it allows to use some 
 #'  specific variables contained in \code{x} as local predictors and the remaining ones, specified in \code{subset.vars},
 #'  as either raw global predictors or to construct the combined PC.
-#'  @param y A grid (usually a stations grid, but not necessarily) of observations (predictands)
-#'  @param PCA Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+#' @param y A grid (usually a stations grid, but not necessarily) of observations (predictands)
+#' @param PCA Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the arguments to be passed to \code{\link[transformeR]{prinComp}} to perform Principal Component Analysis
 #'  of the predictors grid (\code{x}). See Details on principal component analysis of predictors
-#'  @param local.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+#' @param local.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the following arguments:
 #'  \itemize{
 #'    \item \code{neigh.vars}: names of the variables in \code{x} to be used as local predictors
@@ -78,12 +42,12 @@
 #'    length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
 #'  }
 #'  
-#'  @return A named list with components \code{global}, \code{local} and \code{pca}, and other attributes. 
+#' @return A named list with components \code{global}, \code{local} and \code{pca}, and other attributes. 
 #'  See Examples.
 #'  
-#'  @examples See the corresponding vignette.
+#' @examples See the corresponding vignette.
 #'  
-#'  @details   
+#' @details   
 #'  \strong{Temporal consistency}
 #'  Note that \code{x} (predictors) and \code{y} predictands are checked for temporal consistency
 #'   prior to downscaling. In case of partial temporal overlapping, both are internnaly intersected for exact temporal matching.
@@ -93,11 +57,13 @@
 #'  Note that the variables of the predictor grid used to construct the combined PC can be flexibly controlled through the optional argument
 #'  \code{which.combine} in \code{\link[transformeR]{prinComp}}.
 #'  
-#'  @importFrom transformeR getTemporalIntersection getRefDates getCoordinates getVarNames
+#' @importFrom transformeR getTemporalIntersection getRefDates getCoordinates getVarNames
 #'  
-#'  @export
+#' @family downscaling.helpers
 #'  
-#'  @author J. Bedia, D. San-Mart\'in and J.M. Guti\'errez 
+#' @export
+#'  
+#' @author J. Bedia, D. San-Mart\'in and J.M. Guti\'errez 
 
 prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predictors = NULL) {
     y <- getTemporalIntersection(obs = y, prd = x, which.return = "obs")
