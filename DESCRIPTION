@@ -1,7 +1,7 @@
 Package: downscaleR
 Depends:
     R(>= 3.1.0),
-    transformeR(>= 0.0.9)
+    transformeR(>= 1.0.0)
 Imports:
     abind,
     utils,
@@ -17,22 +17,24 @@ Imports:
 Suggests:
     loadeR,
     loadeR.ECOMS,
-    visualizeR
+    visualizeR,
+    knitr,
+    rmarkdown
 Type: Package
-Title: Bias correction and statistical downscaling methods
-Version: 2.0.3
-Date: 2017-06-02
+Title: An R package for bias correction and statistical downscaling
+Version: 3.0.0
+Date: 2017-08-23
 Authors@R: as.person(c(
-    "Santander Meteorology Group <http://meteo.unican.es> [ctb]",
+    "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquin Bedia <bediaj@unican.es> [aut, cre]",
     "Jonas Bhend <Jonas.Bhend@meteoswiss.ch> [ctb]",
     "Matteo De Felice <matteo.defelice@enea.it> [ctb]",
     "Jesus Fernandez <fernandej@unican.es> [ctb]",
     "Maria Dolores Frias <friasmd@unican.es> [ctb]",
-    "Jose Manuel Gutierrez <gutierjm@unican.es> [ctb]",
-    "Sixto Herrera <sixto@predictia.es> [ctb]",
+    "Jose Manuel Gutierrez <gutierjm@unican.es> [aut]",
+    "Sixto Herrera <sixto@predictia.es> [aut]",
     "Maialen Iturbide <miturbide@ifca.unican.es> [aut]",
-    "Rodrigo Manzanas <rmanzanas@ifca.unican.es> [ctb]",
+    "Rodrigo Manzanas <rmanzanas@ifca.unican.es> [aut]",
     "Beata Szabo-Takacs <szabo.b@czechglobe.cz> [ctb]",
     "Max Tuni <max@predictia.es> [ctb]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
@@ -42,3 +44,4 @@ Description: Tools for climate data calibration (bias correction, qq-mapping...)
 License: GPL (>= 3)
 LazyData: true
 RoxygenNote: 6.0.1
+VignetteBuilder: knitr
