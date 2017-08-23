@@ -1,24 +1,40 @@
-# data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850", "NCEP_Iberia_tas")
+# 
+# # An experiment using predictors from the NCEP reanalysis:
+# data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
 # x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+# 
+# 
 # data("VALUE_Iberia_tp")
 # y <- VALUE_Iberia_tp
 # newdata = NULL
 # 
 # getVarNames(x)
-# 
-# 
 # str(x)
 # 
-# "PCA" = list(n.eofs = c(5,5,3,8),
-#              v.exp = .975,
-#              combined.PC = TRUE,
-#              which.combine = c("hus850", "psl")),
-# "local.predictors" = list(neigh.vars = "hus850",
-#                           n.neighs = 5,
-#                           neigh.fun = NULL)
+# out <- prepare_predictors(x = x,
+#                           y = y,
+#                           PCA = list(n.eofs = c(5,5,3),
+#                                      v.exp = .975,
+#                                      combined.PC = TRUE,
+#                                      which.var = c("hus850", "psl")),
+#                           local.predictors = list(neigh.vars = c("hus850","ta850"),
+#                                                   n.neighs = 5,
+#                                                   neigh.fun = NULL)
+# )
+# 
+# str(out)
+# 
+# out <- prepare.predictors(x = x,
+#                           y = y,
+#                           PCA = NULL,
+#                           local.predictors = list(neigh.vars = "hus850",
+#                                                   n.neighs = 5,
+#                                                   neigh.fun = NULL)
+# )
 
 
-#   prepare.predictors.R Configuration of predictors for downscaling
+
+#   prepare_predictors.R Configuration of predictors for downscaling
 #
 #   Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
 #
@@ -38,12 +54,34 @@
 #'  @title Configuration of predictors for downscaling
 #'  @description Configuration of predictors for flexible downscaling experiment definition
 #'  @param x A grid (usually a multigrid) of predictor fields
+#'  @param subset.vars An optional character vector with the short names of the variables of the input \code{x} 
+#'  multigrid to be retained as global predictors (use the \code{\link{getVarNames}} helper if not sure about variable names).
+#'  This argument just produces a call to \code{\link[transformeR]{subsetGrid}}, but it is included here for better
+#'  flexibility in downscaling experiments (predictor screening...). For instance, it allows to use some 
+#'  specific variables contained in \code{x} as local predictors and the remaining ones, specified in \code{subset.vars},
+#'  as either raw global predictors or to construct the combined PC.
 #'  @param y A grid (usually a stations grid, but not necessarily) of observations (predictands)
-#'  @param PCA Default to \cde{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+#'  @param PCA Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the arguments to be passed to \code{\link[transformeR]{prinComp}} to perform Principal Component Analysis
-#'  of the predictors field. See Details on principal component analysis of predictors
-#'  @param local.predictors Default to \cde{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
-#'  with the arguments
+#'  of the predictors grid (\code{x}). See Details on principal component analysis of predictors
+#'  @param local.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+#'  with the following arguments:
+#'  \itemize{
+#'    \item \code{neigh.vars}: names of the variables in \code{x} to be used as local predictors
+#'    \item \code{neigh.fun}: Optional. Aggregation function for the selected local neighbours.
+#'    The aggregation function is specified as a list, indicating the name of the aggregation function in
+#'     first place (as character), and other optional arguments to be passed to the aggregation function.
+#'     For instance, to compute the average skipping missing values: \code{neigh.fun = list(FUN= "mean", na.rm = TRUE)}.
+#'     Default to NULL, meaning that no aggregation is performed.
+#'    \item \code{n.neighs}: Integer. Number of nearest neighbours to use. If a single value is introduced, and there is more
+#'    than one variable in \code{neigh.vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
+#'    length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
+#'  }
+#'  
+#'  @return A named list with components \code{global}, \code{local} and \code{pca}, and other attributes. 
+#'  See Examples.
+#'  
+#'  @examples See the corresponding vignette.
 #'  
 #'  @details   
 #'  \strong{Temporal consistency}
@@ -52,61 +90,67 @@
 #'  
 #'  \strong{Principal Component Analysis}
 #'  Always that PCA is used, a combined PC will be returned (unless one single predictor is used, case in which no combination is possible).
-#'  Note that the variables of the predictor grid used to constrcut the combined PC can be flexibly controlled trough the optional argument
+#'  Note that the variables of the predictor grid used to construct the combined PC can be flexibly controlled through the optional argument
 #'  \code{which.combine} in \code{\link[transformeR]{prinComp}}.
 #'  
-#'  @author J. Bedia, D. San-Mart\'in and J.M. Guti\'errez 
-#'  @importFrom transformeR getTemporalIntersection
+#'  @importFrom transformeR getTemporalIntersection getRefDates getCoordinates getVarNames
+#'  
 #'  @export
+#'  
+#'  @author J. Bedia, D. San-Mart\'in and J.M. Guti\'errez 
 
-prepare.predictors <- function(x, y, PCA = NULL, local.predictors = NULL) {
+prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predictors = NULL) {
     y <- getTemporalIntersection(obs = y, prd = x, which.return = "obs")
     x <- getTemporalIntersection(obs = y, prd = x, which.return = "prd")
-    nn <- if (!is.null(local.predictors)) {
-        pred.nn.ind <- predictor.nn.indices(neigh.vars = local.predictors$neigh.vars,
-                                            n.neighs = local.predictors$n.neighs,
-                                            x = x, y = y) 
-        predictor.nn.values(nn.indices.list = pred.nn.ind,
-                            grid = x,
-                            neigh.fun = local.predictors$neigh.fun) 
-    } else {
-        NULL
+    dates <- getRefDates(x)
+    xyCoords <- getCoordinates(x)
+    # Local predictors
+    nn <- NULL
+    if (!is.null(local.predictors)) {
+            pred.nn.ind <- predictor.nn.indices(neigh.vars = local.predictors$neigh.vars,
+                                                n.neighs = local.predictors$n.neighs,
+                                                x = x, y = y) 
+            nn <- predictor.nn.values(nn.indices.list = pred.nn.ind,
+                                      grid = x,
+                                      neigh.fun = local.predictors$neigh.fun) 
+    } 
+    # Global predictor subsetting
+    if (!is.null(subset.vars)) {
+        x <- subsetGrid(x, var = subset.vars)
     }
+    # PCA - only considers the combined PC as global predictor
+    pc.comb <- NULL
     if (!is.null(PCA)) {
-        do.call("prinComp", PCA) %>% extract2("COMBINED")
+        if ("which.var" %in% names(PCA)) {
+            PCA[["which.var"]] <- subset.vars
+            message("NOTE: The argument 'which.var' passed to the 'PCA' list was overriden by argument 'subset.vars'")
+        }
+        PCA[["grid"]] <- x
+        pc.comb <- do.call("prinComp", PCA) %>% extract2("COMBINED")
+        x <- pc.comb[[1]]$PCs
+    # RAW predictors    
+    } else {
+        # Construct a predictor matrix of raw input grids
+        nvars <- getShape(x, "var")
+        varnames <- getVarNames(x)
+        aux.list <- lapply(1:nvars, function(i) {
+            subsetGrid(x, var = varnames[i]) %>% redim(drop = TRUE) %>% extract2("Data") %>% array3Dto2Dmat()
+        })
+        x <- do.call("cbind", aux.list)
+        aux.list <- NULL
     }
+    predictor.list <- list("global" = x, "local" = nn, "pca" = pc.comb)
+    if (!is.null(PCA)) PCA <- PCA[-grep("grid", names(PCA))]
+    attr(predictor.list, "PCA.pars") <- PCA
+    attr(predictor.list, "localPred.pars") <- local.predictors
+    attr(predictor.list, "dates") <- dates
+    attr(predictor.list, "xyCoords") <- xyCoords
+    return(predictor.list)
 }
 
 
-# load("ignore/juaco/data/obsPredSim_NCEP.Rdata", verbose = TRUE)
-# # obs <- obs.tmean
-# 
-# data("VALUE_Iberia_tas")
-# obs <- VALUE_Iberia_tas
-# 
-# getShape(pred)
-# getShape(sim)
-
-# Check the consistency of x and newdata
-# checkDim(pred, sim, dimensions =  c("var","lon", "lat"))
-
-# Obtain the coordinates of x (=newdata) and y
-# coords.y <- get2DmatCoordinates(obs)
-# coords.x <- get2DmatCoordinates(pred)
-
-# Compute PCA
-# xpc <- prinComp(pred, v.exp = .9)
-# 
-# # Target variable(s) of neighbors (either number or name)
-# neigh.vars = c("psl", "tas")
-# n.neigh = c(9,3) # number of neighbors
-# neigh.fun = list(list(FUN = "mean", na.rm = TRUE), NULL)
-# 
-# a <- predictor.nn.indices(neigh.vars = c("psl", "tas"), n.neighs = c(10,3), x.grid = pred, y.grid = obs)
-# q <- predictor.nn.values(a, neigh.fun = list(NULL, list(FUN = mean, na.rm = TRUE)), grid = pred)
-# 
-# str(q)
-
+#' @title Calculate spatial index position of nearest neighbors
+#' @description Calculate spatial index position of nearest neighbors
 #' @param neigh.vars Character vector of the names of the variable(s) to be used as local predictors
 #' @param n.neighs Integer vector. Number of nearest neighbours to be considered for each variables in \code{neigh.vars}.
 #' Its length must be either 1 --in case there is one single local predictor variable or the same number of neighbours is 
@@ -133,12 +177,13 @@ predictor.nn.indices <- function(neigh.vars = NULL, n.neighs = NULL, x, y) {
     if (any(n.neighs > nrow(coords.x))) stop("Too many neighbours selected (more than predictor grid cells)", call. = FALSE) 
     if (length(n.neighs) == 1) {
         n.neighs <- rep(n.neighs, length(neigh.vars))
-    } else if (length(n.neighs) != length(neigh.vars)) {
+    }
+    if (length(n.neighs) != length(neigh.vars)) {
         stop("Incorrect number of neighbours selected: this should be either 1 or a vector of the same length as 'neigh.vars'", call. = FALSE)
     }
     # The index list has the same length as the number of local predictor variables, containing a matrix of index positions
     local.pred.list <- lapply(1:length(neigh.vars), function(j) {
-        ind.mat <- vapply(1:nrow(coords.y), numeric(n.neighs[j]), FUN = function(i) {
+        ind.mat <- vapply(1:nrow(coords.y), FUN.VALUE = numeric(n.neighs[j]), FUN = function(i) {
             dists <- sqrt((coords.y[i,1] - coords.x[,1])^2 + (coords.y[i,2] - coords.x[,2])^2)
             which(dists %in% sort(dists)[1:n.neighs[j]])
         })
@@ -148,8 +193,10 @@ predictor.nn.indices <- function(neigh.vars = NULL, n.neighs = NULL, x, y) {
 }
 
 
-
-#' @param nn.indices.list
+#' @title Construct local predictor matrices
+#' @description Constructs the local predictor matrices given their spatial index position 
+#' (as returned by \code{\link{predictor.nn.indices}}) and additional parameters.
+#' @param nn.indices.list A list of index positions as returned by \code{\link{predictor.nn.indices}}
 #' @param neigh.fun A list of funtions for neighbour aggregation for each local predictor variable.
 #'  Default to \code{NULL}, and no aggregation is performed
 #' @param grid The grid containing the local predictor information. It can be either the predictors (training)
@@ -164,14 +211,15 @@ predictor.nn.values <- function(nn.indices.list, grid, neigh.fun = NULL) {
     # Aggregation function of neighbors
     if (length(nn.indices.list) == 1) {
         neigh.fun <- list(neigh.fun)
-    } else if (length(neigh.fun) != length(nn.indices.list)) {
+    } 
+    if (!is.null(neigh.fun) && (length(neigh.fun) != length(nn.indices.list))) {
         stop("Incorrect number of neighbours selected: this should be either 1 or a vector of the same length as 'nn.indices.list'", call. = FALSE)
     }
     out.list <- lapply(1:length(nn.indices.list), function(j) {
         neigh.vars <- names(nn.indices.list)
         aux <- subsetGrid(grid, var = neigh.vars[j], drop = TRUE) %>% extract2("Data") %>% array3Dto2Dmat()
         # Local predictor matrix list
-        l <- lapply(1:ncol(nn.indices.list[[j]]), function(k) aux[,nn.indices.list[[j]][,k]])
+        l <- lapply(1:ncol(nn.indices.list[[j]]), function(k) aux[ ,nn.indices.list[[j]][ ,k]])
         # Neighbour aggregation function 
         if (!is.null(neigh.fun[[j]])) {
             arg.list <- c(neigh.fun[[j]], "MARGIN" = 1)
@@ -180,7 +228,10 @@ predictor.nn.values <- function(nn.indices.list, grid, neigh.fun = NULL) {
             l
         }
     })
-    lapply(1:length(out.list[[1]]), function(x) cbind(out.list[[1]][[x]], out.list[[2]][[x]]))
+    lapply(1:length(out.list[[1]]), function(x) {
+        expr <- paste0("cbind(", paste0("out.list[[", 1:length(out.list), "]][[x]]", collapse = ","), ")")
+        parse(text = expr) %>% eval()
+    })
 }
 
 
