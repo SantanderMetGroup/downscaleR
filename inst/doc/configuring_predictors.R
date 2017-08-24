@@ -21,7 +21,7 @@ y <- VALUE_Iberia_tp
 plotClimatology(climatology(y), backdrop.theme = "countries", cex = 1.5,
                 main = "Mean Winter daily precip (mm/day, 1983-2002")
 
-## ------------------------------------------------------------------------
+## ---- echo=FALSE---------------------------------------------------------
 library(downscaleR)
 
 ## ------------------------------------------------------------------------
@@ -32,10 +32,10 @@ out <- prepare_predictors(x = x,
                           local.predictors = NULL)
 str(out)
 
-## ----eval=FALSE----------------------------------------------------------
-#  str(attributes(out))
-
 ## ------------------------------------------------------------------------
+str(attributes(out))
+
+## ---- echo=FALSE---------------------------------------------------------
 out <- prepare_predictors(x = x,
                           y = y,
                           PCA = list(n.eofs = 5, combined.PC = TRUE)
@@ -84,11 +84,4 @@ out <- prepare_predictors(x = x,
 
 ## ------------------------------------------------------------------------
 str(out)
-
-## ---- fig.show='hold'----------------------------------------------------
-plot(1:10)
-plot(10:1)
-
-## ---- echo=FALSE, results='asis'-----------------------------------------
-knitr::kable(head(mtcars, 10))
 

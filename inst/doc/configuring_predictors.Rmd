@@ -13,15 +13,16 @@ vignette: >
 
 ## Introduction
 
-This is a brief document illustrating the preparation of different predictor configurations in perfect-prog experiments. 
+This document illustrates the preparation of different predictor configurations in perfect-prog experiments. 
 
 Broadly speaking, there are two main configurations:
+
   1. Using atmospheric fields "as they are" for a given spatial domain
   2. Using principal components obtained from these fields. This can be either a principal component calculated upon a particular variable, or a _combined_ PC considering a combination of different predictor variables. 
 
-Furthermore, in addition to Principal Components that provide a synoptic descriptor, local information can be also as predictor, providing added information to the downscaling method for the surroundings of the target location for a particualr variable (e.g. the surface temperature in the nearest grid cells around a given station). 
+Furthermore, in addition to Principal Components that provide a synoptic descriptor, local information of a particular variable or set of variables can be also included as a predictor in the calibration phase (e.g. the surface temperature in the nearest grid cells around a given station). 
 
-The potentially large number of options for a fine-tuning of a downscaling method requires a flexible, yet easily configurable interface enabling users to launch complex experiments testing different predictor setups. `prepare_predictors` has been designed to this aim. A few reproducible examples are presented in this vignette.
+The large number of options required for a fine-tuning of a downscaling method requires a flexible, yet easily configurable interface, enabling users to launch complex experiments for testing different predictor setups. `prepare_predictors` has been designed to this aim. A few reproducible examples are presented in this vignette.
   
 ### A note of the terminology used
 
@@ -75,7 +76,7 @@ Although the aim of this example is preparing only the predictors (the predictan
 
 ## Worked examples
 
-```{r}
+```{r, echo=FALSE}
 library(downscaleR)
 ```
 
@@ -100,7 +101,7 @@ The output object is a list with different components:
 
 In addition, several attributes are appended to the output to aid in the traceability of the predictor structure:
 
-```{r,eval=FALSE}
+```{r}
 str(attributes(out))
 ```
 
@@ -109,7 +110,7 @@ str(attributes(out))
 
 In this example, instead of using the raw fields as predictors, we will use principal components. The tuning of the principal component analysis can be undertaken by passing the different possible arguments admitted by `transformeR::prinComp`, which are detailed in the help of the function to the argument `PCA` of `prepare_predictors`, in the form of a named list. Note that here we will use the first 5 PCs of the input variables contained in the multigrid. This applies also to the combined PC, that is used as predictor
 
-```{r}
+```{r, echo=FALSE}
 out <- prepare_predictors(x = x,
                           y = y,
                           PCA = list(n.eofs = 5, combined.PC = TRUE)
@@ -200,32 +201,3 @@ str(out)
 * Maraun, D., Widmann, M., Gutiérrez, J.M., Kotlarski, S., Chandler, R.E., Hertig, E., Wibig, J., Huth, R., Wilcke, R.A.I., 2015. VALUE: A framework to validate downscaling approaches for climate change studies. Earth’s Future 3, 2014EF000259. doi:10.1002/2014EF000259
 
 
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
-```
-
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))

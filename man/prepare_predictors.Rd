@@ -52,7 +52,7 @@ Configuration of predictors for flexible downscaling experiment definition
  \strong{Principal Component Analysis}
  Always that PCA is used, a combined PC will be returned (unless one single predictor is used, case in which no combination is possible).
  Note that the variables of the predictor grid used to construct the combined PC can be flexibly controlled through the optional argument
- \code{which.combine} in \code{\link[transformeR]{prinComp}}.
+ \code{subset.vars}.
 }
 \examples{
 # See the dedicated vignette by typing:
