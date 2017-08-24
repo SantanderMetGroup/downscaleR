@@ -32,35 +32,58 @@ out <- prepare_predictors(x = x,
                           local.predictors = NULL)
 str(out)
 
+## ----eval=FALSE----------------------------------------------------------
+#  str(attributes(out))
+
 ## ------------------------------------------------------------------------
-str(attributes(out))
+out <- prepare_predictors(x = x,
+                          y = y,
+                          PCA = list(n.eofs = 5, combined.PC = TRUE)
+)
+
+## ------------------------------------------------------------------------
+str(out)
 
 ## ------------------------------------------------------------------------
 getVarNames(x)
 
-## ---- eval=FALSE---------------------------------------------------------
-#  out <- prepare_predictors(x = x,
-#                            y = y,
-#                            PCA = list(n.eofs = c(5,5,3,5),
-#                                       combined.PC = TRUE),
-#                            local.predictors = list(neigh.vars = c("hus850","ta850"),
-#                                                    n.neighs = 5,
-#                                                    neigh.fun = NULL)
-#  )
-#  
-#  str(out)
+## ------------------------------------------------------------------------
+out <- prepare_predictors(x = x,
+                          y = y,
+                          subset.vars = c("ta850", "psl"),
+                          local.predictors = list(neigh.vars = "hus850",
+                                                  n.neighs = 5,
+                                                  neigh.fun = NULL)
+)
 
-## ---- eval=FALSE---------------------------------------------------------
-#  out <- prepare_predictors(x = x,
-#                            y = y,
-#                            PCA = list(n.eofs = c(5,5,3),
-#                                       v.exp = .975,
-#                                       combined.PC = TRUE,
-#                                       which.var = c("hus850", "psl")),
-#                            local.predictors = list(neigh.vars = c("hus850","ta850"),
-#                                                    n.neighs = 5,
-#                                                    neigh.fun = NULL)
-#  )
+
+## ------------------------------------------------------------------------
+str(out)
+
+## ------------------------------------------------------------------------
+out <- prepare_predictors(x = x,
+                          y = y,
+                          subset.vars = c("ta850", "psl"),
+                          local.predictors = list(neigh.vars = "hus850",
+                                                  n.neighs = 5,
+                                                  neigh.fun = list(FUN = "mean"))
+)
+
+## ------------------------------------------------------------------------
+str(out)
+
+## ------------------------------------------------------------------------
+out <- prepare_predictors(x = x,
+                          y = y,
+                          subset.vars = c("ta850", "psl"),
+                          PCA = list(v.exp = .975, combined.PC = TRUE),
+                          local.predictors = list(neigh.vars = "hus850",
+                                                  n.neighs = 5,
+                                                  neigh.fun = NULL)
+)
+
+## ------------------------------------------------------------------------
+str(out)
 
 ## ---- fig.show='hold'----------------------------------------------------
 plot(1:10)

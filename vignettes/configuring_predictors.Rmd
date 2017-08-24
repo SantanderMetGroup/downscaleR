@@ -71,7 +71,7 @@ plotClimatology(climatology(y), backdrop.theme = "countries", cex = 1.5,
 ```
 
 
-Even though the aim of this example is preparing only the predictors (the predictands are not manipulated), the information of the predictand is always required in order to ensure the spatio-temporal consistency of the experiment. The function handles internally non-overlapping temporal periods, ensuring that there is a perfect match between predictors and predictand prior to model calibration.
+Although the aim of this example is preparing only the predictors (the predictands are not manipulated), the information of the predictand is always required in order to ensure the spatio-temporal consistency of the experiment. The function handles internally non-overlapping temporal periods, ensuring that there is a perfect match between predictors and predictand prior to model calibration.
 
 ## Worked examples
 
@@ -82,9 +82,9 @@ library(downscaleR)
 
 ### Using the raw predictor variables
 
-In this situation, the multigrid is directly passed to `prepare_predictors`:
+In this situation, the multigrid is directly passed to `prepare_predictors`. Note that only `x` (predictors multigrid) and `y` (predictand, stations) are passed to the function, while the rest of arguments are left with their default value `NULL` (they could be omitted):
 
-```{r,eval=FALSE}
+```{r}
 out <- prepare_predictors(x = x,
                           y = y,
                           subset.vars = NULL,
@@ -107,49 +107,88 @@ str(attributes(out))
 
 ## Using PCs as predictors
 
-In this example, instead of using the raw fields as predictors, we will use principal components. The tuning of the principal component analysis can be undertaken by passing the different possible arguments admitted by `transformeR::prinComp`, which are detailed in the help of the function, to the argument PCA, in the for of a list. Note that here, we will use the first 5, 4 and 3 PCs respectively, of the input variables contained in the multigrid. In case of doubt, the helper `getVarNames` can be used:
+In this example, instead of using the raw fields as predictors, we will use principal components. The tuning of the principal component analysis can be undertaken by passing the different possible arguments admitted by `transformeR::prinComp`, which are detailed in the help of the function to the argument `PCA` of `prepare_predictors`, in the form of a named list. Note that here we will use the first 5 PCs of the input variables contained in the multigrid. This applies also to the combined PC, that is used as predictor
 
 ```{r}
-getVarNames(x)
-```
-
-Therefore, here we will use the following configuration:
-
-| Variable | Number of PCs |
-|------|-----|
-|hus850| 5|
-|psl| 4|
-|ta850| 3|
-|combined| 5|
-
-```{r, eval=FALSE}
 out <- prepare_predictors(x = x,
                           y = y,
-                          PCA = list(n.eofs = c(5,5,3,5),
-                                     combined.PC = TRUE),
-                          local.predictors = list(neigh.vars = c("hus850","ta850"),
-                                                  n.neighs = 5,
-                                                  neigh.fun = NULL)
+                          PCA = list(n.eofs = 5, combined.PC = TRUE)
 )
+```
 
+In this case, the output element `pca` contains the full output of `prinComp`, that will be needed in subsequent steps of the downscaling. There is also a global attribute `PCA.pars` containing metadata of the PCA options chosen. Note that now, the `global` element of the output contains the combined PC matrix (in this example it contains 5 columns, that is, the number of PCs retained as indicated in the argument `n.eofs`).
+
+```{r}
 str(out)
 ``` 
 
 ## Introducing local predictors
 
-```{r, eval=FALSE}
+Finally, it is possible to specify local predictors using the corresponding argument. It is passed as a named list with the following elements: 
+
+ * `neigh.vars`: the names of the variables to be used as local predictors
+ * `n.neighs`: the number of nearest points/grid-boxes to the predcitand location to be used
+ * `neigh.fun`: the aggregation function of the selected neighbours (if any). If `NULL` (the default), the nearest neighbours are not aggregated but just appended to the predictor matrix.
+
+****
+**TIP**: In order to select variables, either for local predictors or for multigrid subsetting via `subset.vars`, the helper `getVarNames` from `transformeR` may be useful:
+
+```{r}
+getVarNames(x)
+```
+****
+
+Next, we will use the raw fields of air temperature at 850mb and sea-level pressure as global predictors (`subset.vars = c("ta850", "psl")`). In addition, specific humidity at 850mb will be used as a local predictor (`neigh.vars = "hus850"`). In this example, we will consider the 5 closest points to the predictand location (`n.neighs = 5`), and no aggregation of the neighbours is undertaken (`neigh.fun = NULL`, this argument could be ommited as this is the default).
+
+```{r}
 out <- prepare_predictors(x = x,
                           y = y,
-                          PCA = list(n.eofs = c(5,5,3),
-                                     v.exp = .975,
-                                     combined.PC = TRUE,
-                                     which.var = c("hus850", "psl")),
-                          local.predictors = list(neigh.vars = c("hus850","ta850"),
+                          subset.vars = c("ta850", "psl"),
+                          local.predictors = list(neigh.vars = "hus850",
+                                                  n.neighs = 5,
+                                                  neigh.fun = NULL)
+)
+
+``` 
+
+```{r}
+str(out)
+```
+
+
+Instead of using all 5 neighbours sepparately, these can be aggregated, for instance using their average value as local predictor (`neigh.fun = list(FUN = "mean")`), or any other user-defined function, by adding all the additional arguments needed in the `neigh.fun` list (for instance, the 90th percentile value would be specified as `neigh.fun = list(FUN = "quantile", prob = .9)`, etc).
+
+```{r}
+out <- prepare_predictors(x = x,
+                          y = y,
+                          subset.vars = c("ta850", "psl"),
+                          local.predictors = list(neigh.vars = "hus850",
+                                                  n.neighs = 5,
+                                                  neigh.fun = list(FUN = "mean"))
+)
+``` 
+
+```{r}
+str(out)
+```
+
+ 
+Note that the same predictor configuration could be used but calculating the combined PC of the global predictors intead of their raw values. In this case, we indicate that we want to keep the PCs explaining no less than 97.5\% of the total variance (`v.exp = 0.975`; note that in the previous PCA example we indicated the number of PCs, instead of the amount of explained variance):
+
+```{r}
+out <- prepare_predictors(x = x,
+                          y = y,
+                          subset.vars = c("ta850", "psl"),
+                          PCA = list(v.exp = .975, combined.PC = TRUE),
+                          local.predictors = list(neigh.vars = "hus850",
                                                   n.neighs = 5,
                                                   neigh.fun = NULL)
 )
 ``` 
 
+```{r}
+str(out)
+```
 
   
 ## References
