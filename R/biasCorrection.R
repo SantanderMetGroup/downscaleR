@@ -140,7 +140,7 @@
 #' }
 #' @author S. Herrera, M. Iturbide, J. Bedia
 #' @export
-#' @examples 
+#' @examples \dontrun{
 #' require(transformeR)
 #' data(VALUE_Igueldo_tp)
 #' data(NCEP_Iberia_tp)
@@ -168,6 +168,7 @@
 #' qqplot(y$Data, eqm1win$Data)
 #' lines(c(0,100), c(0,100))
 #' par(mfrow = c(1,1))
+#' }
 
 
 
