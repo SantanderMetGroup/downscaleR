@@ -89,6 +89,7 @@ prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predi
     }
     # PCA - only considers the combined PC as global predictor
     pc.comb <- NULL
+    full.pca <- NULL
     if (!is.null(PCA)) {
         if ("which.var" %in% names(PCA)) {
             PCA[["which.var"]] <- subset.vars
@@ -97,10 +98,11 @@ prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predi
         varnames <- getVarNames(x)
         PCA[["grid"]] <- x
         PCA[["combined.PC"]] <- TRUE
+        full.pca <- do.call("prinComp", PCA)
         if (length(varnames) == 1) {
-            pc.comb <- do.call("prinComp", PCA) %>% extract2(varnames)
+            pc.comb <- full.pca %>% extract2(varnames)
         } else {
-            pc.comb <- do.call("prinComp", PCA) %>% extract2("COMBINED")    
+            pc.comb <- full.pca %>% extract2("COMBINED")    
         }
         x <- pc.comb[[1]]$PCs
     # RAW predictors    
@@ -115,8 +117,8 @@ prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predi
         aux.list <- NULL
     }
     predictor.list <- list("global" = x, "local" = nn, "pca" = pc.comb)
-    if (!is.null(PCA)) PCA <- PCA[-grep("grid", names(PCA))]
-    attr(predictor.list, "PCA.pars") <- PCA
+    # if (!is.null(PCA)) PCA <- PCA[-grep("grid", names(PCA))]
+    attr(predictor.list, "PCA.pars") <- full.pca
     attr(predictor.list, "localPred.pars") <- local.predictors
     attr(predictor.list, "dates") <- dates
     attr(predictor.list, "xyCoords") <- xyCoords
