@@ -42,8 +42,8 @@
 #'    length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
 #'  }
 #'  
-#' @return A named list with components \code{global}, \code{local} and \code{pca}, and other attributes. 
-#'  See Examples.
+#' @return A named list with components \code{y} (the predictand), \code{x.global} (global predictors, 2D matrix), \code{x.local} (local predictors, a list) 
+#' and \code{pca} (\code{\link[transformeR]{prinComp}} output), and other attributes. See Examples.
 #'  
 #' @examples 
 #' # See the dedicated vignette by typing:
@@ -116,7 +116,7 @@ prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predi
         x <- do.call("cbind", aux.list)
         aux.list <- NULL
     }
-    predictor.list <- list("global" = x, "local" = nn, "pca" = full.pca)
+    predictor.list <- list("y" = y, "x.global" = x, "x.local" = nn, "pca" = full.pca)
     if (!is.null(PCA)) PCA <- PCA[-grep("grid", names(PCA))]
     attr(predictor.list, "PCA.pars") <- PCA
     attr(predictor.list, "localPred.pars") <- local.predictors
