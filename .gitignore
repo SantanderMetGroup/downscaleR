@@ -8,4 +8,4 @@ init.R
 downscaleR.Rproj
 .Rprofile
 *.Rbuildignore
-inst/doc
+
