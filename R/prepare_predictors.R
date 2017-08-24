@@ -57,7 +57,7 @@
 #'  \strong{Principal Component Analysis}
 #'  Always that PCA is used, a combined PC will be returned (unless one single predictor is used, case in which no combination is possible).
 #'  Note that the variables of the predictor grid used to construct the combined PC can be flexibly controlled through the optional argument
-#'  \code{which.combine} in \code{\link[transformeR]{prinComp}}.
+#'  \code{subset.vars}.
 #'  
 #' @importFrom transformeR getTemporalIntersection getRefDates getCoordinates getVarNames
 #' @importFrom magrittr %<>% %>% 
@@ -94,8 +94,14 @@ prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predi
             PCA[["which.var"]] <- subset.vars
             message("NOTE: The argument 'which.var' passed to the 'PCA' list was overriden by argument 'subset.vars'")
         }
+        varnames <- getVarNames(x)
         PCA[["grid"]] <- x
-        pc.comb <- do.call("prinComp", PCA) %>% extract2("COMBINED")
+        PCA[["combined.PC"]] <- TRUE
+        if (length(varnames) == 1) {
+            pc.comb <- do.call("prinComp", PCA) %>% extract2(varnames)
+        } else {
+            pc.comb <- do.call("prinComp", PCA) %>% extract2("COMBINED")    
+        }
         x <- pc.comb[[1]]$PCs
     # RAW predictors    
     } else {
