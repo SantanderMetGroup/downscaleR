@@ -27,7 +27,7 @@
 #' @param y A grid (usually a stations grid, but not necessarily) of observations (predictands)
 #' @param PCA Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the arguments to be passed to \code{\link[transformeR]{prinComp}} to perform Principal Component Analysis
-#'  of the predictors grid (\code{x}). See Details on principal component analysis of predictors
+#'  of the predictors grid (\code{x}). See Details on principal component analysis of predictors.
 #' @param local.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the following arguments:
 #'  \itemize{
@@ -116,9 +116,9 @@ prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predi
         x <- do.call("cbind", aux.list)
         aux.list <- NULL
     }
-    predictor.list <- list("global" = x, "local" = nn, "pca" = pc.comb)
-    # if (!is.null(PCA)) PCA <- PCA[-grep("grid", names(PCA))]
-    attr(predictor.list, "PCA.pars") <- full.pca
+    predictor.list <- list("global" = x, "local" = nn, "pca" = full.pca)
+    if (!is.null(PCA)) PCA <- PCA[-grep("grid", names(PCA))]
+    attr(predictor.list, "PCA.pars") <- PCA
     attr(predictor.list, "localPred.pars") <- local.predictors
     attr(predictor.list, "dates") <- dates
     attr(predictor.list, "xyCoords") <- xyCoords
