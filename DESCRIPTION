@@ -23,7 +23,7 @@ Suggests:
 Type: Package
 Title: An R package for bias correction and statistical downscaling
 Version: 3.0.0
-Date: 2017-08-23
+Date: 2017-08-24
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquin Bedia <bediaj@unican.es> [aut, cre]",
@@ -39,8 +39,9 @@ Authors@R: as.person(c(
     "Max Tuni <max@predictia.es> [ctb]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
-Description: Tools for climate data calibration (bias correction, qq-mapping...), and perfect-prog statistical downscaling.
-      Focused on daily data, the package is conceived for dealing also with ensemble seasonal forecasts.
+Description: Tools for climate data calibration (bias correction, qq-mapping...) and perfect-prog downscaling, 
+as part of the climate4R bundle (see e.g. Cofiño et al 2017 <http://dx.doi.org/10.1016/j.cliser.2017.07.001>).
+Focused on daily data, the package is conceived for dealing also with seasonal forecast ensemble predictions.
 License: GPL (>= 3)
 LazyData: true
 RoxygenNote: 6.0.1

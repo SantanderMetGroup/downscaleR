@@ -45,7 +45,9 @@
 #' @return A named list with components \code{global}, \code{local} and \code{pca}, and other attributes. 
 #'  See Examples.
 #'  
-#' @examples See the corresponding vignette.
+#' @examples 
+#' # See the dedicated vignette by typing:
+#' # utils::vignette(topic = "configuring_predictors", package = "downscaleR")
 #'  
 #' @details   
 #'  \strong{Temporal consistency}
@@ -58,6 +60,7 @@
 #'  \code{which.combine} in \code{\link[transformeR]{prinComp}}.
 #'  
 #' @importFrom transformeR getTemporalIntersection getRefDates getCoordinates getVarNames
+#' @importFrom magrittr %<>% %>% 
 #'  
 #' @family downscaling.helpers
 #'  
@@ -82,7 +85,7 @@ prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predi
     } 
     # Global predictor subsetting
     if (!is.null(subset.vars)) {
-        x <- subsetGrid(x, var = subset.vars)
+        x  %<>%  subsetGrid(var = subset.vars, drop = FALSE)
     }
     # PCA - only considers the combined PC as global predictor
     pc.comb <- NULL
