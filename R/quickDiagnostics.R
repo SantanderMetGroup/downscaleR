@@ -350,8 +350,8 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), y
       y <- subsetGrid(sim, lonLim = location[1], latLim = location[2], outside = T)$Data
       if (!is.null(downscaled)) {
             if (any(attr(obs$Data, "dimensions") == "station")) {
-                  wredim <- redim(downscaled, runtime = T, station = TRUE, drop = F)
-                  if (any(attr(wredim$Data, "dimensions") == "station")){
+                  wredim <- redim(downscaled, runtime = T, loc = TRUE, drop = F)
+                  if (any(attr(wredim$Data, "dimensions") == "station")) {
                         w <- wredim$Data[,,,indstation]      
                   }else{
                         w <- wredim$Data     
