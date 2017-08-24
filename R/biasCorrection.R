@@ -193,7 +193,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
             newdata <- x 
             nwdatamssg <- FALSE
       }
-      if ("station" %in% getDim(y) & isTRUE(join.members)) {
+      if ("loc" %in% getDim(y) & isTRUE(join.members)) {
             join.members <- FALSE
             warning("The option 'join.members=TRUE' is currently not supported for station data predictand. It was reset to 'FALSE'.")
       }
@@ -223,7 +223,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                         target.year <- years[[i]]
                         rest.years <- setdiff(unlist(years), target.year)
                         station <- FALSE
-                        if ("station" %in% getDim(y)) station <- TRUE
+                        if ("loc" %in% getDim(y)) station <- TRUE
                         yy <- redim(y, member = FALSE)
                         yy <- if (method == "delta") {
                               subsetGrid(yy, years = target.year, drop = FALSE)
@@ -232,7 +232,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                         }
                         if (isTRUE(station)) {
                               yy$Data <- adrop(yy$Data, drop = 3)
-                              attr(yy$Data, "dimensions") <- c(setdiff(getDim(yy), c("lat", "lon")), "station")
+                              attr(yy$Data, "dimensions") <- c(setdiff(getDim(yy), c("lat", "lon")), "loc")
                         } else {
                               yy <- redim(yy, drop = TRUE)
                         }
@@ -272,7 +272,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       pred <- x
       sim <- newdata
       precip <- precipitation
-      if ("station" %in% getDim(obso)) {
+      if ("loc" %in% getDim(obso)) {
             station <- TRUE
             obs <- redim(obso, member = FALSE)
             x <- obs$xyCoords[,1]
