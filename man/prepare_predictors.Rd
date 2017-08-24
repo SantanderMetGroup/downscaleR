@@ -55,7 +55,8 @@ Configuration of predictors for flexible downscaling experiment definition
  \code{which.combine} in \code{\link[transformeR]{prinComp}}.
 }
 \examples{
-# See the corresponding vignette.
+# See the dedicated vignette by typing:
+# utils::vignette(topic = "configuring_predictors", package = "downscaleR")
  
 }
 \seealso{

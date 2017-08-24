@@ -1,7 +1,7 @@
 Package: downscaleR
 Depends:
     R(>= 3.1.0),
-    transformeR(>= 1.0.0)
+    transformeR(>= 1.0.1)
 Imports:
     abind,
     utils,
@@ -26,12 +26,12 @@ Version: 3.0.0
 Date: 2017-08-24
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
-    "Joaquin Bedia <bediaj@unican.es> [aut, cre]",
+    "Joaquín Bedia <bediaj@unican.es> [aut, cre]",
     "Jonas Bhend <Jonas.Bhend@meteoswiss.ch> [ctb]",
     "Matteo De Felice <matteo.defelice@enea.it> [ctb]",
-    "Jesus Fernandez <fernandej@unican.es> [ctb]",
-    "Maria Dolores Frias <friasmd@unican.es> [ctb]",
-    "Jose Manuel Gutierrez <gutierjm@unican.es> [aut]",
+    "Jesus Fernández <fernandej@unican.es> [ctb]",
+    "Maria Dolores Frías <friasmd@unican.es> [ctb]",
+    "José Manuel Gutiérrez <gutierjm@unican.es> [aut]",
     "Sixto Herrera <sixto@predictia.es> [aut]",
     "Maialen Iturbide <miturbide@ifca.unican.es> [aut]",
     "Rodrigo Manzanas <rmanzanas@ifca.unican.es> [aut]",
@@ -39,9 +39,8 @@ Authors@R: as.person(c(
     "Max Tuni <max@predictia.es> [ctb]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
-Description: Tools for climate data calibration (bias correction, qq-mapping...) and perfect-prog downscaling, 
-as part of the climate4R bundle (see e.g. Cofiño et al 2017 <http://dx.doi.org/10.1016/j.cliser.2017.07.001>).
-Focused on daily data, the package is conceived for dealing also with seasonal forecast ensemble predictions.
+Encoding: UTF-8
+Description: Tools for climate data calibration (bias correction, qq-mapping...) and perfect-prog downscaling, as part of the climate4R bundle (see e.g. Cofiño et al 2017 <doi:10.1016/j.cliser.2017.07.001>). Focused on daily data, the package is conceived for dealing also with seasonal forecast ensemble predictions.
 License: GPL (>= 3)
 LazyData: true
 RoxygenNote: 6.0.1
