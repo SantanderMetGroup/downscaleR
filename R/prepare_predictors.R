@@ -75,14 +75,21 @@ prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predi
     xyCoords <- getCoordinates(x)
     # Local predictors
     nn <- NULL
+    all.predictor.vars <- if (!is.null(subset.vars)) {
+        subset.vars
+    } else {
+        getVarNames(x)
+    }
     if (!is.null(local.predictors)) {
-            pred.nn.ind <- predictor.nn.indices(neigh.vars = local.predictors$neigh.vars,
-                                                n.neighs = local.predictors$n.neighs,
-                                                x = x, y = y) 
-            nn <- predictor.nn.values(nn.indices.list = pred.nn.ind,
-                                      grid = x,
-                                      neigh.fun = local.predictors$neigh.fun) 
-    } 
+        all.predictor.vars <- c(all.predictor.vars, local.predictors$neigh.vars)
+        pred.nn.ind <- predictor.nn.indices(neigh.vars = local.predictors$neigh.vars,
+                                            n.neighs = local.predictors$n.neighs,
+                                            x = x, y = y) 
+        nn <- predictor.nn.values(nn.indices.list = pred.nn.ind,
+                                  grid = x,
+                                  neigh.fun = local.predictors$neigh.fun) 
+    }
+    all.predictor.vars %<>% unique()
     # Global predictor subsetting
     if (!is.null(subset.vars)) {
         x  %<>%  subsetGrid(var = subset.vars, drop = FALSE)
@@ -120,6 +127,7 @@ prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predi
     if (!is.null(PCA)) PCA <- PCA[-grep("grid", names(PCA))]
     attr(predictor.list, "PCA.pars") <- PCA
     attr(predictor.list, "localPred.pars") <- local.predictors
+    attr(predictor.list, "predictor.vars") <- all.predictor.vars
     attr(predictor.list, "dates") <- dates
     attr(predictor.list, "xyCoords") <- xyCoords
     return(predictor.list)
