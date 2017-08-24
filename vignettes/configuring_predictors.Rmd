@@ -19,12 +19,11 @@ Broadly speaking, there are two main configurations:
 
   1. Using atmospheric fields "as they are" for a given spatial domain
   2. Using principal components obtained from these fields. This can be either a principal component calculated upon a particular variable, or a _combined_ PC considering a combination of different predictor variables. 
-
-Furthermore, in addition to Principal Components that provide a synoptic descriptor, local information of a particular variable or set of variables can be also included as a predictor in the calibration phase (e.g. the surface temperature in the nearest grid cells around a given station). 
+  3. Furthermore, in addition to Principal Components or raw atmospheric fields that provide a synoptic descriptor, local information of a particular variable or set of variables can be also included as a predictor in the calibration phase (e.g. the surface temperature in the nearest grid cells around a given station). 
 
 The large number of options required for a fine-tuning of a downscaling method requires a flexible, yet easily configurable interface, enabling users to launch complex experiments for testing different predictor setups. `prepare_predictors` has been designed to this aim. A few reproducible examples are presented in this vignette.
   
-### A note of the terminology used
+### A note on the terminology used
 
 In the `climate4R` bundle (see e.g. Cofiño _et al._ 2017), atmospheric variables are stored in the so called data _grids_. In order to efficiently handle multiple variables used as predictors in downscaling experiments, "stacks" of grids are used. These are known as _multiGrids_, and can be obtained using the constructor _makeMultiGrid_ from a set of -dimensionally consistent- grids.
 
@@ -35,12 +34,12 @@ In the `climate4R` bundle (see e.g. Cofiño _et al._ 2017), atmospheric variable
 
 Daily data from the NCEP reanalysis (Kalnay _et al._ 1996) are used as example. In particular, a domain centered on the Iberian Peninsula is considered, and three variables (mean sea-level pressure `psl`, specific humidity at 850mb `hus850` and air temperature at 850mb `ta850`) will be used as predictors. These are built-in example datasets from the package `transformeR` of the `climate4R` bundle.
 
-```{r}
+```{r,message=FALSE}
 library(transformeR)
 data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
 ```
 
-```{r,fig.cap='The mean sea-level pressure field for the Iberian Peninsula. Type `help("<name_of_the_dataset>")` for further details.',fig.show='hold'}
+```{r,fig.cap='The mean sea-level pressure field for the Iberian Peninsula. Type `help("<name_of_the_dataset>")` for further details.',fig.show='hold',message=FALSE}
 plotClimatology(climatology(NCEP_Iberia_psl), backdrop.theme = "coastline",
                 main = "Mean DJF SLP (1983-2002)")
 plotClimatology(climatology(NCEP_Iberia_hus850), backdrop.theme = "coastline",
@@ -66,7 +65,7 @@ data("VALUE_Iberia_tp")
 y <- VALUE_Iberia_tp
 ```
 
-```{r,fig.cap='Precipitation observations used as predictand. Type `help("VALUE_Iberia_tp")` for further details.'}
+```{r,fig.cap='Precipitation observations used as predictand. Type `help("VALUE_Iberia_tp")` for further details.',message=FALSE}
 plotClimatology(climatology(y), backdrop.theme = "countries", cex = 1.5,
                 main = "Mean Winter daily precip (mm/day, 1983-2002")
 ```
@@ -110,7 +109,7 @@ str(attributes(out))
 
 In this example, instead of using the raw fields as predictors, we will use principal components. The tuning of the principal component analysis can be undertaken by passing the different possible arguments admitted by `transformeR::prinComp`, which are detailed in the help of the function to the argument `PCA` of `prepare_predictors`, in the form of a named list. Note that here we will use the first 5 PCs of the input variables contained in the multigrid. This applies also to the combined PC, that is used as predictor
 
-```{r, echo=FALSE}
+```{r, message=FALSE}
 out <- prepare_predictors(x = x,
                           y = y,
                           PCA = list(n.eofs = 5, combined.PC = TRUE)
@@ -176,7 +175,7 @@ str(out)
  
 Note that the same predictor configuration could be used but calculating the combined PC of the global predictors intead of their raw values. In this case, we indicate that we want to keep the PCs explaining no less than 97.5\% of the total variance (`v.exp = 0.975`; note that in the previous PCA example we indicated the number of PCs, instead of the amount of explained variance):
 
-```{r}
+```{r,message=FALSE}
 out <- prepare_predictors(x = x,
                           y = y,
                           subset.vars = c("ta850", "psl"),

@@ -1,8 +1,8 @@
-## ------------------------------------------------------------------------
+## ----message=FALSE-------------------------------------------------------
 library(transformeR)
 data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
 
-## ----fig.cap='The mean sea-level pressure field for the Iberian Peninsula. Type `help("<name_of_the_dataset>")` for further details.',fig.show='hold'----
+## ----fig.cap='The mean sea-level pressure field for the Iberian Peninsula. Type `help("<name_of_the_dataset>")` for further details.',fig.show='hold',message=FALSE----
 plotClimatology(climatology(NCEP_Iberia_psl), backdrop.theme = "coastline",
                 main = "Mean DJF SLP (1983-2002)")
 plotClimatology(climatology(NCEP_Iberia_hus850), backdrop.theme = "coastline",
@@ -17,7 +17,7 @@ x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
 data("VALUE_Iberia_tp")
 y <- VALUE_Iberia_tp
 
-## ----fig.cap='Precipitation observations used as predictand. Type `help("VALUE_Iberia_tp")` for further details.'----
+## ----fig.cap='Precipitation observations used as predictand. Type `help("VALUE_Iberia_tp")` for further details.',message=FALSE----
 plotClimatology(climatology(y), backdrop.theme = "countries", cex = 1.5,
                 main = "Mean Winter daily precip (mm/day, 1983-2002")
 
@@ -35,7 +35,7 @@ str(out)
 ## ------------------------------------------------------------------------
 str(attributes(out))
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- message=FALSE------------------------------------------------------
 out <- prepare_predictors(x = x,
                           y = y,
                           PCA = list(n.eofs = 5, combined.PC = TRUE)
@@ -72,7 +72,7 @@ out <- prepare_predictors(x = x,
 ## ------------------------------------------------------------------------
 str(out)
 
-## ------------------------------------------------------------------------
+## ----message=FALSE-------------------------------------------------------
 out <- prepare_predictors(x = x,
                           y = y,
                           subset.vars = c("ta850", "psl"),
