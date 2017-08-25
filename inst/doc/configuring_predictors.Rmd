@@ -94,8 +94,9 @@ str(out)
 ```
 The output object is a list with different components:
 
- * `global`: Is the global predictor data matrix. In this example, it is a matrix in which rows correspond to times (days in this case) and the columns to locations, arranged via the internal helper `transformeR::array3Dto2Dmat`. If there is more than one variable as predictor, as in the example, the matrices for each variable are just binded by columns. In other cases, fopr instance when using PCs, this matrix corresponds to the selected combined PC (rows are times, and columns are PCs, in decreasing order of explained variance according to the user specifications).
- * `local`: in case local predictors are used, the local information is included here. This is a list of matrices, of the same longitude as the number of locations in the predictand, each one containing the local information that will be appended to the `global` matrix. 
+ * `y`: This is the predictand object. If required, it is a subset of the original one in order to ensure the temporal consistency with the predictors (this is achieved internally through the helper function `getTemporalIntersection` in `transformeR`).
+ * `x.global`: Is the global predictor data matrix. In this example, it is a matrix in which rows correspond to times (days in this case) and the columns to locations, arranged via the internal helper `transformeR::array3Dto2Dmat`. If there is more than one variable as predictor, as in the example, the matrices for each variable are just binded by columns. In other cases, fopr instance when using PCs, this matrix corresponds to the selected combined PC (rows are times, and columns are PCs, in decreasing order of explained variance according to the user specifications).
+ * `x.local`: in case local predictors are used, the local information is included here. This is a list of matrices, of the same longitude as the number of locations in the predictand, each one containing the local information that will be appended to the `global` matrix. 
  * `pca`: This element stores the whole PCA (this is the output of the `transformeR::prinComp` function). It contains metadata required in subsequent steps. 
 
 In addition, several attributes are appended to the output to aid in the traceability of the predictor structure:

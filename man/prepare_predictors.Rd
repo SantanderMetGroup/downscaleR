@@ -21,7 +21,7 @@ as either raw global predictors or to construct the combined PC.}
 
 \item{PCA}{Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 with the arguments to be passed to \code{\link[transformeR]{prinComp}} to perform Principal Component Analysis
-of the predictors grid (\code{x}). See Details on principal component analysis of predictors}
+of the predictors grid (\code{x}). See Details on principal component analysis of predictors.}
 
 \item{local.predictors}{Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 with the following arguments:
@@ -38,8 +38,8 @@ with the following arguments:
 }}
 }
 \value{
-A named list with components \code{global}, \code{local} and \code{pca}, and other attributes. 
- See Examples.
+A named list with components \code{y} (the predictand), \code{x.global} (global predictors, 2D matrix), \code{x.local} (local predictors, a list) 
+and \code{pca} (\code{\link[transformeR]{prinComp}} output), and other attributes. See Examples.
 }
 \description{
 Configuration of predictors for flexible downscaling experiment definition
