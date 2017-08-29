@@ -18,7 +18,7 @@
 #' @title Configuration of predictors for downscaling
 #' @description Configuration of predictors for flexible downscaling experiment definition
 #' @param x A grid (usually a multigrid) of predictor fields
-#' @param subset.vars An optional character vector with the short names of the variables of the input \code{x} 
+#' @param global.vars An optional character vector with the short names of the variables of the input \code{x} 
 #'  multigrid to be retained as global predictors (use the \code{\link{getVarNames}} helper if not sure about variable names).
 #'  This argument just produces a call to \code{\link[transformeR]{subsetGrid}}, but it is included here for better
 #'  flexibility in downscaling experiments (predictor screening...). For instance, it allows to use some 
@@ -28,6 +28,9 @@
 #' @param PCA Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the arguments to be passed to \code{\link[transformeR]{prinComp}} to perform Principal Component Analysis
 #'  of the predictors grid (\code{x}). See Details on principal component analysis of predictors.
+#' @param combined.only Optional, and only used if PCA parameters are passed. Should the combined PC be used as the only
+#' global predictor? Default to TRUE. Otherwise, the combined PC constructed with \code{which.combine} argument in 
+#' \code{\link{prinComp}} is append to the PCs of the remaining variables within the grid.
 #' @param local.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the following arguments:
 #'  \itemize{
@@ -66,17 +69,17 @@
 #'  
 #' @export
 #'  
-#' @author J. Bedia, D. San-Mart\'in and J.M. Guti\'errez 
+#' @author J. Bedia, D. San-Martín and J.M. Gutiérrez 
 
-prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predictors = NULL) {
+prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.only = TRUE, local.predictors = NULL) {
     y <- getTemporalIntersection(obs = y, prd = x, which.return = "obs")
     x <- getTemporalIntersection(obs = y, prd = x, which.return = "prd")
     dates <- getRefDates(x)
     xyCoords <- getCoordinates(x)
-    # Local predictors
+    # LOCAL PREDICTORS
     nn <- NULL
-    all.predictor.vars <- if (!is.null(subset.vars)) {
-        subset.vars
+    all.predictor.vars <- if (!is.null(global.vars)) {
+        global.vars
     } else {
         getVarNames(x)
     }
@@ -91,28 +94,31 @@ prepare_predictors <- function(x, y, subset.vars = NULL, PCA = NULL, local.predi
                                   neigh.fun = local.predictors$neigh.fun)
     }
     all.predictor.vars %<>% unique()
-    # Global predictor subsetting
-    if (!is.null(subset.vars)) {
-        x  %<>%  subsetGrid(var = subset.vars, drop = FALSE)
+    # GLOBAL PREDICTOR SUBSETTING
+    if (!is.null(global.vars)) {
+        x  %<>%  subsetGrid(var = global.vars, drop = FALSE)
     }
-    # PCA - only considers the combined PC as global predictor
-    pc.comb <- NULL
+    # PCA predictors
     full.pca <- NULL
     if (!is.null(PCA)) {
-        if ("which.var" %in% names(PCA)) {
-            PCA[["which.var"]] <- subset.vars
-            message("NOTE: The argument 'which.var' passed to the 'PCA' list was overriden by argument 'subset.vars'")
-        }
         varnames <- getVarNames(x)
         PCA[["grid"]] <- x
-        PCA[["combined.PC"]] <- TRUE
         full.pca <- do.call("prinComp", PCA)
-        if (length(varnames) == 1) {
-            pc.comb <- full.pca %>% extract2(varnames)
+        x <- if (!is.null(PCA$which.combine)) {
+            if (length(varnames) == length(PCA$which.combine)) combined.only <- TRUE
+            if (combined.only) {
+                full.pca$COMBINED[[1]]$PCs
+            } else {
+                combined.vars <- attributes(full.pca$COMBINED)$combined_variables
+                all.vars <- names(full.pca)[-length(full.pca)]
+                aux <- full.pca[all.vars[which(!all.vars %in% combined.vars)]]
+                aux <- lapply(1:length(aux), function(i) aux[[i]][[1]]$PCs)
+                cbind(do.call("cbind", aux), full.pca$COMBINED[[1]]$PCs)
+            }
         } else {
-            pc.comb <- full.pca %>% extract2("COMBINED")    
+            aux <- lapply(1:length(full.pca), function(i) full.pca[[i]][[1]]$PCs)
+            do.call("cbind", aux)
         }
-        x <- pc.comb[[1]]$PCs
     # RAW predictors    
     } else {
         # Construct a predictor matrix of raw input grids
