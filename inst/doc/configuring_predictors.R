@@ -27,7 +27,7 @@ library(downscaleR)
 ## ------------------------------------------------------------------------
 out <- prepare_predictors(x = x,
                           y = y,
-                          subset.vars = NULL,
+                          global.vars = NULL,
                           PCA = NULL,
                           local.predictors = NULL)
 str(out)
@@ -35,10 +35,13 @@ str(out)
 ## ------------------------------------------------------------------------
 str(attributes(out))
 
+## ------------------------------------------------------------------------
+getVarNames(x)
+
 ## ---- message=FALSE------------------------------------------------------
 out <- prepare_predictors(x = x,
                           y = y,
-                          PCA = list(n.eofs = 5, combined.PC = TRUE)
+                          PCA = list(n.eofs = c(10,5,5))
 )
 
 ## ------------------------------------------------------------------------
@@ -50,12 +53,11 @@ getVarNames(x)
 ## ------------------------------------------------------------------------
 out <- prepare_predictors(x = x,
                           y = y,
-                          subset.vars = c("ta850", "psl"),
+                          global.vars = c("ta850", "psl"),
                           local.predictors = list(neigh.vars = "hus850",
-                                                  n.neighs = 5,
+                                                  n.neighs = 4,
                                                   neigh.fun = NULL)
 )
-
 
 ## ------------------------------------------------------------------------
 str(out)
@@ -63,9 +65,9 @@ str(out)
 ## ------------------------------------------------------------------------
 out <- prepare_predictors(x = x,
                           y = y,
-                          subset.vars = c("ta850", "psl"),
+                          global.vars = c("ta850", "psl"),
                           local.predictors = list(neigh.vars = "hus850",
-                                                  n.neighs = 5,
+                                                  n.neighs = 4,
                                                   neigh.fun = list(FUN = "mean"))
 )
 
@@ -75,10 +77,10 @@ str(out)
 ## ----message=FALSE-------------------------------------------------------
 out <- prepare_predictors(x = x,
                           y = y,
-                          subset.vars = c("ta850", "psl"),
-                          PCA = list(v.exp = .975, combined.PC = TRUE),
+                          global.vars = c("ta850", "psl"),
+                          PCA = list(v.exp = c(.95, .95)),
                           local.predictors = list(neigh.vars = "hus850",
-                                                  n.neighs = 5,
+                                                  n.neighs = 4,
                                                   neigh.fun = NULL)
 )
 

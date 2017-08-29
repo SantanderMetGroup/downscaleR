@@ -5,6 +5,7 @@ date: "`r Sys.Date()`"
 output: 
     rmarkdown::html_vignette:
         fig_caption: yes
+        toc: yes
 vignette: >
   %\VignetteIndexEntry{Preparing predictors in perfect prog downscaling experiments}
   %\VignetteEngine{knitr::rmarkdown}
@@ -18,7 +19,7 @@ This document illustrates the preparation of different predictor configurations 
 Broadly speaking, there are two main configurations:
 
   1. Using atmospheric fields "as they are" for a given spatial domain
-  2. Using principal components obtained from these fields. This can be either a principal component calculated upon a particular variable, or a _combined_ PC considering a combination of different predictor variables. 
+  2. Using principal components obtained from these fields. This can be either a principal component calculated upon a particular variable, and/or a _combined_ PC considering a combination of different predictor variables. 
   3. Furthermore, in addition to Principal Components or raw atmospheric fields that provide a synoptic descriptor, local information of a particular variable or set of variables can be also included as a predictor in the calibration phase (e.g. the surface temperature in the nearest grid cells around a given station). 
 
 The large number of options required for a fine-tuning of a downscaling method requires a flexible, yet easily configurable interface, enabling users to launch complex experiments for testing different predictor setups. `prepare_predictors` has been designed to this aim. A few reproducible examples are presented in this vignette.
@@ -32,7 +33,7 @@ In the `climate4R` bundle (see e.g. Cofiño _et al._ 2017), atmospheric variable
 
 ### Predictors
 
-Daily data from the NCEP reanalysis (Kalnay _et al._ 1996) are used as example. In particular, a domain centered on the Iberian Peninsula is considered, and three variables (mean sea-level pressure `psl`, specific humidity at 850mb `hus850` and air temperature at 850mb `ta850`) will be used as predictors. These are built-in example datasets from the package `transformeR` of the `climate4R` bundle.
+Daily data from the NCEP reanalysis (Kalnay _et al._ 1996) are used as example. In particular, a domain centered on the Iberian Peninsula is considered, and three variables (mean sea-level pressure `psl`, specific humidity at 850mb `hus850` and air temperature at 850mb `ta850`) will be used as predictors. These are built-in example datasets from the package `transformeR` of the `climate4R` bundle. See for instance `help("NCEP_Iberia_hus850", package = "transformeR")` for further details. 
 
 ```{r,message=FALSE}
 library(transformeR)
@@ -87,7 +88,7 @@ In this situation, the multigrid is directly passed to `prepare_predictors`. Not
 ```{r}
 out <- prepare_predictors(x = x,
                           y = y,
-                          subset.vars = NULL,
+                          global.vars = NULL,
                           PCA = NULL,
                           local.predictors = NULL)
 str(out)
@@ -108,16 +109,25 @@ str(attributes(out))
 
 ## Using PCs as predictors
 
-In this example, instead of using the raw fields as predictors, we will use principal components. The tuning of the principal component analysis can be undertaken by passing the different possible arguments admitted by `transformeR::prinComp`, which are detailed in the help of the function to the argument `PCA` of `prepare_predictors`, in the form of a named list. Note that here we will use the first 5 PCs of the input variables contained in the multigrid. This applies also to the combined PC, that is used as predictor
+In this example, instead of using the raw fields as predictors, we will use principal components. The tuning of the principal component analysis can be undertaken by passing the different possible arguments admitted by `transformeR::prinComp`, which are detailed in the help of the function to the argument `PCA` of `prepare_predictors`, in the form of a named list. 
+
+Note that here we will use the first 5 PCs of the 3 input variables contained in the multigrid. 
+
+```{r}
+getVarNames(x)
+```
+
+
+This applies also to the combined PC, that is used as predictor
 
 ```{r, message=FALSE}
 out <- prepare_predictors(x = x,
                           y = y,
-                          PCA = list(n.eofs = 5, combined.PC = TRUE)
+                          PCA = list(n.eofs = c(10,5,5))
 )
 ```
 
-In this case, the output element `pca` contains the full output of `prinComp`, that will be needed in subsequent steps of the downscaling. There is also a global attribute `PCA.pars` containing metadata of the PCA options chosen. Note that now, the `global` element of the output contains the combined PC matrix (in this example it contains 5 columns, that is, the number of PCs retained as indicated in the argument `n.eofs`).
+In this case, the output element `pca` contains the full output of `prinComp`, that will be needed in subsequent steps of the downscaling. There is also a global attribute `PCA.pars` containing metadata of the PCA options chosen. Note that now, the `x.global` element of the output contains the PC matrix of all the variables in the input grid, and thus it has $10+5+5=20$ columns corresponding to the number of PCs for each variable indicated in `n.eofs`.
 
 ```{r}
 str(out)
@@ -139,17 +149,16 @@ getVarNames(x)
 ```
 ****
 
-Next, we will use the raw fields of air temperature at 850mb and sea-level pressure as global predictors (`subset.vars = c("ta850", "psl")`). In addition, specific humidity at 850mb will be used as a local predictor (`neigh.vars = "hus850"`). In this example, we will consider the 5 closest points to the predictand location (`n.neighs = 5`), and no aggregation of the neighbours is undertaken (`neigh.fun = NULL`, this argument could be ommited as this is the default).
+Next, we will use the raw fields of air temperature at 850mb and sea-level pressure as global predictors (`subset.vars = c("ta850", "psl")`). In addition, specific humidity at 850mb will be used as a local predictor (`neigh.vars = "hus850"`). In this example, we will consider the 4 closest points to the predictand location (`n.neighs = 5`), and no aggregation of the neighbours is undertaken (`neigh.fun = NULL`, this argument could be ommited as this is the default).
 
 ```{r}
 out <- prepare_predictors(x = x,
                           y = y,
-                          subset.vars = c("ta850", "psl"),
+                          global.vars = c("ta850", "psl"),
                           local.predictors = list(neigh.vars = "hus850",
-                                                  n.neighs = 5,
+                                                  n.neighs = 4,
                                                   neigh.fun = NULL)
 )
-
 ``` 
 
 ```{r}
@@ -157,14 +166,14 @@ str(out)
 ```
 
 
-Instead of using all 5 neighbours sepparately, these can be aggregated, for instance using their average value as local predictor (`neigh.fun = list(FUN = "mean")`), or any other user-defined function, by adding all the additional arguments needed in the `neigh.fun` list (for instance, the 90th percentile value would be specified as `neigh.fun = list(FUN = "quantile", prob = .9)`, etc).
+Instead of using all 4 neighbours sepparately, these can be aggregated, for instance using their average value as local predictor (`neigh.fun = list(FUN = "mean")`), or any other user-defined function, by adding all the additional arguments needed in the `neigh.fun` list (for instance, the 90th percentile value would be specified as `neigh.fun = list(FUN = "quantile", prob = .9)`, etc).
 
 ```{r}
 out <- prepare_predictors(x = x,
                           y = y,
-                          subset.vars = c("ta850", "psl"),
+                          global.vars = c("ta850", "psl"),
                           local.predictors = list(neigh.vars = "hus850",
-                                                  n.neighs = 5,
+                                                  n.neighs = 4,
                                                   neigh.fun = list(FUN = "mean"))
 )
 ``` 
@@ -173,16 +182,18 @@ out <- prepare_predictors(x = x,
 str(out)
 ```
 
- 
-Note that the same predictor configuration could be used but calculating the combined PC of the global predictors intead of their raw values. In this case, we indicate that we want to keep the PCs explaining no less than 97.5\% of the total variance (`v.exp = 0.975`; note that in the previous PCA example we indicated the number of PCs, instead of the amount of explained variance):
+
+## Combining PCs with local predictors
+
+This is probably the most typical configuration of predictors. The global information of the PCs is complemented with local information using an additional variable. For instance, in this example we retain temperature and sea-level pressure as global predictors, using their PCs, and include local information for specific humnifity at 850 mb. In this case, we indicate that we want to keep the PCs explaining no less than 95\% of the total variance for each global variable (`v.exp = c(0.95, 0.95)`; note that in the previous PCA example we indicated the number of PCs (argument `n.eofs`), instead of the amount of explained variance):
 
 ```{r,message=FALSE}
 out <- prepare_predictors(x = x,
                           y = y,
-                          subset.vars = c("ta850", "psl"),
-                          PCA = list(v.exp = .975, combined.PC = TRUE),
+                          global.vars = c("ta850", "psl"),
+                          PCA = list(v.exp = c(.95, .95)),
                           local.predictors = list(neigh.vars = "hus850",
-                                                  n.neighs = 5,
+                                                  n.neighs = 4,
                                                   neigh.fun = NULL)
 )
 ``` 
@@ -190,6 +201,10 @@ out <- prepare_predictors(x = x,
 ```{r}
 str(out)
 ```
+
+The `x.global` matrix has now 7 columns, corresponding to 3 PCs reatined fpor sea-level pressure plus 3 for air temperature.
+
+
 
   
 ## References

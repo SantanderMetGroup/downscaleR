@@ -4,15 +4,15 @@
 \alias{prepare_predictors}
 \title{Configuration of predictors for downscaling}
 \usage{
-prepare_predictors(x, y, subset.vars = NULL, PCA = NULL,
-  local.predictors = NULL)
+prepare_predictors(x, y, global.vars = NULL, PCA = NULL,
+  combined.only = TRUE, local.predictors = NULL)
 }
 \arguments{
 \item{x}{A grid (usually a multigrid) of predictor fields}
 
 \item{y}{A grid (usually a stations grid, but not necessarily) of observations (predictands)}
 
-\item{subset.vars}{An optional character vector with the short names of the variables of the input \code{x} 
+\item{global.vars}{An optional character vector with the short names of the variables of the input \code{x} 
 multigrid to be retained as global predictors (use the \code{\link{getVarNames}} helper if not sure about variable names).
 This argument just produces a call to \code{\link[transformeR]{subsetGrid}}, but it is included here for better
 flexibility in downscaling experiments (predictor screening...). For instance, it allows to use some 
@@ -22,6 +22,10 @@ as either raw global predictors or to construct the combined PC.}
 \item{PCA}{Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 with the arguments to be passed to \code{\link[transformeR]{prinComp}} to perform Principal Component Analysis
 of the predictors grid (\code{x}). See Details on principal component analysis of predictors.}
+
+\item{combined.only}{Optional, and only used if PCA parameters are passed. Should the combined PC be used as the only
+global predictor? Default to TRUE. Otherwise, the combined PC constructed with \code{which.combine} argument in 
+\code{\link{prinComp}} is append to the PCs of the remaining variables within the grid.}
 
 \item{local.predictors}{Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 with the following arguments:
@@ -64,5 +68,5 @@ Other downscaling.helpers: \code{\link{predictor.nn.indices}},
   \code{\link{predictor.nn.values}}
 }
 \author{
-J. Bedia, D. San-Mart\'in and J.M. Guti\'errez
+J. Bedia, D. San-Martín and J.M. Gutiérrez
 }
