@@ -12,7 +12,7 @@
 
 <meta name="author" content="J. Bedia (Santander Meteorology Group)" />
 
-<meta name="date" content="2017-08-29" />
+<meta name="date" content="2017-08-30" />
 
 <title>Preparing predictors in perfect prog downscaling experiments</title>
 
@@ -70,30 +70,32 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 <h1 class="title toc-ignore">Preparing predictors in perfect prog downscaling experiments</h1>
 <h4 class="author"><em>J. Bedia (Santander Meteorology Group)</em></h4>
-<h4 class="date"><em>2017-08-29</em></h4>
+<h4 class="date"><em>2017-08-30</em></h4>
 
 
 <div id="TOC">
 <ul>
-<li><a href="#introduction">Introduction</a><ul>
-<li><a href="#a-note-on-the-terminology-used">A note on the terminology used</a></li>
+<li><a href="#introduction"><span class="toc-section-number">1</span> Introduction</a><ul>
+<li><a href="#a-note-on-the-terminology-used"><span class="toc-section-number">1.1</span> A note on the terminology used</a></li>
 </ul></li>
-<li><a href="#data">Data</a><ul>
-<li><a href="#predictors">Predictors</a></li>
+<li><a href="#example-data"><span class="toc-section-number">2</span> Example data</a><ul>
+<li><a href="#predictors"><span class="toc-section-number">2.1</span> Predictors</a></li>
+<li><a href="#predictands"><span class="toc-section-number">2.2</span> Predictands</a></li>
+<li><a href="#worked-examples"><span class="toc-section-number">2.3</span> Worked examples</a></li>
 </ul></li>
-<li><a href="#predictands">Predictands</a></li>
-<li><a href="#worked-examples">Worked examples</a><ul>
-<li><a href="#using-the-raw-predictor-variables">Using the raw predictor variables</a></li>
+<li><a href="#brief-description-of-the-output-predictor-data-structure"><span class="toc-section-number">3</span> Brief description of the output predictor data structure</a></li>
+<li><a href="#case-studies"><span class="toc-section-number">4</span> Case studies</a><ul>
+<li><a href="#using-the-raw-predictor-variables"><span class="toc-section-number">4.1</span> Using the raw predictor variables</a></li>
+<li><a href="#using-pcs-as-predictors"><span class="toc-section-number">4.2</span> Using PCs as predictors</a></li>
+<li><a href="#introducing-local-predictors"><span class="toc-section-number">4.3</span> Introducing local predictors</a></li>
+<li><a href="#combining-pcs-with-local-predictors"><span class="toc-section-number">4.4</span> Combining PCs with local predictors</a></li>
 </ul></li>
-<li><a href="#using-pcs-as-predictors">Using PCs as predictors</a></li>
-<li><a href="#introducing-local-predictors">Introducing local predictors</a></li>
-<li><a href="#combining-pcs-with-local-predictors">Combining PCs with local predictors</a></li>
-<li><a href="#references">References</a></li>
+<li><a href="#references"><span class="toc-section-number">5</span> References</a></li>
 </ul>
 </div>
 
-<div id="introduction" class="section level2">
-<h2>Introduction</h2>
+<div id="introduction" class="section level1">
+<h1><span class="header-section-number">1</span> Introduction</h1>
 <p>This document illustrates the preparation of different predictor configurations in perfect-prog experiments.</p>
 <p>Broadly speaking, there are two main configurations:</p>
 <ol style="list-style-type: decimal">
@@ -102,15 +104,15 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <li>Furthermore, in addition to Principal Components or raw atmospheric fields that provide a synoptic descriptor, local information of a particular variable or set of variables can be also included as a predictor in the calibration phase (e.g. the surface temperature in the nearest grid cells around a given station).</li>
 </ol>
 <p>The large number of options required for a fine-tuning of a downscaling method requires a flexible, yet easily configurable interface, enabling users to launch complex experiments for testing different predictor setups. <code>prepare_predictors</code> has been designed to this aim. A few reproducible examples are presented in this vignette.</p>
-<div id="a-note-on-the-terminology-used" class="section level3">
-<h3>A note on the terminology used</h3>
+<div id="a-note-on-the-terminology-used" class="section level2">
+<h2><span class="header-section-number">1.1</span> A note on the terminology used</h2>
 <p>In the <code>climate4R</code> bundle (see e.g. Cofiño <em>et al.</em> 2017), atmospheric variables are stored in the so called data <em>grids</em>. In order to efficiently handle multiple variables used as predictors in downscaling experiments, “stacks” of grids are used. These are known as <em>multiGrids</em>, and can be obtained using the constructor <em>makeMultiGrid</em> from a set of -dimensionally consistent- grids.</p>
 </div>
 </div>
-<div id="data" class="section level2">
-<h2>Data</h2>
-<div id="predictors" class="section level3">
-<h3>Predictors</h3>
+<div id="example-data" class="section level1">
+<h1><span class="header-section-number">2</span> Example data</h1>
+<div id="predictors" class="section level2">
+<h2><span class="header-section-number">2.1</span> Predictors</h2>
 <p>Daily data from the NCEP reanalysis (Kalnay <em>et al.</em> 1996) are used as example. In particular, a domain centered on the Iberian Peninsula is considered, and three variables (mean sea-level pressure <code>psl</code>, specific humidity at 850mb <code>hus850</code> and air temperature at 850mb <code>ta850</code>) will be used as predictors. These are built-in example datasets from the package <code>transformeR</code> of the <code>climate4R</code> bundle. See for instance <code>help(&quot;NCEP_Iberia_hus850&quot;, package = &quot;transformeR&quot;)</code> for further details.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(transformeR)
 <span class="kw">data</span>(<span class="st">&quot;NCEP_Iberia_hus850&quot;</span>, <span class="st">&quot;NCEP_Iberia_psl&quot;</span>, <span class="st">&quot;NCEP_Iberia_ta850&quot;</span>)</code></pre></div>
@@ -124,9 +126,8 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <p>The grids are already spatially and temporally consistent, so they can be stacked in a multiGrid structure:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">x &lt;-<span class="st"> </span><span class="kw">makeMultiGrid</span>(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)</code></pre></div>
 </div>
-</div>
 <div id="predictands" class="section level2">
-<h2>Predictands</h2>
+<h2><span class="header-section-number">2.2</span> Predictands</h2>
 <p>The predictands correspond to the observations used for downscaling. These are typically meteorological station data or interpolated gridded datasets. In this example, we use a subset of stations used in a large intercomparison experiment of downscaling methods performed in the framework of the COST Action <a href="http://www.value-cost.eu/">VALUE</a> (Maraun <em>et al.</em> 2015). The target variable is daily precipitation.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">data</span>(<span class="st">&quot;VALUE_Iberia_tp&quot;</span>)
 y &lt;-<span class="st"> </span>VALUE_Iberia_tp</code></pre></div>
@@ -139,16 +140,32 @@ y &lt;-<span class="st"> </span>VALUE_Iberia_tp</code></pre></div>
 <p>Although the aim of this example is preparing only the predictors (the predictands are not manipulated), the information of the predictand is always required in order to ensure the spatio-temporal consistency of the experiment. The function handles internally non-overlapping temporal periods, ensuring that there is a perfect match between predictors and predictand prior to model calibration.</p>
 </div>
 <div id="worked-examples" class="section level2">
-<h2>Worked examples</h2>
-<pre><code>## downscaleR version 3.0.0 (2017-08-25) is loaded</code></pre>
+<h2><span class="header-section-number">2.3</span> Worked examples</h2>
+<pre><code>## downscaleR version 3.0.0 (2017-08-29) is loaded</code></pre>
 <pre><code>## 
 ## Attaching package: 'downscaleR'</code></pre>
 <pre><code>## The following objects are masked _by_ '.GlobalEnv':
 ## 
 ##     biasCorrection, downscale, isimip, prepare_predictors,
 ##     quickDiagnostics</code></pre>
-<div id="using-the-raw-predictor-variables" class="section level3">
-<h3>Using the raw predictor variables</h3>
+</div>
+</div>
+<div id="brief-description-of-the-output-predictor-data-structure" class="section level1">
+<h1><span class="header-section-number">3</span> Brief description of the output predictor data structure</h1>
+<p>In this section we briefly describe the main charateristics of the output object of <code>prepare_predictors</code>. It is in essence a named list with different components, whose content varies depending on the predictor setup:</p>
+<ul>
+<li><code>y</code>: This is the predictand object. If required, it is a subset of the original one in order to ensure the temporal consistency with the predictors (this is achieved internally through the helper function <code>getTemporalIntersection</code> in <code>transformeR</code>).</li>
+<li><code>x.global</code>: Is the global predictor data matrix. In this example, it is a matrix in which rows correspond to times (days in this case) and the columns to locations, arranged via the internal helper <code>transformeR::array3Dto2Dmat</code>. If there is more than one variable as predictor, as in the example, the matrices for each variable are just binded by columns. In other cases, fopr instance when using PCs, this matrix corresponds to the selected combined PC (rows are times, and columns are PCs, in decreasing order of explained variance according to the user specifications).</li>
+<li><code>x.local</code>: in case local predictors are used, the local information is included here. This is a list of matrices, of the same longitude as the number of locations in the predictand, each one containing the local information that will be appended to the <code>global</code> matrix. Note that for extensibility to the definition of local <code>newdata</code> information for model prediction, it is structured as a nested list of the form <code>sites --&gt; members</code>, although in the case of predictors, there is only one single member and this dimension in this case is not needed (it is necessary however in order to make predictions with multimember models, e.g. seasonal forecasts).</li>
+<li><code>pca</code>: This element stores the whole PCA (this is the output of the <code>transformeR::prinComp</code> function). It contains metadata required in subsequent steps.</li>
+<li>In addition, several attributes are appended to the output to aid in the traceability of the predictor structure.</li>
+</ul>
+<p>These elements will be next shown for case studies, building upon the example datasets descriibed in the previous section.</p>
+</div>
+<div id="case-studies" class="section level1">
+<h1><span class="header-section-number">4</span> Case studies</h1>
+<div id="using-the-raw-predictor-variables" class="section level2">
+<h2><span class="header-section-number">4.1</span> Using the raw predictor variables</h2>
 <p>In this situation, the multigrid is directly passed to <code>prepare_predictors</code>. Note that only <code>x</code> (predictors multigrid) and <code>y</code> (predictand, stations) are passed to the function, while the rest of arguments are left with their default value <code>NULL</code> (they could be omitted):</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">out &lt;-<span class="st"> </span><span class="kw">prepare_predictors</span>(<span class="dt">x =</span> x,
                           <span class="dt">y =</span> y,
@@ -183,30 +200,23 @@ y &lt;-<span class="st"> </span>VALUE_Iberia_tp</code></pre></div>
 ##  $ x.local : NULL
 ##  $ pca     : NULL
 ##  - attr(*, &quot;predictor.vars&quot;)= chr [1:3] &quot;hus850&quot; &quot;psl&quot; &quot;ta850&quot;
+##  - attr(*, &quot;globalPred.vars&quot;)= chr [1:3] &quot;hus850&quot; &quot;psl&quot; &quot;ta850&quot;
 ##  - attr(*, &quot;dates&quot;)= chr [1:1805] &quot;1982-12-01 GMT&quot; &quot;1982-12-02 GMT&quot; &quot;1982-12-03 GMT&quot; &quot;1982-12-04 GMT&quot; ...
 ##  - attr(*, &quot;xyCoords&quot;)=List of 2
 ##   ..$ x: num [1:7] -10 -7.5 -5 -2.5 0 2.5 5
 ##   ..$ y: num [1:5] 35 37.5 40 42.5 45</code></pre>
-<p>The output object is a list with different components:</p>
-<ul>
-<li><code>y</code>: This is the predictand object. If required, it is a subset of the original one in order to ensure the temporal consistency with the predictors (this is achieved internally through the helper function <code>getTemporalIntersection</code> in <code>transformeR</code>).</li>
-<li><code>x.global</code>: Is the global predictor data matrix. In this example, it is a matrix in which rows correspond to times (days in this case) and the columns to locations, arranged via the internal helper <code>transformeR::array3Dto2Dmat</code>. If there is more than one variable as predictor, as in the example, the matrices for each variable are just binded by columns. In other cases, fopr instance when using PCs, this matrix corresponds to the selected combined PC (rows are times, and columns are PCs, in decreasing order of explained variance according to the user specifications).</li>
-<li><code>x.local</code>: in case local predictors are used, the local information is included here. This is a list of matrices, of the same longitude as the number of locations in the predictand, each one containing the local information that will be appended to the <code>global</code> matrix.</li>
-<li><code>pca</code>: This element stores the whole PCA (this is the output of the <code>transformeR::prinComp</code> function). It contains metadata required in subsequent steps.</li>
-</ul>
-<p>In addition, several attributes are appended to the output to aid in the traceability of the predictor structure:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str</span>(<span class="kw">attributes</span>(out))</code></pre></div>
-<pre><code>## List of 4
-##  $ names         : chr [1:4] &quot;y&quot; &quot;x.global&quot; &quot;x.local&quot; &quot;pca&quot;
-##  $ predictor.vars: chr [1:3] &quot;hus850&quot; &quot;psl&quot; &quot;ta850&quot;
-##  $ dates         : chr [1:1805] &quot;1982-12-01 GMT&quot; &quot;1982-12-02 GMT&quot; &quot;1982-12-03 GMT&quot; &quot;1982-12-04 GMT&quot; ...
-##  $ xyCoords      :List of 2
+<pre><code>## List of 5
+##  $ names          : chr [1:4] &quot;y&quot; &quot;x.global&quot; &quot;x.local&quot; &quot;pca&quot;
+##  $ predictor.vars : chr [1:3] &quot;hus850&quot; &quot;psl&quot; &quot;ta850&quot;
+##  $ globalPred.vars: chr [1:3] &quot;hus850&quot; &quot;psl&quot; &quot;ta850&quot;
+##  $ dates          : chr [1:1805] &quot;1982-12-01 GMT&quot; &quot;1982-12-02 GMT&quot; &quot;1982-12-03 GMT&quot; &quot;1982-12-04 GMT&quot; ...
+##  $ xyCoords       :List of 2
 ##   ..$ x: num [1:7] -10 -7.5 -5 -2.5 0 2.5 5
 ##   ..$ y: num [1:5] 35 37.5 40 42.5 45</code></pre>
 </div>
-</div>
 <div id="using-pcs-as-predictors" class="section level2">
-<h2>Using PCs as predictors</h2>
+<h2><span class="header-section-number">4.2</span> Using PCs as predictors</h2>
 <p>In this example, instead of using the raw fields as predictors, we will use principal components. The tuning of the principal component analysis can be undertaken by passing the different possible arguments admitted by <code>transformeR::prinComp</code>, which are detailed in the help of the function to the argument <code>PCA</code> of <code>prepare_predictors</code>, in the form of a named list.</p>
 <p>Note that here we will use the first 5 PCs of the 3 input variables contained in the multigrid.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">getVarNames</span>(x)</code></pre></div>
@@ -302,13 +312,14 @@ y &lt;-<span class="st"> </span>VALUE_Iberia_tp</code></pre></div>
 ##  - attr(*, &quot;PCA.pars&quot;)=List of 1
 ##   ..$ n.eofs: num [1:3] 10 5 5
 ##  - attr(*, &quot;predictor.vars&quot;)= chr [1:3] &quot;hus850&quot; &quot;psl&quot; &quot;ta850&quot;
+##  - attr(*, &quot;globalPred.vars&quot;)= chr [1:3] &quot;hus850&quot; &quot;psl&quot; &quot;ta850&quot;
 ##  - attr(*, &quot;dates&quot;)= chr [1:1805] &quot;1982-12-01 GMT&quot; &quot;1982-12-02 GMT&quot; &quot;1982-12-03 GMT&quot; &quot;1982-12-04 GMT&quot; ...
 ##  - attr(*, &quot;xyCoords&quot;)=List of 2
 ##   ..$ x: num [1:7] -10 -7.5 -5 -2.5 0 2.5 5
 ##   ..$ y: num [1:5] 35 37.5 40 42.5 45</code></pre>
 </div>
 <div id="introducing-local-predictors" class="section level2">
-<h2>Introducing local predictors</h2>
+<h2><span class="header-section-number">4.3</span> Introducing local predictors</h2>
 <p>Finally, it is possible to specify local predictors using the corresponding argument. It is passed as a named list with the following elements:</p>
 <ul>
 <li><code>neigh.vars</code>: the names of the variables to be used as local predictors</li>
@@ -354,17 +365,28 @@ y &lt;-<span class="st"> </span>VALUE_Iberia_tp</code></pre></div>
 ##   .. ..$ source    : chr [1:11] &quot;ECA&amp;D&quot; &quot;ECA&amp;D&quot; &quot;ECA&amp;D&quot; &quot;ECA&amp;D&quot; ...
 ##  $ x.global: num [1:1805, 1:70] 102168 102320 102595 102930 103260 ...
 ##  $ x.local :List of 11
-##   ..$ : num [1:1805, 1:4] 0.00383 0.00454 0.00482 0.00361 0.00386 ...
-##   ..$ : num [1:1805, 1:4] 0.00223 0.00293 0.00312 0.00389 0.00631 ...
-##   ..$ : num [1:1805, 1:4] 0.00328 0.00316 0.00278 0.00483 0.00765 ...
-##   ..$ : num [1:1805, 1:4] 0.00187 0.00312 0.0042 0.00619 0.0072 ...
-##   ..$ : num [1:1805, 1:4] 0.00286 0.00333 0.00352 0.00287 0.00289 ...
-##   ..$ : num [1:1805, 1:4] 0.00348 0.004 0.00406 0.0033 0.00388 ...
-##   ..$ : num [1:1805, 1:4] 0.00401 0.00372 0.00401 0.00329 0.00464 ...
-##   ..$ : num [1:1805, 1:4] 0.00419 0.004 0.00405 0.00379 0.00409 ...
-##   ..$ : num [1:1805, 1:4] 0.00319 0.00296 0.00391 0.0037 0.00356 ...
-##   ..$ : num [1:1805, 1:4] 0.00264 0.00294 0.00254 0.00218 0.00408 ...
-##   ..$ : num [1:1805, 1:4] 0.00286 0.00333 0.00352 0.00287 0.00289 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00383 0.00454 0.00482 0.00361 0.00386 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00223 0.00293 0.00312 0.00389 0.00631 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00328 0.00316 0.00278 0.00483 0.00765 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00187 0.00312 0.0042 0.00619 0.0072 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00286 0.00333 0.00352 0.00287 0.00289 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00348 0.004 0.00406 0.0033 0.00388 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00401 0.00372 0.00401 0.00329 0.00464 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00419 0.004 0.00405 0.00379 0.00409 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00319 0.00296 0.00391 0.0037 0.00356 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00264 0.00294 0.00254 0.00218 0.00408 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00286 0.00333 0.00352 0.00287 0.00289 ...
 ##  $ pca     : NULL
 ##  - attr(*, &quot;localPred.pars&quot;)=List of 4
 ##   ..$ neigh.vars      : chr &quot;hus850&quot;
@@ -373,6 +395,7 @@ y &lt;-<span class="st"> </span>VALUE_Iberia_tp</code></pre></div>
 ##   ..$ local.index.list:List of 1
 ##   .. ..$ hus850: num [1:4, 1:11] 16 17 23 24 8 9 15 16 9 10 ...
 ##  - attr(*, &quot;predictor.vars&quot;)= chr [1:3] &quot;ta850&quot; &quot;psl&quot; &quot;hus850&quot;
+##  - attr(*, &quot;globalPred.vars&quot;)= chr [1:2] &quot;psl&quot; &quot;ta850&quot;
 ##  - attr(*, &quot;dates&quot;)= chr [1:1805] &quot;1982-12-01 GMT&quot; &quot;1982-12-02 GMT&quot; &quot;1982-12-03 GMT&quot; &quot;1982-12-04 GMT&quot; ...
 ##  - attr(*, &quot;xyCoords&quot;)=List of 2
 ##   ..$ x: num [1:7] -10 -7.5 -5 -2.5 0 2.5 5
@@ -411,17 +434,28 @@ y &lt;-<span class="st"> </span>VALUE_Iberia_tp</code></pre></div>
 ##   .. ..$ source    : chr [1:11] &quot;ECA&amp;D&quot; &quot;ECA&amp;D&quot; &quot;ECA&amp;D&quot; &quot;ECA&amp;D&quot; ...
 ##  $ x.global: num [1:1805, 1:70] 102168 102320 102595 102930 103260 ...
 ##  $ x.local :List of 11
-##   ..$ : num [1:1805, 1] 0.0036 0.00353 0.00389 0.00342 0.0034 ...
-##   ..$ : num [1:1805, 1] 0.00323 0.00368 0.00361 0.00397 0.00621 ...
-##   ..$ : num [1:1805, 1] 0.00324 0.00368 0.0035 0.0041 0.0055 ...
-##   ..$ : num [1:1805, 1] 0.00259 0.00366 0.00378 0.00523 0.00631 ...
-##   ..$ : num [1:1805, 1] 0.00335 0.0034 0.00356 0.00317 0.00332 ...
-##   ..$ : num [1:1805, 1] 0.00401 0.00367 0.00381 0.00367 0.00408 ...
-##   ..$ : num [1:1805, 1] 0.00394 0.00372 0.00409 0.00346 0.00454 ...
-##   ..$ : num [1:1805, 1] 0.00398 0.00349 0.00382 0.00402 0.00416 ...
-##   ..$ : num [1:1805, 1] 0.00356 0.00316 0.00371 0.00376 0.00347 ...
-##   ..$ : num [1:1805, 1] 0.00366 0.00388 0.00387 0.0031 0.00469 ...
-##   ..$ : num [1:1805, 1] 0.00335 0.0034 0.00356 0.00317 0.00332 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1] 0.0036 0.00353 0.00389 0.00342 0.0034 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1] 0.00323 0.00368 0.00361 0.00397 0.00621 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1] 0.00324 0.00368 0.0035 0.0041 0.0055 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1] 0.00259 0.00366 0.00378 0.00523 0.00631 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1] 0.00335 0.0034 0.00356 0.00317 0.00332 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1] 0.00401 0.00367 0.00381 0.00367 0.00408 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1] 0.00394 0.00372 0.00409 0.00346 0.00454 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1] 0.00398 0.00349 0.00382 0.00402 0.00416 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1] 0.00356 0.00316 0.00371 0.00376 0.00347 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1] 0.00366 0.00388 0.00387 0.0031 0.00469 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1] 0.00335 0.0034 0.00356 0.00317 0.00332 ...
 ##  $ pca     : NULL
 ##  - attr(*, &quot;localPred.pars&quot;)=List of 4
 ##   ..$ neigh.vars      : chr &quot;hus850&quot;
@@ -431,13 +465,14 @@ y &lt;-<span class="st"> </span>VALUE_Iberia_tp</code></pre></div>
 ##   ..$ local.index.list:List of 1
 ##   .. ..$ hus850: num [1:4, 1:11] 16 17 23 24 8 9 15 16 9 10 ...
 ##  - attr(*, &quot;predictor.vars&quot;)= chr [1:3] &quot;ta850&quot; &quot;psl&quot; &quot;hus850&quot;
+##  - attr(*, &quot;globalPred.vars&quot;)= chr [1:2] &quot;psl&quot; &quot;ta850&quot;
 ##  - attr(*, &quot;dates&quot;)= chr [1:1805] &quot;1982-12-01 GMT&quot; &quot;1982-12-02 GMT&quot; &quot;1982-12-03 GMT&quot; &quot;1982-12-04 GMT&quot; ...
 ##  - attr(*, &quot;xyCoords&quot;)=List of 2
 ##   ..$ x: num [1:7] -10 -7.5 -5 -2.5 0 2.5 5
 ##   ..$ y: num [1:5] 35 37.5 40 42.5 45</code></pre>
 </div>
 <div id="combining-pcs-with-local-predictors" class="section level2">
-<h2>Combining PCs with local predictors</h2>
+<h2><span class="header-section-number">4.4</span> Combining PCs with local predictors</h2>
 <p>This is probably the most typical configuration of predictors. The global information of the PCs is complemented with local information using an additional variable. For instance, in this example we retain temperature and sea-level pressure as global predictors, using their PCs, and include local information for specific humnifity at 850 mb. In this case, we indicate that we want to keep the PCs explaining no less than 95% of the total variance for each global variable (<code>v.exp = c(0.95, 0.95)</code>; note that in the previous PCA example we indicated the number of PCs (argument <code>n.eofs</code>), instead of the amount of explained variance):</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">out &lt;-<span class="st"> </span><span class="kw">prepare_predictors</span>(<span class="dt">x =</span> x,
                           <span class="dt">y =</span> y,
@@ -476,17 +511,28 @@ y &lt;-<span class="st"> </span>VALUE_Iberia_tp</code></pre></div>
 ##   .. ..$ : NULL
 ##   .. ..$ : chr [1:7] &quot;PC1&quot; &quot;PC2&quot; &quot;PC3&quot; &quot;PC1&quot; ...
 ##  $ x.local :List of 11
-##   ..$ : num [1:1805, 1:4] 0.00383 0.00454 0.00482 0.00361 0.00386 ...
-##   ..$ : num [1:1805, 1:4] 0.00223 0.00293 0.00312 0.00389 0.00631 ...
-##   ..$ : num [1:1805, 1:4] 0.00328 0.00316 0.00278 0.00483 0.00765 ...
-##   ..$ : num [1:1805, 1:4] 0.00187 0.00312 0.0042 0.00619 0.0072 ...
-##   ..$ : num [1:1805, 1:4] 0.00286 0.00333 0.00352 0.00287 0.00289 ...
-##   ..$ : num [1:1805, 1:4] 0.00348 0.004 0.00406 0.0033 0.00388 ...
-##   ..$ : num [1:1805, 1:4] 0.00401 0.00372 0.00401 0.00329 0.00464 ...
-##   ..$ : num [1:1805, 1:4] 0.00419 0.004 0.00405 0.00379 0.00409 ...
-##   ..$ : num [1:1805, 1:4] 0.00319 0.00296 0.00391 0.0037 0.00356 ...
-##   ..$ : num [1:1805, 1:4] 0.00264 0.00294 0.00254 0.00218 0.00408 ...
-##   ..$ : num [1:1805, 1:4] 0.00286 0.00333 0.00352 0.00287 0.00289 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00383 0.00454 0.00482 0.00361 0.00386 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00223 0.00293 0.00312 0.00389 0.00631 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00328 0.00316 0.00278 0.00483 0.00765 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00187 0.00312 0.0042 0.00619 0.0072 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00286 0.00333 0.00352 0.00287 0.00289 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00348 0.004 0.00406 0.0033 0.00388 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00401 0.00372 0.00401 0.00329 0.00464 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00419 0.004 0.00405 0.00379 0.00409 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00319 0.00296 0.00391 0.0037 0.00356 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00264 0.00294 0.00254 0.00218 0.00408 ...
+##   ..$ :List of 1
+##   .. ..$ member_1: num [1:1805, 1:4] 0.00286 0.00333 0.00352 0.00287 0.00289 ...
 ##  $ pca     :List of 2
 ##   ..$ psl  :List of 1
 ##   .. ..$ :List of 3
@@ -534,14 +580,16 @@ y &lt;-<span class="st"> </span>VALUE_Iberia_tp</code></pre></div>
 ##   ..$ local.index.list:List of 1
 ##   .. ..$ hus850: num [1:4, 1:11] 16 17 23 24 8 9 15 16 9 10 ...
 ##  - attr(*, &quot;predictor.vars&quot;)= chr [1:3] &quot;ta850&quot; &quot;psl&quot; &quot;hus850&quot;
+##  - attr(*, &quot;globalPred.vars&quot;)= chr [1:2] &quot;psl&quot; &quot;ta850&quot;
 ##  - attr(*, &quot;dates&quot;)= chr [1:1805] &quot;1982-12-01 GMT&quot; &quot;1982-12-02 GMT&quot; &quot;1982-12-03 GMT&quot; &quot;1982-12-04 GMT&quot; ...
 ##  - attr(*, &quot;xyCoords&quot;)=List of 2
 ##   ..$ x: num [1:7] -10 -7.5 -5 -2.5 0 2.5 5
 ##   ..$ y: num [1:5] 35 37.5 40 42.5 45</code></pre>
 <p>The <code>x.global</code> matrix has now 7 columns, corresponding to 3 PCs reatined fpor sea-level pressure plus 3 for air temperature.</p>
 </div>
-<div id="references" class="section level2">
-<h2>References</h2>
+</div>
+<div id="references" class="section level1">
+<h1><span class="header-section-number">5</span> References</h1>
 <ul>
 <li><p>Cofiño, A.S., Bedia, J., Iturbide, M., Vega, M., Herrera, S., Fernández, J., Frías, M.D., Manzanas, R., Gutiérrez, J.M., 2017. The ECOMS User Data Gateway: Towards seasonal forecast data provision and research reproducibility in the era of Climate Services. Climate Services. <a href="doi:10.1016/j.cliser.2017.07.001" class="uri">doi:10.1016/j.cliser.2017.07.001</a></p></li>
 <li><p>Kalnay, E., Kanamitsu, M., Kistler, R., Collins, W., Deaven, D., Gandin, L., Iredell, M., Saha, S., White, G., Woollen, J., Zhu, Y., Leetmaa, A., Reynolds, R., Chelliah, M., Ebisuzaki, W., Higgins, W., Janowiak, J., Mo, K.C., Ropelewski, C., Wang, J., Jenne, R., Joseph, D., 1996. The NCEP/NCAR 40-Year Reanalysis Project. Bulletin of the American Meteorological Society 77, 437–471. <a href="doi:10.1175/1520-0477(1996)077" class="uri">doi:10.1175/1520-0477(1996)077</a>&lt;0437:TNYRP&gt;2.0.CO;2</p></li>

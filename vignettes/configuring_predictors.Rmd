@@ -6,13 +6,14 @@ output:
     rmarkdown::html_vignette:
         fig_caption: yes
         toc: yes
+        number_section: true
 vignette: >
   %\VignetteIndexEntry{Preparing predictors in perfect prog downscaling experiments}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-## Introduction
+# Introduction
 
 This document illustrates the preparation of different predictor configurations in perfect-prog experiments. 
 
@@ -24,14 +25,14 @@ Broadly speaking, there are two main configurations:
 
 The large number of options required for a fine-tuning of a downscaling method requires a flexible, yet easily configurable interface, enabling users to launch complex experiments for testing different predictor setups. `prepare_predictors` has been designed to this aim. A few reproducible examples are presented in this vignette.
   
-### A note on the terminology used
+## A note on the terminology used
 
 In the `climate4R` bundle (see e.g. Cofiño _et al._ 2017), atmospheric variables are stored in the so called data _grids_. In order to efficiently handle multiple variables used as predictors in downscaling experiments, "stacks" of grids are used. These are known as _multiGrids_, and can be obtained using the constructor _makeMultiGrid_ from a set of -dimensionally consistent- grids.
 
 
-## Data
+# Example data
 
-### Predictors
+## Predictors
 
 Daily data from the NCEP reanalysis (Kalnay _et al._ 1996) are used as example. In particular, a domain centered on the Iberian Peninsula is considered, and three variables (mean sea-level pressure `psl`, specific humidity at 850mb `hus850` and air temperature at 850mb `ta850`) will be used as predictors. These are built-in example datasets from the package `transformeR` of the `climate4R` bundle. See for instance `help("NCEP_Iberia_hus850", package = "transformeR")` for further details. 
 
@@ -80,8 +81,22 @@ Although the aim of this example is preparing only the predictors (the predictan
 library(downscaleR)
 ```
 
+# Brief description of the output predictor data structure
 
-### Using the raw predictor variables
+In this section we briefly describe the main charateristics of the output object of `prepare_predictors`. It is in essence a named list with different components, whose content varies depending on the predictor setup:
+
+ * `y`: This is the predictand object. If required, it is a subset of the original one in order to ensure the temporal consistency with the predictors (this is achieved internally through the helper function `getTemporalIntersection` in `transformeR`).
+ * `x.global`: Is the global predictor data matrix. In this example, it is a matrix in which rows correspond to times (days in this case) and the columns to locations, arranged via the internal helper `transformeR::array3Dto2Dmat`. If there is more than one variable as predictor, as in the example, the matrices for each variable are just binded by columns. In other cases, fopr instance when using PCs, this matrix corresponds to the selected combined PC (rows are times, and columns are PCs, in decreasing order of explained variance according to the user specifications).
+ * `x.local`: in case local predictors are used, the local information is included here. This is a list of matrices, of the same longitude as the number of locations in the predictand, each one containing the local information that will be appended to the `global` matrix. Note that for extensibility to the definition of local `newdata` information for model prediction, it is structured as a nested list of the form `sites --> members`, although in the case of predictors, there is only one single member and this dimension in this case is not needed (it is necessary however in order to make predictions with multimember models, e.g. seasonal forecasts).
+ * `pca`: This element stores the whole PCA (this is the output of the `transformeR::prinComp` function). It contains metadata required in subsequent steps. 
+ * In addition, several attributes are appended to the output to aid in the traceability of the predictor structure. 
+ 
+These elements will be next shown for case studies, building upon the example datasets descriibed in the previous section.
+
+
+# Case studies
+
+## Using the raw predictor variables
 
 In this situation, the multigrid is directly passed to `prepare_predictors`. Note that only `x` (predictors multigrid) and `y` (predictand, stations) are passed to the function, while the rest of arguments are left with their default value `NULL` (they could be omitted):
 
@@ -93,14 +108,8 @@ out <- prepare_predictors(x = x,
                           local.predictors = NULL)
 str(out)
 ```
-The output object is a list with different components:
 
- * `y`: This is the predictand object. If required, it is a subset of the original one in order to ensure the temporal consistency with the predictors (this is achieved internally through the helper function `getTemporalIntersection` in `transformeR`).
- * `x.global`: Is the global predictor data matrix. In this example, it is a matrix in which rows correspond to times (days in this case) and the columns to locations, arranged via the internal helper `transformeR::array3Dto2Dmat`. If there is more than one variable as predictor, as in the example, the matrices for each variable are just binded by columns. In other cases, fopr instance when using PCs, this matrix corresponds to the selected combined PC (rows are times, and columns are PCs, in decreasing order of explained variance according to the user specifications).
- * `x.local`: in case local predictors are used, the local information is included here. This is a list of matrices, of the same longitude as the number of locations in the predictand, each one containing the local information that will be appended to the `global` matrix. 
- * `pca`: This element stores the whole PCA (this is the output of the `transformeR::prinComp` function). It contains metadata required in subsequent steps. 
 
-In addition, several attributes are appended to the output to aid in the traceability of the predictor structure:
 
 ```{r}
 str(attributes(out))
@@ -207,7 +216,7 @@ The `x.global` matrix has now 7 columns, corresponding to 3 PCs reatined fpor se
 
 
   
-## References
+# References
 
 * Cofiño, A.S., Bedia, J., Iturbide, M., Vega, M., Herrera, S., Fernández, J., Frías, M.D., Manzanas, R., Gutiérrez, J.M., 2017. The ECOMS User Data Gateway: Towards seasonal forecast data provision and research reproducibility in the era of Climate Services. Climate Services. doi:10.1016/j.cliser.2017.07.001
 
