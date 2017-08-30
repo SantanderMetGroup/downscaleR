@@ -98,10 +98,10 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
     if (!is.null(global.vars)) {
         x  %<>%  subsetGrid(var = global.vars, drop = FALSE)
     }
+    varnames <- getVarNames(x)
     # PCA predictors
     full.pca <- NULL
     if (!is.null(PCA)) {
-        varnames <- getVarNames(x)
         PCA[["grid"]] <- x
         full.pca <- do.call("prinComp", PCA)
         x <- if (!is.null(PCA$which.combine)) {
@@ -123,7 +123,6 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
     } else {
         # Construct a predictor matrix of raw input grids
         nvars <- getShape(x, "var")
-        varnames <- getVarNames(x)
         aux.list <- lapply(1:nvars, function(i) {
             subsetGrid(x, var = varnames[i]) %>% redim(drop = TRUE) %>% extract2("Data") %>% array3Dto2Dmat()
         })
@@ -135,6 +134,7 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
     attr(predictor.list, "PCA.pars") <- PCA
     attr(predictor.list, "localPred.pars") <- local.predictors
     attr(predictor.list, "predictor.vars") <- all.predictor.vars
+    attr(predictor.list, "globalPred.vars") <- varnames
     attr(predictor.list, "dates") <- dates
     attr(predictor.list, "xyCoords") <- xyCoords
     return(predictor.list)
@@ -193,6 +193,7 @@ predictor.nn.indices <- function(neigh.vars = NULL, n.neighs = NULL, x, y) {
 #'  Default to \code{NULL}, and no aggregation is performed
 #' @param grid The grid containing the local predictor information. It can be either the predictors (training)
 #'  grid or the simulation (prediction) grid, depending on the situation.
+#' @return A nested list of 2D matrices with the following structure: sites/members
 #' @keywords internal
 #' @family downscaling.helpers
 #' @importFrom transformeR subsetGrid array3Dto2Dmat
@@ -209,21 +210,32 @@ predictor.nn.values <- function(nn.indices.list, grid, neigh.fun = NULL) {
     }
     out.list <- lapply(1:length(nn.indices.list), function(j) {
         neigh.vars <- names(nn.indices.list)
-        aux <- subsetGrid(grid, var = neigh.vars[j], drop = TRUE) %>% extract2("Data") %>% array3Dto2Dmat()
-        # Local predictor matrix list
-        l <- lapply(1:ncol(nn.indices.list[[j]]), function(k) aux[ ,nn.indices.list[[j]][ ,k]])
-        # Neighbour aggregation function 
-        if (!is.null(neigh.fun[[j]])) {
-            arg.list <- c(neigh.fun[[j]], "MARGIN" = 1)
-            lapply(1:length(l), function(k) do.call(what = "apply", c("X" = l[k], arg.list))) 
-        } else {
-            l
-        }
+        aux <- subsetGrid(grid, var = neigh.vars[j], drop = TRUE) %>% redim(member = TRUE) 
+        n.mem <- getShape(aux, "member")
+        mem.list <- lapply(1:n.mem, function(i) {
+            aux1 <- subsetGrid(aux, members = i, drop = TRUE) %>% extract2("Data") %>% array3Dto2Dmat()
+            # Local predictor matrix list
+            l <- lapply(1:ncol(nn.indices.list[[j]]), function(k) aux1[ ,nn.indices.list[[j]][ ,k]])
+            # Neighbour aggregation function 
+            if (!is.null(neigh.fun[[j]])) {
+                arg.list <- c(neigh.fun[[j]], "MARGIN" = 1)
+                lapply(1:length(l), function(k) do.call(what = "apply", c("X" = l[k], arg.list))) 
+            } else {
+                l
+            }
+        })
+        names(mem.list) <- paste("member", 1:n.mem, sep = "_")
+        return(mem.list)
     })
-    lapply(1:length(out.list[[1]]), function(x) {
-        expr <- paste0("cbind(", paste0("out.list[[", 1:length(out.list), "]][[x]]", collapse = ","), ")")
-        parse(text = expr) %>% eval()
+    names(out.list) <- names(nn.indices.list)
+    lapply(1:length(out.list[[1]][[1]]), function(i) {
+        aux <- lapply(1:length(out.list[[1]]), function(j) {
+            expr <- paste0("cbind(", paste0("out.list[[", 1:length(out.list), "]][[", j,"]][[",i,"]]", collapse = ","), ")")
+            parse(text = expr) %>% eval()
+        })
+        names(aux) <- paste("member", 1:length(aux), sep = "_")
+        return(aux)
     })
-}
+ }
 
 
