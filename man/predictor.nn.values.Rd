@@ -15,6 +15,9 @@ grid or the simulation (prediction) grid, depending on the situation.}
 \item{neigh.fun}{A list of funtions for neighbour aggregation for each local predictor variable.
 Default to \code{NULL}, and no aggregation is performed}
 }
+\value{
+A nested list of 2D matrices with the following structure: sites/members
+}
 \description{
 Constructs the local predictor matrices given their spatial index position 
 (as returned by \code{\link{predictor.nn.indices}}) and additional parameters.

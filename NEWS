@@ -1,8 +1,9 @@
 New in downscaleR
 =================
 
-* Bug fix in `biasCorrection`
-* Updated NAMESPACE imports
+* Major update in the way downscaling experiments are configured:
+ * New `prepare_predictors` function to flexibly configure predictors
+ * New `prepare_newdata` function, to prepapre the prediction data
 * Other documentation updates and enhancements
 
 

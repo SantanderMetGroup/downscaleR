@@ -23,7 +23,7 @@ Suggests:
 Type: Package
 Title: An R package for bias correction and statistical downscaling
 Version: 3.0.0
-Date: 2017-08-29
+Date: 2017-08-30
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquín Bedia <bediaj@unican.es> [aut, cre]",
