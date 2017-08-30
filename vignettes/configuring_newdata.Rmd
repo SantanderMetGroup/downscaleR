@@ -1,0 +1,98 @@
+---
+title: "Preparing newdata for predictions in perfect prog downscaling experiments"
+author: "J. Bedia (Santander Meteorology Group)"
+date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_vignette:
+        fig_caption: yes
+        toc: yes
+        number_section: true
+vignette: >
+  %\VignetteIndexEntry{Preparing newdata in perfect prog downscaling experiments}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Introduction
+
+# Data
+
+```{r}
+require(transformeR)
+```
+
+
+## Predictand
+```{r}
+data("VALUE_Iberia_tp")
+y <- VALUE_Iberia_tp
+```
+
+
+# Predictors
+
+In this example, we consider the calibration period 1983-1994. To this aim, we first load the example NCEP reanalysis data from package `transformeR`, that encompasses the period 1983-2002 for boreal winter (DJF). `subsetGrid` is used in order to extract the calibration period, indicating the corresponding argument `years`:
+
+```{r}
+data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
+mg <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+# Calibration period 1983-1994
+x <- subsetGrid(mg, years = 1983:1994)
+```
+
+
+
+# Newdata
+
+We next consider the same NCEP reanalysis to make the predictions, using a different period (1995-2002) than for the calibration (1983-1994). Note that this is just for illustration purposes, and that newdata will be typically formed by GCM simulations (e.g. seasonal to multidecadal...) instead of the reanalysis. For this reason, `prepare_newdata` is envisaged to transparently deal with multimember datasets
+
+```{r}
+# Simulation period 1995:2002
+prediction.data <- subsetGrid(mg, years = 1995:2002) #%>% redim(member = TRUE)
+```
+
+
+
+# Procedure
+
+## Preparing the predictor
+
+In this example, the following predictor configuration will be used:
+
+ * Sea-level pressure (`psl`) and air temperature at 850 mb pressure level (`ta850`) are used as global predictors. Their principal components are used explaining the 90\% of variance of psl and 95\% of `ta850`
+ * Furthermore, specific humidity at 850 mb (`hus850`) will be used as local predictor. In this example the 4 nearest points to each predictand location are averaged to this aim.
+ 
+The predictor so configured is constructed with `prepare_predictors`:
+
+```{r}
+predictor <- prepare_predictors(x = x,
+                                y = y,
+                                global.vars = c("psl", "ta850"),
+                                PCA = list(v.exp = c(.9, .95)),
+                                local.predictors = list(neigh.vars = "hus850",
+                                                        n.neighs = 4,
+                                                        neigh.fun = list(FUN = "mean")))
+
+```
+
+## Preparing the newdata
+
+### Local scaling of the prediction data
+
+Use `help("localScaling", package = "transformeR")` for further details on how this step operates. 
+
+```{r}
+newdata <- localScaling(grid = prediction.data, base = x, ref = prediction.data, time.frame = "monthly")
+```
+
+Once locally scaled, the newdata is ready to perform the predictions
+
+
+# Internal structure of newdata
+
+```{r}
+str(newdata)
+```
+
+
+
