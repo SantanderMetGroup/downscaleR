@@ -92,6 +92,7 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
         nn <- predictor.nn.values(nn.indices.list = pred.nn.ind,
                                   grid = x,
                                   neigh.fun = local.predictors$neigh.fun)
+        attr(nn, "local.index.list") <- pred.nn.ind
     }
     all.predictor.vars %<>% unique()
     # GLOBAL PREDICTOR SUBSETTING
