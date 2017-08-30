@@ -9,3 +9,4 @@ downscaleR.Rproj
 .Rprofile
 *.Rbuildignore
 R/lmdown.R
+inst/doc

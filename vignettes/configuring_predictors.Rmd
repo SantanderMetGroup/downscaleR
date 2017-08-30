@@ -211,7 +211,7 @@ out <- prepare_predictors(x = x,
 str(out)
 ```
 
-The `x.global` matrix has now 7 columns, corresponding to 3 PCs reatined fpor sea-level pressure plus 3 for air temperature.
+The `x.global` matrix has now 7 columns, corresponding to 3 PCs retained for sea-level pressure plus 3 for air temperature.
 
 
 

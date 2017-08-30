@@ -65,7 +65,8 @@ Configuration of predictors for flexible downscaling experiment definition
 }
 \seealso{
 Other downscaling.helpers: \code{\link{predictor.nn.indices}},
-  \code{\link{predictor.nn.values}}
+  \code{\link{predictor.nn.values}},
+  \code{\link{prepare_newdata}}
 }
 \author{
 J. Bedia, D. San-Martín and J.M. Gutiérrez
