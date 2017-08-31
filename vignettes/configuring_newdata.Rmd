@@ -15,10 +15,17 @@ vignette: >
 
 # Introduction
 
+This vignette illustrates the steps for configuring the data to make predictions, once a downscaling method has been calibrated. As the prediction data is passed to the argument `newdata` of `downscale`, for simplicity we will refer to the prediction dataset as *newdata*.
+
+This vignette assumes that a convenient predictor structure has been already prepared with `prepare_predictors`. If not, the reader is referred to this first vignette by typing: `utils::vignette("configuring_predictors", package = "downscaleR")`
+
 # Data
 
-```{r}
+The data used correspond to the built-in datasets available in `transformeR`, and previously used in the vignette covering the topic `configuring_predictors`.
+
+```{r, message=FALSE}
 require(transformeR)
+require(downscaleR)
 ```
 
 
@@ -27,7 +34,6 @@ require(transformeR)
 data("VALUE_Iberia_tp")
 y <- VALUE_Iberia_tp
 ```
-
 
 # Predictors
 
@@ -41,7 +47,6 @@ x <- subsetGrid(mg, years = 1983:1994)
 ```
 
 
-
 # Newdata
 
 We next consider the same NCEP reanalysis to make the predictions, using a different period (1995-2002) than for the calibration (1983-1994). Note that this is just for illustration purposes, and that newdata will be typically formed by GCM simulations (e.g. seasonal to multidecadal...) instead of the reanalysis. For this reason, `prepare_newdata` is envisaged to transparently deal with multimember datasets
@@ -51,9 +56,9 @@ We next consider the same NCEP reanalysis to make the predictions, using a diffe
 prediction.data <- subsetGrid(mg, years = 1995:2002) #%>% redim(member = TRUE)
 ```
 
-
-
 # Procedure
+
+In this section we illustrate the different steps to prepare the newdata. It requires preparing the predictor structure previously, as this will contain the predictor variables needed to make the predictions, as well as all the required metadata for their adequate transformation prior to model prediction.
 
 ## Preparing the predictor
 
@@ -79,20 +84,38 @@ predictor <- prepare_predictors(x = x,
 
 ### Local scaling of the prediction data
 
-Use `help("localScaling", package = "transformeR")` for further details on how this step operates. 
+The first step needed is to adequately scale the data for predictions prior to passing it to the fitted model. The model has been calibrated with reanalysis data for the training period, and therefore the mean of the new period (often using a different model/GCM with its own biases) need to be adequately adjusted. This step consists of adjusting the mean at a gridbox scale (*local scaling*) to match that of the training data. Furthermore, this step is typically done on a monthly basis (i.e., means are corrected considering the climatological mean of the base period month by month). The function `localScaling` is used to this aim. Use `help("localScaling", package = "transformeR")` for further details on how this step operates. 
 
 ```{r}
-newdata <- localScaling(grid = prediction.data, base = x, ref = prediction.data, time.frame = "monthly")
+newdata <- localScaling(grid = prediction.data,
+                        base = x,
+                        ref = prediction.data,
+                        time.frame = "monthly")
 ```
+
+Note that in this example the arguments `ref` and `grid` have the same value. This is becasuse the predictions come from the same dataset used for calibration. However, in most occasions (climate change or seasonal applications) `grid` will correspond to the future simulations of a GCM, and `ref` will correspond to historical simulations of the same GCM, matching the temporal period of the reanalysis used for calibration (i.e., base and ref correspond to the calibration -historical- period, and grid is the future simulation).
 
 Once locally scaled, the newdata is ready to perform the predictions
 
 
 # Internal structure of newdata
 
+Users do not need to worry much about the internal output structure that will next passed to `downscale`. However, developers might be interested in the information internally stored by `newdata`. 
+
 ```{r}
 str(newdata)
 ```
 
+It consists of a named list with the following components:
+
+ * `newdata.global` Global newdata information. A list of members, each one containing a 2D matrix of global predictors (i.e., applied to all predictand locations).
+ * `newdata.local` Local newdata information (i.e., applied to each predictand location sepparately), as a list of members. Each member contains another list with a 2D matrix of local predictors, with length the number of predictand locations.
+ * `Dates` These are the reference dates of the predictions, as a list in the usualformat of grids, with `"start"`  and `"end"` components. 
+
+# Session info
+
+```{r}
+print(sessionInfo(package = c("transformeR", "downscaleR")))
+```
 
 

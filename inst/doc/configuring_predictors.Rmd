@@ -224,4 +224,9 @@ The `x.global` matrix has now 7 columns, corresponding to 3 PCs retained for sea
 
 * Maraun, D., Widmann, M., Gutiérrez, J.M., Kotlarski, S., Chandler, R.E., Hertig, E., Wibig, J., Huth, R., Wilcke, R.A.I., 2015. VALUE: A framework to validate downscaling approaches for climate change studies. Earth’s Future 3, 2014EF000259. doi:10.1002/2014EF000259
 
+# Session info
+
+```{r}
+print(sessionInfo(package = c("transformeR", "downscaleR")))
+```
 

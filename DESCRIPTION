@@ -22,8 +22,8 @@ Suggests:
     rmarkdown
 Type: Package
 Title: An R package for bias correction and statistical downscaling
-Version: 3.0.0
-Date: 2017-08-30
+Version: 3.0-0
+Date: 2017-08-31
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquín Bedia <bediaj@unican.es> [aut, cre]",
