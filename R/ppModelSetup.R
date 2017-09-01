@@ -26,7 +26,7 @@
 #' @importFrom magrittr %>%
 
 ppModelSetup <- function(y, x, newdata) {
-      stations <- ifelse("station" %in% getDim(y), TRUE, FALSE)
+      stations <- ifelse("loc" %in% getDim(y), TRUE, FALSE)
       if ("scaled:method" %in% names(attributes(x))) {
             use.PCs <- TRUE
             x.pred <- attr(x, "xCoords")
@@ -37,20 +37,19 @@ ppModelSetup <- function(y, x, newdata) {
                   stop("'x' must be a grid/multigrid\nSingle point selections are not allowed", call. = FALSE)
             }
             use.PCs <- FALSE
-            x.pred <- x$xyCoords$x
-            y.pred <- x$xyCoords$y
-            time.pred <- x$Dates$start
-            if (is.null(time.pred)) time.pred <- x$Dates[[1]]$start   
+            x.pred <- getCoordinates(x)$x
+            y.pred <- getCoordinates(x)$y
+            time.pred <- getRefDates(x, "start")
       }
       # Georef simulations
       if (length(getShape(newdata)) < 3) {
-            stop("'x' must be a grid/multigrid\nSingle point selections are not allowed", call. = FALSE)
+          stop("'newdata' must be a grid/multigrid\nSingle point selections are not allowed", call. = FALSE)
       }
       x.sim <- newdata$xyCoords$x
       y.sim <- newdata$xyCoords$y
       # Spatial consistency check x-newdata
       if (!isTRUE(all.equal(x.pred, x.sim, tolerance = 1e-03)) || !isTRUE(all.equal(y.pred, y.sim, tolerance = 1e-03))) {
-            stop("'x' and 'newdata' datasets are not spatially consistent", call. = FALSE)
+          stop("'x' and 'newdata' datasets are not spatially consistent", call. = FALSE)
       }
       # Temporal matching check (y-x)
       if (!identical(as.POSIXlt(y$Dates$start)$yday, as.POSIXlt(time.pred)$yday) || !identical(as.POSIXlt(y$Dates$start)$year, as.POSIXlt(time.pred)$year)) {

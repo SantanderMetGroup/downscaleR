@@ -78,7 +78,7 @@
 
 downscale <- function(y,
                       x,
-                      newdata = NULL,
+                      newdata = x,
                       method = c("analogs", "glm"),
                       simulate = c("no", "yes", "occurrence"),
                       n.analogs = 1,
