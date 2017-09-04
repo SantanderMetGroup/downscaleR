@@ -94,28 +94,30 @@ downscale <- function(y,
       simulate <- match.arg(simulate, choices = c("no", "yes", "occurrence"))
       cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
       parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
+      method <- match.arg(method, choices = c("analogs", "glm"))
       modelPars <- ppModelSetup(y, x, newdata)
       obs.orig <- y
       if (cross.val == "none") {
-            down <- switch(method,
-                           "analogs" = analogs(y = y,
-                                               modelPars = modelPars,
-                                               n.analogs = n.analogs,
-                                               sel.fun = sel.fun,
-                                               analog.dates = analog.dates,
-                                               parallel.pars = parallel.pars),
-                           "glm" = glimpr(y = y,
-                                          modelPars = modelPars,
-                                          wet.threshold = wet.threshold,
-                                          n.pcs = n.pcs,
-                                          simulate = simulate)
-            )
+          down <- if (method == "analogs") {
+              analogs(y = y,
+                      modelPars = modelPars,
+                      n.analogs = n.analogs,
+                      sel.fun = sel.fun,
+                      analog.dates = analog.dates,
+                      parallel.pars = parallel.pars) 
+          } else if (method == "glm") {
+              glimpr(y = y,
+                     modelPars = modelPars,
+                     wet.threshold = wet.threshold,
+                     n.pcs = n.pcs,
+                     simulate = simulate)
+          }
       } else {
-            if (!is.null(newdata)) {
-                  message("'newdata' will be ignored for cross-validation")
-            }
-            if ("scaled:method" %in% names(attributes(x))) {
-                  x$Dates$start <- attr(x, "dates_start")
+          if (!is.null(newdata)) {
+              message("'newdata' will be ignored for cross-validation")
+          }
+          if ("scaled:method" %in% names(attributes(x))) {
+              x$Dates$start <- attr(x, "dates_start")
             }
             years <- getYearsAsINDEX(x)
             modelPars.orig <- modelPars
