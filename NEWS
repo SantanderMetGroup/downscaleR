@@ -1,9 +1,8 @@
 New in downscaleR
 =================
 
-* Major update in the way downscaling experiments are configured:
- * New `prepare_predictors` function to flexibly configure predictors
- * New `prepare_newdata` function, to prepapre the prediction data
+* Minor bug fix in the temporal aggregation of station datasets
+* Attributes of downscaling methods are now global, instead of being stored within the Data element 
 * Other documentation updates and enhancements
 
 
