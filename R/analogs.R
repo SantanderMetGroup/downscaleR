@@ -99,7 +99,7 @@ analogs <- function(y = y,
       if (isTRUE(modelPars$stations)) {
             if (n.analogs > 1) {
                   out.list <- lapply(1:length(d.list), function(k) {
-                        aux.mat <- matrix(nrow = ncol(d.list[[k]]), ncol = dim(y$Data)[grep("station", attr(y$Data, "dimensions"))])
+                        aux.mat <- matrix(nrow = ncol(d.list[[k]]), ncol = getShape(y, "loc"))
                         for (i in 1:nrow(aux.mat)) {
                               aux <- y$Data[d.list[[k]][ ,i], ]
                               aux.mat[i, ] <- switch(sel.fun, 

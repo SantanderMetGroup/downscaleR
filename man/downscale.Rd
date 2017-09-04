@@ -4,7 +4,7 @@
 \alias{downscale}
 \title{Perfect-prog downscaling}
 \usage{
-downscale(y, x, newdata = NULL, method = c("analogs", "glm"),
+downscale(y, x, newdata = x, method = c("analogs", "glm"),
   simulate = c("no", "yes", "occurrence"), n.analogs = 1,
   sel.fun = c("random", "mean"), analog.dates = FALSE,
   wet.threshold = 0.1, n.pcs = NULL, cross.val = c("none", "loocv",

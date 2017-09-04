@@ -46,20 +46,21 @@ dateReplacement <- function(obs.dates, sim.dates) {
 #' @param multi.member Logical indicating if simulation data is a multimember
 #' @return A character vector indicating the dimensions of the output object
 #' @keywords internal
+#' @importFrom transformeR getDim
 #' @author J. Bedia
 
 
 renameDims <- function(obs, multi.member) {
-    dimNames <- attr(obs$Data, "dimensions")
+    dimNames <- getDim(obs)
     # Remove "station" from dimensions for single-station objects
-    st.dim.index <- grep("station", dimNames)
+    st.dim.index <- grep("loc", dimNames)
     if (!identical(st.dim.index, integer(0))) {
         dim.st <- dim(obs$Data)[st.dim.index]
         if (identical(dim.st, 1L)) {
             dimNames <- dimNames[-st.dim.index]
         }
     }
-    if (isTRUE(multi.member)) {dimNames <- c("member", dimNames)}
+    if (isTRUE(multi.member)) dimNames <- c("member", dimNames)
     return(dimNames)
 }
 # End
