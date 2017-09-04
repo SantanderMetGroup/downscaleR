@@ -199,10 +199,10 @@ downscale <- function(y,
       dimNames <- renameDims(obs.orig, modelPars$multi.member)
       obs.orig$Data <- down
       attr(obs.orig$Data, "dimensions") <- dimNames
-      attr(obs.orig$Data, "downscaling:method") <- method
-      attr(obs.orig$Data, "downscaling:cross-validation") <- cross.val
-      attr(obs.orig$Data, "downscaling:simulation_data") <- modelPars$sim.dataset
-      attr(obs.orig$Data, "downscaling:n_pcs") <- n.pcs
+      attr(obs.orig, "downscaling:method") <- method
+      attr(obs.orig, "downscaling:cross-validation") <- cross.val
+      attr(obs.orig, "downscaling:simulation_data") <- modelPars$sim.dataset
+      attr(obs.orig, "downscaling:n_pcs") <- n.pcs
       # Date replacement
       obs.orig$Dates <- modelPars$sim.dates 
       message("[", Sys.time(), "] Done.")
