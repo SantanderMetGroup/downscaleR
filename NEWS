@@ -2,7 +2,6 @@ New in downscaleR
 =================
 
 * Minor bug fix in the temporal aggregation of station datasets
-* Attributes of downscaling methods are now global, instead of being stored within the Data element 
 * Other documentation updates and enhancements
 
 
