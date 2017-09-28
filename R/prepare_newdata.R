@@ -26,8 +26,8 @@
 #' # See the dedicated vignette by typing:
 #' # utils::vignette(topic = "configuring_newdata", package = "downscaleR")
 #' @family downscaling.helpers
-#' @importFrom transformeR getVarNames subsetGrid redim getShape getCoordinates grid2PCs getRefDates
-#' @importFrom magrittr %>%  
+#' @importFrom transformeR getVarNames subsetGrid redim getShape getCoordinates grid2PCs getRefDates array3Dto2Dmat grid2PCs
+#' @importFrom magrittr %>% extract2 
 
 prepare_newdata <- function(newdata, predictor) {
     x.varnames <- attr(predictor, "predictor.vars")
@@ -36,7 +36,7 @@ prepare_newdata <- function(newdata, predictor) {
     # Spatial check primero para segurar que los nn.indices son correctos
     if (!identical(attr(predictor, "xyCoords"), getCoordinates(newdata))) stop("Spatial mismatch between predictor and newdata", call. = FALSE)
     # Local predictors 
-    newdata.local.list <- NULL
+    newdata.local.list <- NULL # A list containing, for each location of the predictand, the local neighbour values
     if (!is.null(predictor$x.local)) {
         local.index.list <- attributes(predictor$x.local)$"local.index.list"
         newdata.local.list <- predictor.nn.values(nn.indices.list = local.index.list,
@@ -63,21 +63,45 @@ prepare_newdata <- function(newdata, predictor) {
         })
         names(newdata.global.list) <- paste("member", 1:length(newdata.global.list), sep = "_")
     } else {
-    ## PCA predictors    
-        pca.mat.list <- lapply(1:length(global.pred.vars), function(i) {
-            aux <- subsetGrid(newdata, var = global.pred.vars[i]) %>% grid2PCs(prinCompObj = predictor$pca)
-        })
-        names(pca.mat.list) <- global.pred.vars
-        newdata.global.list <- lapply(1:length(pca.mat.list[[1]]), function(x) {
-            expr <- paste0("cbind(", paste0("pca.mat.list[[", 1:length(pca.mat.list), "]][[x]]", collapse = ","), ")")
-            parse(text = expr) %>% eval()
-        })
-        pca.mat.list <- NULL
+    ## PCA predictors   
+        if (is.null(predictor$pca$COMBINED)) { # The COMBINED PC is not being used
+            pca.mat.list <- lapply(1:length(global.pred.vars), function(i) {
+                aux <- subsetGrid(newdata, var = global.pred.vars[i]) %>% grid2PCs(prinCompObj = predictor$pca)
+            })
+            names(pca.mat.list) <- global.pred.vars
+            newdata.global.list <- lapply(1:length(pca.mat.list[[1]]), function(x) {
+                expr <- paste0("cbind(", paste0("pca.mat.list[[", 1:length(pca.mat.list), "]][[x]]", collapse = ","), ")")
+                parse(text = expr) %>% eval()
+            })
+            pca.mat.list <- NULL
+        } else {# The COMBINED PC is being used
+            pca.mat.list <- lapply(1:length(global.pred.vars), function(i) {
+                aux <- subsetGrid(newdata, var = global.pred.vars[i]) %>% redim(member = TRUE)
+                escala <- attributes(predictor$pca[[i]][[1]]$orig)$'scaled:scale'
+                center <- attributes(predictor$pca[[i]][[1]]$orig)$'scaled:center'
+                n.mem <- getShape(aux, "member")
+                lapply(1:n.mem, function(j) {
+                    subsetGrid(aux, members = j, drop = TRUE) %>% extract2("Data") %>% array3Dto2Dmat() %>% scale(center = center, scale = escala)
+                })
+            })
+            ## The combined standardized matrix is created, as a list of members: 
+            combined.std.mat <- lapply(1:length(pca.mat.list[[1]]), function(i) {
+                expr <- paste0("cbind(", paste0("pca.mat.list[[", 1:length(pca.mat.list), "]][[", i,"]]", collapse = ","), ")")
+                parse(text = expr) %>% eval()
+            })
+            pca.mat.list <- NULL
+            # The COMBINED PCs are calculated using the predictor EOFs:
+            newdata.global.list <- lapply(1:length(combined.std.mat), function(i) {
+                combined.std.mat[[i]] %*% predictor$pca$COMBINED[[1]]$EOFs
+            })
+            combined.std.mat <- NULL
+        }
         names(newdata.global.list) <- paste("member", 1:length(newdata.global.list), sep = "_")
     }
     newdata.refdates <- list(start = getRefDates(newdata, "start"), end = getRefDates(newdata, "end"))
     return(list("newdata.global" = newdata.global.list,
                 "newdata.local" = newdata.local.list,
-                "Dates" = newdata.refdates))
+                "Dates" = newdata.refdates)
+    )
 }
 
