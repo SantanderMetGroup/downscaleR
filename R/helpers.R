@@ -107,3 +107,19 @@ get2DmatCoordinates <- function(grid) {
         stop("Direct downscaling of rotated grids is not supported", call. = FALSE)
     }
 }
+
+
+#' @title Obtain a grob object from ordinary plot
+#' @description Obtain a grob object from ordinary plot
+#' @return A grob object
+#' @keywords internal
+#' @importFrom gridGraphics grid.echo 
+#' @importFrom grid grid.grab
+#' @author J. Bedia
+
+
+grabGrob <- function(){
+      grid.echo()
+      grid.grab()
+}
+# End

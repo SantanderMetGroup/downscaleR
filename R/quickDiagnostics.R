@@ -1,37 +1,72 @@
 #' @title Plots daily/annual series and the annual correlation map of different grid objects
 #' @description Plots daily/annual series and the annual correlation map of different grid objects
 #' @param obs grid of observations. 
-#' @param sim grid of model data.
+#' @param raw grid of model data.
 #' @param downscaled Optional. grid of the downscaling output.  
-#' @param location Coordinates of a location in the geographic domain of the grid.
+#' @param location Coordinates of a location in the geographic domain of 'obs'. 
+#' If NULL it is randomly chosen from coordinates in 'obs'.
 #' @param type Character value, either \code{"daily"} or \code{"interannual"}, indicating is the assessment is to
 #' be performed on a daily or interannual basis.
-#' @param members An integer vector indicating \strong{the position} of the members to be subset.
+#' @param members An integer vector indicating \strong{the position} of the members to be subset. 
+#' If NULL all members are considered when type = "interannual" and one member is randomly chosen when type = "daily".
 #' @param na.tolerance proportion of NAs in a grid cell (location) that are allowed to calculate correlation. 
 #' @param ylim 'ylim' argument passed to the time series plot.
 #' @param main 'main' argument passed to the plot.
 #' @family visualization
-#' @importFrom fields image.plot
+#' @importFrom gridExtra grid.arrange
 #' @return Two diagnostic plots with observed, simulated and (possibly) downscaled time series, and a QQ-plot by percentlies.
 #' @author M. Iturbide 
 #' @export
+#' @examples {
+#' data("VALUE_Iberia_pr")
+#' data("NCEP_Iberia_pr")
+#' y <- VALUE_Iberia_pr
+#' x <- NCEP_Iberia_pr
+#' x$Data <- x$Data*86400
+#' eqm1win <- biasCorrection(y = y, x = x, 
+#'                           method = "eqm",
+#'                           extrapolation = "none",
+#'                           window = c(31, 1))
+#' quickDiagnostics(y, x, eqm1win)
+#' quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
+#' quickDiagnostics(obs = y, raw = x, downscaled = eqm1win, location = c(-2, 43), type = "interannual")
+#' }
 
 
-quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), type = c("daily", "interannual"), members = NULL, na.tolerance = .3, ylim = NULL, main = NULL){
-      type <- match.arg(type, choices = c("daily", "interannual"))
-      if(!is.null(members)){
-            sim <- subsetGrid(sim, members = members)
-            downscaled <- subsetGrid(downscaled, members = members)
+quickDiagnostics <- function(obs, 
+                             raw, 
+                             downscaled = NULL, 
+                             location = NULL, 
+                             type = c("daily", "interannual"), 
+                             members = NULL, 
+                             na.tolerance = .3, 
+                             ylim = NULL, 
+                             main = NULL){
+      
+      if (is.null(location)) {
+            coordref <- getCoordinates(obs)
+            if (class(coordref) == "list") coordref <- expand.grid(coordref$x, coordref$y)
+            location <- as.numeric(coordref[sample(1:nrow(coordref), 1),])
       }
+      type <- match.arg(type, choices = c("daily", "interannual"))
+      if (is.null(members) & "member" %in% names(getShape(downscaled))) {
+            if (type == "daily") {
+                  members <- sample(1:getShape(downscaled)["member"],1)
+            } else {
+                  members <- 1:getShape(downscaled)["member"]
+            }
+      }
+      suppressWarnings(raw <- subsetGrid(raw, members = members))
+      suppressWarnings(downscaled <- subsetGrid(downscaled, members = members))
       if (type == "daily") {
             if (!is.null(downscaled)) {
-                  if (difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
+                  if (difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1) {
                         stop("downscaled data is not daily, try with type = 'interannual'")
                   }
             }
-            dailyOutlook(obs, sim, downscaled, location, ylim)
+            dailyOutlook(obs, raw, downscaled, location, ylim)
       } else if (type == "interannual") {
-            interannualOutlook(obs, sim, downscaled, location, na.tolerance = na.tolerance, ylim, main)
+            interannualOutlook(obs, raw, downscaled, location, na.tolerance = na.tolerance, ylim, main)
       }
 }
 #end
@@ -42,291 +77,118 @@ quickDiagnostics <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3
 #' @importFrom stats sd cor
 #' @importFrom grDevices rgb
 #' @keywords internal
-#' @importFrom transformeR subsetGrid getCoordinates getYearsAsINDEX draw.world.lines
+#' @importFrom transformeR subsetGrid getCoordinates getYearsAsINDEX draw.world.lines aggregateGrid climatology plotClimatology 
+#' @importFrom sp SpatialPoints
 
-interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), na.tolerance = .3, ylim = NULL, main = NULL){
-      par(mfrow = c(1,2))
-      period.id <- (getYearsAsINDEX(sim))
-      period <- unique(period.id)
-      if (!is.null(downscaled)){
-            test.id2 <- getYearsAsINDEX(downscaled)
-            train.id <- period.id[which(is.na(match(period.id, test.id2)))]
-            if(length(train.id)==0){train.id <-period.id}
-            test.id <- period.id[which(is.na(match(period.id, train.id)))]
-            if(length(test.id)==0){test.id <- period.id}
-            test.period <- unique(test.id)
-            #             train.period <- period[which(is.na(match(period,test.period)))]
-            train.period <-unique(train.id)
-            obs.test <- subsetGrid(obs, years = test.period) 
-            obs.train <- subsetGrid(obs, years = train.period)
-            sim.test <- subsetGrid(sim, years = test.period)
-            sim.train <- subsetGrid(sim, years = train.period)
-            if(length(which(is.na(match(train.id, test.id2))))==0){
-                  comper <- TRUE
-            }else{comper <- FALSE}
+interannualOutlook <- function(obs, raw, downscaled = NULL, location = c(-42.5, -3), na.tolerance = .3, ylim = NULL, main = NULL){
+      period <- unique(getYearsAsINDEX(obs))
+      if (!identical(period, unique(getYearsAsINDEX(raw)))) stop("obs and raw have different temporal (year) domain")
+      suppressMessages(obsy <- aggregateGrid(obs, aggr.y = list(FUN = "mean", na.rm = T)))
+      suppressMessages(rawy <- aggregateGrid(raw, aggr.y = list(FUN = "mean", na.rm = T)))
+      if (!is.null(downscaled)) {
+            if (!identical(period, unique(getYearsAsINDEX(downscaled)))) stop("obs and downscaled have different temporal (year) domain")
+            suppressMessages(downy <- aggregateGrid(downscaled, aggr.y = list(FUN = mean, na.rm = T)))
       }
-      x.coord <- getCoordinates(obs)$x
-      y.coord <- getCoordinates(obs)$y
-      coords <- expand.grid(1:length(x.coord), 1:length(y.coord))
-      xo <- findInterval(location[1], x.coord)
-      yo <- findInterval(location[2], y.coord)
-      xi <- findInterval(x.coord[xo], getCoordinates(sim)$x)
-      yi <- findInterval(y.coord[yo], getCoordinates(sim)$y)
-      if (any(attr(sim$Data, "dimensions")=="member")){
-            nmem <- dim(sim$Data)[which(attr(sim$Data, "dimensions")=="member")]
-            #Daily time series plot
-            ##Compute statistic
-            x <- tapply(obs$Data[, yo,xo], INDEX = period.id, FUN = mean)
-            yl <- lapply(1:nmem, function(m) {
-                  tapply(sim$Data[m,,yi,xi], INDEX = period.id, FUN = mean)
-            })
-            y <- Reduce("+", yl)/length(yl)
-            ys <- apply(simplify2array(yl), 1, sd)
-            if(!is.null(downscaled)){
-                  xt <- tapply(obs.test$Data[, yo,xo], INDEX = test.id, FUN = mean)
-                  ytl <- lapply(1:nmem, function(m){
-                        tapply(sim.test$Data[m,,yi,xi], INDEX = test.id, FUN = mean)})
-                  yt <- Reduce("+", ytl)/length(ytl)
-                  wl <- lapply(1:nmem, function(m){
-                        if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
-                              downscaled$Data[m,,yo,xo]   
-                        }else{
-                              tapply(downscaled$Data[m,,yo,xo], INDEX = test.id2, FUN = mean)}
-                  })
-                  
-                  w <- Reduce("+", wl)/length(wl)
-                  ws <- apply(simplify2array(wl), 1, sd)
-                  ## ACCURACY
-                  ### Spearman correlation rho and the Root Mean Square Error (RMSE) as accuracy measures 
-                  ### for the direct and calibrated simulation in the TEST PERIOD
-                  rmse.down <- sqrt(mean((xt - w)^2))
-                  bias.down <-  sum(w - xt)/sum(x)
-                  rho.down <- cor(x = xt, y = w, method = "spearman")
-                  rmse.direct <- sqrt(mean((xt - yt)^2))
-                  bias.direct <-  sum(yt - xt)/sum(x)
-                  rho.direct <- cor(x = xt, y = yt, method = "spearman")
-            } else {
-                  rmse.direct <- sqrt(mean((x - y)^2))
-                  bias.direct <-  sum(y - x)/sum(x)
-                  rho.direct <- cor(x = x, y = y, method = "spearman")
-            }
-            if (is.null(ylim)) {
-                  mi <- floor(min(c(x,y)))-1
-                  ma <-  floor(max(c(x,y)))
-                  ylim <- c(mi, ma + (ma-mi))
-            }
-            plot(1:length(period), x, xlim = c(0,length(period)), ylim = ylim, xlab="", xaxt = "n", 
-                 ylab = "Annual/seasonal mean value", cex = .6, col = NULL, main = main)
-            tck <- axis(1, at = 1:length(period), labels=FALSE)
-            text(tck,  par("usr")[3] - 2, xpd = TRUE, labels = (1981:2010), 
-                 srt = 90, cex =.6)
-            #plot the sd (shadows)
-            polygon(x = c(1:length(period), length(period):1), y =c (ys+y,rev(y-ys)), col = rgb(1,0,0,0.2), border = NA)
+      if ("member" %in%  getDim(raw)) {
+         nmem <- getShape(raw)["member"]
+         suppressMessages(rawsd <- aggregateGrid(rawy, aggr.mem = list(FUN = "sd", na.rm = T)))
+         suppressMessages(rawy <- aggregateGrid(rawy, aggr.mem = list(FUN = "mean", na.rm = T)))
+         if (!is.null(downscaled)){
+               suppressMessages(downsd <- aggregateGrid(downy, aggr.mem = list(FUN = "sd", na.rm = T)))
+               suppressMessages(downy <- aggregateGrid(downy, aggr.mem = list(FUN = "mean", na.rm = T)))
+         } 
+      }
+      if ("loc" %in% getDim(obs)) {
+            a <- abs(getCoordinates(obs)$y - location[2]) + abs(getCoordinates(obs)$x - location[1])
+            indstation <- which(a == min(a))
+            x <- obsy$Data[,indstation]
+            location[1] <- obs$xyCoords[indstation,1]
+            location[2] <- obs$xyCoords[indstation,2]
+            warning("Coordinates of the nearest station to the specified location are considered: 
+                    x = ", location[1], ", y = ", location[2])
             if (!is.null(downscaled)) {
-                  if(comper == TRUE){
-                        polygon(x = c(1:length(period), length(period):1), 
-                                y =c (ws+w,rev(w-ws)), col = rgb(0,0,1,0.2), border = NA)
-                        #plot the mean (lines)
-                        lines(1:length(period), x[1:length(period)], lwd = 2, xlim = c(0,length(period)))
-                        lines(1:length(period), y[1:length(period)], lwd = 2, xlim = c(0,length(period)),
-                              col="red")
-                        lines(1:length(period), w, col = "blue", lwd = 2)     
-                  }else{
-                        polygon(x = c((length(train.period)+1):length(period), length(period):(length(train.period)+1)), 
-                                y =c (ws+w,rev(w-ws)), col = rgb(0,0,1,0.2), border = NA, main = main)
-                        #plot the mean (lines)
-                        lines(1:(length(train.period)+1), x[1:(length(train.period)+1)], lwd = 2, lty = 4, xlim = c(0,length(period)))
-                        lines((1+length(train.period)):length(period) , x[(1+length(train.period)):length(period)], 
-                              lwd = 2)
-                        lines(1:(length(train.period)+1), y[1:(length(train.period)+1)], lwd = 2, lty = 4, xlim = c(0,length(period)),
-                              col="red")
-                        lines((1+length(train.period)):length(period) , y[(1+length(train.period)):length(period)], 
-                              lwd = 2, col ="red")
-                        lines((length(train.period)+1):length(period), w, col = "blue", lwd = 2)
-                  }
-                  legend(0, ylim[2] , legend = c("obs",  
-                                                 paste("direct: rho=", 
-                                                       round(rho.direct, digits = 2), ", bias=", 
-                                                       round(bias.direct, digits = 2), sep = ""), 
-                                                 paste("downscaled: rho=", 
-                                                       round(rho.down, digits = 2), ", bias=", 
-                                                       round(bias.down, digits = 2), sep = "")), 
-                         fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
-            } else {
-                  # plot the mean (lines)
-                  lines(1:length(period), x, lwd = 2)
-                  lines(1:length(period), y, lwd = 2, col ="red")
-                  legend(0, ylim[2] , legend = c("obs",  
-                                                 paste("direct: rho=", 
-                                                       round(rho.direct, digits = 2), ", bias=", 
-                                                       round(bias.direct, digits = 2), sep = "")), 
-                         fill = c("black", "red"), box.lwd = 0, cex = .8)
-            }
-            ## correlation map
-            r <- matrix(nrow = length(x.coord), ncol = length(y.coord))
-            for (i in 1:nrow(coords)) {
-                  if(!is.null(downscaled)){
-                        x <- tapply(obs.test$Data[, coords[i,2], coords[i,1]],
-                                    INDEX = test.id, FUN = mean)
-                        
-                        wl <- lapply(1:nmem, function(m) {
-                              if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
-                                    downscaled$Data[m,,coords[i,2], coords[i,1]]   
-                              }else{
-                                    tapply(downscaled$Data[m,, coords[i,2], coords[i,1]],
-                                           INDEX = test.id, FUN = mean)}
-                        })
-                  } else {
-                        x <- tapply(obs$Data[, coords[i,2], coords[i,1]],
-                                    INDEX = period.id, FUN = mean)
-                        wl <- lapply(1:nmem, function(m) {
-                              
-                              tapply(sim$Data[m,, coords[i,2], coords[i,1]],
-                                     INDEX = period.id, FUN = mean)
-                        }) 
-                  }
-                  w <- Reduce("+", wl)/length(wl)
-                  r[coords[i,1],coords[i,2]] <- cor(x,w,method = "spearman")
-            }
-            # Ignore negative values
-            r[which(r < 0)] <- 0
-            image.plot(x.coord, y.coord, r, asp = 1, breaks = seq(0,1,0.1),
-                       nlevel = 10, lab.breaks = c("=<0",as.character(seq(0.1,1,0.1))),
-                       xlab = "longitude", ylab = "latitude")
-            
-            draw.world.lines()
-            
-            points(location[1], location[2], cex = 2, pch = 17)
+                  w <- downy$Data[,indstation]
+                  if ("member" %in%  getDim(downscaled)) wsd <- downsd$Data[,indstation]
+            } 
       } else {
-            ##Compute statistic
-            x <- tapply(obs$Data[, yo, xo], INDEX = period.id, FUN = mean)
-            y <- tapply(sim$Data[, yi, xi], INDEX = period.id, FUN = mean)
-            
+            x <- subsetGrid(obsy, lonLim = location[1], latLim = location[2])$Data
             if (!is.null(downscaled)) {
-                  
-                  if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
-                        w <- downscaled$Data[,yo,xo]   
-                  }else{
-                        w <- tapply(downscaled$Data[,yo,xo], INDEX = test.id2, FUN = mean)
-                        
-                  }
-                  if(comper == TRUE){
-                        xt <- x
-                        yt <- y
-                  }else{
-                        xt <- x[(1+length(train.period)):length(period)]
-                        yt <- y[(1+length(train.period)):length(period)]
-                  }
-                  ## ACCURACY
-                  ### Spearman correlation rho and the Root Mean Square Error (RMSE) as accuracy measures 
-                  ### for the direct and calibrated simulation in the TEST PERIOD
-                  if(length(which(is.na(w))) > 0 & (length(which(is.na(w)))/length(w)) < na.tolerance){  
-                        ind <- which(is.na(w))
-                        rmse.down <- sqrt(mean((xt[-ind] - w[-ind])^2))
-                        bias.down <-  sum(w[-ind] - xt[-ind])/sum(x[-ind])
-                        rho.down <- cor(x = xt[-ind], y = w[-ind], method = "spearman")
-                        rmse.direct <- sqrt(mean((xt - yt)^2))
-                        bias.direct <-  sum(yt - xt)/sum(x)
-                        rho.direct <- cor(x = xt, y = yt, method = "spearman")
-                  }else if(length(which(is.na(w))) == 0){
-                        rmse.down <- sqrt(mean((xt - w)^2))
-                        bias.down <-  sum(w - xt)/sum(x)
-                        rho.down <- cor(x = xt, y = w, method = "spearman")
-                        rmse.direct <- sqrt(mean((xt - yt)^2))
-                        bias.direct <-  sum(yt - xt)/sum(x)
-                        rho.direct <- cor(x = xt, y = yt, method = "spearman")
-                  }else{                  
-                        stop("Too many NAs in the selected location. Select a new location")
-                  }
-                  
-            } else {
-                  rmse.direct <- sqrt(mean((x - y)^2))
-                  bias.direct <-  sum(y - x)/sum(x)
-                  rho.direct <- cor(x = x, y = y, method = "spearman")
+                  w <- subsetGrid(downy, lonLim = location[1], latLim = location[2])$Data
+                  if ("member" %in%  getDim(downscaled)) wsd <- subsetGrid(downsd, lonLim = location[1], latLim = location[2])$Data
             }
-            if (is.null(ylim)) {
-                  mi <- floor(min(c(x,y)))-1
-                  ma <-  floor(max(c(x,y)))
-                  ylim <- c(mi, ma + (ma-mi))}
-            plot(1:length(period), x, xlim = c(0,length(period)), ylim = ylim, xlab="", xaxt = "n", 
-                 ylab = "Annual/seasonal mean value", cex = .6, col = NULL, main = main)
-            tck <- axis(1, at = 1:length(period), labels=FALSE)
-            text(tck,  par("usr")[3] - 2, xpd = TRUE, labels = (1981:2010), 
-                 srt = 90, cex =.6)
-            if (!is.null(downscaled)) {
-                  #plot the mean (lines)
-                  if(comper == TRUE){
-                        lines(1:length(period), x, lwd = 2, xlim = c(0,length(period)))
-                        
-                        lines(1:length(period), y, lwd = 2, xlim = c(0,length(period)),
-                              col="red")
-                        lines(1:length(period), w, col = "blue", lwd = 2)                        
-                  }else{
-                        lines(1:(length(train.period)+1), x[1:(length(train.period)+1)], lwd = 2, lty = 4, xlim = c(0,length(period)))
-                        lines((1+length(train.period)):length(period) , x[(1+length(train.period)):length(period)], 
-                              lwd = 2)
-                        lines(1:(length(train.period)+1), y[1:(length(train.period)+1)], lwd = 2, lty = 4, xlim = c(0,length(period)),
-                              col="red")
-                        lines((1+length(train.period)):length(period) , y[(1+length(train.period)):length(period)], 
-                              lwd = 2, col ="red")
-                        lines((length(train.period)+1):length(period), w, col = "blue", lwd = 2)
-                  }
-                  legend(0, ylim[2] , legend = c("obs",  
-                                                 paste("direct: rho=", 
-                                                       round(rho.direct, digits = 2), ", bias=", 
-                                                       round(bias.direct, digits = 2), sep = ""), 
-                                                 paste("downscaled: rho=", 
-                                                       round(rho.down, digits = 2), ", bias=", 
-                                                       round(bias.down, digits = 2), sep = "")), 
-                         fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
-            } else {
-                  #plot the mean (lines)
-                  lines(1:length(period), x, lwd = 2)
-                  lines(1:length(period), y, lwd = 2, col ="red")
-                  legend(0, ylim[2] , legend = c("obs",  
-                                                 paste("direct: rho=", 
-                                                       round(rho.direct, digits = 2), ", bias=", 
-                                                       round(bias.direct, digits = 2), sep = "")), 
-                         fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
-            }
-            #correlation map
-            r <- matrix(nrow = length(x.coord), ncol = length(y.coord))
-            for (i in 1:nrow(coords)) {
-                  if(!is.null(downscaled)) {
-                        x <- tapply(obs.test$Data[, coords[i,2], coords[i,1]],
-                                    INDEX = test.id, FUN = mean)
-                        if(difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1){
-                              w <- downscaled$Data[,coords[i,2],coords[i,1]]   
-                        }else{
-                              
-                              w <- tapply(downscaled$Data[, coords[i,2], coords[i,1]],
-                                          INDEX = test.id, FUN = mean)
-                        }
-                  } else {
-                        x <- tapply(obs$Data[, coords[i,2], coords[i,1]],
-                                    INDEX = period.id, FUN = mean)
-                        w <- tapply(sim$Data[, coords[i,2], coords[i,1]],
-                                    INDEX = period.id, FUN = mean)   
-                  }
-                  if(length(which(is.na(w))) > 0 & (length(which(is.na(w)))/length(w)) < na.tolerance){
-                        ind <- which(is.na(w))
-                        r[coords[i,1],coords[i,2]] <- cor(x[-ind],w[-ind],method = "spearman")
-                        
-                  }else{
-                        r[coords[i,1],coords[i,2]] <- cor(x,w,method = "spearman")
-                        
-                  }
-                  
-            }
-            # Ignore negative values
-            r[which(r < 0)] <- 0
-            image.plot(x.coord, y.coord, r, asp = 1, breaks = seq(0,1,0.1),
-                       nlevel = 10, lab.breaks = c("=<0",as.character(seq(0.1,1,0.1))),
-                       xlab = "longitude", ylab = "latitude")
-            draw.world.lines()
-            points(location[1], location[2], cex = 2, pch = 17)
       }
-      par(mfrow = c(1,1)) 
+      y <- subsetGrid(rawy, lonLim = location[1], latLim = location[2])$Data
+      if ("member" %in%  getDim(raw)) ysd <- subsetGrid(rawsd, lonLim = location[1], latLim = location[2])$Data
+      #statistics
+      rmse.direct <- sqrt(mean((x - y)^2, na.rm = T))
+      bias.direct <-  sum(y - x, na.rm = T)/sum(x,  na.rm = T)
+      rho.direct <- cor(x = x, y = y, method = "spearman")
+      if (!is.null(downscaled)){
+            rmse.down <- sqrt(mean((x - w)^2, na.rm = T))
+            bias.down <-  sum(w - x, na.rm = T)/sum(x, na.rm = T)
+            rho.down <- cor(x = x, y = w, method = "spearman")
+      }
+      if (is.null(ylim)) {
+            mi <- floor(min(c(x,y)))-1
+            ma <-  floor(max(c(x,y)))
+            ylim <- c(mi, ma + (ma-mi))
+      }
+      plot(1:length(period), x, xlim = c(0,length(period)), ylim = ylim, xlab="", xaxt = "n", 
+           ylab = "Annual/seasonal mean value", cex = .6, col = NULL, main = main)
+      tck <- axis(1, at = 1:length(period), labels=FALSE)
+      text(tck,  par("usr")[3] - 2, xpd = TRUE, labels = period, 
+           srt = 90, cex =.6)
+      #plot the sd (shadows)
+      lines(1:length(period), x, col = "black")
+      lines(1:length(period), y, col = "red")
+      if(!is.null(downscaled)) lines(1:length(period), w, col = "blue")
+      if ("member" %in%  getDim(raw)) {
+            polygon(x = c(1:length(period), length(period):1), y = c(ysd + y,rev(y - ysd)), col = rgb(1,0,0,0.2), border = NA)
+            if (!is.null(downscaled)) {
+                  polygon(x = c(1:length(period), length(period):1), y =c (wsd+w,rev(w-wsd)), col = rgb(0,0,1,0.2), border = NA)
+            }
+      }
+      #legend
+      if (!is.null(downscaled)) {
+            legend(0, ylim[2] , legend = c("obs",  
+                                           paste("direct: rho=", 
+                                                 round(rho.direct, digits = 2), ", bias=", 
+                                                 round(bias.direct, digits = 2), sep = ""), 
+                                           paste("downscaled: rho=", 
+                                                 round(rho.down, digits = 2), ", bias=", 
+                                                 round(bias.down, digits = 2), sep = "")), 
+                         fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
+       } else {
+            legend(0, ylim[2] , legend = c("obs",  
+                                           paste("direct: rho=", 
+                                                 round(rho.direct, digits = 2), ", bias=", 
+                                                 round(bias.direct, digits = 2), sep = "")), 
+                   fill = c("black", "red"), box.lwd = 0, cex = .8)
+       }
+       pl <- grabGrob()
+       ## correlation map
+       suppressMessages(corgrid <- climatology(obs))
+       if (is.null(downscaled)) {
+             downy <- rawy
+       }
+       if ("loc" %in% getDim(obs)) {
+             corgrid$Data[1,] <- vapply(1:nrow(getCoordinates(corgrid)), FUN.VALUE = numeric(length = 1), FUN = function(m) {
+                   cor(obsy$Data[,m], downy$Data[,m], method = "spearman") 
+             })
+       } else {
+             for (i in 1:length(getCoordinates(corgrid)$x)) {
+                   corgrid$Data[1,,i] <- vapply(1:length(getCoordinates(corgrid)$y), FUN.VALUE = numeric(length = 1), FUN = function(m) {
+                         cor(obsy$Data[,m,i], downy$Data[,m,i], method = "spearman")  
+                  })
+             }
+       }
+       plcor <- 
+             plotClimatology(corgrid, backdrop.theme = "countries", cuts = seq(-1,1,0.25),
+                                key.space = "bottom", scales=list(draw = TRUE),
+                             auto.key = T,par.settings=list(fontsize=list(text= 8)),
+                       sp.layout = list(list(SpatialPoints(matrix(location,ncol = 2)), 
+                                             first = FALSE, pch = 2, cex = 1.8, col = "black")))
+       grid.arrange(pl, plcor, nrow = 1, ncol = 2, widths = c(1.4,1))
 }
 #end
 
@@ -338,31 +200,29 @@ interannualOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, 
 #' @importFrom transformeR subsetGrid
 #' @keywords internal
 
-dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), ylim = NULL){
+dailyOutlook <- function(obs, raw, downscaled = NULL, location = c(-42.5, -3), ylim = NULL){
       if ("loc" %in% getDim(obs)) {
-            a <- which(abs(obs$xyCoords[,2] - location[2] ) == min(abs(obs$xyCoords[,2] - location[2])))
-            b <- which(abs(obs$xyCoords[,1] - location[1] ) == min(abs(obs$xyCoords[,1] - location[1]))) 
-            indstation <- which(!is.na(match(a,b)))
+            a <- abs(getCoordinates(obs)$y - location[2]) + abs(getCoordinates(obs)$x - location[1])            
+            indstation <- which(a == min(a))
             x <- obs$Data[,indstation]
+            location[1] <- obs$xyCoords[indstation,1]
+            location[2] <- obs$xyCoords[indstation,2]
+            warning("Coordinates of the nearest station to the specified location are considered: 
+                    x = ", location[1], ", y = ", location[2])
       } else {
             x <- subsetGrid(obs, lonLim = location[1], latLim = location[2], outside = T)$Data
       }
-      y <- subsetGrid(sim, lonLim = location[1], latLim = location[2], outside = T)$Data
+      y <- subsetGrid(raw, lonLim = location[1], latLim = location[2], outside = T)$Data
       if (!is.null(downscaled)) {
-            if ("loc" %in% getDim(obs)) {
-                  wredim <- redim(downscaled, runtime = T, loc = TRUE, drop = F)
-                  if ("loc" %in% getDim(wredim)) {
-                        w <- wredim$Data[,,,indstation]      
-                  }else{
-                        w <- wredim$Data     
-                  }
+            if ("loc" %in% getDim(downscaled)) {
+                  w <- downscaled$Data[,indstation]      
             } else {
                   w <- subsetGrid(downscaled, lonLim = location[1], latLim = location[2], outside = T)$Data
             }
       }
       yran <- if (is.null(ylim)) {
             mi <- 0
-            ma <-  floor(max(x, na.rm = T))
+            ma <-  floor(max(c(x,y,w), na.rm = T))
             c(mi, (ma + ma/4))
       } else {
             ylim
@@ -374,96 +234,35 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), y
            lwd = 2, ty = "l", lty = 3,  
            ylim = yran, xlim = c(1,dim(obs$Data)[1]),
            xlab = "Days", ylab = obs$Variable$varName, main = "Daily series")
-      
-      o <- match(attr(y, "dimensions"),"member")
-      mi <- which(!is.na(o))
-      
-      if(length(mi)>0){
-            nmem <- dim(sim$Data)[which(attr(sim$Data, "dimensions")=="member")]
-            
-            yl <- lapply(1:nmem, function(m){
-                  y[m,]
-            })
-            y <- Reduce("+", yl)/length(yl)
-            
-            rmse.direct <- sqrt(mean((x - y)^2))
-            bias.direct <-  sum(y - x, na.rm = T)/sum(x, na.rm = T)
-            xcor <- x[which(!is.na(x))]
-            ycor <- y[which(!is.na(x))]
-            rho.direct <- cor(x = xcor, y = ycor, method = "spearman")
-            
-            lines(1:length(y), 
-                  y, 
-                  col = "red", lwd = 1)
-            if (!is.null(downscaled)){
-                  wl <- lapply(1:nmem, function(m){
-                        w[m,]
-                  })
-                  w <- Reduce("+", wl)/length(wl)
-                  
-                  xt <- x[(length(x) -(length(w)-1)):length(x)]
-                  yt <- y[(length(x) -(length(w)-1)):length(x)]
-                  rmse.down <- sqrt(mean((xt - w)^2, na.rm = T))
-                  bias.down <-  sum(w - xt, na.rm = T)/sum(x, na.rm = T)
-                  xtcor <- xt[which(!is.na(xt))]
-                  ytcor <- yt[which(!is.na(xt))]
-                  wcor <- w[which(!is.na(xt))]
-                  
-                  rho.down <- cor(x = xtcor, y = wcor, method = "spearman")
-                  rmse.direct <- sqrt(mean((xt - yt)^2, na.rm = T))
-                  bias.direct <-  sum(yt - xt, na.rm = T)/sum(x, na.rm = T)
-                  rho.direct <- cor(x = xtcor, y = ytcor, method = "spearman")
-                  lines((length(x) -(length(w)-1)):length(x), 
-                        w, col = "blue", lwd = 1)
+      rmse.direct <- sqrt(mean((x - y)^2, na.rm = T))
+      bias.direct <-  sum(y - x, na.rm = T) / sum(x, na.rm = T)
+      naind <- intersect(which(!is.na(x)), which(!is.na(y)))
+      rho.direct <- cor(x = x[naind], y = y[naind], method = "spearman")
+      lines(1:length(y), y, col = "red", lwd = 1)
+      if (!is.null(downscaled)) {
+            xt <- x[(length(x) - (length(w) - 1)):length(x)]
+            yt <- y[(length(x) - (length(w) - 1)):length(x)]
+            rmse.down <- sqrt(mean((xt - w)^2, na.rm = T))
+            bias.down <-  sum(w - xt, na.rm = T)/sum(x, na.rm = T)
+            naind2 <- intersect(which(!is.na(xt)), which(!is.na(yt)))
+            rho.down <- cor(x = xt[naind2], y = w[naind2], method = "spearman")
+            rmse.direct <- sqrt(mean((xt - yt)^2, na.rm = T))
+            bias.direct <-  sum(yt - xt, na.rm = T)/sum(x, na.rm = T)
+            rho.direct <- cor(x = xt[naind2], y = yt[naind2], method = "spearman")
+            lines((length(x) - (length(w) - 1)):length(x), w, col = "blue", lwd = 1)
                   legend(0, yran[2] , legend = c("obs",  
-                                                 paste("sim: rho=", 
+                                                 paste("raw: rho=", 
                                                        round(rho.direct, digits = 2), ", bias=", 
                                                        round(bias.direct, digits = 2), sep = ""), 
                                                  paste("downscaled: rho=", 
                                                        round(rho.down, digits = 2), ", bias=", 
                                                        round(bias.down, digits = 2), sep = "")), 
-                         fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
-            } else {
-                  legend(0, yran[2] , legend = c("obs",  
-                                                 paste("sim: rho=", 
-                                                       round(rho.direct, digits = 2), ", bias=", 
-                                                       round(bias.direct, digits = 2), sep = "")), 
-                         fill = c("black", "red"), box.lwd = 0, cex = .8)
-            }
-      } else {
-            rmse.direct <- sqrt(mean((x - y)^2))
-            bias.direct <-  sum(y- x)/sum(x)
-            rho.direct <- cor(x = x, y = y, method = "spearman")
-            lines(1:length(y), 
-                  y, 
-                  col = "red", lwd = 1)
-            if (!is.null(downscaled)) {
-                  xt <- x[(length(x) -(length(w)-1)):length(x)]
-                  yt <- y[(length(x) -(length(w)-1)):length(x)]
-                  rmse.down <- sqrt(mean((xt - w)^2, na.rm = T))
-                  bias.down <-  sum(w - xt, na.rm = T)/sum(x, na.rm = T)
-                  rho.down <- cor(x = xt, y = w, method = "spearman")
-                  rmse.direct <- sqrt(mean((xt - yt)^2, na.rm = T))
-                  bias.direct <-  sum(yt- xt, na.rm = T)/sum(x, na.rm = T)
-                  rho.direct <- cor(x = xt, y = yt, method = "spearman")
-                  lines((length(x) -(length(w)-1)):length(x), 
-                        w, 
-                        col = "blue", lwd = 1)
-                  legend(0, yran[2] , legend = c("obs",  
-                                                 paste("sim: rho=", 
-                                                       round(rho.direct, digits = 2), ", bias=", 
-                                                       round(bias.direct, digits = 2), sep = ""), 
-                                                 paste("downscaled: rho=", 
-                                                       round(rho.down, digits = 2), ", bias=", 
-                                                       round(bias.down, digits = 2), sep = "")), 
-                         fill = c("black", "red", "blue"), box.lwd = 0, cex = .8)
-            } else {
-                  legend(0, yran[2] , legend = c("obs",  
-                                                 paste("sim: rho=", 
-                                                       round(rho.direct, digits = 2), ", bias=", 
-                                                       round(bias.direct, digits = 2), sep = "")), 
-                         fill = c("black", "red"), box.lwd = 0, cex = .8)
-            }
+                         fill = c("black", "red", "blue"), box.lwd = 0, cex = .6)
+       } else {
+            legend(0, yran[2] , legend = c("obs", paste("raw: rho=", 
+                                            round(rho.direct, digits = 2), ", bias=", 
+                                            round(bias.direct, digits = 2), sep = "")), 
+                         fill = c("black", "red"), box.lwd = 0, cex = .6)
       }
       # qq-plot
       qy <- quantile(y, probs = seq(0.01, .99, 0.01), na.rm = T, , type =4)
@@ -476,7 +275,7 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), y
       yran <- c(0, max(c(q1, qy, qw), na.rm = T))
       plot(q1, qy, col="red", main = "qq-plot", xlab = "obs", ylab = "predicted", ylim = yran)
       lines(0:max(c(q1, qy, qw), na.rm = T), 0:max(c(q1, qy, qw), na.rm = T))
-      if(!is.null(downscaled)){
+      if (!is.null(downscaled)){
             points(q1,qw, col="blue")
       }
       par(mfrow = c(1,1)) 
@@ -484,3 +283,8 @@ dailyOutlook <- function(obs, sim, downscaled = NULL, location = c(-42.5, -3), y
 
 #end    
 
+
+grabGrob <- function(){
+      grid.echo()
+      grid.grab()
+}
