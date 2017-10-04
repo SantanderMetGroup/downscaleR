@@ -63,11 +63,11 @@ The predictands correspond to the observations used for downscaling. These are t
 
 
 ```{r}
-data("VALUE_Iberia_tp")
-y <- VALUE_Iberia_tp
+data("VALUE_Iberia_pr")
+y <- VALUE_Iberia_pr
 ```
 
-```{r,fig.cap='Precipitation observations used as predictand. Type `help("VALUE_Iberia_tp")` for further details.',message=FALSE}
+```{r,fig.cap='Precipitation observations used as predictand. Type `help("VALUE_Iberia_pr")` for further details.',message=FALSE}
 plotClimatology(climatology(y), backdrop.theme = "countries", cex = 1.5,
                 main = "Mean Winter daily precip (mm/day, 1983-2002")
 ```

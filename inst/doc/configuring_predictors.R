@@ -14,10 +14,10 @@ plotClimatology(climatology(NCEP_Iberia_ta850), backdrop.theme = "coastline",
 x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
 
 ## ------------------------------------------------------------------------
-data("VALUE_Iberia_tp")
-y <- VALUE_Iberia_tp
+data("VALUE_Iberia_pr")
+y <- VALUE_Iberia_pr
 
-## ----fig.cap='Precipitation observations used as predictand. Type `help("VALUE_Iberia_tp")` for further details.',message=FALSE----
+## ----fig.cap='Precipitation observations used as predictand. Type `help("VALUE_Iberia_pr")` for further details.',message=FALSE----
 plotClimatology(climatology(y), backdrop.theme = "countries", cex = 1.5,
                 main = "Mean Winter daily precip (mm/day, 1983-2002")
 

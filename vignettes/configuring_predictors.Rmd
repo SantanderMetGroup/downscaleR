@@ -63,11 +63,11 @@ The predictands correspond to the observations used for downscaling. These are t
 
 
 ```{r}
-data("VALUE_Iberia_tp")
-y <- VALUE_Iberia_tp
+data("VALUE_Iberia_pr")
+y <- VALUE_Iberia_pr
 ```
 
-```{r,fig.cap='Precipitation observations used as predictand. Type `help("VALUE_Iberia_tp")` for further details.',message=FALSE}
+```{r,fig.cap='Precipitation observations used as predictand. Type `help("VALUE_Iberia_pr")` for further details.',message=FALSE}
 plotClimatology(climatology(y), backdrop.theme = "countries", cex = 1.5,
                 main = "Mean Winter daily precip (mm/day, 1983-2002")
 ```
@@ -163,8 +163,8 @@ Next, we will use the raw fields of air temperature at 850mb and sea-level press
 ```{r}
 out <- prepare_predictors(x = x,
                           y = y,
-                          global.vars = c("ta850", "psl"),
-                          local.predictors = list(neigh.vars = "hus850",
+                          global.vars = c("air850", "slp"),
+                          local.predictors = list(neigh.vars = "shum850",
                                                   n.neighs = 4,
                                                   neigh.fun = NULL)
 )
@@ -180,8 +180,8 @@ Instead of using all 4 neighbours sepparately, these can be aggregated, for inst
 ```{r}
 out <- prepare_predictors(x = x,
                           y = y,
-                          global.vars = c("ta850", "psl"),
-                          local.predictors = list(neigh.vars = "hus850",
+                          global.vars = c("air850", "slp"),
+                          local.predictors = list(neigh.vars = "shum850",
                                                   n.neighs = 4,
                                                   neigh.fun = list(FUN = "mean"))
 )
@@ -199,9 +199,9 @@ This is probably the most typical configuration of predictors. The global inform
 ```{r,message=FALSE}
 out <- prepare_predictors(x = x,
                           y = y,
-                          global.vars = c("ta850", "psl"),
+                          global.vars = c("air850", "slp"),
                           PCA = list(v.exp = c(.95, .95)),
-                          local.predictors = list(neigh.vars = "hus850",
+                          local.predictors = list(neigh.vars = "shum850",
                                                   n.neighs = 4,
                                                   neigh.fun = NULL)
 )
