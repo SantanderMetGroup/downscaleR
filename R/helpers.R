@@ -100,7 +100,9 @@ getIntersect <- function(obs,prd){
 
 get2DmatCoordinates <- function(grid) {
     if (typeofGrid(grid) == "regular_grid") {
-        getCoordinates(grid) %>%  expand.grid()
+        coords <- getCoordinates(grid) 
+        aux <- expand.grid(coords)
+        aux[order(aux[,1]), ]
     } else if (typeofGrid(grid) == "station") {
         getCoordinates(grid)
     } else if (typeofGrid(grid) == "rotated_grid") {

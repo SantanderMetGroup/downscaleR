@@ -104,6 +104,9 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
     full.pca <- NULL
     if (!is.null(PCA)) {
         PCA[["grid"]] <- x
+        if (is.null(PCA$which.combine)) {
+            message("NOTE: The COMBINED PC won't be calculated as 'which.combine' argument in PCA is missing (with no default)")
+        }
         full.pca <- do.call("prinComp", PCA)
         x <- if (!is.null(PCA$which.combine)) {
             if (length(varnames) == length(PCA$which.combine)) combined.only <- TRUE

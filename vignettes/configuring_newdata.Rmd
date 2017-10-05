@@ -77,7 +77,6 @@ predictor <- prepare_predictors(x = x,
                                 local.predictors = list(neigh.vars = "shum850",
                                                         n.neighs = 4,
                                                         neigh.fun = list(FUN = "mean")))
-
 ```
 
 ## Preparing the newdata
@@ -98,13 +97,21 @@ Note that in this example the arguments `ref` and `grid` have the same value. Th
 Once locally scaled, the newdata is ready to perform the predictions
 
 
-# Internal structure of newdata
+### Internal structure of newdata
 
 Users do not need to worry much about the internal output structure that will next passed to `downscale`. However, developers might be interested in the information internally stored by `newdata`. 
 
 ```{r}
 str(newdata)
 ```
+
+
+```{r}
+test.data <- prepare_newdata(predictor = predictor,
+                             newdata = newdata)
+str(test.data)
+```
+
 
 It consists of a named list with the following components:
 

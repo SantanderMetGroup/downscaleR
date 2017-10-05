@@ -1,7 +1,9 @@
 New in downscaleR
 =================
 
-* Attributes of downscaling methods are now global, instead of being stored within the Data element 
+* Bug fix in nearest neighbour indexing for local predictor definition
+* Bug fix in the recovery of the combined PCs of the prediction data from the predictor combined EOFs
+* All changes in predictor/predictand definition have been double-checked against MeteoLab for consistency (thanks to J. B. Medina)
 * Other documentation updates and enhancements
 
 
