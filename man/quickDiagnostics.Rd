@@ -43,6 +43,8 @@ data("NCEP_Iberia_pr")
 y <- VALUE_Iberia_pr
 x <- NCEP_Iberia_pr
 x$Data <- x$Data*86400
+quickDiagnostics(obs = y, raw = x, location = c(-2, 43), type = "daily")
+quickDiagnostics(obs = y, raw = x, location = c(-2, 43), type = "interannual")
 eqm1win <- biasCorrection(y = y, x = x, 
                           method = "eqm",
                           extrapolation = "none",

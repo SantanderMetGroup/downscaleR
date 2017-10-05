@@ -23,6 +23,8 @@
 #' y <- VALUE_Iberia_pr
 #' x <- NCEP_Iberia_pr
 #' x$Data <- x$Data*86400
+#' quickDiagnostics(obs = y, raw = x, location = c(-2, 43), type = "daily")
+#' quickDiagnostics(obs = y, raw = x, location = c(-2, 43), type = "interannual")
 #' eqm1win <- biasCorrection(y = y, x = x, 
 #'                           method = "eqm",
 #'                           extrapolation = "none",
@@ -49,15 +51,17 @@ quickDiagnostics <- function(obs,
             location <- as.numeric(coordref[sample(1:nrow(coordref), 1),])
       }
       type <- match.arg(type, choices = c("daily", "interannual"))
-      if (is.null(members) & "member" %in% names(getShape(downscaled))) {
+      message("[", Sys.time(), "] Performing quick diagnostics of ", type, " data...")
+      if (is.null(members) & "member" %in% names(getShape(raw))) {
             if (type == "daily") {
-                  members <- sample(1:getShape(downscaled)["member"],1)
+                  members <- sample(1:getShape(raw)["member"],1)
+                  message("[", Sys.time(), "] Member ", members, " is randomly chosen.")
             } else {
-                  members <- 1:getShape(downscaled)["member"]
+                  members <- 1:getShape(raw)["member"]
             }
       }
       suppressWarnings(raw <- subsetGrid(raw, members = members))
-      suppressWarnings(downscaled <- subsetGrid(downscaled, members = members))
+      if (!is.null(downscaled)) suppressWarnings(downscaled <- subsetGrid(downscaled, members = members))
       if (type == "daily") {
             if (!is.null(downscaled)) {
                   if (difftime(downscaled$Dates$start[2], downscaled$Dates$start[1], units = "weeks") > 1) {
@@ -68,6 +72,7 @@ quickDiagnostics <- function(obs,
       } else if (type == "interannual") {
             interannualOutlook(obs, raw, downscaled, location, na.tolerance = na.tolerance, ylim, main)
       }
+      message("[", Sys.time(), "] Done.")
 }
 #end
 
@@ -77,7 +82,7 @@ quickDiagnostics <- function(obs,
 #' @importFrom stats sd cor
 #' @importFrom grDevices rgb
 #' @keywords internal
-#' @importFrom transformeR subsetGrid getCoordinates getYearsAsINDEX draw.world.lines aggregateGrid climatology plotClimatology 
+#' @importFrom transformeR subsetGrid getCoordinates getYearsAsINDEX draw.world.lines aggregateGrid climatology plotClimatology interpGrid getGrid
 #' @importFrom sp SpatialPoints
 
 interannualOutlook <- function(obs, raw, downscaled = NULL, location = c(-42.5, -3), na.tolerance = .3, ylim = NULL, main = NULL){
@@ -129,9 +134,9 @@ interannualOutlook <- function(obs, raw, downscaled = NULL, location = c(-42.5, 
             rho.down <- cor(x = x, y = w, method = "spearman")
       }
       if (is.null(ylim)) {
-            mi <- floor(min(c(x,y)))-1
-            ma <-  floor(max(c(x,y)))
-            ylim <- c(mi, ma + (ma-mi))
+            mi <- floor(min(c(x, y))) - 1
+            ma <-  floor(max(c(x, y)))
+            ylim <- c(mi, ma + (ma - mi))
       }
       plot(1:length(period), x, xlim = c(0,length(period)), ylim = ylim, xlab="", xaxt = "n", 
            ylab = "Annual/seasonal mean value", cex = .6, col = NULL, main = main)
@@ -141,7 +146,7 @@ interannualOutlook <- function(obs, raw, downscaled = NULL, location = c(-42.5, 
       #plot the sd (shadows)
       lines(1:length(period), x, col = "black")
       lines(1:length(period), y, col = "red")
-      if(!is.null(downscaled)) lines(1:length(period), w, col = "blue")
+      if (!is.null(downscaled)) lines(1:length(period), w, col = "blue")
       if ("member" %in%  getDim(raw)) {
             polygon(x = c(1:length(period), length(period):1), y = c(ysd + y,rev(y - ysd)), col = rgb(1,0,0,0.2), border = NA)
             if (!is.null(downscaled)) {
@@ -169,7 +174,7 @@ interannualOutlook <- function(obs, raw, downscaled = NULL, location = c(-42.5, 
        ## correlation map
        suppressMessages(corgrid <- climatology(obs))
        if (is.null(downscaled)) {
-             downy <- rawy
+             downy <- suppressMessages(interpGrid(rawy, getGrid(obsy)))
        }
        if ("loc" %in% getDim(obs)) {
              corgrid$Data[1,] <- vapply(1:nrow(getCoordinates(corgrid)), FUN.VALUE = numeric(length = 1), FUN = function(m) {
@@ -222,7 +227,7 @@ dailyOutlook <- function(obs, raw, downscaled = NULL, location = c(-42.5, -3), y
       }
       yran <- if (is.null(ylim)) {
             mi <- 0
-            ma <-  floor(max(c(x,y,w), na.rm = T))
+            ma <-  floor(max(c(x,y), na.rm = T))
             c(mi, (ma + ma/4))
       } else {
             ylim
@@ -266,7 +271,7 @@ dailyOutlook <- function(obs, raw, downscaled = NULL, location = c(-42.5, -3), y
       }
       # qq-plot
       qy <- quantile(y, probs = seq(0.01, .99, 0.01), na.rm = T, , type =4)
-      if(!is.null(downscaled)){
+      if (!is.null(downscaled)){
             qw <-  quantile(w, probs = seq(0.01, .99, 0.01), na.rm = T, type =4)
       }else{
             qw <- NA

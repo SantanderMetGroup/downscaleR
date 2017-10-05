@@ -120,7 +120,8 @@
 #'  non-standard variables.
 #'     
 #' 
-#' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration
+#' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration and \code{\link{quickDiagnostics}} 
+#' for an outlook of the results.
 #' @return A calibrated grid of the same spatio-temporal extent than the input \code{"y"}
 #' @family downscaling
 #' 
@@ -269,6 +270,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       sim <- newdata
       delta.method <- method == "delta"
       precip <- precipitation
+      message("[", Sys.time(), "] Argument precipitation is set as ", precip, ", please ensure that this matches your data.")
       if ("loc" %in% getDim(obso)) {
             station <- TRUE
             obs <- redim(obso, member = FALSE)
