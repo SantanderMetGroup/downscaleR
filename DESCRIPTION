@@ -14,6 +14,7 @@ Imports:
     graphics,
     stats,
     magrittr,
+    sp,
     gridGraphics,
     gridExtra
 Suggests:
@@ -25,7 +26,7 @@ Suggests:
 Type: Package
 Title: An R package for bias correction and statistical downscaling
 Version: 2.0.4
-Date: 2017-09-04
+Date: 2017-05-10
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquín Bedia <bediaj@unican.es> [aut, cre]",
