@@ -140,7 +140,7 @@
 #' }
 #' @author S. Herrera, M. Iturbide, J. Bedia
 #' @export
-#' @examples \dontrun{
+#' @examples {
 #' data("VALUE_Iberia_pr")
 #' data("NCEP_Iberia_pr")
 #' y <- VALUE_Iberia_pr

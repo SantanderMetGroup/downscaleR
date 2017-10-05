@@ -137,7 +137,7 @@ qqmap to alleviate the problems arising when the dry day frequency in the raw mo
 }
 
 \examples{
-\dontrun{
+{
 data("VALUE_Iberia_pr")
 data("NCEP_Iberia_pr")
 y <- VALUE_Iberia_pr

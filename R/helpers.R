@@ -115,7 +115,7 @@ get2DmatCoordinates <- function(grid) {
 #' @keywords internal
 #' @importFrom gridGraphics grid.echo 
 #' @importFrom grid grid.grab
-#' @author J. Bedia
+#' @author M. Iturbide
 
 
 grabGrob <- function(){

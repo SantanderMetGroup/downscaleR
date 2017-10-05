@@ -13,6 +13,6 @@ A grob object
 Obtain a grob object from ordinary plot
 }
 \author{
-J. Bedia
+M. Iturbide
 }
 \keyword{internal}
