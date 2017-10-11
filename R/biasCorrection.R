@@ -289,7 +289,9 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       bc <- obso
       if (isTRUE(join.members)) {
             pred <- flatMemberDim(pred)
+            pred <- redim(pred, drop = T)
             sim <- flatMemberDim(sim)
+            sim <- redim(sim, drop = T)
       }
       pred <- redim(pred, member = TRUE, runtime = TRUE)
       sim <- if (!is.null(sim)) {
