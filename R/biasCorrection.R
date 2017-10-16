@@ -327,17 +327,22 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                   }
                   #window
                   if (!is.null(window)) {
-                        win <- getWindowIndex(y = obs, newdata = s, window = window, delta.method = delta.method)
+                        win <- getWindowIndex(y = obs, x = p, newdata = s, window = window, delta.method = delta.method)
                   } else {
                         win <- list()
-                        win[["Window1"]] <- list("window" = 1:getShape(obs)["time"], "step" = 1:getShape(s)["time"])
+                        indobservations <- numeric()
+                        for(b in 1:getShape(p)["time"]){
+                          indobservations[b] <- which(obs$Dates$start == p$Dates$start[b])
+                        }
+                        win[["Window1"]] <- list("obsWindow" = indobservations, "window" = 1:getShape(p)["time"], "step" = 1:getShape(s)["time"])
+                        if(delta.method) win[["Window1"]]["deltaind"] <- indobservations
                   }
                   message("[", Sys.time(), "] Number of windows considered: ", length(win), "...")
                   #correcting locations
                   for (i in 1:nrow(ind)) {
                         # Apply bias correction methods
                         for (j in 1:length(win)) {
-                              yind <- win[[j]]$window
+                              yind <- win[[j]]$obsWindow
                               outind <- win[[j]]$step
                               if (delta.method) {
                                     yind <- win[[j]]$deltaind
@@ -365,11 +370,11 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       }) #end loop for runtimes
       bc$Data <- unname(abind(lrun, along = 1))
       attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
+      bc$Dates <- sim$Dates
       ## Recover the member dimension when join.members=TRUE:
       if (isTRUE(join.members)) {
-            bc <- recoverMemberDim(pred, bc, newdata)
+            bc <- recoverMemberDim(plain.grid = sim, bc.grid = bc, newdata = newdata)
       } else {
-            bc$Dates <- sim$Dates
             bc$InitializationDates <- sim$InitializationDates
             bc$Members <- sim$Members
       }
@@ -394,11 +399,11 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
 #' @keywords internal
 #' @author M. Iturbide
 
-getWindowIndex <- function(y, newdata, window, delta.method = FALSE){
+getWindowIndex <- function(y, x, newdata, window, delta.method = FALSE){
       step <- window[2]
       window <- window[1]
       if (window - step < 0) stop("The first argument of window must be equal or higher than the second. See ?biasCorrection")
-      datesList <- as.POSIXct(y$Dates$start, tz = "GMT", format = "%Y-%m-%d")
+      datesList <- as.POSIXct(x$Dates$start, tz = "GMT", format = "%Y-%m-%d")
       yearList <- unlist(strsplit(as.character(datesList), "[-]"))
       dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
       dayList <- unique(dayListObs,index.return = datesList)
@@ -455,11 +460,21 @@ getWindowIndex <- function(y, newdata, window, delta.method = FALSE){
             })
             indSim <- sort(do.call("abind", indSim))
             names(indSim) <- newdata$Dates$start[indSim]
-            indObsWindow <- indObsWindow[which(!is.na(y$Dates$start[indObsWindow]))]
-            names(indObsWindow) <- y$Dates$start[indObsWindow]
-            names(indObs) <- y$Dates$start[indObs]
-            output[[paste0("Window", j)]] <- list("window" = indObsWindow, "step" = indSim)
-            if (delta.method) output[[paste0("Window", j)]][["deltaind"]] <- indObs
+            indObsWindow <- indObsWindow[which(!is.na(x$Dates$start[indObsWindow]))]
+            names(indObsWindow) <- x$Dates$start[indObsWindow]
+            indobservations <- numeric()
+            for(b in 1:length(names(indObsWindow))){
+              indobservations[b] <- which(y$Dates$start == names(indObsWindow)[b])
+            }
+            names(indobservations) <- y$Dates$start[indobservations]
+            names(indObs) <- x$Dates$start[indObs]
+            indObsObs <- numeric()
+            for(a in 1:length(names(indObs))){
+              indObsObs[a] <- which(y$Dates$start == names(indObs)[a])
+            }
+            
+            output[[paste0("Window", j)]] <- list("obsWindow" = indobservations, "window" = indObsWindow, "step" = indSim)
+            if (delta.method) output[[paste0("Window", j)]][["deltaind"]] <- indObsObs
       }
       return(output)
 }
@@ -947,14 +962,13 @@ flatMemberDim <- function(grid) {
 #' @seealso \code{\link{flatMemberDim}}, for \dQuote{flattening} the member structure
 #' @author J Bedia
 
-recoverMemberDim <- function(flat.grid, bc.grid, newdata) {
-      pred <- flat.grid
+recoverMemberDim <- function(plain.grid, bc.grid, newdata) {
       bc <- bc.grid
-      nmem <- attr(pred, "orig.mem.shape")
-      ntimes <- attr(pred, "orig.time.shape")
-      bc$Dates <- lapply(bc$Dates, "rep", nmem)
+      nmem <- attr(plain.grid, "orig.mem.shape")
+      ntimes <- attr(plain.grid, "orig.time.shape")
+      # bc$Dates <- lapply(bc$Dates, "rep", nmem)
       aux.list <- lapply(1:nmem, function(m) {
-            aux <- subsetDimension(grid = bc, dimension = "time", indices = ((m - 1) * ntimes + 1):(m * ntimes))
+            aux <- subsetDimension(grid = bc, dimension = "time", indices = seq(m, nmem * ntimes, nmem))
             aux$InitializationDates <- newdata$InitializationDates[[m]]
             aux$Members <- newdata$Members[[m]]
             return(aux)
