@@ -2,11 +2,13 @@
 
 export(biasCorrection)
 export(downscale)
+export(downscale.train)
 export(isimip)
 export(prepare_newdata)
 export(prepare_predictors)
 export(quickDiagnostics)
 importFrom(MASS,fitdistr)
+importFrom(MASS,ginv)
 importFrom(RCurl,getURL)
 importFrom(abind,abind)
 importFrom(abind,adrop)
