@@ -104,6 +104,9 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
     full.pca <- NULL
     if (!is.null(PCA)) {
         PCA[["grid"]] <- x
+        if (is.null(PCA$which.combine)) {
+            message("NOTE: The COMBINED PC won't be calculated as 'which.combine' argument in PCA is missing (with no default)")
+        }
         full.pca <- do.call("prinComp", PCA)
         x <- if (!is.null(PCA$which.combine)) {
             if (length(varnames) == length(PCA$which.combine)) combined.only <- TRUE
@@ -159,32 +162,31 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
 #' @author J Bedia
 
 predictor.nn.indices <- function(neigh.vars = NULL, n.neighs = NULL, x, y) {
-    if (is.null(neigh.vars)) stop("Undefined local predictor variables. A value for 'neigh.vars' argument is required", call. = FALSE)
-    if (is.null(n.neighs)) stop("Undefined number of local neighbours. A value for 'n.neighs' argument is required", call. = FALSE)
-    varnames <- getVarNames(x)
-    if (!any(neigh.vars %in% varnames)) stop("The requested neigh.var was not found in the predictor grid", call. = FALSE)
-    # Selection of nearest neighbour indices
-    # Coordinates matrices
-    coords.y <- get2DmatCoordinates(y)
-    coords.x <- get2DmatCoordinates(x)
-    if (any(n.neighs > nrow(coords.x))) stop("Too many neighbours selected (more than predictor grid cells)", call. = FALSE) 
-    if (length(n.neighs) == 1) {
-        n.neighs <- rep(n.neighs, length(neigh.vars))
-    }
-    if (length(n.neighs) != length(neigh.vars)) {
-        stop("Incorrect number of neighbours selected: this should be either 1 or a vector of the same length as 'neigh.vars'", call. = FALSE)
-    }
-    # The index list has the same length as the number of local predictor variables, containing a matrix of index positions
-    local.pred.list <- lapply(1:length(neigh.vars), function(j) {
-        ind.mat <- vapply(1:nrow(coords.y), FUN.VALUE = numeric(n.neighs[j]), FUN = function(i) {
-            dists <- sqrt((coords.y[i,1] - coords.x[,1])^2 + (coords.y[i,2] - coords.x[,2])^2)
-            which(dists %in% sort(dists)[1:n.neighs[j]])
-        })
-    })
-    names(local.pred.list) <- neigh.vars
-    return(local.pred.list)
+      if (is.null(neigh.vars)) stop("Undefined local predictor variables. A value for 'neigh.vars' argument is required", call. = FALSE)
+      if (is.null(n.neighs)) stop("Undefined number of local neighbours. A value for 'n.neighs' argument is required", call. = FALSE)
+      varnames <- getVarNames(x)
+      if (!any(neigh.vars %in% varnames)) stop("The requested neigh.var was not found in the predictor grid", call. = FALSE)
+      # Selection of nearest neighbour indices
+      # Coordinates matrices
+      coords.y <- get2DmatCoordinates(y)
+      coords.x <- get2DmatCoordinates(x)
+      if (any(n.neighs > nrow(coords.x))) stop("Too many neighbours selected (more than predictor grid cells)", call. = FALSE) 
+      if (length(n.neighs) == 1) {
+            n.neighs <- rep(n.neighs, length(neigh.vars))
+      }
+      if (length(n.neighs) != length(neigh.vars)) {
+            stop("Incorrect number of neighbours selected: this should be either 1 or a vector of the same length as 'neigh.vars'", call. = FALSE)
+      }
+      # The index list has the same length as the number of local predictor variables, containing a matrix of index positions
+      local.pred.list <- lapply(1:length(neigh.vars), function(j) {
+            ind.mat <- vapply(1:nrow(coords.y), FUN.VALUE = numeric(n.neighs[j]), FUN = function(i) {
+                  dists <- sqrt((coords.y[i,1] - coords.x[,1])^2 + (coords.y[i,2] - coords.x[,2])^2)
+                  which(dists %in% sort(dists)[1:n.neighs[j]])
+            })
+      })
+      names(local.pred.list) <- neigh.vars
+      return(local.pred.list)
 }
-
 
 #' @title Construct local predictor matrices
 #' @description Constructs the local predictor matrices given their spatial index position 

@@ -31,8 +31,8 @@ require(downscaleR)
 
 ## Predictand
 ```{r}
-data("VALUE_Iberia_tp")
-y <- VALUE_Iberia_tp
+data("VALUE_Iberia_pr")
+y <- VALUE_Iberia_pr
 ```
 
 # Predictors
@@ -72,9 +72,9 @@ The predictor so configured is constructed with `prepare_predictors`:
 ```{r}
 predictor <- prepare_predictors(x = x,
                                 y = y,
-                                global.vars = c("psl", "ta850"),
+                                global.vars = c("slp", "air850"),
                                 PCA = list(v.exp = c(.9, .95)),
-                                local.predictors = list(neigh.vars = "hus850",
+                                local.predictors = list(neigh.vars = "shum850",
                                                         n.neighs = 4,
                                                         neigh.fun = list(FUN = "mean")))
 ```

@@ -6,7 +6,7 @@
 \usage{
 biasCorrection(y, x, newdata = NULL, precipitation = FALSE,
   method = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"),
-  cross.val = c("none", "loocv", "kfold"), folds = NULL, window = NULL,
+  cross.val = c("none", "loo", "kfold"), folds = NULL, window = NULL,
   scaling.type = c("additive", "multiplicative"), wet.threshold = 1,
   n.quantiles = NULL, extrapolation = c("none", "constant"), theta = 0.95,
   join.members = FALSE)
@@ -26,14 +26,14 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 \code{"scaling"}, \code{"gqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.}
 
-\item{cross.val}{Should cross-validation be performed? methods available are leave-one-out ("loocv") and k-fold ("kfold"). The default 
-option ("none") does not perform cross-validation.}
+\item{cross.val}{Should cross-validation be performed? methods available are leave-one-out ("loo") 
+and k-fold ("kfold") on an annual basis. The default option ("none") does not perform cross-validation.}
 
 \item{folds}{Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
 the corresponding fold.}
 
 \item{window}{vector of length = 2 specifying the time window width used to calibrate and the target days (days that are being corrected).
- The window is centered on the target day/s. 
+ The window is centered on the target day/s (window width >= target days). 
 Default to \code{NULL}, which considers the whole period available.}
 
 \item{scaling.type}{Character indicating the type of the scaling method. Options are \code{"additive"} (default)
@@ -137,12 +137,12 @@ qqmap to alleviate the problems arising when the dry day frequency in the raw mo
 }
 
 \examples{
-\dontrun{
-require(transformeR)
-data(VALUE_Igueldo_tp)
-data(NCEP_Iberia_tp)
-y <- VALUE_Igueldo_tp
-x <- NCEP_Iberia_tp
+{
+data("VALUE_Iberia_pr")
+data("NCEP_Iberia_pr")
+y <- VALUE_Iberia_pr
+x <- NCEP_Iberia_pr
+x$Data <- x$Data*86400
 
 eqm1 <- biasCorrection(y = y, x = x, 
                        method = "eqm",
@@ -150,21 +150,17 @@ eqm1 <- biasCorrection(y = y, x = x,
 eqm1win <- biasCorrection(y = y, x = x, 
                           method = "eqm",
                           extrapolation = "none",
-                          window = c(90, 10))
+                          window = c(31, 1))
 eqm1folds <- biasCorrection(y = y, x = x,
-                          method = "eqm",
-                          cross.val = "kfold",
-                          folds = list(1991:1993, 1994:1996, 1997:2000))
-                          
-NCEP_Igueldo <- subsetGrid(x, latLim = y$xyCoords[,2], lonLim = y$xyCoords[,1])
-par(mfrow = c(1,3))
-qqplot(y$Data, NCEP_Igueldo$Data)
-lines(c(0,100), c(0,100))
-qqplot(y$Data, eqm1$Data)
-lines(c(0,100), c(0,100))
-qqplot(y$Data, eqm1win$Data)
-lines(c(0,100), c(0,100))
-par(mfrow = c(1,1))
+                            method = "eqm",
+                            window = c(31, 1),
+                            cross.val = "kfold",
+                            folds = list(1983:1989, 1990:1996, 1997:2002))
+
+quickDiagnostics(y, x, eqm1)
+quickDiagnostics(y, x, eqm1, location = c(-2, 43))
+quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
+quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
 }
 }
 \references{
@@ -179,7 +175,8 @@ par(mfrow = c(1,1))
 }
 }
 \seealso{
-\code{\link{isimip}} for a trend-preserving method of model calibration
+\code{\link{isimip}} for a trend-preserving method of model calibration and \code{\link{quickDiagnostics}} 
+for an outlook of the results.
 
 Other downscaling: \code{\link{analogs}},
   \code{\link{downscale}}, \code{\link{glimpr}},
