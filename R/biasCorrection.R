@@ -1,3 +1,20 @@
+#     biasCorrection.R Bias correction methods
+#
+#     Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
+#
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #' @title Bias correction methods
 #' @description Implementation of several standard bias correction methods
 #'
@@ -23,11 +40,12 @@
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
 #' \code{newdata} that are out of the range of \code{x}. Extrapolation is applied only to the \code{"eqm"} method, 
 #' thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).
-#' 
 #' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 #' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 #' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
 #' percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.
+#' @param join.members Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
+#'  or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).
 #'  
 #' @details
 #' 
@@ -35,6 +53,7 @@
 #' \code{"scaling"}, \code{"gqm"}, \code{"gpqm"}\code{"loci"}, 
 #' \code{"ptr"}  (the four latter used only for precipitation) and 
 #' \code{"variance"} (only for temperature).
+#' 
 #'  These are next briefly described: 
 #'  
 #' \strong{Delta}
@@ -70,6 +89,7 @@
 #' gamma distribution to values under the threshold given by the 95th percentile (following Yang et al. 2010) and a general Pareto 
 #' distribution (GPD) to values above the threshold.
 #' 
+#' 
 #' \strong{variance}
 #' 
 #' Variance scaling of temperature. This method is described in Chen et al. 2011. It is applicable only to temperature. It corrects
@@ -85,6 +105,7 @@
 #' Power transformation of precipitation. This method is described in Leander and Buishand 2007 and is applicable only to precipitation. It adjusts the variance statistics of precipitation
 #' time series in an exponential form. The power parameter is estimated on a monthly basis using a 90-day window centered on the interval. The power is defined by matching the coefficient
 #' of variation of corrected daily simulated precipitation with the coefficient of variation of observed daily precipitation. It is calculated by root-finding algorithm using Brent's method.
+#'
 #'
 #' @section Note on the bias correction of precipitation:
 #' 
@@ -102,6 +123,9 @@
 #' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration
 #' @return A calibrated grid of the same spatio-temporal extent than the input \code{"y"}
 #' @family downscaling
+#' 
+#' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim
+#' @importFrom abind adrop
 #'
 #' @references
 #'
@@ -113,29 +137,28 @@
 #' \item C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
 #'
 #' \item O. Gutjahr and G. Heinemann (2013) Comparing precipitation bias correction methods for high-resolution regional climate simulations using COSMO-CLM, Theoretical and Applied Climatology, 114, 511-529
-#' 
-#' \item J. Chen, F. P. Brissette, R. Leconte (2011) Uncertainty of downscaling method in quantifying the impact of climate change on hydrology, J. Hydrol. 401, (3-4), 190-202
-#' 
-#' \item J. Schmidli, C. Frei, P. L. Vidale (2006) Downscaling from GCM precipitation: a benchmark for dynamical and statistical downscaling methods, Int. J. Climatol. 26 (5), 679-689
-#'       
-#' \item R. Leander, T. A. Buishand (2007) Resampling of regional climate model output for the simulation of extreme river flows, J. Hydrol. 332 (3-4), 487-496}
-#' 
-#' @author S. Herrera and M. Iturbide
+#' }
+#' @author S. Herrera, M. Iturbide, J. Bedia
 #' @export
 #' @examples \dontrun{
+#' require(transformeR)
 #' data(VALUE_Igueldo_tp)
 #' data(NCEP_Iberia_tp)
 #' y <- VALUE_Igueldo_tp
 #' x <- NCEP_Iberia_tp
 #' 
-#' eqm1 <- biasCorrection(y = y, x = x, newdata = x,
+#' eqm1 <- biasCorrection(y = y, x = x, 
 #'                        method = "eqm",
-#'                        extrapolation = "none",
 #'                        window = NULL)
-#' eqm1win <- biasCorrection(y = y, x = x, newdata = x,
+#' eqm1win <- biasCorrection(y = y, x = x, 
 #'                           method = "eqm",
 #'                           extrapolation = "none",
 #'                           window = c(90, 10))
+#' eqm1folds <- biasCorrection(y = y, x = x,
+#'                           method = "eqm",
+#'                           cross.val = "kfold",
+#'                           folds = list(1991:1993, 1994:1996, 1997:2000))
+#'                           
 #' NCEP_Igueldo <- subsetGrid(x, latLim = y$xyCoords[,2], lonLim = y$xyCoords[,1])
 #' par(mfrow = c(1,3))
 #' qqplot(y$Data, NCEP_Igueldo$Data)
@@ -148,19 +171,33 @@
 #' }
 
 
-biasCorrection <- function(y, x, newdata, precipitation = FALSE,
-                           method = c("delta", "scaling", "eqm", "gqm", "gpqm", "variance", "loci", "ptr"),
+
+biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
+                           method = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"),
                            cross.val = c("none", "loocv", "kfold"),
                            folds = NULL,
                            window = NULL,
                            scaling.type = c("additive", "multiplicative"),
-                           wet.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
-                           theta = .95){
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "variance", "loci", "ptr"))
+                           wet.threshold = 1,
+                           n.quantiles = NULL,
+                           extrapolation = c("none", "constant"), 
+                           theta = .95,
+                           join.members = FALSE) {
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci", "ptr", "variance"))
       cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
-      if(cross.val == "none"){
+      stopifnot(is.logical(join.members))
+      nwdatamssg <- TRUE
+      if (is.null(newdata)) {
+            newdata <- x 
+            nwdatamssg <- FALSE
+      }
+      if ("loc" %in% getDim(y) & isTRUE(join.members)) {
+            join.members <- FALSE
+            warning("The option 'join.members=TRUE' is currently not supported for station data predictand. It was reset to 'FALSE'.")
+      }
+      if (cross.val == "none") {
             output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
                                        precipitation = precipitation,
                                        method = method,
@@ -169,25 +206,36 @@ biasCorrection <- function(y, x, newdata, precipitation = FALSE,
                                        pr.threshold = wet.threshold, 
                                        n.quantiles = n.quantiles, 
                                        extrapolation = extrapolation, 
-                                       theta = theta)
-      }else{
-            if (!is.null(newdata)) {
+                                       theta = theta,
+                                       join.members = join.members)
+      } else {
+            if (nwdatamssg) {
                   message("'newdata' will be ignored for cross-validation")
             }
-            if(cross.val == "loocv"){
+            if (cross.val == "loocv") {
                   years <- as.list(unique(getYearsAsINDEX(x)))
-            }else if(cross.val == "kfold" & !is.null(folds)){
+            } else if (cross.val == "kfold" & !is.null(folds)) {
                   years <- folds
-            }else if(cross.val == "kfold" & is.null(folds)){
-                  stop("Please, specify folds for kfold cross validation")
+            } else if (cross.val == "kfold" & is.null(folds)) {
+                  stop("Fold specification is missing, with no default")
             }
             output.list <- lapply(1:length(years), function(i) {
-                        target.year <-years[[i]]
+                        target.year <- years[[i]]
                         rest.years <- setdiff(unlist(years), target.year)
-                        yy <- redim(y, member = F)
-                        yy <- subsetGrid(yy, years = rest.years, drop = FALSE)
-                        yy <- redim(yy, drop = T)
-                        if(length(getDim(yy)) == 1){attr(yy$Data, "dimensions") <- c(getDim(yy), "station")}
+                        station <- FALSE
+                        if ("loc" %in% getDim(y)) station <- TRUE
+                        yy <- redim(y, member = FALSE)
+                        yy <- if (method == "delta") {
+                              subsetGrid(yy, years = target.year, drop = FALSE)
+                        } else {
+                              subsetGrid(yy, years = rest.years, drop = FALSE)
+                        }
+                        if (isTRUE(station)) {
+                              yy$Data <- adrop(yy$Data, drop = 3)
+                              attr(yy$Data, "dimensions") <- c(setdiff(getDim(yy), c("lat", "lon")), "loc")
+                        } else {
+                              yy <- redim(yy, drop = TRUE)
+                        }
                         newdata2 <- subsetGrid(x, years = target.year)
                         xx <- subsetGrid(x, years = rest.years)
                         message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
@@ -196,63 +244,63 @@ biasCorrection <- function(y, x, newdata, precipitation = FALSE,
                                           window = window,
                                           scaling.type = scaling.type,
                                           pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
-                                          theta = theta)
+                                          theta = theta, join.members = join.members)
                   })
                   al <- which(getDim(x) == "time")
-                  Data <- sapply(output.list, function(n) unname(n$Data), simplify = F)
+                  Data <- sapply(output.list, function(n) unname(n$Data), simplify = FALSE)
                   bindata <- unname(do.call("abind", c(Data, along = al)))
                   output <- output.list[[1]]
+                  dimNames <- attr(output$Data, "dimensions")
                   output$Data <- bindata
+                  attr(output$Data, "dimensions") <- dimNames
                   output$Dates <- x$Dates
       }
       return(output)
 }
 
+#' @keywords internal
+#' @importFrom transformeR redim subsetGrid getDim
+
 biasCorrectionXD <- function(y, x, newdata, precipitation, 
-                           method = c("delta", "scaling", "eqm", "gqm", "gpqm", "variance", "loci", "ptr"),
-                           window = NULL,
-                           scaling.type = c("additive", "multiplicative"),
-                           pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
-                           theta = .95){
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "variance", "loci", "ptr"))
-      scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
-      extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
-      obs <- y
+                             method = method,
+                             window = NULL,
+                             scaling.type = c("additive", "multiplicative"),
+                             pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
+                             theta = .95,
+                             join.members = join.members) {
+      obso <- y
       pred <- x
       sim <- newdata
-#       if (!any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))) {
-#             precip <- FALSE    
-#         } else {
-#             precip <- TRUE
-#         }
       precip <- precipitation
-      if ("station" %in% attr(obs$Data, "dimensions")) {
+      if ("loc" %in% getDim(obso)) {
             station <- TRUE
-            obs <- redim(obs, member = F)
+            obs <- redim(obso, member = FALSE)
             x <- obs$xyCoords[,1]
             y <- obs$xyCoords[,2]
             ito <- which(getDim(obs) == "time")
             ind <- cbind(1:dim(obs$Data)[2], rep(1, dim(obs$Data)[2]), 1:dim(obs$Data)[2])
       } else {
             station <- FALSE
-            x <- obs$xyCoords$x
-            y <- obs$xyCoords$y
+            x <- obso$xyCoords$x
+            y <- obso$xyCoords$y
+            obs <- obso
             ind1 <- expand.grid(1:length(y), 1:length(x))
             ind <- cbind(ind1, ind1[,2])
       }
-
-      
-      
-      bc <- obs
-      pred <- redim(pred, member = T, runtime = T)
-      sim <- redim(sim, member = T, runtime = T)
-      itp <- which(getDim(pred) == "time")
+      bc <- obso
+      if (isTRUE(join.members)) {
+            pred <- flatMemberDim(pred)
+            sim <- flatMemberDim(sim)
+      }
+      pred <- redim(pred, member = TRUE, runtime = TRUE)
+      sim <- if (!is.null(sim)) {
+            redim(sim, member = TRUE, runtime = TRUE)
+      } else {
+            pred
+      }
       ito <- which(getDim(obs) == "time")
-      if (dim(obs$Data)[ito] != dim(pred$Data)[itp]) stop("y and x do not have the same time series length")
-      
       n.run <- dim(sim$Data)[1]
       n.mem <- dim(sim$Data)[2]
-      
       if (method == "delta") {
             run <- array(dim = c(1, n.mem, dim(obs$Data)))
       } else {
@@ -260,45 +308,47 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
             run <- array(dim = c(1, n.mem, dim(sim$Data)[its], dim(obs$Data)[-ito]))
       }
       lrun <- lapply(1:n.run, function(k) {    # loop for runtimes
-            
             pre <- subsetGrid(pred, runtime = k, drop = FALSE)
             si <- subsetGrid(sim, runtime = k, drop = FALSE)
-            
-            #                   if(multi.member == TRUE){
             if (method == "delta") {
                   mem <- array(dim = c(1, 1, dim(obs$Data)))
             } else {
                   mem <- array(dim = c(1, 1, dim(sim$Data)[its], dim(obs$Data)[-ito]))
             }
-            lmem <- lapply(1:n.mem, function(l){ # loop for members
-                  
+            lmem <- lapply(1:n.mem, function(l) { # loop for members
                   p <- subsetGrid(pred, members = l, drop = FALSE)
                   s <- subsetGrid(sim, members = l, drop = FALSE)
-                  message("[", Sys.time(), "] Bias correcting member ", l, " out of ", n.mem, ".")
+                  if (!isTRUE(join.members)) {
+                        message("[", Sys.time(), "] Bias-correcting member ", l, " out of ", n.mem, "...")
+                  } else {
+                        message("[", Sys.time(), "] Bias-correcting ", attr(pred, "orig.mem.shape"), " members considering their joint distribution...")
+                  }
                   if (is.null(window)) {
                         # Apply bias correction methods
                         for (i in 1:nrow(ind)) {
                               suppressWarnings(
-                                   mem[,,,ind[i,1],ind[i,2]] <- biasCorrection1D(obs$Data[,ind[i,1],ind[i,2]],
-                                                                            subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1],
-                                                                            subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1], 
-                                                                            method = method,
-                                                                            scaling.type = scaling.type,
-                                                                            precip = precip,
-                                                                            pr.threshold = pr.threshold,
-                                                                            n.quantiles = n.quantiles,
-                                                                            extrapolation = extrapolation,
-                                                                            theta = theta)
+                                    mem[,,,ind[i,1],ind[i,2]] <- biasCorrection1D(obs$Data[,ind[i,1],ind[i,2]],
+                                                                                  subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = TRUE, drop = FALSE)$Data[1,1,,1,1],
+                                                                                  subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = TRUE, drop = FALSE)$Data[1,1,,1,1], 
+                                                                                  method = method,
+                                                                                  scaling.type = scaling.type,
+                                                                                  precip = precip,
+                                                                                  pr.threshold = pr.threshold,
+                                                                                  n.quantiles = n.quantiles,
+                                                                                  extrapolation = extrapolation,
+                                                                                  theta = theta)
                               )
                         }                                                                             
                   } else {
                         step <- window[2]
-                        window <- window[1] + step
+                        window <- window[1]
                         message("Correcting windows")
                         datesList <- as.POSIXct(obs$Dates$start, tz = "GMT", format = "%Y-%m-%d")
                         yearList <- unlist(strsplit(as.character(datesList), "[-]"))
                         dayListObs <- array(data = c(as.numeric(yearList[seq(2,length(yearList),3)]),as.numeric(yearList[seq(3,length(yearList),3)])), dim = c(length(datesList),2))
                         dayList <- unique(dayListObs,index.return = datesList)
+                        annual <- TRUE
+                        if (nrow(dayList) < 360) annual <- FALSE
                         indDays <- array(data = NaN, dim = c(length(datesList),1))
                         for (d in 1:dim(dayList)[1]) {
                               indDays[which(sqrt((dayListObs[,1] - dayList[d,1]) ^ 2 + (dayListObs[,2] - dayList[d,2]) ^ 2) == 0)] <- d
@@ -310,6 +360,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                         for (d in 1:dim(dayList)[1]) {
                               indDaysSim[which(sqrt((dayListSim[,1] - dayList[d,1]) ^ 2 + (dayListSim[,2] - dayList[d,2]) ^ 2) == 0)] <- d
                         }
+                        #location loop
                         for (i in 1:nrow(ind)) {
                               if (method == "delta") {
                                     end <- indDays
@@ -317,6 +368,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                                     end <- indDaysSim
                               }
                               steps <- floor(dim(dayList)[1]/step)
+                              #steps loop
                               for (j in 1:steps) {
                                     days <- ((j - 1) * step + 1):((j - 1) * step + step)
                                     if (j == steps) days <- days[1]:dim(dayList)[1]
@@ -324,7 +376,16 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                                           which(indDays == days[h])
                                     })
                                     indObs <- sort(do.call("abind", indObs))
-                                    indObsWindow <- array(data = NA, dim = c((window)*length(indObs)/step,1))
+                                    head <- window/2
+                                    tail <- window/2
+                                    before <- after <- FALSE
+                                    if (annual == FALSE) {
+                                          before <- min(indDays[indObs]) - 1 - window/2 < 1
+                                          if (before) head <- (window/2) + (min(indDays[indObs]) - 1 - window/2) 
+                                          after <- max(indDays[indObs]) + window/2 > nrow(dayList)
+                                          if (after) tail <- nrow(dayList) - max(indDays[indObs])   
+                                    }
+                                    indObsWindow <- array(data = NA, dim = c((head + step + tail)*length(indObs)/step,1))
                                     breaks <- c(which(diff(indObs) != 1), length(indObs))
                                     for (d in 1:length(breaks)) {
                                           if (d == 1) {
@@ -332,17 +393,18 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                                           } else {
                                                 piece <- indObs[(breaks[d - 1] + 1):breaks[d]]
                                           }
-                                          suppressWarnings(indObsWindow[((d - 1)*window + 1):(d*window)] <- (min(piece, na.rm = T) - floor((window - step) / 2)):(max(piece, na.rm = T) + floor((window - step) / 2)))
+                                          suppressWarnings(indObsWindow[((d - 1) * (head + step + tail) + 1):(d * (head + step + tail))] <- (min(piece, na.rm = TRUE) - floor(head)):(max(piece, na.rm = TRUE) + floor(tail)))
                                     }
-                                    indObsWindow[which(indObsWindow <= 0)] <- 1
-                                    indObsWindow[which(indObsWindow >  length(indDays))] <- length(indDays)
-                                    indObsWindow <- unique(indObsWindow)
+                                    if (isTRUE(annual)) {
+                                          indObsWindow[which(indObsWindow <= 0)] <- 1
+                                          indObsWindow[which(indObsWindow >  length(indDays))] <- length(indDays)
+                                          indObsWindow <- unique(indObsWindow)
+                                    }
                                     indSim <- lapply(1:length(days), function(h){
                                           which(indDaysSim == days[h])
                                     })
                                     indSim <- sort(do.call("abind", indSim))
                                     # Apply bias correction methods
-                                    
                                     suppressWarnings(
                                           if (method == "delta") {
                                                 o1 <- obs$Data[indObs,ind[i,1],ind[i,2]]
@@ -351,10 +413,10 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                                           }
                                     )
                                     suppressWarnings(
-                                          p1 <- subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indObsWindow]
+                                          p1 <- subsetGrid(p, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = TRUE, drop = FALSE)$Data[1,1,,1,1][indObsWindow]
                                     )
                                     suppressWarnings(
-                                          s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = T, drop = FALSE)$Data[1,1,,1,1][indSim]
+                                          s1 <- subsetGrid(s, latLim = y[ind[i,1]], lonLim = x[ind[i,3]], outside = TRUE, drop = FALSE)$Data[1,1,,1,1][indSim]
                                     )
                                     if (method == "delta") indSim <- indObs
                                     end[indSim,] <- biasCorrection1D(o1, p1, s1, 
@@ -370,28 +432,26 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                         }
                   }
                   return(mem)
-            }) #end loop for members
-            #                   }else{
-            #                         ############# members jointly
-            #                   }
-          
-            
+            }) 
             run[,,,,] <- abind(lmem, along = 2)
             return(run)
       }) #end loop for runtimes
       bc$Data <- unname(abind(lrun, along = 1))
       attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
+      ## Recover the member dimension when join.members=TRUE:
+      if (isTRUE(join.members)) {
+            bc <- recoverMemberDim(pred, bc, newdata)
+      } else {
+            bc$Dates <- sim$Dates
+            bc$InitializationDates <- sim$InitializationDates
+            bc$Members <- sim$Members
+      }
       attr(bc$Variable, "correction") <- method
-      ##########################
-      bc <- redim(bc, runtime = TRUE, drop = TRUE)
+      bc <- redim(bc, drop = TRUE)
       message("[", Sys.time(), "] Done.")
-      ##########################
-      bc$Dates <- sim$Dates
-      bc$InitializationDates <- sim$InitializationDates
-      bc$Members <- sim$Members
       return(bc)
 }
-#end
+
 
 
 #' @title Bias correction methods on 1D data
@@ -400,7 +460,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"}. 
+#'  \code{"scaling"}, \code{"gqm"}, \code{"gpqm"}, \code{"variance"}, \code{"loci"} and \code{"ptr"}. 
 #' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
 #' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not selected as the bias correction method.
 #' @param precip Logical indicating if o, p, s is precipitation data.
@@ -435,14 +495,14 @@ biasCorrection1D <- function(o, p, s,
       } else if (method == "gpqm") {
             gpqm(o, p, s, precip, pr.threshold, theta)
       } else if (method == "variance") {
-        variance(o, p, s, precip)
+            variance(o, p, s, precip)
       } else if (method == "loci") {
-        loci(o, p, s, precip, pr.threshold)
+            loci(o, p, s, precip, pr.threshold)
       } else if (method == "ptr") {
-        ptr(o, p, s, precip)
+            ptr(o, p, s, precip)
       }
 }
-#end
+
 
 #' @title Delta method for bias correction
 #' @description Implementation of Delta method for bias correction 
@@ -451,11 +511,12 @@ biasCorrection1D <- function(o, p, s,
 #' @param s A vector containing the simulated climate for the variable used in \code{x}, but considering the test period.
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
+
 delta <- function(o, p, s){
       corrected <- o + (mean(s) - mean(p))
       return(corrected)
 }
-#end
+
 
 #' @title Scaling method for bias correction
 #' @description Implementation of Scaling method for bias correction 
@@ -466,6 +527,7 @@ delta <- function(o, p, s){
 #' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not selected as the bias correction method.
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
+
 scaling <- function(o, p, s, scaling.type){
       if (scaling.type == "additive") {
             s - mean(p) + mean(o)
@@ -473,7 +535,7 @@ scaling <- function(o, p, s, scaling.type){
             (s/mean(p)) * mean(o)
       }
 }
-#end
+
 
 
 #' @title Gamma Quantile Mapping method for bias correction
@@ -504,7 +566,7 @@ gqm <- function(o, p, s, precip, pr.threshold){
             }
             if (is.null(nP)) {
                   s <- rep(NA, length(s))
-            } else if (nP < length(o)) {
+            } else if (nP[1] < length(o)) {
                   ind <- which(o > threshold & !is.na(o))
                   obsGamma <-  tryCatch({fitdistr(o[ind],"gamma")}, error = function(err){stop("There are not precipitation days in y for the window length selected in one or more locations. Try to enlarge the window")})
                   ind <- which(p > 0 & !is.na(p))
@@ -515,7 +577,7 @@ gqm <- function(o, p, s, precip, pr.threshold){
                   s[rain] <- qgamma(auxF, obsGamma$estimate[1], rate = obsGamma$estimate[2])
                   s[noRain] <- 0
             } else {
-                  warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
+                  warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) no bias correction has been applied.")
             } 
       }
       return(s)
@@ -578,24 +640,15 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
                               smap[drizzle] <- quantile(s[which(s > min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))], probs = eFrc(s[drizzle]), na.rm = TRUE, type = 4)
                         }
                         smap[noRain] <- 0
-                  } else {## For dry series
+                  } else { ## For dry series
                         smap <- s
                         warning('No rainy days in the prediction. Bias correction is not applied') 
-#                         noRain<-which(s <= Pth & !is.na(s))
-#                         rain<-which(s > Pth & !is.na(s))
-#                         smap <- s
-#                         if (length(rain)>0){
-#                               eFrc<-ecdf(s[rain])
-#                               smap[rain]<-quantile(o[which(o > threshold & !is.na(o))], probs = eFrc(s[rain]), na.rm = TRUE, type = 4)
-# 
-#                         }
-#                         smap[noRain]<-0
                   }
             }
       } else {
             if (all(is.na(o))) {
                   smap <- rep(NA, length(s))
-            }else if (all(is.na(p))){
+            } else if (all(is.na(p))) {
                   smap <- rep(NA, length(s))
             }else if (any(!is.na(p)) & any(!is.na(o))) {
                   if (is.null(n.quantiles)) n.quantiles <- length(p)
@@ -636,33 +689,32 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
 
-gpqm <- function(o, p, s, precip, pr.threshold, theta){ 
-      if(precip == FALSE){
+gpqm <- function(o, p, s, precip, pr.threshold, theta) { 
+      if (precip == FALSE) {
             stop("method gpqm is only applied to precipitation data")
-      }else{
-            
+      } else {
             threshold <- pr.threshold
-            if (any(!is.na(o))){
+            if (any(!is.na(o))) {
                   params <-  norain(o, p, threshold)
                   p <- params$p
                   nP <- params$nP
                   Pth <- params$Pth
-            }else{
+            } else {
                   nP = NULL
             }
-            if(is.null(nP)){
+            if (is.null(nP)) {
                   s <- rep(NA, length(s))
-            }else if(nP < length(o)){
+            } else if (nP[1] < length(o)) {
                   ind <- which(o > threshold & !is.na(o))
                   indgamma <- ind[which(o[ind] < quantile(o[ind], theta))]
                   indpareto <- ind[which(o[ind] >= quantile(o[ind], theta))]
                   obsGQM <- fitdistr(o[indgamma],"gamma")
                   obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
                   ind <- which(p > 0 & !is.na(p))
-                  indgamma <- ind[which(p[ind] < quantile(p[ind],theta))]
-                  indpareto <-ind[which(p[ind] >= quantile(p[ind], theta))]
-                  prdGQM <- fitdistr(p[indgamma], "gamma")
-                  prdGQM2 <- fpot(p[indpareto], quantile(p[ind], theta), "gpd", std.err = FALSE)
+                  indgammap <- ind[which(p[ind] < quantile(p[ind],theta))]
+                  indparetop <- ind[which(p[ind] >= quantile(p[ind], theta))]
+                  prdGQM <- fitdistr(p[indgammap], "gamma")
+                  prdGQM2 <- fpot(p[indparetop], quantile(p[ind], theta), "gpd", std.err = FALSE)
                   rain <- which(s > Pth & !is.na(s))
                   noRain <- which(s <= Pth & !is.na(s))
                   indgammasim <- rain[which(s[rain] < quantile(p[ind], theta))]
@@ -670,11 +722,10 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
                   auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
                   auxF2 <- pgpd(s[indparetosim], loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
                   s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
-                  s[indparetosim[which(auxF2<1)]] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
-                  s[indparetosim[which(auxF2==1)]] <- max(o[indpareto], na.rm = TRUE)
+                  s[indparetosim[which(auxF2 < 1)]] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
+                  s[indparetosim[which(auxF2 == 1)]] <- max(o[indpareto], na.rm = TRUE)
                   s[noRain] <- 0
-                  warningNoRain <- FALSE
-            }else{
+            } else {
                   warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
             }  
       }
@@ -682,131 +733,6 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta){
 }
 
 #end
-
-#' @title Variance scaling of temperature
-#' @description Implementation of Variance scaling of temperature method for bias correction
-#' @param o A vector (e.g. station data) containing the observed climate data for the training period
-#' @param p A vector containing the simulated climate by the model for the training period. 
-#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
-#' @param precip Logical indicating if o, p, s is temperature data.
-#' @keywords internal
-#' @author B. Szabo-Takacs
-
-variance <- function(o, p, s, precip){
-  if(precip == FALSE){
-
-      t_dif <- mean(o,na.rm=TRUE)-mean(p,na.rm=TRUE)
-      t1 <- p+rep(t_dif,length(p),1)
-      t1_m <- mean(t1,na.rm=TRUE) 
-      t2 <- t1-rep(t1_m,length(t1),1)
-      o_s <- sd(o,na.rm=TRUE) 
-      t2_s <- sd(t2,na.rm=TRUE) 
-      tsig <- o_s/t2_s
-    
-    rm(t1,t1_m,t2,o_s,t2_s)
-    
-      t1 <- s+rep(t_dif,length(s),1)
-      t1_m <- mean(t1,na.rm=TRUE)
-      t2 <- t1-rep(t1_m,length(t1),1)
-      t3 <- t2*rep(tsig,length(t2),1)
-      tC <- t3+rep(t1_m,length(t3),1)
-
-    rm(t1,t1_m,t2,t3)
-    
-    return(tC)}
-  
-  else {stop("method variance is only applied to temperature data")}
-}
-#end
-
-#' @title Local intensity scaling of precipitation
-#' @description Implementation of Local intensity scaling of precipitation method for bias correction based on Vincent Moron's local_scaling function in weaclim toolbox in Matlab
-#' @param o A vector (e.g. station data) containing the observed climate data for the training period
-#' @param p A vector containing the simulated climate by the model for the training or test period. 
-#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
-#' @param precip Logical indicating if o, p, s is precipitation data.
-#' @param pr.threshold The minimum value that is considered as a non-zero precipitation.
-#' @keywords internal
-#' @author B. Szabo-Takacs
-
-loci <- function(o, p, s, precip, pr.threshold){
-       if(precip == FALSE){ 
-              stop("method loci is only applied to precipitation data")
-        }else{
-          
-      threshold <- pr.threshold
-    
-      l <- length(which(o > threshold))
-      gcmr <- rev(sort(s))
-      Pgcm <- gcmr[l+1]
-      # local scaling factor
-      mobs <- o[which(o > threshold)]
-      mobs <- mean(mobs,na.rm=TRUE)
-      mgcm <- s[which(s > Pgcm)]
-      mgcm <- mean(mgcm,na.rm=TRUE)
-      scaling <- (mobs-threshold)/(mgcm-Pgcm)
-      GCM <- (scaling*(s-Pgcm))+threshold
-      GCM[which(GCM < threshold)] <- 0
-    
-        }
-  return(GCM)
-}
-
-#end
-
-#' @title Power transformation of precipitation
-#' @description Implementation of Power transformation of precipitation method for bias correction 
-#' @param o A vector (e.g. station data) containing the observed climate data for the training period
-#' @param p A vector containing the simulated climate by the model for the training period. 
-#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
-#' @param precip Logical indicating if o, p, s is precipitation data.
-#' @importFrom stats uniroot
-#' @keywords internal
-#' @author S. Herrera and B. Szabo-Takacs
-
-ptr <- function(o, p, s, precip) {
-  if(precip==FALSE){ 
-    stop("method power transformation is only applied to precipitation data")
-  } else{
-      b <- NaN
-      cvO <- sd(o,na.rm=TRUE)/mean(o, na.rm=TRUE)
-      if (!is.na(cvO)) {
-        bi <- try(uniroot(function(x)
-          varCoeficient(x,abs(p),cvO),c(0,1),extendInt="yes"),silent=T)
-        if ("try-error" %in% class(bi)) {  # an error occurred
-          b <- NA
-        } else {
-          b <- bi$root
-        }
-      }
-    
-    p[p<0] <-  0
-    s[s<0] <-  0
-   
-      aux_c <- p^rep(b,length(p),1)
-      aux <- s^rep(b,length(s),1)
-      prC <- aux*rep((mean(o, na.rm=TRUE)/mean(aux_c, na.rm=TRUE)), length(s),1)
-    
-    rm(aux, aux_c)}
-  
-  return(prC)
-}
-
-#end
-
-#' @title VarCoeficient
-#' @description preprocess to power transformation of precipitation
-#' @param delta A vector of power parameter
-#' @param data A vector containing the simulated climate by the model for training period
-#' @param cv A vector containing coefficient of variation of observed climate data
-#' @keywords internal
-#' @author S. Herrera and B. Szabo-Takacs
-
-varCoeficient <- function(delta,data,cv){
-  y <- cv-sd((data^delta),na.rm=TRUE)/mean((data^delta),na.rm=TRUE)
-  return(y)}
-#end
-
 
 #' @title norain
 #' @description presprocess to bias correct precipitation data
@@ -820,48 +746,210 @@ varCoeficient <- function(delta,data,cv){
 #' @author S. Herrera and M. Iturbide
 
 norain <- function(o, p , threshold){
-      nP <- sum(as.double(o <= threshold & !is.na(o)), na.rm = TRUE)
-      if (nP >= 0 & nP < length(o)){
+      nPo <- sum(as.double(o <= threshold & !is.na(o)), na.rm = TRUE)
+      nPp <- ceiling(length(p) * nPo / length(o))
+      if (nPo >= 0 & nPo < length(o)) {
             ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
             Ps <- sort(p, decreasing = FALSE, na.last = NA)
-            Pth <- Ps[nP + 1]
-            if (Ps[nP + 1]<=threshold){
+            Pth <- Ps[nPp + 1]
+            if (Pth <= threshold) {
                   Os <- sort(o, decreasing = FALSE, na.last = NA)
-                  ind <- which(Ps > threshold & !is.na(Ps))
-                  if (length(ind)==0){
-                        ind <- max(which(!is.na(Ps)))
-                        ind <- min(c(length(Os),ind))
-                  }else{
-                        ind <- min(which(Ps > threshold & !is.na(Ps)))
+                  indP <- which(Ps > threshold & !is.na(Ps))
+                  if (length(indP) == 0) {
+                        indP <- max(which(!is.na(Ps)))
+                        indO <- min(c(length(Os), ceiling(length(Os) * indP/length(Ps))))
+                  } else {
+                        indP <- min(which(Ps > threshold & !is.na(Ps)))
+                        indO <- ceiling(length(Os) * indP/length(Ps))
                   }
                   # [Shape parameter Scale parameter]
-                  if (length(unique(Os[(nP + 1):ind])) < 6){
-                        Ps[(nP + 1):ind] <- mean(Os[(nP + 1):ind], na.rm = TRUE)
-                  }else{
-                        auxOs <- Os[(nP + 1):ind]
+                  if (length(unique(Os[(nPo + 1):indO])) < 6) {
+                        Ps[(nPp + 1):indP] <- mean(Os[(nPo + 1):indO], na.rm = TRUE)
+                  } else {
+                        auxOs <- Os[(nPo + 1):indO]
                         auxOs <- auxOs[which(!is.na(auxOs))]
-                        auxGamma <- fitdistr(auxOs,"gamma")
-                        Ps[(nP + 1):ind]<-rgamma(ind - nP, auxGamma$estimate[1], rate = auxGamma$estimate[2])
+                        auxGamma <- fitdistr(auxOs, "gamma")
+                        Ps[(nPp + 1):indP] <- rgamma(indP - nPp, auxGamma$estimate[1], rate = auxGamma$estimate[2])
                   }
-                  Ps<-sort(Ps, decreasing = FALSE, na.last = NA)
+                  Ps <- sort(Ps, decreasing = FALSE, na.last = NA)
             }
-            if (nP > 0){
-                  ind <- min(nP, length(p))
-                  Ps[1:ind]<-0
+            if (nPo > 0) {
+                  ind <- min(nPp, length(p))
+                  Ps[1:ind] <- 0
             }
             p[ix] <- Ps
-            
-      }else{
-            if (nP == length(o)){
+      } else {
+            if (nPo == length(o)) {
                   ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
                   Ps <- sort(p, decreasing = FALSE, na.last = NA)
-                  Pth <- Ps[nP]
-                  ind <- min(nP, length(p))
+                  Pth <- Ps[nPp]
+                  ind <- min(nPp, length(p))
                   Ps[1:ind] <- 0
                   p[ix] <- Ps
             }
       }
-      return(list("nP" = nP, "Pth" = Pth, "p" = p)) 
+      return(list("nP" = c(nPo,nPp), "Pth" = Pth, "p" = p)) 
 }
 
 #end
+
+#' @title Variance scaling of temperature
+#' @description Implementation of Variance scaling of temperature method for bias correction
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
+#' @param precip Logical indicating if o, p, s is temperature data.
+#' @keywords internal
+#' @author B. Szabo-Takacs
+
+variance <- function(o, p, s, precip) {
+      if (precip == FALSE) {
+            t_dif <- mean(o, na.rm = TRUE) - mean(p, na.rm = TRUE)
+            t1 <- p + rep(t_dif, length(p), 1)
+            t1_m <- mean(t1,na.rm = TRUE) 
+            t2 <- t1 - rep(t1_m,length(t1),1)
+            o_s <- sd(o,na.rm = TRUE) 
+            t2_s <- sd(t2,na.rm = TRUE) 
+            tsig <- o_s/t2_s
+            t1 <- t1_m <- t2 <- o_s <- t2_s <- NULL
+            t1 <- s + rep(t_dif, length(s), 1)
+            t1_m <- mean(t1, na.rm = TRUE)
+            t2 <- t1 - rep(t1_m, length(t1), 1)
+            t3 <- t2 * rep(tsig, length(t2), 1)
+            tC <- t3 + rep(t1_m, length(t3), 1)
+            t1 <- t1_m <- t2 <- t3 <- NULL
+            return(tC)
+      } else {
+            stop("method variance is only applied to temperature data")
+      }
+}
+
+
+#' @title Local intensity scaling of precipitation
+#' @description Implementation of Local intensity scaling of precipitation method for bias correction based on Vincent Moron's local_scaling function in weaclim toolbox in Matlab
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training or test period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
+#' @param precip Logical indicating if o, p, s is precipitation data.
+#' @param pr.threshold The minimum value that is considered as a non-zero precipitation.
+#' @author B. Szabo-Takacs
+
+loci <- function(o, p, s, precip, pr.threshold){
+      if (precip == FALSE) { 
+            stop("method loci is only applied to precipitation data")
+      } else {
+            threshold <- pr.threshold
+            l <- length(which(o > threshold))
+            gcmr <- rev(sort(p))
+            gcmrs <- rev(sort(s))
+            Pgcm <- gcmr[l + 1]
+            Pgcms <- gcmrs[l + 1]
+            # local scaling factor
+            mobs <- mean(o[which(o > threshold)], na.rm = TRUE)
+            mgcm <- mean(p[which(p > Pgcm)], na.rm = TRUE)
+            scaling <- (mobs - threshold) / (mgcm - Pgcm)
+            GCM <- (scaling*(s - Pgcms)) + threshold
+            GCM[which(GCM < threshold)] <- 0
+      }
+      return(GCM)
+}
+
+
+#' @title Power transformation of precipitation
+#' @description Implementation of Power transformation of precipitation method for bias correction 
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
+#' @param precip Logical indicating if o, p, s is precipitation data.
+#' @importFrom stats uniroot
+#' @keywords internal
+#' @author S. Herrera and B. Szabo-Takacs
+
+ptr <- function(o, p, s, precip) {
+      if (precip == FALSE) { 
+            stop("method power transformation is only applied to precipitation data")
+      } else {
+            b <- NaN
+            cvO <- sd(o,na.rm = TRUE) / mean(o, na.rm = TRUE)
+            if ((!is.na(cvO)) & (!is.na(p)) & (mean(p) != 0)) {
+                  bi <- try(uniroot(function(x)
+                        varCoeficient(x, abs(p), cvO), c(0,1), extendInt = "yes"), silent = TRUE)
+                  if ("try-error" %in% class(bi)) {  # an error occurred
+                        b <- NA
+                  } else {
+                        b <- bi$root
+                  }
+            }
+            p[p < 0] <-  0
+            s[s < 0] <-  0
+            aux_c <- p^rep(b,length(p),1)
+            aux <- s^rep(b,length(s),1)
+            prC <- aux * rep((mean(o, na.rm = TRUE) / mean(aux_c, na.rm = TRUE)), length(s), 1)
+            aux <- aux_c <- NULL
+      }
+      return(prC)
+}
+
+
+#' @title VarCoeficient
+#' @description preprocess to power transformation of precipitation
+#' @param delta A vector of power parameter
+#' @param data A vector containing the simulated climate by the model for training period
+#' @param cv A vector containing coefficient of variation of observed climate data
+#' @keywords internal
+#' @author S. Herrera and B. Szabo-Takacs
+
+varCoeficient <- function(delta,data,cv){
+      y <- cv - sd((data^delta), na.rm = TRUE)/mean((data^delta), na.rm = TRUE)
+      return(y)
+}
+
+
+#' @title Concatenate members
+#' @description Concatenate members as a single time series for using their joint distribution in bias correction
+#' @param grid Input (multimember) grid
+#' @return A grid without members, with additional attributes to retrieve the original structure after bias correction
+#' @seealso \code{\link{recoverMemberDim}}, for recovering the original structure after bias correction.
+#' @keywords internal
+#' @importFrom transformeR subsetGrid redim getShape bindGrid.time
+#' @author J Bedia
+
+flatMemberDim <- function(grid) {
+      grid <- redim(grid, member = TRUE)     
+      n.mem.join <- getShape(grid, "member")
+      n.time.join <- getShape(grid, "time")
+      aux.ltime <- lapply(1:n.mem.join, function(x) {
+            subsetGrid(grid, members = x)
+      })
+      out <- do.call("bindGrid.time", aux.ltime)
+      attr(out, "orig.mem.shape") <- n.mem.join
+      attr(out, "orig.time.shape") <- n.time.join
+      return(out)
+}
+
+#' @title Recover member multimember structure
+#' @description Recover member multimember structure after application of \code{\link{flatMemberDim}}
+#' @param flat.grid A \dQuote{flattened} grid used as predictor in \code{biasCorrection} (the 'pred' object)
+#' @param bc.grid The bias-corrected output (the 'bc' object), still without its member structure 
+#' @param newdata The 'newdata' object, needed to recover relevant metadata (i.e. initialization dates and member names)
+#' @return A (bias-corrected) multimember grid
+#' @keywords internal
+#' @importFrom transformeR subsetDimension bindGrid.member
+#' @seealso \code{\link{flatMemberDim}}, for \dQuote{flattening} the member structure
+#' @author J Bedia
+
+recoverMemberDim <- function(flat.grid, bc.grid, newdata) {
+      pred <- flat.grid
+      bc <- bc.grid
+      nmem <- attr(pred, "orig.mem.shape")
+      ntimes <- attr(pred, "orig.time.shape")
+      bc$Dates <- lapply(bc$Dates, "rep", nmem)
+      aux.list <- lapply(1:nmem, function(m) {
+            aux <- subsetDimension(grid = bc, dimension = "time", indices = ((m - 1) * ntimes + 1):(m * ntimes))
+            aux$InitializationDates <- newdata$InitializationDates[[m]]
+            aux$Members <- newdata$Members[[m]]
+            return(aux)
+      })
+      do.call("bindGrid.member", aux.list)
+}
+
