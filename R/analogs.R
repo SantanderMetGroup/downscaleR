@@ -73,7 +73,7 @@ analogs <- function(y = y,
       if (isTRUE(analog.dates) & n.analogs > 1) {
             stop("Analog dates are only returned for 1-neighbour analogs\n Set argument 'n.analogs = 1'")
       }
-      sel.fun <- match.arg(sel.fun, choices = c("random", "mean"))
+      sel.fun <- match.arg(sel.fun, choices = c("random", "mean"))  # median, min, max, prc85, prcXX, wmean
       # Analog search      
       message("[", Sys.time(), "] Calculating analogs ...")
       d.list <- if (parallel.pars$hasparallel) {

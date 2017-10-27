@@ -22,47 +22,49 @@ The function can downscale in both global and local mode, though not simultaneou
 }
 \examples{
 # Loading predictors
-x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 x <- subsetGrid(x, years = 1985:1995)
 # Loading predictands
 y <- VALUE_Iberia_pr
-# Prepare predictors and prepare new data
-xtrain <- prepare_predictors(x = x, y = y)
-xtest <- prepare_newdata(newdata = x, predictor = xtrain)
-# Downscaling a generalized linear model. In particular a logistic regression.
-# model <- downscale.train(ybin, xtrain, method = "GLM" ,family = binomial(link = "logit"))
-# str(model)
-# pred <- downscale.predict(xtest, model)
-# str(pred)
-# Downscaling a linear model..
-model <- downscale.train(xtrain$y, xtrain, method = "MLR", fitting = 'MP')
-str(model)
-pred <- downscale.predict(xtest, model)
-str(pred)
-# Downscaling a non-linear model via a regularized L2 Extreme learning Machine..
-model <- downscale.train(xtrain$y, xtrain, method = "ELM", fitting = 'MP+L2')
-str(model)
-pred <- downscale.predict(xtest, model)
-str(pred)
-# Downscaling a non-linear model via Neural Networks..
-model <- downscale.train(xtrain$y, xtrain, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
-str(model)
-pred <- downscale.predict(xtest, model)
-str(pred)
-# Downscaling a local model with the closest 4 grid points.
-xtrain <- prepare_predictors(x = x,y = y,local.predictors = list(neigh.vars = "shum850",n.neighs = 4))
-xtest <- prepare_newdata(newdata = x, predictor = xtrain)
-model <- downscale.train(xtrain$y, xtrain, method = "MLR", fitting = 'MP')
-str(model)
-pred <- downscale.predict(xtest, model)
-str(pred)
-# Donwscaling with Principal Components (PCs)
-xtrain <- prepare_predictors(x = x,y = y, PCA = list(v.exp = 0.9))
-xtest <- prepare_newdata(newdata = x, predictor = xtrain)
-model <- downscale.train(xtrain$y, xtrain, method = "ELM" ,fitting = 'MP')
-str(model)
-pred <- downscale.predict(xtest, model)
-str(pred)
+y <- getTemporalIntersection(obs = y,prd = x, "obs" )
+ybin <- convert2bin(y, threshold = 1)
+# Prepare predictors
+xT <- prepare_predictors(x = x, y = y)
+# Downscaling PRECIPITATION
+#' # ... via analogs ...
+model.ocu <- downscale.train(ybin, xT, method = "analogs", sel.fun = "mean")
+model.reg <- downscale.train(y, xT, method = "analogs", sel.fun = "mean")
+pred.ocu <- downscale.predict(xT, model)
+pred.reg <- downscale.predict(xt, model)
+# ... via a linear model ...
+model.ocu <- downscale.train(ybin, xT, method = "GLM" ,family = binomial(link = "logit"))
+model.reg <- downscale.train(y, xT, method = "MLR", fitting = "MP")
+pred.ocu <- downscale.predict(xT,model.ocu)
+pred.reg <- downscale.predict(xT,model.reg)
+pred <- pred.ocu$Data * pred.reg$Data
+# ... via a extreme learning machine ...
+model.ocu <- downscale.train(ybin, xT, method = "ELM", neurons = 200)
+model.reg <- downscale.train(y, xT, method = "ELM", neurons = 200)
+pred.ocu <- downscale.predict(xT,model.ocu)
+pred.reg <- downscale.predict(xT,model.reg)
+pred <- pred.ocu$Data * pred.reg$Data
+# ... via a neural network ...
+model.ocu <- downscale.train(ybin, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
+model.reg <- downscale.train(y, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
+pred.ocu <- downscale.predict(xT,model.ocu)
+pred.reg <- downscale.predict(xT,model.reg)
+pred <- pred.ocu$Data * pred.reg$Data
+# Downscaling PRECIPITATION - Local model with the closest 4 grid points.
+xT <- prepare_predictors(x = x,y = y,local.predictors = list(neigh.vars = "shum850",n.neighs = 4))
+model.ocu <- downscale.train(ybin, xT, method = "MLR", fitting = 'MP')
+model.reg <- downscale.train(y, xT, method = "MLR", fitting = 'MP')
+pred.ocu <- downscale.predict(xT,model.ocu)
+pred.reg <- downscale.predict(xT,model.reg)
+pred <- pred.ocu$Data * pred.reg$Data
+# Downscaling PRECIPITATION - Principal Components (PCs)
+xT <- prepare_predictors(x = x,y = y, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+model.ocu <- downscale.train(ybin, xT, method = "MLR" ,fitting = 'MP')
+model.reg <- downscale.train(y, xT, method = "MLR" ,fitting = 'MP')
 }
 \author{
 J. Bano-Medina

@@ -99,8 +99,8 @@ prepare_newdata <- function(newdata, predictor) {
         names(newdata.global.list) <- paste("member", 1:length(newdata.global.list), sep = "_")
     }
     newdata.refdates <- list(start = getRefDates(newdata, "start"), end = getRefDates(newdata, "end"))
-    return(list("newdata.global" = newdata.global.list,
-                "newdata.local" = newdata.local.list,
+    return(list("x.global" = newdata.global.list,
+                "x.local" = newdata.local.list,
                 "Dates" = newdata.refdates)
     )
 }

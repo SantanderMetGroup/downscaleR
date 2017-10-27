@@ -4,7 +4,8 @@
 \alias{downscale.train}
 \title{Downscale climate data.}
 \usage{
-downscale.train(predictands, predictors, method, ...)
+downscale.train(predictands, predictors, method, singlesite = FALSE,
+  filt = NULL, ...)
 }
 \arguments{
 \item{predictands}{The observations dataset. It should be an object as returned by \pkg{loadeR}.}
@@ -12,6 +13,10 @@ downscale.train(predictands, predictors, method, ...)
 \item{predictors}{The input grid as returned by \code{\link[downscaleR]{prepare_predictors}}.}
 
 \item{method}{Type of transer function. Options are: GLM, MLR, ELM and NN. The default is MLR.}
+
+\item{singlesite}{Perform the study singlesite. Default is FALSE.}
+
+\item{filt}{A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. Everything concerning these parameters is explained in the section \code{Details}. However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}}, \code{\link[downscaleR]{mlr.train}}, \code{\link[downscaleR]{elm.train}} and \code{\link[deepnet]{nn.train}}.}
 }
@@ -24,11 +29,14 @@ A list of objects that contains the prediction on the train dataset, the model, 
    \item \code{predictands}: Same as the predictands input parameter.}
 }
 \description{
-Downscale data to local scales by statistical methods: generalized linear models (GLM), multiple linear regression (MLR), Extreme Learning Machine (ELM) and Neural Networks (NN).
+Downscale data to local scales by statistical methods: analogs, generalized linear models (GLM), multiple linear regression (MLR), Extreme Learning Machine (ELM) and Neural Networks (NN).
 }
 \details{
 The function can downscale in both global and local mode, though not simultaneously. 
 If there is perfect collinearity among predictors, then the matrix will not be invertible and the downscaling will fail.
+
+\strong{Analogs}
+The optional parameters of this method are the number of analogs, (n.analogs = 4 (DEFAULT), the function applied to the analogs values, (sel.fun = c("mean","max","min","median","prcXX") and the temporal window, (window = 0).
 
 \strong{Generalized Linear Models (GLM)}
 
@@ -37,7 +45,7 @@ family(object,...) where you can specified a link (i.e., a specification for the
 
 \strong{Multiple Linear Regression (MLR)}
 
-If you want to downscale by multiple linear regression there is only one optional parameter called, \code{fitting}, with options: fitting = c("LS","MP","MP+L2"). This options refers to Least Squares (LS), Moore-Penrose (MP) and L2 penalty Moore-Penrose (MP+L2). LS uses the \code{\link[stats]{lm}} R function, whereas MP and MP+L2 downscales via an internal function \code{\link[downscaleR]{mlr.train}}. "MP" is the default option.
+If you want to downscale by multiple linear regression there is only one optional parameter called, \code{fitting}, with options: fitting = c("LS","MP","MP+L2"). This options refers to Least Squares (LS), Moore-Penrose (MP) and L2 penalty Moore-Penrose (MP+L2). LS uses the \code{\link[stats]{lm}} R function, whereas MP and MP+L2 downscales via an internal function \code{\link[downscaleR]{mlr.train}}. "LS" is the default option.
 
 \strong{Extreme Learning Machine (ELM)}
 
@@ -52,37 +60,39 @@ Neural network is based on the library \pkg{deepnet}. The optional parameters co
 
 \strong{Help}
 
-If there are still doubts about the optional parameters despite the description here, we encourage to look for further details in the atomic functions: \code{\link[downscaleR]{glm.train}}, \code{\link[downscaleR]{mlr.train}}, \code{\link[downscaleR]{elm.train}} and \code{\link[deepnet]{nn.train}}.
+If there are still doubts about the optional parameters despite the description here, we encourage to look for further details in the atomic functions: \code{\link[downscaleR]{analogs.train}}, \code{\link[downscaleR]{glm.train}}, \code{\link[downscaleR]{mlr.train}}, \code{\link[downscaleR]{elm.train}} and \code{\link[deepnet]{nn.train}}.
 }
 \examples{
 # Loading predictors
-x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 x <- subsetGrid(x, years = 1985:1995)
 # Loading predictands
 y <- VALUE_Iberia_pr
+y <- getTemporalIntersection(obs = y,prd = x, "obs" )
+ybin <- convert2bin(y, threshold = 1)
 # Prepare predictors
-xtrain <- prepare_predictors(x = x, y = y)
-# Downscaling a generalized linear model. In particular a logistic regression.
-# model <- downscale.train(ybin, xtrain, method = "GLM" ,family = binomial(link = "logit"))
-# Downscaling a linear model..
-model <- downscale.train(xtrain$y, xtrain, method = "MLR", fitting = 'MP')
-str(model)
-# Downscaling a non-linear model via a regularized L2 Extreme learning Machine..
-model <- downscale.train(xtrain$y, xtrain, method = "ELM", fitting = 'MP+L2')
-str(model)
-# Downscaling a non-linear model via Neural Networks..
-model <- downscale.train(xtrain$y, xtrain, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
-str(model)
-# Downscaling a local model with the closest 4 grid points.
-xtrain <- prepare_predictors(x = x,y = y,local.predictors = list(neigh.vars = "shum850",n.neighs = 4))
-xtest <- prepare_newdata(newdata = x, predictor = xtrain)
-model <- downscale.train(xtrain$y, xtrain, method = "MLR", fitting = 'MP')
-str(model)
-# Donwscaling with Principal Components (PCs)
-xtrain <- prepare_predictors(x = x,y = y, PCA = list(v.exp = 0.9))
-xtest <- prepare_newdata(newdata = x, predictor = xtrain)
-model <- downscale.train(xtrain$y, xtrain, method = "ELM" ,fitting = 'MP')
-str(model)
+xT <- prepare_predictors(x = x, y = y)
+# Downscaling PRECIPITATION
+# ... via analogs ...
+model.ocu <- downscale.train(ybin, xT, method = "analogs", sel.fun = "mean")
+model.reg <- downscale.train(y, xT, method = "analogs", sel.fun = "mean")
+# ... via a linear model ...
+model.ocu <- downscale.train(ybin, xT, method = "GLM" ,family = binomial(link = "logit"))
+model.reg <- downscale.train(y, xT, method = "MLR", fitting = "MP")
+# ... via a extreme learning machine ...
+model.ocu <- downscale.train(ybin, xT, method = "ELM", neurons = 200)
+model.reg <- downscale.train(y, xT, method = "ELM", neurons = 200)
+# ... via a extreme learning machine ...
+model.ocu <- downscale.train(ybin, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
+model.reg <- downscale.train(y, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
+# Downscaling PRECIPITATION - Local model with the closest 4 grid points.
+xT <- prepare_predictors(x = x,y = y,local.predictors = list(neigh.vars = "shum850",n.neighs = 4))
+model.ocu <- downscale.train(ybin, xT, method = "MLR", fitting = 'MP')
+model.reg <- downscale.train(y, xT, method = "MLR", fitting = 'MP')
+# Downscaling PRECIPITATION - Principal Components (PCs)
+xT <- prepare_predictors(x = x,y = y, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+model.ocu <- downscale.train(ybin, xT, method = "MLR" ,fitting = 'MP')
+model.reg <- downscale.train(y, xT, method = "MLR" ,fitting = 'MP')
 }
 \author{
 J. Bano-Medina
