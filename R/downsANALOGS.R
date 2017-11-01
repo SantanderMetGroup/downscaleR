@@ -8,14 +8,15 @@
 #' @param n.analogs Number of analogs. Default is 4.
 #' @param sel.fun Function applied to the analogs. Can be "mean", "wmean" (i.e., weighted mean), "max", "min", "median", "prcXX" (i.e., prc85 means the 85th percentile of the analogs values distribution). Default is "mean".
 #' @param window Window of days removed when selecting analogs. Default is 7. This means that the 7 days after the date and the 7 days before the date are removed.
+#' @param n.random An integer. Choose N random analogs among the closest n.analogs.
 #' @return A list containing the grid data, the observations and a list with information concerning the analogs.
 #' @details The analogs actually is not a model in the sense that it is not really trained. The model would be the data where to search the analogs. For this reason this function only saves the information to search analogs in a list. 
 #' @author J. Bano-Medina
 #' @export
-analogs.train <- function(x, y, n.analogs = 4, sel.fun = "mean", window = 0){
+analogs.train <- function(x, y, n.analogs = 4, sel.fun = "mean", window = 0, n.random = NULL){
   #if (window == 0) {warning("Window is 0, this may lead to an unrealistic prediction.")}
   if (n.analogs == 1) {sel.fun <- NULL}
-  return(list("dataset_x" = x, "dataset_y" = y, "info" = list("n.analogs" = n.analogs, "sel.fun" = sel.fun, "window" = window)))}
+  return(list("dataset_x" = x, "dataset_y" = y, "info" = list("n.analogs" = n.analogs, "sel.fun" = sel.fun, "window" = window, "n.random" = n.random)))}
 
 #' @title Donwscaling with the analogs method (test).
 #' @description Donwscaling with the analogs method (test).
@@ -49,6 +50,10 @@ analogs.test <- function(newdata, x, y, info){
     ind.analogs <- sapply(1:info$n.analogs, FUN = function(zz){
       ind.analogs <- which((dist2test == dist.analogs[zz]) == TRUE)})
     value.analogs <- y[ind.analogs,]
+    if (!is.null(info$n.random)) {
+      ind.random <- sample(1:dim(value.analogs)[1],size = info$n.random, replace = FALSE)
+      dist.analogs  <- dist.analogs[ind.random]
+      value.analogs <- value.analogs[ind.random,]}
     if (is.null(info$sel.fun)) {
       pred <- value.analogs}
     else if (info$sel.fun == "mean" || info$sel.fun == "median" || info$sel.fun == "max" || info$sel.fun == "min") {
