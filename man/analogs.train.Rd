@@ -4,7 +4,8 @@
 \alias{analogs.train}
 \title{Donwscaling with the analogs method (train).}
 \usage{
-analogs.train(x, y, n.analogs = 4, sel.fun = "mean", window = 0)
+analogs.train(x, y, n.analogs = 4, sel.fun = "mean", window = 0,
+  n.random = NULL)
 }
 \arguments{
 \item{x}{The grid data. Class: matrix.}
@@ -16,6 +17,8 @@ analogs.train(x, y, n.analogs = 4, sel.fun = "mean", window = 0)
 \item{sel.fun}{Function applied to the analogs. Can be "mean", "wmean" (i.e., weighted mean), "max", "min", "median", "prcXX" (i.e., prc85 means the 85th percentile of the analogs values distribution). Default is "mean".}
 
 \item{window}{Window of days removed when selecting analogs. Default is 7. This means that the 7 days after the date and the 7 days before the date are removed.}
+
+\item{n.random}{An integer. Choose N random analogs among the closest n.analogs.}
 }
 \value{
 A list containing the grid data, the observations and a list with information concerning the analogs.
