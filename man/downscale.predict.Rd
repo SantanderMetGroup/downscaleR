@@ -34,8 +34,8 @@ xT <- prepare_predictors(x = x, y = y)
 #' # ... via analogs ...
 model.ocu <- downscale.train(ybin, xT, method = "analogs", sel.fun = "mean")
 model.reg <- downscale.train(y, xT, method = "analogs", sel.fun = "mean")
-pred.ocu <- downscale.predict(xT, model)
-pred.reg <- downscale.predict(xt, model)
+pred.ocu <- downscale.predict(xT, model.ocu)
+pred.reg <- downscale.predict(xT, model.reg)
 # ... via a linear model ...
 model.ocu <- downscale.train(ybin, xT, method = "GLM" ,family = binomial(link = "logit"))
 model.reg <- downscale.train(y, xT, method = "MLR", fitting = "MP")

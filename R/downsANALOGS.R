@@ -26,6 +26,7 @@ analogs.train <- function(x, y, n.analogs = 4, sel.fun = "mean", window = 0){
 #' @return A matrix containing the predictions.
 #' @details The selected functions use the base R functions: \code{\link[base]{mean}}, \code{\link[stats]{median}}, \code{\link[stats]{weighted.mean}}, \code{\link[stats]{quantile}}, \code{\link[base]{Extremes}}.
 #' @author J. Bano-Medina
+#' @importFrom stats dist
 #' @export
 analogs.test <- function(newdata, x, y, info){
   prediction <- sapply(1:dim(newdata)[1], FUN = function(z){
@@ -39,15 +40,14 @@ analogs.test <- function(newdata, x, y, info){
         ind <- (z - info$window):(z + dim(x)[1])}
       else {
         ind <- (z - info$window):(z + info$window)}}
-    newx <- x[-ind,]
-    dist2test <- sapply(1:dim(newx)[1], FUN = function(xx) {
-      dist(rbind(newdata[z,],newx[xx,]))})
-    dist.analogs <- sort(dist2test)[1:info$n.analogs]
+    ind_yes <- setdiff(1:dim(newdata)[1],ind)
+    dist2test <- sapply(1:dim(newdata)[1], FUN = function(xx) {
+      if (sum(xx == ind) == 1) {0}
+      else {dist(rbind(newdata[z,],x[ind_yes[xx],]))}})
+    ind_zeros <- which(dist2test == 0)
+    dist.analogs <- sort(dist2test[-ind_zeros])[1:info$n.analogs]
     ind.analogs <- sapply(1:info$n.analogs, FUN = function(zz){
-      ind.analogsnewx <- which((dist2test == dist.analogs[zz]) == TRUE)
-      ind.analogsx <- sapply(1:dim(x)[1], FUN = function(zzz) {
-        isTRUE(sum(x[zzz,] == newx[ind.analogsnewx,]) == length(newx[ind.analogsnewx,]))})
-      which(ind.analogsx == TRUE)})
+      ind.analogs <- which((dist2test == dist.analogs[zz]) == TRUE)})
     value.analogs <- y[ind.analogs,]
     if (is.null(info$sel.fun)) {
       pred <- value.analogs}
