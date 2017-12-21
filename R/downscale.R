@@ -18,194 +18,149 @@
 #' @title Perfect-prog downscaling
 #' 
 #' @description Workhorse function to call the different perfect-prog downscaling methods
-#' 
-#' @template templateObsPredSim
-#' @param method Downscaling method
-#' @param simulate Character. Options are \code{"no"}, \code{"yes"} or \code{"occurrence"}.
-#'  The last option simulates the precipitation occurrence but not the amount.
+#' @param y The observations dataset. It should be an object as returned by \pkg{loadeR}.
+#' @param x The input grid. It should be an object as returned by \pkg{loadeR}.
+#' @param newdata It should be an object as returned by \pkg{loadeR} and consistent with x. Default is newdata = x.
+#' @param method Downscaling method. Options are c = ("analogs","glm","lm"). Glm can only be set when downscaling precipitation. 
+#' @param simulate Character. Options are \code{"no"}, \code{"yes"}.
 #' @param n.analogs Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.
 #' @param sel.fun Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n.neig = 1}.
-#' Current values are \code{"random"} (the default) and \code{"mean"}. See details.
-#' @param analog.dates Logical flag indicating whether the dates of the analogs should be returned. See the analogs section.
+#' Current values are \code{"mean"} (the default), \code{"wmean"},  \code{"max"},  \code{"min"} and  \code{"median"}.
 #' @param wet.threshold Value below which precipitation amount is considered zero 
 #' @param n.pcs Integer indicating the number of EOFs to be used as predictors
 #' @param cross.val Should cross-validation be performed? methods available are leave-one-out (\code{"loocv"})
 #'  and k-fold (\code{"kfold"}). Default to \code{"none"}, which does not perform cross-validation.
-#' @param folds Only requiered if \code{cross.val = "kfold"}, otherwise ignored. A list of vectors,
-#'  each containing the years to be grouped in the corresponding fold.
-#' @template templateParallelParams 
+#' @param folds Only requiered if \code{cross.val = "kfold"}, otherwise ignored. Could be a fraction, value between (0,1) indicating the fraction of the data that will define the train set, 
+#' or an integer indicating the number of folds. It can also be a list of folds indicating the years of each fold. 
 #' 
 #' @details
-#' 
-#' \strong{Spatial consistency}
-#' 
-#' Several checks of spatial consistency are performed. In particular, note that both \code{x} (reanalysis) and \code{newdata}
-#'  (model simulations) should be in the same grid. This consistency must be ensured by the user prior to entering these arguments,
-#' for instance by means of the \code{\link[transformeR]{interpGrid}} function in conjunction with the \code{\link[transformeR]{getGrid}} method.
-#' 
 #' \strong{Scaling and centering}
-#' 
 #' When the climate variables are used as predictors instead of the PCs, these are previously centered and scaled
-#' using the mean and sigma parameters globally computed for the whole spatial domain (This is equivalent to the \dQuote{field})
-#' method in the \code{\link[transformeR]{prinComp}} function. The simulation data will use the parameters obtained when scaling and centering
-#' the predictors dataset. In case that the predictors come from a PC analysis object (as returned by \code{\link[transformeR]{prinComp}}), the
-#' parameters for rescaling the simulation data are passed by the predictors.
-#' 
-#' 
-#' @section Analogs:
-#' 
-#' \strong{Construction of analogs using multiple neighbours}
-#' 
-#' The argument \code{sel.fun} controls how the analogs are constructed when considering more than the first neighbour (argument
-#' \code{n.analogs} > 1). In this case the \code{"random"} choice randomly selects one of the \code{n.analogs} neighbours,
-#'  while the \code{"mean"} choice will compute their average.
-#' 
-#' \strong{Analog dates}
-#' 
-#' If the argument \code{analog.dates} is set to TRUE, these will be returned as a global attribute named \code{"analog.dates"}.
-#' Note that the analog dates can be only returned for one single neighbour analog selections (i.e. \code{n.analogs = 1}),
-#'  otherwise giving an error. The analog dates are different for each member in case of 
-#'  multimember downscaling, and are returned as a list, each element of the list corresponding to one member. 
-#' @template templateParallel
-#' @seealso \code{\link[transformeR]{prinComp}} for details on principal component/EOF analysis,
-#' \code{rescaleMonthlyMeans} for data pre-processing,
-#' \code{\link[transformeR]{makeMultiGrid}} for multigrid construction
-#' \code{loadGridData} and \code{loadStationData}, from package \pkg{loadeR}, for loading grids and station data respectively.
+#' using the mean and sigma parameters globally computed for the whole spatial domain.
+#' @return The prediction structure.
 #' @export 
-#' @family downscaling
-#' @author J Bedia, M Iturbide
-#' @importFrom transformeR parallelCheck getYearsAsINDEX getDim
+#' @importFrom transformeR localScaling
+#' @examples 
+#' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
+#' newdata <- subsetGrid(x, years = 1994:1995)
+#' x <- subsetGrid(x, years = 1985:1993)
+#' # Loading predictands
+#' y <- VALUE_Iberia_pr
+#' y <- getTemporalIntersection(obs = y,prd = x, "obs" )
+#' x <- getTemporalIntersection(obs = y,prd = x, "prd" )
+#' ### Analogs ###
+#' # None
+#' yp <- downscale(y,x,method = "analogs")
+#' yp <- downscale(y,x,newdata,method = "analogs")
+#' # kfold
+#' yp <- downscale(y,x,method = "analogs", n.pcs = 15, cross.val = "kfold", folds = 2)
+#' yp <- downscale(y,x,method = "analogs", n.pcs = 15, cross.val = "kfold", folds = list(c("1985","1986","1987"),
+#'                                                                                       c("1988","1989","1990"),
+#'                                                                                       c("1991","1992","1993")))
+#' ### GLM ###
+#' # None
+#' yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10, wet.threshold = 1)
+#' yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10, wet.threshold = 1)
+#' # kfold
+#' yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10, cross.val = "kfold", folds = 2)
+#' yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10, cross.val = "kfold", folds = 2)
+#' yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10, cross.val = "kfold", folds = list(c("1985","1986","1987"),
+#'                                                                                                    c("1988","1989","1990"),
+#'                                                                                                    c("1991","1992","1993")))
 
 downscale <- function(y,
-                      x,
-                      newdata = x,
-                      method = c("analogs", "glm"),
-                      simulate = c("no", "yes", "occurrence"),
-                      n.analogs = 1,
-                      sel.fun = c("random", "mean"),
-                      analog.dates = FALSE,
-                      wet.threshold = .1,
-                      n.pcs = NULL,
-                      cross.val = c("none", "loocv", "kfold"),
-                      folds = NULL,
-                      parallel = FALSE,
-                      max.ncores = 16,
-                      ncores = NULL) {
-      simulate <- match.arg(simulate, choices = c("no", "yes", "occurrence"))
-      cross.val <- match.arg(cross.val, choices = c("none", "loocv", "kfold"))
-      parallel.pars <- parallelCheck(parallel, max.ncores, ncores)
-      method <- match.arg(method, choices = c("analogs", "glm"))
-      modelPars <- ppModelSetup(y, x, newdata)
-      obs.orig <- y
-      if (cross.val == "none") {
-          down <- if (method == "analogs") {
-              analogs(y = y,
-                      modelPars = modelPars,
-                      n.analogs = n.analogs,
-                      sel.fun = sel.fun,
-                      analog.dates = analog.dates,
-                      parallel.pars = parallel.pars) 
-          } else if (method == "glm") {
-              glimpr(y = y,
-                     modelPars = modelPars,
-                     wet.threshold = wet.threshold,
-                     n.pcs = n.pcs,
-                     simulate = simulate)
-          }
-      } else {
-          if (!is.null(newdata)) {
-              message("'newdata' will be ignored for cross-validation")
-          }
-          if ("scaled:method" %in% names(attributes(x))) {
-              x$Dates$start <- attr(x, "dates_start")
-            }
-            years <- getYearsAsINDEX(x)
-            modelPars.orig <- modelPars
-            message("[", Sys.time(), "] Fitting models...")
-            if (cross.val == "loocv") {
-                  downi <- lapply(1:length(unique(years)), function(i) {
-                        year.ind <- which(years == unique(years)[i])
-                        modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
-                        modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
-                        if (isTRUE(modelPars$stations)) {
-                              y$Data <- obs.orig$Data[-year.ind,]
-                        } else {
-                              y$Data <- obs.orig$Data[-year.ind,,]
-                        }
-                        attr(y$Data, "dimensions") <- attr(obs.orig$Data, "dimensions")
-                        message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
-                              if (method == "analogs") {
-                                    suppressMessages(
-                                          analogs(y = y,
-                                                  modelPars = modelPars,
-                                                  n.analogs = n.analogs,
-                                                  sel.fun = sel.fun,
-                                                  analog.dates = analog.dates,
-                                                  parallel.pars = parallel.pars)
-                                    )
-                              } else if (method == "glm") {
-                                    suppressMessages(
-                                          glimpr(y = y,
-                                                 modelPars = modelPars,
-                                                 wet.threshold = wet.threshold,
-                                                 n.pcs = n.pcs,
-                                                 simulate = simulate)
-                                    )
-                              }
-                        }
-                  )
-                  down <- unname(do.call("abind", c(downi, along = 1)))
-            } else if (cross.val == "kfold") {
-                  if (is.null(folds)) {
-                        stop("Fold specification is missing, with no default", call. = FALSE)
-                  }
-                  downi <- lapply(1:length(folds), function(i) {
-                        year.ind <- lapply(1:length(folds[[i]]), function(k){
-                              indstep <- which(years == folds[[i]][k])
-                              return(indstep)
-                        })
-                        year.ind <- unname(abind(year.ind, along = 1))
-                        modelPars$sim.mat[[1]] <- modelPars.orig$pred.mat[year.ind,]
-                        modelPars$pred.mat <- modelPars.orig$pred.mat[-year.ind,]
-                        if (isTRUE(modelPars$stations)) {
-                              y$Data <- obs.orig$Data[-year.ind,]
-                        } else {
-                              y$Data <- obs.orig$Data[-year.ind,,]
-                        }
-                        attr(y$Data, "dimensions") <- getDim(obs.orig)
-                        message("Validation ", i, ", ", length(folds) - i, " remaining")
-                        if (method == "analogs") {
-                              suppressMessages(
-                                    analogs(y = y,
-                                            modelPars = modelPars,
-                                            n.analogs = n.analogs,
-                                            sel.fun = sel.fun,
-                                            analog.dates = analog.dates,
-                                            parallel.pars = parallel.pars)
-                              )
-                        } else if (method == "glm") {
-                              suppressMessages(
-                                    glimpr(y = y,
-                                           modelPars = modelPars,
-                                           wet.threshold = wet.threshold,
-                                           n.pcs = n.pcs)
-                              )
-                        }
-                  })
-                  down <- unname(do.call("abind", c(downi, along = 1)))
-            }
+                       x,
+                       newdata = x,
+                       method = c("analogs", "glm","lm"),
+                       simulate = c("no", "yes"),
+                       n.analogs = 1,
+                       sel.fun = c("mean","wmean","max","min","median"),
+                       wet.threshold = .1,
+                       n.pcs = NULL,
+                       cross.val = c("none", "loocv", "kfold"),
+                       folds = NULL) {
+  
+  method <- match.arg(NULL,method)
+  simulate <- match.arg(NULL,simulate)
+  sel.fun <- match.arg(NULL,sel.fun)
+  cross.val <- match.arg(NULL,cross.val)
+  
+  if (!identical(as.Date(getRefDates(x)),as.Date(getRefDates(y)))) {stop("Dates of x and y do not mach, please try using getTemporalIntersection function from package transformeR")}
+  if (cross.val == "kfold" && is.null(folds)) message("Please, specify the number of folds with the parameter: folds")
+  if (cross.val == "loocv") {
+    folds <- unique(substr(as.Date(getRefDates(x)),1,4)) %>% as.list()
+  }
+  
+  if (!is.null(n.pcs)) {PCA <- list(n.eofs = c(rep(1,length(getVarNames(x))),n.pcs),which.combine = getVarNames(x))}
+  else {PCA <- NULL}
+  
+  if (method == "glm") {
+    if (simulate == "yes") {
+      y.ocu <- convert2bin(y,threshold = 0.01)
+      y <- convert2bin(y,threshold = 0.01, partial = TRUE)}
+    else{
+      y.ocu <- convert2bin(y,threshold = wet.threshold)  
+      y <- convert2bin(y,threshold = wet.threshold, partial = TRUE)  
+    }
+  }
+  
+  
+  # Downscaling and cross-validation (if selected...)  
+  if (cross.val == "none") {
+    newdata <- localScaling(newdata,base = x, scale = TRUE)
+    x <- localScaling(x,base = x, scale = TRUE)
+    gridT <- prepare_predictors(x,y,global.vars = getVarNames(x),PCA)
+    gridt <- prepare_newdata(newdata,gridT)
+    if (method == "analogs") {
+      model <- downscale.train(gridT,method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun, singlesite = FALSE)
+      yp <- downscale.predict(gridt,model)
+    }
+    else if (method == "glm") {
+      # Amounts
+      model.reg <- downscale.train(gridT, method = "GLM", family = Gamma(link = "log"), filt = ">0", simulate = simulate)
+      yp.reg <- downscale.predict(gridt,model.reg)
+      # Ocurrence
+      gridT <- prepare_predictors(x,y.ocu,global.vars = getVarNames(x),PCA)
+      model.ocu <- downscale.train(gridT,method = "GLM", family = binomial(link = "logit"), simulate = simulate)
+      yp.ocu <- downscale.predict(gridt,model.ocu)
+      # Complete serie
+      if (simulate == "no") {
+        yp.ocu <- convert2bin(yp.ocu, ref.obs = y.ocu, ref.pred = yp.ocu)
       }
-      # Data array - rename dims
-      dimNames <- renameDims(obs.orig, modelPars$multi.member)
-      obs.orig$Data <- down
-      attr(obs.orig$Data, "dimensions") <- dimNames
-      attr(obs.orig, "downscaling:method") <- method
-      attr(obs.orig, "downscaling:cross-validation") <- cross.val
-      attr(obs.orig, "downscaling:simulation_data") <- modelPars$sim.dataset
-      attr(obs.orig, "downscaling:n_pcs") <- n.pcs
-      # Date replacement
-      obs.orig$Dates <- modelPars$sim.dates 
-      message("[", Sys.time(), "] Done.")
-      return(obs.orig)
+      yp <- y
+      yp$Data <- yp.ocu$Data*yp.reg$Data
+      if (simulate == "yes") {
+        yp <- convert2bin(yp,threshold = wet.threshold, partial = TRUE)
+      }
+    }
+    else if (method == "lm") {
+      model <- downscale.train(gridT,method = "GLM", family = "gaussian")
+      yp <- downscale.predict(gridt,model)
+    }
+  }  
+  else {# Leave-one-out and cross-validation 
+    if (method == "analogs") {
+      yp <- downscale.cv(x,y,folds = folds, scale = TRUE, PCA = PCA, singlesite = FALSE,
+                         method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun)
+    }
+    else if (method == "glm") {
+      # Ocurrence
+      yp.ocu <- downscale.cv(x,y.ocu,folds = folds, scale = TRUE, PCA = PCA,
+                             method = "GLM", family = binomial(link = "logit"), simulate = simulate)
+      # Amounts
+      yp.reg <- downscale.cv(x,y,folds = folds, scale = TRUE, PCA = PCA,
+                             method = "GLM", family = Gamma(link = "log"), filt = ">0", simulate = simulate)
+      # Complete serie
+      yp <- y
+      yp$Data <- yp.ocu[[2]]$Data*yp.reg$Data
+      if (simulate == "yes") {
+        yp <- convert2bin(yp,threshold = wet.threshold,partial = TRUE)
+      }
+    }
+    else if (method == "lm") {
+      yp <- downscale.cv(x,y,folds = folds, scale = TRUE, PCA = PCA,
+                         method = "GLM", family = "gaussian")
+    }
+  }
+  return(yp)
 }
-

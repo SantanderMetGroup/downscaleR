@@ -4,12 +4,15 @@
 \alias{glm.predict}
 \title{Donwscaling with a given generalized linear model (GLM).}
 \usage{
-glm.predict(x, weights)
+glm.predict(x, weights, info)
 }
 \arguments{
 \item{x}{The grid data. Class: matrix.}
 
 \item{weights}{Object as returned from \code{\link[downscaleR]{glm.train}}}
+
+\item{info}{A list containing information of the experiment: the fitting, the family of the generalized linear model and 
+if it is deterministic or stochastic.}
 }
 \value{
 The predicted matrix.
@@ -18,7 +21,8 @@ The predicted matrix.
 Donwscaling with a given generalized linear models (GLM) calculated in \code{\link[downscaleR]{downscale.predict}} via \code{\link[downscaleR]{glm.train}}.
 }
 \details{
-Predicts by using the base function \code{\link[stats]{predict}}. This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.predict}}.
+Predicts by using the base function \code{\link[stats]{predict}}. This function is internal and should not be used by the user.
+The user should use \code{\link[downscaleR]{downscale.predict}}.
 }
 \author{
 J. Bano-Medina

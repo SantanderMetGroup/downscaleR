@@ -11,9 +11,9 @@ downs.train(x, y, method, ...)
 
 \item{y}{The observations dataset. Class: matrix.}
 
-\item{method}{Type of transer function. Options are: GLM, MLR, ELM and NN. The default is MLR.}
+\item{method}{Type of transer function. Options are: analogs, GLM and NN.}
 
-\item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. For this reason see the atomic functions for more details: \code{\link[downscaleR]{glm.train}}, \code{\link[downscaleR]{mlr.train}}, \code{\link[downscaleR]{elm.train}} and \code{\link[deepnet]{nn.train}}.}
+\item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. For this reason see the atomic functions for more details: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.}
 }
 \value{
 An object with the information of the selected model.

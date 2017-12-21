@@ -4,21 +4,30 @@
 \alias{analogs.train}
 \title{Donwscaling with the analogs method (train).}
 \usage{
-analogs.train(x, y, n.analogs = 4, sel.fun = "mean", window = 0,
-  n.random = NULL)
+analogs.train(x, y, dates, n.analogs = 4, sel.fun = "mean", window = 0,
+  n.random = NULL, pool = 0)
 }
 \arguments{
 \item{x}{The grid data. Class: matrix.}
 
 \item{y}{The observations data. Class: matrix.}
 
-\item{n.analogs}{Number of analogs. Default is 4.}
+\item{dates}{Dates of the grid and observations data.}
 
-\item{sel.fun}{Function applied to the analogs. Can be "mean", "wmean" (i.e., weighted mean), "max", "min", "median", "prcXX" (i.e., prc85 means the 85th percentile of the analogs values distribution). Default is "mean".}
+\item{n.analogs}{An integer. Number of analogs. Default is 4.}
 
-\item{window}{Window of days removed when selecting analogs. Default is 7. This means that the 7 days after the date and the 7 days before the date are removed.}
+\item{sel.fun}{A string. Select a function to apply to the analogs selected for a given observation. Options are 
+"mean", "wmean" (i.e., weighted mean), "max", "min", "median", "prcXX" 
+(i.e., prc85 means the 85th percentile of the analogs values distribution). Default is "mean".
+the function applied to the analogs values, (i.e., sel.fun = c("mean","max","min","median","prcXX"), with default "mean") 
+and the temporal window, (i.e., window = 0).}
 
-\item{n.random}{An integer. Choose N random analogs among the closest n.analogs.}
+\item{window}{An integer. Window of days removed when selecting analogs. 
+If window = 7, then 7 days after the observation date and the 7 days before the observation date are removed. Default is 0.}
+
+\item{n.random}{An integer. Choose N random analogs among the closest n.analogs. Default is NULL.}
+
+\item{pool}{An integer. Number of auxiliary analogs in case there are NaN or NA in the original analogs.}
 }
 \value{
 A list containing the grid data, the observations and a list with information concerning the analogs.
@@ -27,7 +36,8 @@ A list containing the grid data, the observations and a list with information co
 Donwscaling with the analogs method (train).
 }
 \details{
-The analogs actually is not a model in the sense that it is not really trained. The model would be the data where to search the analogs. For this reason this function only saves the information to search analogs in a list.
+The analogs actually is not a model in the sense that it is not really trained. 
+The model would be the data where to search the analogs. For this reason this function only saves the information to search analogs in a list.
 }
 \author{
 J. Bano-Medina

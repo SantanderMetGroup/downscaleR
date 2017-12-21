@@ -26,8 +26,6 @@
 #' @details The function can downscale in both global and local mode, though not simultaneously.
 #' @author J. Bano-Medina
 #' @export
-#' @importFrom MASS ginv 
-#' @importFrom matlab reshape repmat
 #' @examples 
 #' # Loading predictors
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
@@ -35,44 +33,47 @@
 #' # Loading predictands
 #' y <- VALUE_Iberia_pr
 #' y <- getTemporalIntersection(obs = y,prd = x, "obs" )
+#' x <- getTemporalIntersection(obs = y,prd = x, "prd" )
 #' ybin <- convert2bin(y, threshold = 1)
-#' # Prepare predictors
-#' xT <- prepare_predictors(x = x, y = y)
+#' x <- localScaling(x, base = x, scale = TRUE)
+#' # Prepare predictors and predictands
+#' xyT     <- prepare_predictors(x = x, y = y)
+#' xyT.bin <- prepare_predictors(x = x, y = ybin)
+#' xyt     <- prepare_newdata(newdata = x, predictor = xyT)
+#' xyt.bin <- prepare_newdata(newdata = x, predictor = xyT.bin)
 #' # Downscaling PRECIPITATION
-#' #' # ... via analogs ...
-#' model.ocu <- downscale.train(ybin, xT, method = "analogs", sel.fun = "mean")
-#' model.reg <- downscale.train(y, xT, method = "analogs", sel.fun = "mean")
-#' pred.ocu <- downscale.predict(xT, model.ocu)
-#' pred.reg <- downscale.predict(xT, model.reg)
-#' # ... via a linear model ...
-#' model.ocu <- downscale.train(ybin, xT, method = "GLM" ,family = binomial(link = "logit"))
-#' model.reg <- downscale.train(y, xT, method = "MLR", fitting = "MP")
-#' pred.ocu <- downscale.predict(xT,model.ocu)
-#' pred.reg <- downscale.predict(xT,model.reg)
-#' pred <- pred.ocu$Data * pred.reg$Data
-#' # ... via a extreme learning machine ...
-#' model.ocu <- downscale.train(ybin, xT, method = "ELM", neurons = 200)
-#' model.reg <- downscale.train(y, xT, method = "ELM", neurons = 200)
-#' pred.ocu <- downscale.predict(xT,model.ocu)
-#' pred.reg <- downscale.predict(xT,model.reg)
-#' pred <- pred.ocu$Data * pred.reg$Data
+#' # ... via analogs ...
+#' model <- downscale.train(xyT, method = "analogs", sel.fun = "mean", singlesite = FALSE)
+#' pred <- downscale.predict(xyt, model)
+#' # ... via a logistic regression (ocurrence of precipitation) and gaussian regression (amount of precipitation) ...
+#' model.ocu <- downscale.train(xyT.bin, method = "GLM", family = binomial(link = "logit"))
+#' model.reg <- downscale.train(xyT,     method = "GLM", family = "gaussian", filt = ">0")
+#' pred.ocu <- downscale.predict(xyt.bin, model.ocu)
+#' pred.reg <- downscale.predict(xyt    , model.reg)
 #' # ... via a neural network ...
-#' model.ocu <- downscale.train(ybin, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
-#' model.reg <- downscale.train(y, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
-#' pred.ocu <- downscale.predict(xT,model.ocu)
-#' pred.reg <- downscale.predict(xT,model.reg)
-#' pred <- pred.ocu$Data * pred.reg$Data
+#' model.ocu <- downscale.train(xyT.bin, method = "NN", singlesite = FALSE, learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear')
+#' model.reg <- downscale.train(xyT    , method = "NN", singlesite = FALSE, learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear')
+#' pred.ocu <- downscale.predict(xyT.bin, model.ocu)
+#' pred.reg <- downscale.predict(xyT    , model.reg)
 #' # Downscaling PRECIPITATION - Local model with the closest 4 grid points.
-#' xT <- prepare_predictors(x = x,y = y,local.predictors = list(neigh.vars = "shum850",n.neighs = 4))
-#' model.ocu <- downscale.train(ybin, xT, method = "MLR", fitting = 'MP')
-#' model.reg <- downscale.train(y, xT, method = "MLR", fitting = 'MP')
-#' pred.ocu <- downscale.predict(xT,model.ocu)
-#' pred.reg <- downscale.predict(xT,model.reg)
-#' pred <- pred.ocu$Data * pred.reg$Data
-#' # Downscaling PRECIPITATION - Principal Components (PCs)
-#' xT <- prepare_predictors(x = x,y = y, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
-#' model.ocu <- downscale.train(ybin, xT, method = "MLR" ,fitting = 'MP')
-#' model.reg <- downscale.train(y, xT, method = "MLR" ,fitting = 'MP')
+#' xyT.local     <- prepare_predictors(x = x,y = y,local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+#' xyT.local.bin <- prepare_predictors(x = x,y = ybin,local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+#' xyt.local     <- prepare_newdata(newdata = x, predictor = xyT.local)
+#' xyt.local.bin <- prepare_newdata(newdata = x, predictor = xyT.local.bin)
+#' model.ocu <- downscale.train(xyT.local.bin, method = "GLM", fitting = 'MP')
+#' model.reg <- downscale.train(xyT.local    , method = "GLM", fitting = 'MP')
+#' pred.ocu <- downscale.predict(xyt.local.bin, model.ocu)
+#' pred.reg <- downscale.predict(xyt.local    , model.reg)
+#' # Downscaling PRECIPITATION - Principal Components (PCs) and gamma regression for the amount of precipitation
+#' xyT.pc     <- prepare_predictors(x = x,y = y, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+#' xyT.pc.bin <- prepare_predictors(x = x,y = ybin, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+#' xyt.pc     <- prepare_newdata(newdata = x, predictor = xyT.pc)
+#' xyt.pc.bin <- prepare_newdata(newdata = x, predictor = xyT.pc.bin)
+#' model.ocu <- downscale.train(xyT.pc.bin, method = "GLM" , family = binomial(link = "logit"))
+#' model.reg <- downscale.train(xyT.pc    , method = "GLM" , family = Gamma(link = "log"), filt = ">0")
+#' pred.ocu <- downscale.predict(xyt.pc.bin, model.ocu)
+#' pred.reg <- downscale.predict(xyt.pc    , model.reg)
+
 downscale.predict <- function(newdata, model) {
   dimNames <- getDim(model$pred)
   pred <- model$pred
@@ -82,23 +83,29 @@ downscale.predict <- function(newdata, model) {
       xx <- newdata$x.global}
     else {
       xx <- newdata$x.global$member_1}
+    if (model$conf$method == "analogs") {model$conf$atomic_model$dates$test <- getRefDates(newdata)}
     pred$Data <- downs.predict(xx, model$conf$method, model$conf$atomic_model)}
   else {
-    if (is.null(dim(model$pred$Data))) {stations <- 1; n.obs <- length(model$pred$Data)}
-    else{stations <- dim(model$pred$Data)[2]; n.obs <- length(newdata$Dates$start)}
-    if (is.null(newdata$Dates)) {n.obs <- length(newdata$y$Dates$start)}
-    pred$Data <- array(data = NA, dim = c(n.obs,stations))
-    for (i in 1:stations) {
-      if (!is.null(newdata$x.local)) {
-        if (!is.list(newdata$x.local[[i]])) {
-          xx = newdata$x.local[[i]]}
+    stations <- length(model$conf$atomic_model)
+    if (!is.null(newdata$x.local)) {
+      if (!is.list(newdata$x.local[[1]])) {n.obs <- nrow(as.matrix(newdata$x.local[[1]]))}
+      else{n.obs <- nrow(as.matrix(newdata$x.local[[1]]$member_1))}}
+    else {
+      if (!is.list(newdata$x.global)) {n.obs <- nrow(as.matrix(newdata$x.global))} 
+      else {n.obs <- nrow(as.matrix(newdata$x.global$member_1))}}
+      pred$Data <- array(data = NA, dim = c(n.obs,stations))
+      for (i in 1:stations) {
+        if (!is.null(newdata$x.local)) {
+          if (!is.list(newdata$x.local[[i]])) {
+            xx = newdata$x.local[[i]]}
+          else {
+            xx = newdata$x.local[[i]]$member_1}}
         else {
-          xx = newdata$x.local[[i]]$member_1}}
-      else {
-        if (!is.list(newdata$x.global)) {
-          xx <- newdata$x.global}
-        else {
-          xx <- newdata$x.global$member_1}}
+          if (!is.list(newdata$x.global)) {
+            xx <- newdata$x.global}
+          else {
+            xx <- newdata$x.global$member_1}}
+      if (model$conf$method == "analogs") {model$conf$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
       pred$Data[,i] <- downs.predict(xx, model$conf$method, model$conf$atomic_model[[i]])}}
   attr(pred$Data, "dimensions") <- dimNames
   return(pred)}
@@ -116,12 +123,8 @@ downscale.predict <- function(newdata, model) {
 #' @author J. Bano-Medina
 #' @export
 downs.predict <- function(x, method, atomic_model){
-  if (!is.null(atomic_model$info$fitting) && (atomic_model$info$fitting == "MP" || atomic_model$info$fitting == "MP+L2")) {
-    x <- cbind(x,array(data = 1,dim = c(nrow(x), 1)))}
   switch(method,
-         analogs = pred <- analogs.test(x, atomic_model$dataset_x, atomic_model$dataset_y, atomic_model$info),
-         GLM     = pred <- glm.predict(x, atomic_model),
-         MLR     = pred <- mlr.predict(x, atomic_model$weights, atomic_model$info),
-         ELM     = pred <- elm.predict(x, atomic_model$weights, atomic_model$info),
+         analogs = pred <- analogs.test(x, atomic_model$dataset_x, atomic_model$dataset_y, atomic_model$dates, atomic_model$info),
+         GLM     = pred <- glm.predict(x, atomic_model$weights, atomic_model$info),
          NN      = pred <- nn.predict(atomic_model, x)) 
   return(pred)}

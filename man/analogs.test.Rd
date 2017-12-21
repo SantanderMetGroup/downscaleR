@@ -4,7 +4,7 @@
 \alias{analogs.test}
 \title{Donwscaling with the analogs method (test).}
 \usage{
-analogs.test(newdata, x, y, info)
+analogs.test(newdata, x, y, dates, info)
 }
 \arguments{
 \item{newdata}{The grid data.  Class: matrix.}
@@ -12,6 +12,8 @@ analogs.test(newdata, x, y, info)
 \item{x}{The grid data where to search the analogs. Class: matrix.}
 
 \item{y}{The observations data of the same days of x. Class: matrix.}
+
+\item{dates}{A list containing both the newdata grid  and x grid, dates.}
 
 \item{info}{A list containing the information required to perform the analogs method: number of analogs, function, window. These parameters are grouped in a list in \code{\link[downscaleR]{analogs.train}}.}
 }

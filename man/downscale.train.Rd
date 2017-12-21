@@ -4,63 +4,104 @@
 \alias{downscale.train}
 \title{Downscale climate data.}
 \usage{
-downscale.train(predictands, predictors, method, singlesite = FALSE,
-  filt = NULL, ...)
+downscale.train(grid, method, singlesite = TRUE, filt = NULL, ...)
 }
 \arguments{
-\item{predictands}{The observations dataset. It should be an object as returned by \pkg{loadeR}.}
+\item{grid}{An object grid. The input grid as returned by \code{\link[downscaleR]{prepare_predictors}}.}
 
-\item{predictors}{The input grid as returned by \code{\link[downscaleR]{prepare_predictors}}.}
+\item{method}{A string value. Type of transer function. Options are c("analogs","GLM","NN").}
 
-\item{method}{Type of transer function. Options are: GLM, MLR, ELM and NN. The default is MLR.}
-
-\item{singlesite}{Perform the study singlesite. Default is FALSE.}
+\item{singlesite}{A logical value. Wether to perform the study singlesite or multisite. Multisite option is only available when 
+the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP".}
 
 \item{filt}{A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.}
 
-\item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. Everything concerning these parameters is explained in the section \code{Details}. However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}}, \code{\link[downscaleR]{mlr.train}}, \code{\link[downscaleR]{elm.train}} and \code{\link[deepnet]{nn.train}}.}
+\item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
+Everything concerning these parameters is explained in the section \code{Details}. 
+However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.}
 }
 \value{
-A list of objects that contains the prediction on the train dataset, the model, the predictors and predictands used.
+A list of objects that contains the prediction on the train dataset and the model.
 \itemize{
    \item \code{pred}: An object with the same structure as the predictands input parameter, but with pred$Data being the predictions and not the observations.
-   \item \code{model}: A list with the information of the model: method, coefficients, fitting technique...
-   \item \code{predictors}: Same as the predictors input parameter.
-   \item \code{predictands}: Same as the predictands input parameter.}
+   \item \code{model}: A list with the information of the model: method, coefficients, fitting ...
+   }
 }
 \description{
-Downscale data to local scales by statistical methods: analogs, generalized linear models (GLM), multiple linear regression (MLR), Extreme Learning Machine (ELM) and Neural Networks (NN).
+Downscale data to local scales by statistical methods: analogs, generalized linear models (GLM) and Neural Networks (NN).
 }
 \details{
 The function can downscale in both global and local mode, though not simultaneously. 
 If there is perfect collinearity among predictors, then the matrix will not be invertible and the downscaling will fail.
+We recommend to get rid of the NaN/NA values before calling the function.
 
 \strong{Analogs}
-The optional parameters of this method are the number of analogs, (n.analogs = 4 (DEFAULT), the function applied to the analogs values, (sel.fun = c("mean","max","min","median","prcXX") and the temporal window, (window = 0).
+The optional parameters of this method are:
+\itemize{
+\item \code{n.analogs} An integer. Number of analogs. Default is 4.
+\item \code{sel.fun} A string. Select a function to apply to the analogs selected for a given observation. Options are 
+"mean", "wmean" (i.e., weighted mean), "max", "min", "median", "prcXX" 
+(i.e., prc85 means the 85th percentile of the analogs values distribution). Default is "mean".
+the function applied to the analogs values, (i.e., sel.fun = c("mean","max","min","median","prcXX"), with default "mean") 
+and the temporal window, (i.e., window = 0).
+\item \code{window} An integer. Window of days removed when selecting analogs. 
+If window = 7, then 7 days after the observation date and the 7 days before the observation date are removed. Default is 0.
+\item \code{n.random} An integer. Choose N random analogs among the closest n.analogs. Default is NULL.
+}
+More information can be found in \code{\link[downscaleR]{analogs.train}}
 
 \strong{Generalized Linear Models (GLM)}
+The optional parameters depends on the \code{fitting} optional parameter:
+\itemize{
+\item \code{fitting} A string indicating the types of objective functions and how to fit the linear model.
+\itemize{
+\item \code{fitting = NULL} In this case the generalized linear model uses the \code{\link[stats]{glm}} function to fit the linear model. 
+This is the default option.
+The optional parameters when fitting = NULL are:
+\itemize{
+\item \code{family} A string indicating a description of the error distribution. Options are 
+family = c("gaussian","binomial","Gamma","inverse.gaussian","poisson","quasi","quasibinomial","quasipoisson"). 
+The links can be also specified and can be found in \code{\link[stats]{family}}.
+\item \code{na.action} A function which indicates what should happen when the data contain NAs. 
+The default is set by the na.action setting of options, and is na.fail if that is unset. 
+The ‘factory-fresh’ default is na.omit. Another possible value is NULL, no action. Value na.exclude can be useful.
+}
+\item \code{fitting = "stepwise"} Indicates a stepwise regression via \code{\link[stats]{glm}} and \code{\link[stats]{step}}.
+The optional parameters are the same than for fitting = NULL. The stepwise performs always a forward selection search stopping
+\item \code{fitting = c("L1","L2","L1L2","gLASSO")}. These four options refer to ridge regression (L1 penalty), lasso regression (L2 penalty),
+elastic-net regression (L1L2 penalty) and group Lasso regression (group L2 penalty). The model is fitted via 
+\code{\link[glmnet]{glmnet}} and the corresponding penalties are found via \code{\link[glmnet]{cv.glmnet}}. This function \code{\link[glmnet]{glmnet}}
+forces by default to standardize predictors, however we have changed it to standardize = FALSE, and standardization should be done prior to 
+the downscaling process. 
+The optional parameters when fitting = c("L1","L2","L1L2","gLASSO") are:
+\itemize{
+\item \code{family} A string indicating a description of the error distribution. Options are 
+family = c("gaussian","binomial","Gamma","inverse.gaussian","poisson","quasi","quasibinomial","quasipoisson"). 
+The links CAN NOT be specified as the \code{\link[glmnet]{glmnet}} has not been programmed to handle links.
+However, the default ones can be found in \code{\link[stats]{family}}. If fitting = "gLASSO" then family must be "mgaussian".
+\item \code{offset} A vector of length nobs that is included in the linear predictor (a nobs x nc matrix for the "multinomial" family). 
+Useful for the "poisson" family (e.g. log of exposure time), or for refining a model by starting at a current fit. 
+Default is NULL. If supplied, then values must also be supplied to the predict function.
+}
+\item \code{fitting = "MP"} Solves the ordinary least squares (OLS) by a Moore-Penrose (MP) inverse. No more optional parameters
+are permitted when fitting = "MP".
+}
+There are two things to consider. 
+1) If family = "binomial" then type = "response" when predicting values.
+2) Except for fitting = "MP", for the rest of the fitting options, the parameter singlesite must be TRUE, unless 
+we want a gLASSO, in this case singlesite must be FALSE.
 
-This function uses \code{\link[stats]{glm}}. The unique optional parameter is \code{family} with default \code{gaussian}. The possible family options are: gaussian, binomial, Gamma, inverse.gaussian, poisson, quasi, quasibinomial, quasipoisson. Indeed, family is a function itself of the form
-family(object,...) where you can specified a link (i.e., a specification for the model link function), see \code{\link[stats]{family}}. For example for a logistic regression the optional parameter would be family = binomial(link = "logit"). The optional parameters of each method are axplained here:
-
-\strong{Multiple Linear Regression (MLR)}
-
-If you want to downscale by multiple linear regression there is only one optional parameter called, \code{fitting}, with options: fitting = c("LS","MP","MP+L2"). This options refers to Least Squares (LS), Moore-Penrose (MP) and L2 penalty Moore-Penrose (MP+L2). LS uses the \code{\link[stats]{lm}} R function, whereas MP and MP+L2 downscales via an internal function \code{\link[downscaleR]{mlr.train}}. "LS" is the default option.
-
-\strong{Extreme Learning Machine (ELM)}
-
-If you want to downscale via an Extreme Learning Machine there are 5 optional parameters: \code{fitting}, \code{neurons}, \code{Act.F}, \code{area.region} and \code{area.module}.
-The parameter \code{fitting} refers to Moore-Penrose (MP) or Moore-Penrose L2 penalty (MP+L2). "MP" is the default option.
-The parameter \code{neurons} refers to the number of hidden neurons, default is 100. The paramter \code{Act.F} refers to the activation function of the hidden neurons being a sigmoidal neuron the default and only option: Act.F = 'sig'.
-The parameters \code{area.region} and \code{area.module} are necessary if you want to downscale with a variant of ELM, called Receptive Fields ELM (RF-ELM). The parameter \code{area.region} is a vector with two parameters (i.e. c(a,b)), meaning the number of consecutive points of x in latitude (a) and in longitude (b). Default is NULL. The parameter \code{area.module}, is the size of the area within the grid region that is masked and fed to the hidden neurons. Default is NULL.
+}
 
 \strong{Neural Networks}
-
-Neural network is based on the library \pkg{deepnet}. The optional parameters corresponds to those in \code{\link[deepnet]{nn.train}} and are: \code{initW} = NULL, \code{initB} = NULL, \code{hidden} = c(10), \code{activationfun} = "sigm", \code{learningrate} = 0.8, \code{momentum} = 0.5, \code{learningrate_scale} = 1, \code{output} = "sigm", \code{numepochs} = 3, \code{batchsize} = 100, \code{hidden_dropout} = 0, \code{visible_dropout} = 0. The values indicated are the default values.
+Neural network is based on the library \pkg{deepnet}. The optional parameters corresponds to those in \code{\link[deepnet]{nn.train}}
+and are: \code{initW} = NULL, \code{initB} = NULL, \code{hidden} = c(10), \code{activationfun} = "sigm", \code{learningrate} = 0.8, \code{momentum} = 0.5, 
+\code{learningrate_scale} = 1, \code{output} = "sigm", \code{numepochs} = 3, \code{batchsize} = 100, \code{hidden_dropout} = 0, \code{visible_dropout} = 0. The values indicated are the default values.
 
 \strong{Help}
 
-If there are still doubts about the optional parameters despite the description here, we encourage to look for further details in the atomic functions: \code{\link[downscaleR]{analogs.train}}, \code{\link[downscaleR]{glm.train}}, \code{\link[downscaleR]{mlr.train}}, \code{\link[downscaleR]{elm.train}} and \code{\link[deepnet]{nn.train}}.
+If there are still doubts about the optional parameters despite the description here, we encourage to look for further details in the atomic functions: 
+\code{\link[downscaleR]{analogs.train}}, \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.
 }
 \examples{
 # Loading predictors
@@ -69,30 +110,31 @@ x <- subsetGrid(x, years = 1985:1995)
 # Loading predictands
 y <- VALUE_Iberia_pr
 y <- getTemporalIntersection(obs = y,prd = x, "obs" )
+x <- getTemporalIntersection(obs = y,prd = x, "prd" )
 ybin <- convert2bin(y, threshold = 1)
-# Prepare predictors
-xT <- prepare_predictors(x = x, y = y)
+x <- localScaling(x, base = x, scale = TRUE)
+# Prepare predictors and predictands
+xyT     <- prepare_predictors(x = x, y = y)
+xyT.bin <- prepare_predictors(x = x, y = ybin)
 # Downscaling PRECIPITATION
 # ... via analogs ...
-model.ocu <- downscale.train(ybin, xT, method = "analogs", sel.fun = "mean")
-model.reg <- downscale.train(y, xT, method = "analogs", sel.fun = "mean")
-# ... via a linear model ...
-model.ocu <- downscale.train(ybin, xT, method = "GLM" ,family = binomial(link = "logit"))
-model.reg <- downscale.train(y, xT, method = "MLR", fitting = "MP")
-# ... via a extreme learning machine ...
-model.ocu <- downscale.train(ybin, xT, method = "ELM", neurons = 200)
-model.reg <- downscale.train(y, xT, method = "ELM", neurons = 200)
-# ... via a extreme learning machine ...
-model.ocu <- downscale.train(ybin, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
-model.reg <- downscale.train(y, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
-# Downscaling PRECIPITATION - Local model with the closest 4 grid points.
-xT <- prepare_predictors(x = x,y = y,local.predictors = list(neigh.vars = "shum850",n.neighs = 4))
-model.ocu <- downscale.train(ybin, xT, method = "MLR", fitting = 'MP')
-model.reg <- downscale.train(y, xT, method = "MLR", fitting = 'MP')
-# Downscaling PRECIPITATION - Principal Components (PCs)
-xT <- prepare_predictors(x = x,y = y, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
-model.ocu <- downscale.train(ybin, xT, method = "MLR" ,fitting = 'MP')
-model.reg <- downscale.train(y, xT, method = "MLR" ,fitting = 'MP')
+model <- downscale.train(xyT, method = "analogs", sel.fun = "mean", singlesite = FALSE)
+# ... via a logistic regression (ocurrence of precipitation) and gaussian regression (amount of precipitation) ...
+model.ocu <- downscale.train(xyT.bin, method = "GLM", family = binomial(link = "logit"))
+model.reg <- downscale.train(xyT,     method = "GLM", family = "gaussian", filt = ">0")
+# ... via a neural network ...
+model.ocu <- downscale.train(xyT.bin, method = "NN", singlesite = FALSE, learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear')
+model.reg <- downscale.train(xyT    , method = "NN", singlesite = FALSE, learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear')
+# Downscaling PRECIPITATION - Local model with the closest 4 grid points and multisite linear regression.
+xyT.local     <- prepare_predictors(x = x, y = y,local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+xyT.local.bin <- prepare_predictors(x = x, y = ybin,local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+model.ocu <- downscale.train(xyT.local.bin, method = "GLM", fitting = 'MP')
+model.reg <- downscale.train(xyT.local    , method = "GLM", fitting = 'MP')
+# Downscaling PRECIPITATION - Principal Components (PCs) and gamma regression for the amount of precipitation
+xyT.pc     <- prepare_predictors(x = x,y = y, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+xyT.pc.bin <- prepare_predictors(x = x,y = ybin, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+model.ocu <- downscale.train(xyT.pc.bin, method = "GLM" , family = binomial(link = "logit"))
+model.reg <- downscale.train(xyT.pc    , method = "GLM" , family = Gamma(link = "log"), filt = ">0")
 }
 \author{
 J. Bano-Medina

@@ -4,23 +4,65 @@
 \alias{glm.train}
 \title{Donwscaling with generalized linear models (GLM).}
 \usage{
-glm.train(x, y, family)
+glm.train(x, y, fitting = NULL, simulate = "no", ...)
 }
 \arguments{
 \item{x}{The grid data. Class: matrix.}
 
 \item{y}{The observations data. Class: matrix.}
 
-\item{family}{Family of the generalized linear model according to \code{\link[stats]{family}}. This is an optional parameter and there is no default.}
+\item{fitting}{A string indicating the types of objective functions and how to fit the linear model.}
+
+\item{simulate}{A string indicating wether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma 
+or binomial families.}
+
+\item{...}{Optional parameters. See the parameter fitting for more information.
+\itemize{
+\item \code{fitting = NULL} In this case the generalized linear model uses the \code{\link[stats]{glm}} function to fit the linear model. 
+This is the default option.
+The optional parameters when fitting = NULL are:
+\itemize{
+\item \code{family} A string indicating a description of the error distribution. Options are 
+family = c("gaussian","binomial","Gamma","inverse.gaussian","poisson","quasi","quasibinomial","quasipoisson"). 
+The links can be also specified and can be found in \code{\link[stats]{family}}.
+\item \code{na.action} A function which indicates what should happen when the data contain NAs. 
+The default is set by the na.action setting of options, and is na.fail if that is unset. 
+The ‘factory-fresh’ default is na.omit. Another possible value is NULL, no action. Value na.exclude can be useful.
+}
+\item \code{fitting = "stepwise"} Indicates a stepwise regression via \code{\link[stats]{glm}} and \code{\link[stats]{step}}.
+The optional parameters are the same than for fitting = NULL. The stepwise performs always a forward selection search stopping
+based on the AIC criterion.
+\item \code{fitting = c("L1","L2","L1L2","gLASSO")}. These four options refer to ridge regression (L1 penalty), lasso regression (L2 penalty),
+elastic-net regression (L1L2 penalty) and group Lasso regression (group L2 penalty). The model is fitted via 
+\code{\link[glmnet]{glmnet}} and the corresponding penalties are found via \code{\link[glmnet]{cv.glmnet}}. This function \code{\link[glmnet]{glmnet}}
+forces by default to standardize predictors, however we have changed it to standardize = FALSE, and standardization should be done prior to 
+the downscaling process. 
+The optional parameters when fitting = c("L1","L2","L1L2","gLASSO") are:
+\itemize{
+\item \code{family} A string indicating a description of the error distribution. Options are 
+family = c("gaussian","binomial","Gamma","inverse.gaussian","poisson","quasi","quasibinomial","quasipoisson"). 
+The links CAN NOT be specified as the \code{\link[glmnet]{glmnet}} has not been programmed to handle links.
+However, the default ones can be found in \code{\link[stats]{family}}. If fitting = "gLASSO" then family must be "mgaussian".
+\item \code{offset} A vector of length nobs that is included in the linear predictor (a nobs x nc matrix for the "multinomial" family). 
+Useful for the "poisson" family (e.g. log of exposure time), or for refining a model by starting at a current fit. 
+Default is NULL. If supplied, then values must also be supplied to the predict function.
+}
+\item \code{MP} Solves the ordinary least squares (OLS) by a Moore-Penrose (MP) inverse. No more optional parameters
+are permitted when fitting = "MP". Multisite can be performed in this way of fitting the model.
+}
+There are two things to consider. 
+1) If family = "binomial" then type = "response" when predicting values.
+2) Except for fitting = "MP", for the rest of the fitting options, the parameter singlesite must be TRUE, unless 
+we want a gLASSO which in this case singlesite must be FALSE.}
 }
 \value{
-The GLM model as returned from \code{\link[stats]{glm}}.
+The GLM model as returned from \code{\link[stats]{glm}} plus a list with information concerning the experiment.
 }
 \description{
 Donwscaling with generalized linear models (GLM) with the base function \code{\link[stats]{glm}}.
 }
 \details{
-The indicated optional parameters MUST be included in \code{\link[downscaleR]{downscale.predict}}, in this case \code{family} is the only optional parameter. This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.predict}}.
+This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.train}} or \code{\link[downscaleR]{downscale.cv}}.
 }
 \author{
 J. Bano-Medina

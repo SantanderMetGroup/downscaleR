@@ -1,7 +1,7 @@
 ##############################################################################################################
 #                     GENERAL DOWNSCALING                                                                    #
 ##############################################################################################################
-##     downscale.train.R Downscale climate data.
+##     downscale.cv.R Downscale climate with cross validation.
 ##
 ##     Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
 ##
@@ -18,100 +18,115 @@
 ##     You should have received a copy of the GNU General Public License
 ##     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#' @title Downscale climate data.
-#' @description Downscale data to local scales by statistical methods: analogs, generalized linear models (GLM), multiple linear regression (MLR), Extreme Learning Machine (ELM) and Neural Networks (NN). 
-#' @param predictands The observations dataset. It should be an object as returned by \pkg{loadeR}.
-#' @param predictors The input grid as returned by \code{\link[downscaleR]{prepare_predictors}}.
-#' @param method Type of transer function. Options are: GLM, MLR, ELM and NN. The default is MLR.
-#' @param singlesite Perform the study singlesite. Default is FALSE.
+#' @title Downscale climate data and reconstruct the temporal serie by splitting the data in k folds.
+#' @description Downscale climate data and reconstruct the temporal serie by splitting the data in k folds. 
+#' Statistical downscaling methods are: analogs, generalized linear models (GLM) and Neural Networks (NN). 
+#' @param x The input grid. It should be an object as returned by \pkg{loadeR}.
+#' @param y The observations dataset. It should be an object as returned by \pkg{loadeR}.
+#' @param method A string value. Type of transer function. Options are c("analogs","GLM","NN").
+#' @param folds Could be a fraction, value between (0,1) indicating the fraction of the data that will define the train set, 
+#' or an integer indicating the number of folds. It can also be a list of folds indicating the years of each fold. 
+#' @param type A string, c("chronological","random"). Indicates how to split the data in folds. Default is "chronological".
+#' @param scale A logical value. If TRUE then the data is standardized. Default is FALSE.
+#' @param singlesite A logical value. Wether to perform the study singlesite or multisite. Multisite option is only available when
+#' the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP". 
+#' @param global.vars An optional character vector with the short names of the variables of the input x multigrid to be retained as global predictors 
+#' (use the getVarNames helper if not sure about variable names). 
+#' This argument just produces a call to subsetGrid, but it is included here for better flexibility in downscaling experiments (predictor screening...). 
+#' For instance, it allows to use some specific variables contained in x as local predictors and the remaining ones, specified in subset.vars, 
+#' as either raw global predictors or to construct the combined PC.
+#' @param PCA Default to NULL, and not used. Otherwise, a named list of arguments in the form argument = value, 
+#' with the arguments to be passed to prinComp to perform Principal Component Analysis of the predictors grid (x). 
+#' See Details on principal component analysis of predictors.
+#' @param combined.only Optional, and only used if PCA parameters are passed. Should the combined PC be used as the only global predictor? Default to TRUE. 
+#' Otherwise, the combined PC constructed with which.combine argument in prinComp is append to the PCs of the remaining variables within the grid.
+#' @param local.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+#'  with the following arguments:
+#'  \itemize{
+#'    \item \code{neigh.vars}: names of the variables in \code{x} to be used as local predictors
+#'    \item \code{neigh.fun}: Optional. Aggregation function for the selected local neighbours.
+#'    The aggregation function is specified as a list, indicating the name of the aggregation function in
+#'     first place (as character), and other optional arguments to be passed to the aggregation function.
+#'     For instance, to compute the average skipping missing values: \code{neigh.fun = list(FUN= "mean", na.rm = TRUE)}.
+#'     Default to NULL, meaning that no aggregation is performed.
+#'    \item \code{n.neighs}: Integer. Number of nearest neighbours to use. If a single value is introduced, and there is more
+#'    than one variable in \code{neigh.vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
+#'    length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
+#'  }
+#' @param neurons A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.
 #' @param filt A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.
-#' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. Everything concerning these parameters is explained in the section \code{Details}. However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}}, \code{\link[downscaleR]{mlr.train}}, \code{\link[downscaleR]{elm.train}} and \code{\link[deepnet]{nn.train}}.  
-
-#' @details The function can downscale in both global and local mode, though not simultaneously. 
-#' If there is perfect collinearity among predictors, then the matrix will not be invertible and the downscaling will fail.
+#' @param ... Optional parameters. These parameters are different depending on the method selected. 
+#' Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
+#' Everything concerning these parameters is explained in the section \code{Details} of the function \code{\link[downscaleR]{downscale.train}}. However, if wanted, the atomic functions can be seen here: 
+#' \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
+#' @details The functon relies on \code{\link[downscaleR]{prepare_predictors}}, \code{\link[downscaleR]{prepare_newdata}}, \code{\link[downscaleR]{downscale.train}}, and \code{\link[downscaleR]{downscale.predict}}. 
+#' For more information please visit these functions.
+#' If the variable to downscale is the precipitation and it is a binary variable, then two temporal series will be returned:
+#' 1) The temporal serie with binary values filtered by a threshold adjusted by the train dataset, see \code{\link[transformeR]{convert2bin}} for more details.
+#' 2) The temporal serie with the results obtained by the downscaling, without any binary converting process.
+#' We recommend to get rid of the NaN/NA when dealing with multisite mode.
 #' 
-#' \strong{Analogs}
-#' The optional parameters of this method are the number of analogs, (n.analogs = 4 (DEFAULT), the function applied to the analogs values, (sel.fun = c("mean","max","min","median","prcXX") and the temporal window, (window = 0).
-#' 
-#' \strong{Generalized Linear Models (GLM)}
-#' 
-#' This function uses \code{\link[stats]{glm}}. The unique optional parameter is \code{family} with default \code{gaussian}. The possible family options are: gaussian, binomial, Gamma, inverse.gaussian, poisson, quasi, quasibinomial, quasipoisson. Indeed, family is a function itself of the form
-#' family(object,...) where you can specified a link (i.e., a specification for the model link function), see \code{\link[stats]{family}}. For example for a logistic regression the optional parameter would be family = binomial(link = "logit"). The optional parameters of each method are axplained here:
-#' 
-#' \strong{Multiple Linear Regression (MLR)}
-#' 
-#' If you want to downscale by multiple linear regression there is only one optional parameter called, \code{fitting}, with options: fitting = c("LS","MP","MP+L2"). This options refers to Least Squares (LS), Moore-Penrose (MP) and L2 penalty Moore-Penrose (MP+L2). LS uses the \code{\link[stats]{lm}} R function, whereas MP and MP+L2 downscales via an internal function \code{\link[downscaleR]{mlr.train}}. "LS" is the default option.
-#' 
-#' \strong{Extreme Learning Machine (ELM)}
-#' 
-#' If you want to downscale via an Extreme Learning Machine there are 5 optional parameters: \code{fitting}, \code{neurons}, \code{Act.F}, \code{area.region} and \code{area.module}.
-#' The parameter \code{fitting} refers to Moore-Penrose (MP) or Moore-Penrose L2 penalty (MP+L2). "MP" is the default option.
-#' The parameter \code{neurons} refers to the number of hidden neurons, default is 100. The paramter \code{Act.F} refers to the activation function of the hidden neurons being a sigmoidal neuron the default and only option: Act.F = 'sig'.
-#' The parameters \code{area.region} and \code{area.module} are necessary if you want to downscale with a variant of ELM, called Receptive Fields ELM (RF-ELM). The parameter \code{area.region} is a vector with two parameters (i.e. c(a,b)), meaning the number of consecutive points of x in latitude (a) and in longitude (b). Default is NULL. The parameter \code{area.module}, is the size of the area within the grid region that is masked and fed to the hidden neurons. Default is NULL.
-#' 
-#' \strong{Neural Networks}
-#' 
-#' Neural network is based on the library \pkg{deepnet}. The optional parameters corresponds to those in \code{\link[deepnet]{nn.train}} and are: \code{initW} = NULL, \code{initB} = NULL, \code{hidden} = c(10), \code{activationfun} = "sigm", \code{learningrate} = 0.8, \code{momentum} = 0.5, \code{learningrate_scale} = 1, \code{output} = "sigm", \code{numepochs} = 3, \code{batchsize} = 100, \code{hidden_dropout} = 0, \code{visible_dropout} = 0. The values indicated are the default values.
-#' 
-#' \strong{Help}
-#' 
-#' If there are still doubts about the optional parameters despite the description here, we encourage to look for further details in the atomic functions: \code{\link[downscaleR]{analogs.train}}, \code{\link[downscaleR]{glm.train}}, \code{\link[downscaleR]{mlr.train}}, \code{\link[downscaleR]{elm.train}} and \code{\link[deepnet]{nn.train}}.
-#' 
-#' @return A list of objects that contains the prediction on the train dataset, the model, the predictors and predictands used.
-#' \itemize{
-#'    \item \code{pred}: An object with the same structure as the predictands input parameter, but with pred$Data being the predictions and not the observations.
-#'    \item \code{model}: A list with the information of the model: method, coefficients, fitting technique...
-#'    \item \code{predictors}: Same as the predictors input parameter.
-#'    \item \code{predictands}: Same as the predictands input parameter.}
-#'    
+#' @return The reconstructed downscaled temporal serie.
+#' @importFrom transformeR dataSplit convert2bin localScaling
 #' @author J. Bano-Medina
 #' @export
-#' @importFrom MASS ginv
-#' @importFrom matlab reshape repmat
-#' @import deepnet 
 #' @examples 
-#' # Loading predictors
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' x <- subsetGrid(x, years = 1985:1995)
 #' # Loading predictands
 #' y <- VALUE_Iberia_pr
 #' y <- getTemporalIntersection(obs = y,prd = x, "obs" )
-#' ybin <- convert2bin(y, threshold = 1)
-#' # Prepare predictors
-#' xT <- prepare_predictors(x = x, y = y)
-#' # Downscaling PRECIPITATION
-#' # ... via analogs ...
-#' model.ocu <- downscale.train(ybin, xT, method = "analogs", sel.fun = "mean")
-#' model.reg <- downscale.train(y, xT, method = "analogs", sel.fun = "mean")
-#' # ... via a linear model ...
-#' model.ocu <- downscale.train(ybin, xT, method = "GLM" ,family = binomial(link = "logit"))
-#' model.reg <- downscale.train(y, xT, method = "MLR", fitting = "MP")
-#' # ... via a extreme learning machine ...
-#' model.ocu <- downscale.train(ybin, xT, method = "ELM", neurons = 200)
-#' model.reg <- downscale.train(y, xT, method = "ELM", neurons = 200)
-#' # ... via a extreme learning machine ...
-#' model.ocu <- downscale.train(ybin, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
-#' model.reg <- downscale.train(y, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
-#' # Downscaling PRECIPITATION - Local model with the closest 4 grid points.
-#' xT <- prepare_predictors(x = x,y = y,local.predictors = list(neigh.vars = "shum850",n.neighs = 4))
-#' model.ocu <- downscale.train(ybin, xT, method = "MLR", fitting = 'MP')
-#' model.reg <- downscale.train(y, xT, method = "MLR", fitting = 'MP')
-#' # Downscaling PRECIPITATION - Principal Components (PCs)
-#' xT <- prepare_predictors(x = x,y = y, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
-#' model.ocu <- downscale.train(ybin, xT, method = "MLR" ,fitting = 'MP')
-#' model.reg <- downscale.train(y, xT, method = "MLR" ,fitting = 'MP')
-downscale.cv <- function(x, y, folds = 4, method, singlesite = FALSE, filt = NULL, global.vars = NULL, PCA = NULL, combined.only = TRUE, local.predictors = NULL, ...) {
-  y <- filterNA(y)
-  x <- getTemporalIntersection(y,x,which.return = 'prd')
-  y <- getTemporalIntersection(y,x,which.return = 'obs')
-  dimNames <- getDim(y)
-  pred <- y
-  pred$Data <- lapply(1:folds, FUN = function(xx) {
-    data <- data_split(x,y, f = folds, type = "chronological", test.pos = (1:folds)[xx])
-    xT <- prepare_predictors(x = data$xT, y = data$yT, global.vars, PCA, combined.only, local.predictors)
-    xt <- prepare_newdata(newdata = data$xt, predictor = xT)
-    model <- downscale.train(data$yT, xT, method = method, singlesite, filt, ...)
-    downscale.predict(xt, model)$Data})
-  pred$Data <- do.call(rbind,pred$Data)
-  attr(pred$Data, "dimensions") <- dimNames
+#' x <- getTemporalIntersection(obs = y,prd = x, "prd" )
+#' # Reconstructing the downscaled serie in 3 folds
+#' pred <- downscale.cv(x,y,folds = 3,type = "chronological", scale = TRUE, method = "GLM", filt = ">0")
+#' # ... or with dates ...
+#' pred <- downscale.cv(x,y,type = "chronological", scale = TRUE, method = "GLM", filt = ">0",
+#'                      folds = list(c("1985","1986","1987","1988"),
+#'                                   c("1989","1990","1991","1992"),
+#'                                   c("1993","1994","1995")))
+#' # Reconstructing the downscaled serie in 3 folds with a pre-processed of the predictors with principal component analysis.
+#' pred <- downscale.cv(x,y,folds = 3,type = "chronological", method = "GLM", family = Gamma(link = "log"), filt = ">0",
+#'                      PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+#' # Reconstructing the downscaled serie in 3 folds with local predictors.
+#' pred <- downscale.cv(x,y,folds = 3,type = "chronological", scale = TRUE, method = "GLM", filt = ">0",
+#'                      local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+
+downscale.cv <- function(x, y, method,
+                         folds = 4, type = "chronological", scale = FALSE, singlesite = TRUE,
+                         global.vars = NULL, PCA = NULL, combined.only = TRUE, local.predictors = NULL, neurons = NULL,
+                         filt = NULL, ...) {
+  data <- dataSplit(x,y, f = folds, type = type)
+  p <- lapply(1:length(data), FUN = function(xx) {
+    print(paste("fold:",xx,"-->","calculating..."))
+    xT <- data[[xx]]$train$x ; yT <- data[[xx]]$train$y
+    xt <- data[[xx]]$test$x  ; yt <- data[[xx]]$test$y
+    if (isTRUE(scale)) {
+      xt <- localScaling(xt, base = xT, scale = scale)
+      xT <- localScaling(xT, base = xT, scale = scale)
+    }
+    xT <- prepare_predictors(x = xT, y = yT, global.vars, PCA, combined.only, local.predictors, neurons)
+    xt <- prepare_newdata(newdata = xt, predictor = xT)
+    model <- downscale.train(xT, method, singlesite, filt, ...)
+    if (all(as.vector(y$Data) %in% c(0,1,NA,NaN), na.rm = TRUE)) {
+      y.prob <- downscale.predict(xt, model)
+      if (singlesite == TRUE && method == "GLM") {
+        if (model$conf$atomic_model[[1]]$info$simulate == "yes") {
+          y.bin  <- y.prob}
+        else {
+          y.bin  <- convert2bin(y.prob, ref.obs = yT, ref.pred = model$pred)}}
+      else{
+        y.bin  <- convert2bin(y.prob, ref.obs = yT, ref.pred = model$pred)}
+      out <- list(y.prob$Data, y.bin$Data)}
+    else{
+      out <- list(downscale.predict(xt, model)$Data)}
+    return(out)
+    })
+  
+    pred <- lapply(1:length(p[[1]]), function(i) {
+      pred <- y
+      dimNames <- getDim(pred)
+      pp <- lapply(1:length(data), function(z) p[[z]][[i]])  ; pred$Data   <- do.call(rbind,as.matrix(pp))
+      attr(pred$Data, "dimensions") <- dimNames  
+      return(pred)})
+    if (length(pred) == 1) pred <- pred[[1]]
   return(pred)}

@@ -27,44 +27,46 @@ x <- subsetGrid(x, years = 1985:1995)
 # Loading predictands
 y <- VALUE_Iberia_pr
 y <- getTemporalIntersection(obs = y,prd = x, "obs" )
+x <- getTemporalIntersection(obs = y,prd = x, "prd" )
 ybin <- convert2bin(y, threshold = 1)
-# Prepare predictors
-xT <- prepare_predictors(x = x, y = y)
+x <- localScaling(x, base = x, scale = TRUE)
+# Prepare predictors and predictands
+xyT     <- prepare_predictors(x = x, y = y)
+xyT.bin <- prepare_predictors(x = x, y = ybin)
+xyt     <- prepare_newdata(newdata = x, predictor = xyT)
+xyt.bin <- prepare_newdata(newdata = x, predictor = xyT.bin)
 # Downscaling PRECIPITATION
-#' # ... via analogs ...
-model.ocu <- downscale.train(ybin, xT, method = "analogs", sel.fun = "mean")
-model.reg <- downscale.train(y, xT, method = "analogs", sel.fun = "mean")
-pred.ocu <- downscale.predict(xT, model.ocu)
-pred.reg <- downscale.predict(xT, model.reg)
-# ... via a linear model ...
-model.ocu <- downscale.train(ybin, xT, method = "GLM" ,family = binomial(link = "logit"))
-model.reg <- downscale.train(y, xT, method = "MLR", fitting = "MP")
-pred.ocu <- downscale.predict(xT,model.ocu)
-pred.reg <- downscale.predict(xT,model.reg)
-pred <- pred.ocu$Data * pred.reg$Data
-# ... via a extreme learning machine ...
-model.ocu <- downscale.train(ybin, xT, method = "ELM", neurons = 200)
-model.reg <- downscale.train(y, xT, method = "ELM", neurons = 200)
-pred.ocu <- downscale.predict(xT,model.ocu)
-pred.reg <- downscale.predict(xT,model.reg)
-pred <- pred.ocu$Data * pred.reg$Data
+# ... via analogs ...
+model <- downscale.train(xyT, method = "analogs", sel.fun = "mean", singlesite = FALSE)
+pred <- downscale.predict(xyt, model)
+# ... via a logistic regression (ocurrence of precipitation) and gaussian regression (amount of precipitation) ...
+model.ocu <- downscale.train(xyT.bin, method = "GLM", family = binomial(link = "logit"))
+model.reg <- downscale.train(xyT,     method = "GLM", family = "gaussian", filt = ">0")
+pred.ocu <- downscale.predict(xyt.bin, model.ocu)
+pred.reg <- downscale.predict(xyt    , model.reg)
 # ... via a neural network ...
-model.ocu <- downscale.train(ybin, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
-model.reg <- downscale.train(y, xT, method = "NN", learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear') 
-pred.ocu <- downscale.predict(xT,model.ocu)
-pred.reg <- downscale.predict(xT,model.reg)
-pred <- pred.ocu$Data * pred.reg$Data
+model.ocu <- downscale.train(xyT.bin, method = "NN", singlesite = FALSE, learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear')
+model.reg <- downscale.train(xyT    , method = "NN", singlesite = FALSE, learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear')
+pred.ocu <- downscale.predict(xyT.bin, model.ocu)
+pred.reg <- downscale.predict(xyT    , model.reg)
 # Downscaling PRECIPITATION - Local model with the closest 4 grid points.
-xT <- prepare_predictors(x = x,y = y,local.predictors = list(neigh.vars = "shum850",n.neighs = 4))
-model.ocu <- downscale.train(ybin, xT, method = "MLR", fitting = 'MP')
-model.reg <- downscale.train(y, xT, method = "MLR", fitting = 'MP')
-pred.ocu <- downscale.predict(xT,model.ocu)
-pred.reg <- downscale.predict(xT,model.reg)
-pred <- pred.ocu$Data * pred.reg$Data
-# Downscaling PRECIPITATION - Principal Components (PCs)
-xT <- prepare_predictors(x = x,y = y, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
-model.ocu <- downscale.train(ybin, xT, method = "MLR" ,fitting = 'MP')
-model.reg <- downscale.train(y, xT, method = "MLR" ,fitting = 'MP')
+xyT.local     <- prepare_predictors(x = x,y = y,local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+xyT.local.bin <- prepare_predictors(x = x,y = ybin,local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+xyt.local     <- prepare_newdata(newdata = x, predictor = xyT.local)
+xyt.local.bin <- prepare_newdata(newdata = x, predictor = xyT.local.bin)
+model.ocu <- downscale.train(xyT.local.bin, method = "GLM", fitting = 'MP')
+model.reg <- downscale.train(xyT.local    , method = "GLM", fitting = 'MP')
+pred.ocu <- downscale.predict(xyt.local.bin, model.ocu)
+pred.reg <- downscale.predict(xyt.local    , model.reg)
+# Downscaling PRECIPITATION - Principal Components (PCs) and gamma regression for the amount of precipitation
+xyT.pc     <- prepare_predictors(x = x,y = y, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+xyT.pc.bin <- prepare_predictors(x = x,y = ybin, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+xyt.pc     <- prepare_newdata(newdata = x, predictor = xyT.pc)
+xyt.pc.bin <- prepare_newdata(newdata = x, predictor = xyT.pc.bin)
+model.ocu <- downscale.train(xyT.pc.bin, method = "GLM" , family = binomial(link = "logit"))
+model.reg <- downscale.train(xyT.pc    , method = "GLM" , family = Gamma(link = "log"), filt = ">0")
+pred.ocu <- downscale.predict(xyt.pc.bin, model.ocu)
+pred.reg <- downscale.predict(xyt.pc    , model.reg)
 }
 \author{
 J. Bano-Medina

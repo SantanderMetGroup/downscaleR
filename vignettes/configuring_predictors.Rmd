@@ -163,8 +163,8 @@ Next, we will use the raw fields of air temperature at 850mb and sea-level press
 ```{r}
 out <- prepare_predictors(x = x,
                           y = y,
-                          global.vars = c("air850", "slp"),
-                          local.predictors = list(neigh.vars = "shum850",
+                          global.vars = c("air@850", "slp"),
+                          local.predictors = list(neigh.vars = "shum@850",
                                                   n.neighs = 4,
                                                   neigh.fun = NULL)
 )
@@ -180,8 +180,8 @@ Instead of using all 4 neighbours sepparately, these can be aggregated, for inst
 ```{r}
 out <- prepare_predictors(x = x,
                           y = y,
-                          global.vars = c("air850", "slp"),
-                          local.predictors = list(neigh.vars = "shum850",
+                          global.vars = c("air@850", "slp"),
+                          local.predictors = list(neigh.vars = "shum@850",
                                                   n.neighs = 4,
                                                   neigh.fun = list(FUN = "mean"))
 )
@@ -199,9 +199,9 @@ This is probably the most typical configuration of predictors. The global inform
 ```{r,message=FALSE}
 out <- prepare_predictors(x = x,
                           y = y,
-                          global.vars = c("air850", "slp"),
+                          global.vars = c("air@850", "slp"),
                           PCA = list(v.exp = c(.95, .95)),
-                          local.predictors = list(neigh.vars = "shum850",
+                          local.predictors = list(neigh.vars = "shum@850",
                                                   n.neighs = 4,
                                                   neigh.fun = NULL)
 )
