@@ -66,7 +66,7 @@ glm.train <- function(x, y, fitting = NULL, simulate = "no", ...) {
     fullmod <- glm(X1~.,data = df,...)
     nothing <- glm(X1~1.,data = df,...)
     weights <- step(nothing, scope = list(lower = formula(nothing),upper = formula(fullmod)),
-                    direction = "forward")
+                    direction = "forward", steps = 15)
   }
   else if (fitting == "L1") {
     cv <- cv.glmnet(x,y,alpha = 1, ...)
