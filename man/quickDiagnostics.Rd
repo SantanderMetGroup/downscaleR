@@ -37,7 +37,7 @@ Two diagnostic plots with observed, simulated and (possibly) downscaled time ser
 Plots daily/annual series and the annual correlation map of different grid objects
 }
 \examples{
-{
+\donttest {
 data("VALUE_Iberia_pr")
 data("NCEP_Iberia_pr")
 y <- VALUE_Iberia_pr
@@ -45,14 +45,16 @@ x <- NCEP_Iberia_pr
 x$Data <- x$Data*86400
 quickDiagnostics(obs = y, raw = x, location = c(-2, 43), type = "daily")
 quickDiagnostics(obs = y, raw = x, location = c(-2, 43), type = "interannual")
-eqm1win <- biasCorrection(y = y, x = x, 
+eqm1win <- biasCorrection(y = y, x = x,
                           method = "eqm",
-                          extrapolation = "none",
-                          window = c(31, 1))
+                          extrapolation = "none")
 quickDiagnostics(y, x, eqm1win)
 quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
 quickDiagnostics(obs = y, raw = x, downscaled = eqm1win, location = c(-2, 43), type = "interannual")
 }
+}
+\seealso{
+Other visualization: \code{\link{bcDiagnostics}}
 }
 \author{
 M. Iturbide

@@ -233,8 +233,8 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                         } else {
                               yy <- redim(yy, drop = TRUE)
                         }
-                        newdata2 <- subsetGrid(x, years = target.year)
-                        xx <- subsetGrid(x, years = rest.years)
+                        newdata2 <- subsetGrid(x, years = target.year, drop = F)
+                        xx <- subsetGrid(x, years = rest.years, drop = F)
                         message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
                         biasCorrectionXD(y = yy, x = xx, newdata = newdata2, precipitation = precipitation,
                                           method = method,
@@ -317,8 +317,8 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                   mem <- array(dim = c(1, 1, dim(sim$Data)[its], dim(obs$Data)[-ito]))
             }
             lmem <- lapply(1:n.mem, function(l) { # loop for members
-                  p <- subsetGrid(pred, members = l, drop = FALSE)
-                  s <- subsetGrid(sim, members = l, drop = FALSE)
+                  p <- subsetGrid(pre, members = l, drop = FALSE)
+                  s <- subsetGrid(si, members = l, drop = FALSE)
                   #join members
                   if (!isTRUE(join.members)) {
                         message("[", Sys.time(), "] Bias-correcting member ", l, " out of ", n.mem, "...")
@@ -330,12 +330,11 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                         win <- getWindowIndex(y = obs, x = p, newdata = s, window = window, delta.method = delta.method)
                   } else {
                         win <- list()
-                        indobservations <- numeric()
-                        for(b in 1:getShape(p)["time"]){
-                          indobservations[b] <- which(obs$Dates$start == p$Dates$start[b])
-                        }
+                        indobservations <- match(as.POSIXct(p$Dates$start), as.POSIXct(obs$Dates$start))
+                        ## esto no mola, es para el caso especial de join members...hay que mirarlo
+                        if (length(indobservations) > length(unique(indobservations))) indobservations <- 1:length(indobservations) 
                         win[["Window1"]] <- list("obsWindow" = indobservations, "window" = 1:getShape(p)["time"], "step" = 1:getShape(s)["time"])
-                        if(delta.method) win[["Window1"]]["deltaind"] <- indobservations
+                        if (delta.method) win[["Window1"]][["deltaind"]] <- indobservations
                   }
                   message("[", Sys.time(), "] Number of windows considered: ", length(win), "...")
                   #correcting locations
@@ -380,6 +379,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
       }
       attr(bc$Variable, "correction") <- method
       bc <- redim(bc, drop = TRUE)
+      bc <- redim(bc, member = FALSE, runtime = FALSE)
       if(station & !"loc" %in% bc) bc <- redim(bc, member = FALSE, loc = TRUE)
       message("[", Sys.time(), "] Done.")
       return(bc)
@@ -462,17 +462,10 @@ getWindowIndex <- function(y, x, newdata, window, delta.method = FALSE){
             names(indSim) <- newdata$Dates$start[indSim]
             indObsWindow <- indObsWindow[which(!is.na(x$Dates$start[indObsWindow]))]
             names(indObsWindow) <- x$Dates$start[indObsWindow]
-            indobservations <- numeric()
-            for(b in 1:length(names(indObsWindow))){
-              indobservations[b] <- which(y$Dates$start == names(indObsWindow)[b])
-            }
+            indobservations <- match(as.POSIXct(x$Dates$start[indObsWindow], format = "%Y-%m-%d"), as.POSIXct(y$Dates$start, format = "%Y-%m-%d"))
             names(indobservations) <- y$Dates$start[indobservations]
             names(indObs) <- x$Dates$start[indObs]
-            indObsObs <- numeric()
-            for(a in 1:length(names(indObs))){
-              indObsObs[a] <- which(y$Dates$start == names(indObs)[a])
-            }
-            
+            indObsObs <- match(as.POSIXct(x$Dates$start[indObs], format = "%Y-%m-%d"), as.POSIXct(y$Dates$start, format = "%Y-%m-%d"))
             output[[paste0("Window", j)]] <- list("obsWindow" = indobservations, "window" = indObsWindow, "step" = indSim)
             if (delta.method) output[[paste0("Window", j)]][["deltaind"]] <- indObsObs
       }
@@ -637,22 +630,25 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
             } else {
                   nP = NULL
             }
-            if (is.null(nP)) {
-                  smap <- rep(NA, length(s))
-            } else if (any(!is.na(p)) & any(!is.na(o))) {
+            smap <- rep(NA, length(s))
+            if (any(!is.na(p)) & any(!is.na(o))) {
                   if (length(which(p > Pth)) > 0) { 
                         noRain <- which(s <= Pth & !is.na(s))
                         rain <- which(s > Pth & !is.na(s))
                         drizzle <- which(s > Pth  & s  <= min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))
-                        eFrc <- tryCatch({ecdf(s[rain])}, error = function(err) {stop("There are not precipitation days in newdata for the step length selected in one or more locations. Try to enlarge the window step")})
                         if (length(rain) > 0) {
+                              eFrc <- tryCatch({ecdf(s[rain])}, error = function(err) {stop("There are not precipitation days in newdata for the step length selected in one or more locations. Try to enlarge the window step")})
                               if (is.null(n.quantiles)) n.quantiles <- length(p)
                               bins <- n.quantiles
                               qo <- quantile(o[which(o > threshold & !is.na(o))], prob = seq(1/bins,1 - 1/bins,1/bins), na.rm = T)
                               qp <- quantile(p[which(p > Pth)], prob = seq(1/bins,1 - 1/bins,1/bins), na.rm = T)
-                              p2o <- approxfun(qp, qo, method = "linear")
+                              p2o <- tryCatch({approxfun(qp, qo, method = "linear")}, error = function(err) {NA})
                               smap <- s
-                              smap[rain] <- p2o(s[rain])
+                              smap[rain] <- if (!is.na(p2o)) {
+                                p2o(s[rain])
+                              }else{
+                                s[rain] <- NA
+                              }
                               # Linear extrapolation was discarded due to lack of robustness 
                               if (extrapolation == "constant") {
                                     smap[rain][which(s[rain] > max(qp, na.rm = TRUE))] <- s[rain][which(s[rain] > max(qp, na.rm = TRUE))] + (qo[length(qo)] - qp[length(qo)])
@@ -661,6 +657,9 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
                                     smap[rain][which(s[rain] > max(qp, na.rm = TRUE))] <- qo[length(qo)]
                                     smap[rain][which(s[rain] < min(qp, na.rm = TRUE))] <- qo[1]
                               }
+                        }else{
+                          smap <- rep(0, length(s))
+                          warning("There are not precipitation days in newdata for the step length selected in one or more locations. Consider the possibility of enlarging the window step")
                         }
                         if (length(drizzle) > 0) {
                               smap[drizzle] <- quantile(s[which(s > min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))], probs = eFrc(s[drizzle]), na.rm = TRUE, type = 4)

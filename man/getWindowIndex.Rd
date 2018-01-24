@@ -4,7 +4,7 @@
 \alias{getWindowIndex}
 \title{Get the index of the window days.}
 \usage{
-getWindowIndex(y, newdata, window, delta.method = FALSE)
+getWindowIndex(y, x, newdata, window, delta.method = FALSE)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
