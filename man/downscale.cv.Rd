@@ -85,17 +85,22 @@ y <- VALUE_Iberia_pr
 y <- getTemporalIntersection(obs = y,prd = x, "obs" )
 x <- getTemporalIntersection(obs = y,prd = x, "prd" )
 # Reconstructing the downscaled serie in 3 folds
-pred <- downscale.cv(x,y,folds = 3,type = "chronological", scale = TRUE, method = "GLM", filt = ">0")
+pred <- downscale.cv(x,y,folds = 3,type = "chronological", 
+        scale = TRUE, method = "GLM", filt = ">0")
 # ... or with dates ...
-pred <- downscale.cv(x,y,type = "chronological", scale = TRUE, method = "GLM", filt = ">0",
+pred <- downscale.cv(x,y,type = "chronological", scale = TRUE, 
+                     method = "GLM", filt = ">0",
                      folds = list(c("1985","1986","1987","1988"),
                                   c("1989","1990","1991","1992"),
                                   c("1993","1994","1995")))
-# Reconstructing the downscaled serie in 3 folds with a pre-processed of the predictors with principal component analysis.
-pred <- downscale.cv(x,y,folds = 3,type = "chronological", method = "GLM", family = Gamma(link = "log"), filt = ">0",
+# Reconstructing the downscaled serie in 3 folds with a 
+# pre-processed of the predictors with principal component analysis.
+pred <- downscale.cv(x,y,folds = 3,type = "chronological", 
+                      method = "GLM", family = Gamma(link = "log"), filt = ">0",
                      PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
 # Reconstructing the downscaled serie in 3 folds with local predictors.
-pred <- downscale.cv(x,y,folds = 3,type = "chronological", scale = TRUE, method = "GLM", filt = ">0",
+pred <- downscale.cv(x,y,folds = 3,type = "chronological", 
+                     scale = TRUE, method = "GLM", filt = ">0",
                      local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
 }
 \author{

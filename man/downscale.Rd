@@ -59,18 +59,25 @@ x <- getTemporalIntersection(obs = y,prd = x, "prd" )
 yp <- downscale(y,x,method = "analogs")
 yp <- downscale(y,x,newdata,method = "analogs")
 # kfold
-yp <- downscale(y,x,method = "analogs", n.pcs = 15, cross.val = "kfold", folds = 2)
-yp <- downscale(y,x,method = "analogs", n.pcs = 15, cross.val = "kfold", folds = list(c("1985","1986","1987"),
-                                                                                      c("1988","1989","1990"),
-                                                                                      c("1991","1992","1993")))
+yp <- downscale(y,x,method = "analogs", n.pcs = 15,
+               cross.val = "kfold", folds = 2)
+yp <- downscale(y,x,method = "analogs", n.pcs = 15,
+              cross.val = "kfold", folds = list(c("1985","1986","1987"),
+                                                c("1988","1989","1990"),
+                                                 c("1991","1992","1993")))
 ### GLM ###
 # None
-yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10, wet.threshold = 1)
-yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10, wet.threshold = 1)
+yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10,
+                      wet.threshold = 1)
+yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10,
+                        wet.threshold = 1)
 # kfold
-yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10, cross.val = "kfold", folds = 2)
-yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10, cross.val = "kfold", folds = 2)
-yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10, cross.val = "kfold", folds = list(c("1985","1986","1987"),
-                                                                                                   c("1988","1989","1990"),
-                                                                                                   c("1991","1992","1993")))
+yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
+                    cross.val = "kfold", folds = 2)
+yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10,
+                    cross.val = "kfold", folds = 2)
+yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
+               cross.val = "kfold", folds = list(c("1985","1986","1987"),
+                                                c("1988","1989","1990"),
+                                                c("1991","1992","1993")))
 }

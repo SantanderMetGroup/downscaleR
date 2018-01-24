@@ -24,13 +24,14 @@
 #' x <- NCEP_Iberia_pr
 #' x$Data <- x$Data*86400
 #' quickDiagnostics(obs = y, raw = x, location = c(-2, 43), type = "daily")
-#' quickDiagnostics(obs = y, raw = x, location = c(-2, 43), type = "interannual")
+#' #quickDiagnostics(obs = y, raw = x, location = c(-2, 43), type = "interannual")
 #' eqm1win <- biasCorrection(y = y, x = x,
 #'                           method = "eqm",
 #'                           extrapolation = "none")
 #' quickDiagnostics(y, x, eqm1win)
 #' quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
-#' quickDiagnostics(obs = y, raw = x, downscaled = eqm1win, location = c(-2, 43), type = "interannual")
+#' #quickDiagnostics(obs = y, raw = x, downscaled = eqm1win, 
+#' # location = c(-2, 43), type = "interannual")
 #' }
 
 
@@ -169,7 +170,7 @@ interannualOutlook <- function(obs, raw, downscaled = NULL, location = c(-42.5, 
                                                  round(bias.direct, digits = 2), sep = "")), 
                    fill = c("black", "red"), box.lwd = 0, cex = .8)
        }
-       pl <- downscaleR:::grabGrob()
+       pl <- grabGrob()
        ## correlation map
        suppressMessages(corgrid <- climatology(obs))
        if (is.null(downscaled)) {
