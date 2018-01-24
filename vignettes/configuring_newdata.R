@@ -3,8 +3,8 @@ require(transformeR)
 require(downscaleR)
 
 ## ------------------------------------------------------------------------
-data("VALUE_Iberia_tp")
-y <- VALUE_Iberia_tp
+data("VALUE_Iberia_pr")
+y <- VALUE_Iberia_pr
 
 ## ------------------------------------------------------------------------
 data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
@@ -19,9 +19,9 @@ prediction.data <- subsetGrid(mg, years = 1995:2002) #%>% redim(member = TRUE)
 ## ------------------------------------------------------------------------
 predictor <- prepare_predictors(x = x,
                                 y = y,
-                                global.vars = c("psl", "ta850"),
+                                global.vars = c("slp", "air@850"),
                                 PCA = list(v.exp = c(.9, .95)),
-                                local.predictors = list(neigh.vars = "hus850",
+                                local.predictors = list(neigh.vars = "shum@850",
                                                         n.neighs = 4,
                                                         neigh.fun = list(FUN = "mean")))
 

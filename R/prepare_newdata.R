@@ -61,7 +61,14 @@ prepare_newdata <- function(newdata, predictor) {
             expr <- paste0("cbind(", paste0("newdata.global.list[[", 1:length(newdata.global.list), "]][[i]]", collapse = ","), ")")
             parse(text = expr) %>% eval()
         })
+        if (!is.null(attr(predictor,"neurons.matrix"))) {
+          newdata.global.list <- lapply(1:length(newdata.global.list), function(z){
+            h <- cbind(newdata.global.list[[z]],rep(1,nrow(newdata.global.list[[z]]))) %*% attr(predictor,"neurons.matrix")
+            1/(1 + exp(-h))
+          })
+        }
         names(newdata.global.list) <- paste("member", 1:length(newdata.global.list), sep = "_")
+        
     } else {
     ## PCA predictors   
         if (is.null(predictor$pca$COMBINED)) { # The COMBINED PC is not being used
@@ -99,8 +106,8 @@ prepare_newdata <- function(newdata, predictor) {
         names(newdata.global.list) <- paste("member", 1:length(newdata.global.list), sep = "_")
     }
     newdata.refdates <- list(start = getRefDates(newdata, "start"), end = getRefDates(newdata, "end"))
-    return(list("newdata.global" = newdata.global.list,
-                "newdata.local" = newdata.local.list,
+    return(list("x.global" = newdata.global.list,
+                "x.local" = newdata.local.list,
                 "Dates" = newdata.refdates)
     )
 }

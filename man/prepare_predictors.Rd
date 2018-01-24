@@ -5,7 +5,7 @@
 \title{Configuration of predictors for downscaling}
 \usage{
 prepare_predictors(x, y, global.vars = NULL, PCA = NULL,
-  combined.only = TRUE, local.predictors = NULL)
+  combined.only = TRUE, local.predictors = NULL, neurons = NULL)
 }
 \arguments{
 \item{x}{A grid (usually a multigrid) of predictor fields}
@@ -40,6 +40,8 @@ with the following arguments:
   than one variable in \code{neigh.vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
   length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
 }}
+
+\item{neurons}{A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.}
 }
 \value{
 A named list with components \code{y} (the predictand), \code{x.global} (global predictors, 2D matrix), \code{x.local} (local predictors, a list) 

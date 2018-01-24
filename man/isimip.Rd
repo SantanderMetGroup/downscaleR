@@ -92,8 +92,7 @@ par(mfrow = c(1,1))
 \seealso{
 \code{\link{biasCorrection}} for details on other standard methods for bias correction
 
-Other downscaling: \code{\link{analogs}},
-  \code{\link{biasCorrection}}, \code{\link{downscale}},
+Other downscaling: \code{\link{biasCorrection}},
   \code{\link{glimpr}}
 }
 \author{

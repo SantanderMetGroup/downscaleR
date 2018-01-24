@@ -178,8 +178,7 @@ quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
 \code{\link{isimip}} for a trend-preserving method of model calibration and \code{\link{quickDiagnostics}} 
 for an outlook of the results.
 
-Other downscaling: \code{\link{analogs}},
-  \code{\link{downscale}}, \code{\link{glimpr}},
+Other downscaling: \code{\link{glimpr}},
   \code{\link{isimip}}
 }
 \author{

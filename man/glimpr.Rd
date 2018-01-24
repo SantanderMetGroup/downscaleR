@@ -23,8 +23,7 @@ glimpr(y = y, modelPars = modelPars, simulate = c("none", "loocv",
 Implementation of GLM's to downscale precipitation data
 }
 \seealso{
-Other downscaling: \code{\link{analogs}},
-  \code{\link{biasCorrection}}, \code{\link{downscale}},
+Other downscaling: \code{\link{biasCorrection}},
   \code{\link{isimip}}
 }
 \author{

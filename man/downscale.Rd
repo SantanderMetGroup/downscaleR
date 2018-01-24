@@ -4,34 +4,26 @@
 \alias{downscale}
 \title{Perfect-prog downscaling}
 \usage{
-downscale(y, x, newdata = x, method = c("analogs", "glm"),
-  simulate = c("no", "yes", "occurrence"), n.analogs = 1,
-  sel.fun = c("random", "mean"), analog.dates = FALSE,
-  wet.threshold = 0.1, n.pcs = NULL, cross.val = c("none", "loocv",
-  "kfold"), folds = NULL, parallel = FALSE, max.ncores = 16,
-  ncores = NULL)
+downscale(y, x, newdata = x, method = c("analogs", "glm", "lm"),
+  simulate = c("no", "yes"), n.analogs = 1, sel.fun = c("mean", "wmean",
+  "max", "min", "median"), wet.threshold = 0.1, n.pcs = NULL,
+  cross.val = c("none", "loocv", "kfold"), folds = NULL)
 }
 \arguments{
-\item{y}{A grid or station data containing the observed climate data for the training period}
+\item{y}{The observations dataset. It should be an object as returned by \pkg{loadeR}.}
 
-\item{x}{A grid containing the simulated climate by the model for the training period. This can be either
-the same variable as \code{obs}, in the case of model calibration (bias correction and related techniques) or MOS (model
- output statistics) approaches, or a set of predictors in the case of \emph{perfect prog} downscaling approaches (possibly
- after principal component analysis via the \code{\link{prinComp}} output).}
+\item{x}{The input grid. It should be an object as returned by \pkg{loadeR}.}
 
-\item{newdata}{A grid containing the simulated climate for the variables used in \code{x}, but considering the test period.}
+\item{newdata}{It should be an object as returned by \pkg{loadeR} and consistent with x. Default is newdata = x.}
 
-\item{method}{Downscaling method}
+\item{method}{Downscaling method. Options are c = ("analogs","glm","lm"). Glm can only be set when downscaling precipitation.}
 
-\item{simulate}{Character. Options are \code{"no"}, \code{"yes"} or \code{"occurrence"}.
-The last option simulates the precipitation occurrence but not the amount.}
+\item{simulate}{Character. Options are \code{"no"}, \code{"yes"}.}
 
 \item{n.analogs}{Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.}
 
 \item{sel.fun}{Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n.neig = 1}.
-Current values are \code{"random"} (the default) and \code{"mean"}. See details.}
-
-\item{analog.dates}{Logical flag indicating whether the dates of the analogs should be returned. See the analogs section.}
+Current values are \code{"mean"} (the default), \code{"wmean"},  \code{"max"},  \code{"min"} and  \code{"median"}.}
 
 \item{wet.threshold}{Value below which precipitation amount is considered zero}
 
@@ -40,78 +32,45 @@ Current values are \code{"random"} (the default) and \code{"mean"}. See details.
 \item{cross.val}{Should cross-validation be performed? methods available are leave-one-out (\code{"loocv"})
 and k-fold (\code{"kfold"}). Default to \code{"none"}, which does not perform cross-validation.}
 
-\item{folds}{Only requiered if \code{cross.val = "kfold"}, otherwise ignored. A list of vectors,
-each containing the years to be grouped in the corresponding fold.}
-
-\item{parallel}{Logical. Should parallel execution be used?}
-
-\item{max.ncores}{Integer. Upper bound for user-defined number of cores.}
-
-\item{ncores}{Integer number of cores used in parallel computation. Self-selected number of
-cores is used when \code{ncpus = NULL} (the default), or when \code{maxcores} exceeds the default \code{ncores} value.}
+\item{folds}{Only requiered if \code{cross.val = "kfold"}, otherwise ignored. Could be a fraction, value between (0,1) indicating the fraction of the data that will define the train set, 
+or an integer indicating the number of folds. It can also be a list of folds indicating the years of each fold.}
+}
+\value{
+The prediction structure.
 }
 \description{
 Workhorse function to call the different perfect-prog downscaling methods
 }
 \details{
-\strong{Spatial consistency}
-
-Several checks of spatial consistency are performed. In particular, note that both \code{x} (reanalysis) and \code{newdata}
- (model simulations) should be in the same grid. This consistency must be ensured by the user prior to entering these arguments,
-for instance by means of the \code{\link[transformeR]{interpGrid}} function in conjunction with the \code{\link[transformeR]{getGrid}} method.
-
 \strong{Scaling and centering}
-
 When the climate variables are used as predictors instead of the PCs, these are previously centered and scaled
-using the mean and sigma parameters globally computed for the whole spatial domain (This is equivalent to the \dQuote{field})
-method in the \code{\link[transformeR]{prinComp}} function. The simulation data will use the parameters obtained when scaling and centering
-the predictors dataset. In case that the predictors come from a PC analysis object (as returned by \code{\link[transformeR]{prinComp}}), the
-parameters for rescaling the simulation data are passed by the predictors.
+using the mean and sigma parameters globally computed for the whole spatial domain.
 }
-\section{Analogs}{
-
-
-\strong{Construction of analogs using multiple neighbours}
-
-The argument \code{sel.fun} controls how the analogs are constructed when considering more than the first neighbour (argument
-\code{n.analogs} > 1). In this case the \code{"random"} choice randomly selects one of the \code{n.analogs} neighbours,
- while the \code{"mean"} choice will compute their average.
-
-\strong{Analog dates}
-
-If the argument \code{analog.dates} is set to TRUE, these will be returned as a global attribute named \code{"analog.dates"}.
-Note that the analog dates can be only returned for one single neighbour analog selections (i.e. \code{n.analogs = 1}),
- otherwise giving an error. The analog dates are different for each member in case of 
- multimember downscaling, and are returned as a list, each element of the list corresponding to one member.
-}
-
-\section{Parallel Processing}{
-
-
-Parallel processing is enabled using the \pkg{parallel} package. 
-Parallelization is undertaken by a FORK-type parallel socket cluster formed by \code{ncores}.
-If \code{ncores} is not specified (default), \code{ncores} will be one less than the autodetected number of cores.
-The maximum number of cores used for parallel processing can be set with the \code{max.ncores} argument, 
-although this will be reset to the auto-detected number of cores minus 1 if this number is exceeded. Note that not all 
-code, but just some critical loops within the function are parallelized.
-
-In practice, parallelization does not always result in smaller execution times, due to the parallel overhead.
-However, parallel computing may potentially provide a significant speedup for the 
-particular case of large multimember datasets or large grids.
- 
-Parallel computing is currently not available for Windows machines.
-}
-
-\seealso{
-\code{\link[transformeR]{prinComp}} for details on principal component/EOF analysis,
-\code{rescaleMonthlyMeans} for data pre-processing,
-\code{\link[transformeR]{makeMultiGrid}} for multigrid construction
-\code{loadGridData} and \code{loadStationData}, from package \pkg{loadeR}, for loading grids and station data respectively.
-
-Other downscaling: \code{\link{analogs}},
-  \code{\link{biasCorrection}}, \code{\link{glimpr}},
-  \code{\link{isimip}}
-}
-\author{
-J Bedia, M Iturbide
+\examples{
+x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
+newdata <- subsetGrid(x, years = 1994:1995)
+x <- subsetGrid(x, years = 1985:1993)
+# Loading predictands
+y <- VALUE_Iberia_pr
+y <- getTemporalIntersection(obs = y,prd = x, "obs" )
+x <- getTemporalIntersection(obs = y,prd = x, "prd" )
+### Analogs ###
+# None
+yp <- downscale(y,x,method = "analogs")
+yp <- downscale(y,x,newdata,method = "analogs")
+# kfold
+yp <- downscale(y,x,method = "analogs", n.pcs = 15, cross.val = "kfold", folds = 2)
+yp <- downscale(y,x,method = "analogs", n.pcs = 15, cross.val = "kfold", folds = list(c("1985","1986","1987"),
+                                                                                      c("1988","1989","1990"),
+                                                                                      c("1991","1992","1993")))
+### GLM ###
+# None
+yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10, wet.threshold = 1)
+yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10, wet.threshold = 1)
+# kfold
+yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10, cross.val = "kfold", folds = 2)
+yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10, cross.val = "kfold", folds = 2)
+yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10, cross.val = "kfold", folds = list(c("1985","1986","1987"),
+                                                                                                   c("1988","1989","1990"),
+                                                                                                   c("1991","1992","1993")))
 }

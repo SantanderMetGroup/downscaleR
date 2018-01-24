@@ -44,7 +44,7 @@
 #'    than one variable in \code{neigh.vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
 #'    length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
 #'  }
-#'  
+#' @param neurons A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.
 #' @return A named list with components \code{y} (the predictand), \code{x.global} (global predictors, 2D matrix), \code{x.local} (local predictors, a list) 
 #' and \code{pca} (\code{\link[transformeR]{prinComp}} output), and other attributes. See Examples.
 #'  
@@ -71,7 +71,7 @@
 #'  
 #' @author J. Bedia, D. San-Martín and J.M. Gutiérrez 
 
-prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.only = TRUE, local.predictors = NULL) {
+prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.only = TRUE, local.predictors = NULL, neurons = NULL) {
     y <- getTemporalIntersection(obs = y, prd = x, which.return = "obs")
     x <- getTemporalIntersection(obs = y, prd = x, which.return = "prd")
     dates <- getRefDates(x)
@@ -124,7 +124,8 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
             do.call("cbind", aux)
         }
     # RAW predictors    
-    } else {
+    } 
+    else {
         # Construct a predictor matrix of raw input grids
         nvars <- getShape(x, "var")
         aux.list <- lapply(1:nvars, function(i) {
@@ -132,9 +133,21 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
         })
         x <- do.call("cbind", aux.list)
         aux.list <- NULL
+        
+        if (!is.null(neurons)) {
+          inp.n <- ncol(x) + 1
+          hid.n <- neurons
+          r <- 2*((inp.n) ** (-0.5))
+          w <- array(data = runif(inp.n*hid.n, min = -r, max = r), c(inp.n,hid.n))
+          w[inp.n,] <- runif(hid.n, min = -2, max = 2)
+          x.bias <- cbind(x,array(data = 1,dim = c(nrow(x), 1))) 
+          h <- x.bias %*% w
+          x <- 1/(1 + exp(-h))
+        }
     }
     predictor.list <- list("y" = y, "x.global" = x, "x.local" = nn, "pca" = full.pca)
     if (!is.null(PCA)) PCA <- PCA[-grep("grid", names(PCA))]
+    if (!is.null(neurons)) attr(predictor.list,"neurons.matrix") <- w
     attr(predictor.list, "PCA.pars") <- PCA
     attr(predictor.list, "localPred.pars") <- local.predictors
     attr(predictor.list, "predictor.vars") <- all.predictor.vars
