@@ -148,10 +148,10 @@
 #' x <- NCEP_Iberia_pr
 #' x$Data <- x$Data*86400
 #' 
-#' eqm1 <- biasCorrection(y = y, x = x, 
+#' eqm1 <- biasCorrection(y = y, x = x,
 #'                        method = "eqm",
 #'                        window = NULL)
-#' eqm1win <- biasCorrection(y = y, x = x, 
+#' eqm1win <- biasCorrection(y = y, x = x,
 #'                           method = "eqm",
 #'                           extrapolation = "none",
 #'                           window = c(31, 1))
