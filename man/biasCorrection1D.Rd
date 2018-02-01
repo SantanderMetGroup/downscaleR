@@ -6,7 +6,8 @@
 \usage{
 biasCorrection1D(o, p, s, method = method, scaling.type = scaling.type,
   precip = FALSE, pr.threshold = 1, n.quantiles = NULL,
-  extrapolation = extrapolation, theta = 0.95)
+  extrapolation = extrapolation, theta = 0.95, parallel = FALSE,
+  max.ncores = 16, ncores = NULL)
 }
 \arguments{
 \item{o}{A vector (e.g. station data) containing the observed climate data for the training period}
@@ -34,6 +35,13 @@ thus, this argument is ignored if other bias correction method is selected. Defa
 above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
 percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.}
+
+\item{parallel}{Logical. Should parallel execution be used?}
+
+\item{max.ncores}{Integer. Upper bound for user-defined number of cores.}
+
+\item{ncores}{Integer number of cores used in parallel computation. Self-selected number of
+cores is used when \code{ncpus = NULL} (the default), or when \code{maxcores} exceeds the default \code{ncores} value.}
 }
 \description{
 Implementation of several standard bias correction methods
