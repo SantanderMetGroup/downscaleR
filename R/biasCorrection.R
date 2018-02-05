@@ -177,19 +177,19 @@
 
 
 biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
-                            method = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"),
-                            cross.val = c("none", "loo", "kfold"),
-                            folds = NULL,
-                            window = NULL,
-                            scaling.type = c("additive", "multiplicative"),
-                            wet.threshold = 1,
-                            n.quantiles = NULL,
-                            extrapolation = c("none", "constant"), 
-                            theta = .95,
-                            join.members = FALSE,
-                            parallel = FALSE,
-                            max.ncores = 16,
-                            ncores = NULL) {
+                           method = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"),
+                           cross.val = c("none", "loo", "kfold"),
+                           folds = NULL,
+                           window = NULL,
+                           scaling.type = c("additive", "multiplicative"),
+                           wet.threshold = 1,
+                           n.quantiles = NULL,
+                           extrapolation = c("none", "constant"), 
+                           theta = .95,
+                           join.members = FALSE,
+                           parallel = FALSE,
+                           max.ncores = 16,
+                           ncores = NULL) {
       method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci", "ptr", "variance"))
       cross.val <- match.arg(cross.val, choices = c("none", "loo", "kfold"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
@@ -276,15 +276,15 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
 #' @importFrom transformeR redim subsetGrid getDim
 
 biasCorrectionXD <- function(y, x, newdata, precipitation, 
-                              method = method,
-                              window = NULL,
-                              scaling.type = c("additive", "multiplicative"),
-                              pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
-                              theta = .95,
-                              join.members = join.members,
-                              parallel = FALSE,
-                              max.ncores = 16,
-                              ncores = NULL) {
+                             method = method,
+                             window = NULL,
+                             scaling.type = c("additive", "multiplicative"),
+                             pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
+                             theta = .95,
+                             join.members = join.members,
+                             parallel = FALSE,
+                             max.ncores = 16,
+                             ncores = NULL) {
       station <- FALSE
       if ("loc" %in% getDim(y)) station <- TRUE
       xy <- y$xyCoords
@@ -353,16 +353,16 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                         p <- lapply(seq_len(ncol(data[[2]])), function(i) data[[2]][,i])
                         s <- lapply(seq_len(ncol(data[[3]])), function(i) data[[3]][,i])
                         mat <- biasCorrection1D(o, p, s,
-                                                 method = method,
-                                                 scaling.type = scaling.type,
-                                                 precip = precip,
-                                                 pr.threshold = pr.threshold,
-                                                 n.quantiles = n.quantiles,
-                                                 extrapolation = extrapolation,
-                                                 theta = theta,
-                                                 parallel = parallel,
-                                                 max.ncores = max.ncores,
-                                                 ncores = ncores)  
+                                                method = method,
+                                                scaling.type = scaling.type,
+                                                precip = precip,
+                                                pr.threshold = pr.threshold,
+                                                n.quantiles = n.quantiles,
+                                                extrapolation = extrapolation,
+                                                theta = theta,
+                                                parallel = parallel,
+                                                max.ncores = max.ncores,
+                                                ncores = ncores)  
                         if (!station) mat <- mat2Dto3Darray(mat, xy$x, xy$y)
                         mat
                   })
@@ -600,16 +600,20 @@ gqm <- function(o, p, s, precip, pr.threshold){
                   s <- rep(NA, length(s))
             } else if (nP[1] < length(o)) {
                   ind <- which(o > threshold & !is.na(o))
-                  obsGamma <-  tryCatch({fitdistr(o[ind],"gamma")}, error = function(err){stop("There are not precipitation days in y for the window length selected in one or more locations. Try to enlarge the window")})
+                  obsGamma <-  tryCatch({fitdistr(o[ind],"gamma")}, error = function(err){NULL})
                   ind <- which(p > 0 & !is.na(p))
-                  prdGamma <- tryCatch({fitdistr(p[ind],"gamma")}, error = function(err){stop("There are not precipitation days in x for the window length selected in one or more locations. Try to enlarge the window")})
+                  prdGamma <- tryCatch({fitdistr(p[ind],"gamma")}, error = function(err){NULL})
                   rain <- which(s > Pth & !is.na(s))
                   noRain <- which(s <= Pth & !is.na(s))
-                  auxF <- pgamma(s[rain], prdGamma$estimate[1], rate = prdGamma$estimate[2])
-                  s[rain] <- qgamma(auxF, obsGamma$estimate[1], rate = obsGamma$estimate[2])
-                  s[noRain] <- 0
+                  if(!is.null(prdGamma) & !is.null(obsGamma)) {
+                        auxF <- pgamma(s[rain], prdGamma$estimate[1], rate = prdGamma$estimate[2])
+                        s[rain] <- qgamma(auxF, obsGamma$estimate[1], rate = obsGamma$estimate[2])
+                        s[noRain] <- 0
+                  }else{
+                        warning("For the window step selected, location with not enough rainfall in y or x to adjust gamma.\n no bias correction applied in location.")
+                  }
             } else {
-                  warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) no bias correction has been applied.")
+                  warning("For the window step selected, location without rainfall above the threshold.\n no bias correction applied in location.")
             } 
       }
       return(s)
@@ -658,9 +662,9 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
                               p2o <- tryCatch({approxfun(qp, qo, method = "linear")}, error = function(err) {NA})
                               smap <- s
                               smap[rain] <- if (suppressWarnings(!is.na(p2o))) {
-                                p2o(s[rain])
+                                    p2o(s[rain])
                               }else{
-                                s[rain] <- NA
+                                    s[rain] <- NA
                               }
                               # Linear extrapolation was discarded due to lack of robustness 
                               if (extrapolation == "constant") {
@@ -671,8 +675,8 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
                                     smap[rain][which(s[rain] < min(qp, na.rm = TRUE))] <- qo[1]
                               }
                         }else{
-                          smap <- rep(0, length(s))
-                          warning("There are not precipitation days in newdata for the step length selected in one or more locations. Consider the possibility of enlarging the window step")
+                              smap <- rep(0, length(s))
+                              warning("There are not precipitation days in newdata for the step length selected in one or more locations. Consider the possibility of enlarging the window step")
                         }
                         if (length(drizzle) > 0) {
                               smap[drizzle] <- quantile(s[which(s > min(p[which(p > Pth)], na.rm = TRUE) & !is.na(s))], probs = eFrc(s[drizzle]), na.rm = TRUE, type = 4)
