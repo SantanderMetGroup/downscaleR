@@ -33,8 +33,9 @@ and k-fold ("kfold") on an annual basis. The default option ("none") does not pe
 \item{folds}{Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
 the corresponding fold.}
 
-\item{window}{vector of length = 2 specifying the time window width used to calibrate and the target days (days that are being corrected).
- The window is centered on the target day/s (window width >= target days). 
+\item{window}{vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
+target days (days that are being corrected). If the window length = 1, the window width is no larger than the 
+target days. The window is centered on the target day/s (window width >= target days). 
 Default to \code{NULL}, which considers the whole period available.}
 
 \item{scaling.type}{Character indicating the type of the scaling method. Options are \code{"additive"} (default)

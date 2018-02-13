@@ -28,8 +28,9 @@
 #' the corresponding fold.
 #' @param wet.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). See details on bias correction for precipitation.
-#' @param window vector of length = 2 specifying the time window width used to calibrate and the target days (days that are being corrected).
-#'  The window is centered on the target day/s (window width >= target days). 
+#' @param window vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
+#' target days (days that are being corrected). If the window length = 1, the window width is no larger than the 
+#' target days. The window is centered on the target day/s (window width >= target days). 
 #' Default to \code{NULL}, which considers the whole period available.
 #' 
 #' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
@@ -395,8 +396,9 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
 #' @param newdata A grid containing the simulated climate for the test period.
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 #'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.
-#' @param window vector of length = 2 specifying the time window width used to calibrate and the target days (days that are being corrected).
-#'  The window is centered on the target day/s (window width >= target days). 
+#' @param window vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
+#' target days (days that are being corrected). If the window length = 1 the window width is no larger than the 
+#' target days. The window is centered on the target day/s (window width >= target days). 
 #' @param delta.method logical (default is FALSE)
 #' @keywords internal
 #' @author M. Iturbide
