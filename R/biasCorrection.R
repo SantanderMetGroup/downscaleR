@@ -402,6 +402,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
 #' @author M. Iturbide
 
 getWindowIndex <- function(y, x, newdata, window, delta.method = FALSE){
+      if (length(window) == 1) window <- rep(window, 2)
       step <- window[2]
       window <- window[1]
       if (window - step < 0) stop("The first argument of window must be equal or higher than the second. See ?biasCorrection")
