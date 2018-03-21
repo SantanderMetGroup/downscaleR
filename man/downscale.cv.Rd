@@ -7,7 +7,7 @@
 downscale.cv(x, y, method, folds = 4, type = "chronological",
   scale = FALSE, singlesite = TRUE, global.vars = NULL, PCA = NULL,
   combined.only = TRUE, local.predictors = NULL, neurons = NULL,
-  filt = NULL, ...)
+  module = NULL, filt = NULL, ...)
 }
 \arguments{
 \item{x}{The input grid. It should be an object as returned by \pkg{loadeR}.}
@@ -54,6 +54,8 @@ with the following arguments:
 }}
 
 \item{neurons}{A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.}
+
+\item{module}{A numeric value. Indicates the size of the mask's module. Belongs to a specific type of ELM called RF-ELM.}
 
 \item{filt}{A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.}
 

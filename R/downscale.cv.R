@@ -54,6 +54,7 @@
 #'    length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
 #'  }
 #' @param neurons A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.
+#' @param module A numeric value. Indicates the size of the mask's module. Belongs to a specific type of ELM called RF-ELM.
 #' @param filt A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. 
 #' Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
@@ -93,7 +94,7 @@
 
 downscale.cv <- function(x, y, method,
                          folds = 4, type = "chronological", scale = FALSE, singlesite = TRUE,
-                         global.vars = NULL, PCA = NULL, combined.only = TRUE, local.predictors = NULL, neurons = NULL,
+                         global.vars = NULL, PCA = NULL, combined.only = TRUE, local.predictors = NULL, neurons = NULL, module = NULL,
                          filt = NULL, ...) {
   data <- dataSplit(x,y, f = folds, type = type)
   p <- lapply(1:length(data), FUN = function(xx) {
@@ -101,10 +102,10 @@ downscale.cv <- function(x, y, method,
     xT <- data[[xx]]$train$x ; yT <- data[[xx]]$train$y
     xt <- data[[xx]]$test$x  ; yt <- data[[xx]]$test$y
     if (isTRUE(scale)) {
-      xt <- localScaling(xt, base = xT, scale = scale)
-      xT <- localScaling(xT, base = xT, scale = scale)
+      xt <- localScaling(xt, base = xT, scale = scale, spatial.frame = "gridbox")
+      xT <- localScaling(xT, base = xT, scale = scale, spatial.frame = "gridbox")
     }
-    xT <- prepare_predictors(x = xT, y = yT, global.vars, PCA, combined.only, local.predictors, neurons)
+    xT <- prepare_predictors(x = xT, y = yT, global.vars, PCA, combined.only, local.predictors, neurons, module)
     xt <- prepare_newdata(newdata = xt, predictor = xT)
     model <- downscale.train(xT, method, singlesite, filt, ...)
     if (all(as.vector(y$Data) %in% c(0,1,NA,NaN), na.rm = TRUE)) {

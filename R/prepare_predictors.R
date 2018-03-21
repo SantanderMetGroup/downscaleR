@@ -45,6 +45,7 @@
 #'    length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
 #'  }
 #' @param neurons A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.
+#' @param module A numeric value. Indicates the size of the mask's module. Belongs to a specific type of ELM called RF-ELM.
 #' @return A named list with components \code{y} (the predictand), \code{x.global} (global predictors, 2D matrix), \code{x.local} (local predictors, a list) 
 #' and \code{pca} (\code{\link[transformeR]{prinComp}} output), and other attributes. See Examples.
 #'  
@@ -71,7 +72,7 @@
 #'  
 #' @author J. Bedia, D. San-Martín and J.M. Gutiérrez 
 
-prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.only = TRUE, local.predictors = NULL, neurons = NULL) {
+prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.only = TRUE, local.predictors = NULL, neurons = NULL, module = NULL) {
     y <- getTemporalIntersection(obs = y, prd = x, which.return = "obs")
     x <- getTemporalIntersection(obs = y, prd = x, which.return = "prd")
     dates <- getRefDates(x)
@@ -139,6 +140,18 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
           hid.n <- neurons
           r <- 2*((inp.n) ** (-0.5))
           w <- array(data = runif(inp.n*hid.n, min = -r, max = r), c(inp.n,hid.n))
+          if (!is.null(module)) {
+            ww <- w[1:(inp.n - 1),]
+            dim(ww) <- c(7,7,20,hid.n)
+            mask <- array(data = 0,dim = dim(ww))
+            for (zzz in 1:hid.n) {
+              r1 <- sample(1:(dim(ww)[1] - module),size = 1)
+              r2 <- sample(1:(dim(ww)[2] - module),size = 1)
+              mask[(r1:(r1 + module)),(r2:(r2 + module)),,zzz] <- ww[(r1:(r1 + module)),(r2:(r2 + module)),,zzz]
+            }
+            dim(mask) <- c(980,hid.n)
+            w[1:(inp.n - 1),] <- mask
+          }
           w[inp.n,] <- runif(hid.n, min = -2, max = 2)
           x.bias <- cbind(x,array(data = 1,dim = c(nrow(x), 1))) 
           h <- x.bias %*% w

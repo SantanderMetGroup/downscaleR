@@ -5,7 +5,8 @@
 \title{Configuration of predictors for downscaling}
 \usage{
 prepare_predictors(x, y, global.vars = NULL, PCA = NULL,
-  combined.only = TRUE, local.predictors = NULL, neurons = NULL)
+  combined.only = TRUE, local.predictors = NULL, neurons = NULL,
+  module = NULL)
 }
 \arguments{
 \item{x}{A grid (usually a multigrid) of predictor fields}
@@ -42,6 +43,8 @@ with the following arguments:
 }}
 
 \item{neurons}{A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.}
+
+\item{module}{A numeric value. Indicates the size of the mask's module. Belongs to a specific type of ELM called RF-ELM.}
 }
 \value{
 A named list with components \code{y} (the predictand), \code{x.global} (global predictors, 2D matrix), \code{x.local} (local predictors, a list) 

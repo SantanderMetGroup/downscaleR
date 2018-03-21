@@ -93,22 +93,23 @@ downscale.predict <- function(newdata, model) {
     else {
       if (!is.list(newdata$x.global)) {n.obs <- nrow(as.matrix(newdata$x.global))} 
       else {n.obs <- nrow(as.matrix(newdata$x.global$member_1))}}
-      pred$Data <- array(data = NA, dim = c(n.obs,stations))
-      for (i in 1:stations) {
-        if (!is.null(newdata$x.local)) {
-          if (!is.list(newdata$x.local[[i]])) {
-            xx = newdata$x.local[[i]]}
-          else {
-            xx = newdata$x.local[[i]]$member_1}}
+    pred$Data <- array(data = NA, dim = c(n.obs,stations))
+    for (i in 1:stations) {
+      if (!is.null(newdata$x.local)) {
+        if (!is.list(newdata$x.local[[i]])) {
+          xx = newdata$x.local[[i]]}
         else {
-          if (!is.list(newdata$x.global)) {
-            xx <- newdata$x.global}
-          else {
-            xx <- newdata$x.global$member_1}}
+          xx = newdata$x.local[[i]]$member_1}}
+      else {
+        if (!is.list(newdata$x.global)) {
+          xx <- newdata$x.global}
+        else {
+          xx <- newdata$x.global$member_1}}
       if (model$conf$method == "analogs") {model$conf$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
       pred$Data[,i] <- downs.predict(xx, model$conf$method, model$conf$atomic_model[[i]])}}
   attr(pred$Data, "dimensions") <- dimNames
-  return(pred)}
+  return(pred)
+}
 
 ##############################################################################################################
 #                     DOWNSCALING                                                                            #
