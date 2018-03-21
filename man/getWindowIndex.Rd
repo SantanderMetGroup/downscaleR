@@ -4,15 +4,16 @@
 \alias{getWindowIndex}
 \title{Get the index of the window days.}
 \usage{
-getWindowIndex(y, newdata, window, delta.method = FALSE)
+getWindowIndex(y, x, newdata, window, delta.method = FALSE)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
 
 \item{newdata}{A grid containing the simulated climate for the test period.}
 
-\item{window}{vector of length = 2 specifying the time window width used to calibrate and the target days (days that are being corrected).
-The window is centered on the target day/s (window width >= target days).}
+\item{window}{vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
+target days (days that are being corrected). If the window length = 1 the window width is no larger than the 
+target days. The window is centered on the target day/s (window width >= target days).}
 
 \item{delta.method}{logical (default is FALSE)}
 

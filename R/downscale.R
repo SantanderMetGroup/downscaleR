@@ -40,7 +40,7 @@
 #' @return The prediction structure.
 #' @export 
 #' @importFrom transformeR localScaling
-#' @examples 
+#' @examples
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' newdata <- subsetGrid(x, years = 1994:1995)
 #' x <- subsetGrid(x, years = 1985:1993)
@@ -53,20 +53,27 @@
 #' yp <- downscale(y,x,method = "analogs")
 #' yp <- downscale(y,x,newdata,method = "analogs")
 #' # kfold
-#' yp <- downscale(y,x,method = "analogs", n.pcs = 15, cross.val = "kfold", folds = 2)
-#' yp <- downscale(y,x,method = "analogs", n.pcs = 15, cross.val = "kfold", folds = list(c("1985","1986","1987"),
-#'                                                                                       c("1988","1989","1990"),
-#'                                                                                       c("1991","1992","1993")))
+#' yp <- downscale(y,x,method = "analogs", n.pcs = 15,
+#'                cross.val = "kfold", folds = 2)
+#' yp <- downscale(y,x,method = "analogs", n.pcs = 15,
+#'               cross.val = "kfold", folds = list(c("1985","1986","1987"),
+#'                                                 c("1988","1989","1990"),
+#'                                                  c("1991","1992","1993")))
 #' ### GLM ###
 #' # None
-#' yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10, wet.threshold = 1)
-#' yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10, wet.threshold = 1)
+#' yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10,
+#'                       wet.threshold = 1)
+#' yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10,
+#'                         wet.threshold = 1)
 #' # kfold
-#' yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10, cross.val = "kfold", folds = 2)
-#' yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10, cross.val = "kfold", folds = 2)
-#' yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10, cross.val = "kfold", folds = list(c("1985","1986","1987"),
-#'                                                                                                    c("1988","1989","1990"),
-#'                                                                                                    c("1991","1992","1993")))
+#' yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
+#'                     cross.val = "kfold", folds = 2)
+#' yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10,
+#'                     cross.val = "kfold", folds = 2)
+#' yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
+#'                cross.val = "kfold", folds = list(c("1985","1986","1987"),
+#'                                                 c("1988","1989","1990"),
+#'                                                 c("1991","1992","1993")))
 
 downscale <- function(y,
                        x,

@@ -118,23 +118,39 @@ xyT     <- prepare_predictors(x = x, y = y)
 xyT.bin <- prepare_predictors(x = x, y = ybin)
 # Downscaling PRECIPITATION
 # ... via analogs ...
-model <- downscale.train(xyT, method = "analogs", sel.fun = "mean", singlesite = FALSE)
-# ... via a logistic regression (ocurrence of precipitation) and gaussian regression (amount of precipitation) ...
-model.ocu <- downscale.train(xyT.bin, method = "GLM", family = binomial(link = "logit"))
-model.reg <- downscale.train(xyT,     method = "GLM", family = "gaussian", filt = ">0")
+model <- downscale.train(xyT, method = "analogs", 
+         sel.fun = "mean", singlesite = FALSE)
+# ... via a logistic regression (ocurrence of precipitation) 
+# and gaussian regression (amount of precipitation) ...
+model.ocu <- downscale.train(xyT.bin, method = "GLM", 
+                           family = binomial(link = "logit"))
+model.reg <- downscale.train(xyT, method = "GLM", 
+                        family = "gaussian", filt = ">0")
 # ... via a neural network ...
-model.ocu <- downscale.train(xyT.bin, method = "NN", singlesite = FALSE, learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear')
-model.reg <- downscale.train(xyT    , method = "NN", singlesite = FALSE, learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear')
-# Downscaling PRECIPITATION - Local model with the closest 4 grid points and multisite linear regression.
-xyT.local     <- prepare_predictors(x = x, y = y,local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
-xyT.local.bin <- prepare_predictors(x = x, y = ybin,local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+model.ocu <- downscale.train(xyT.bin, method = "NN", singlesite = FALSE, 
+                             learningrate = 0.1, numepochs = 10, hidden = 5, 
+                              output = 'linear')
+model.reg <- downscale.train(xyT, method = "NN", singlesite = FALSE, 
+                            learningrate = 0.1, numepochs = 10, 
+                             hidden = 5, output = 'linear')
+# Downscaling PRECIPITATION - Local model with the closest 
+# 4 grid points and multisite linear regression.
+xyT.local <- prepare_predictors(x = x, y = y,
+                local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+xyT.local.bin <- prepare_predictors(x = x, y = ybin,
+                 local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
 model.ocu <- downscale.train(xyT.local.bin, method = "GLM", fitting = 'MP')
 model.reg <- downscale.train(xyT.local    , method = "GLM", fitting = 'MP')
-# Downscaling PRECIPITATION - Principal Components (PCs) and gamma regression for the amount of precipitation
-xyT.pc     <- prepare_predictors(x = x,y = y, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
-xyT.pc.bin <- prepare_predictors(x = x,y = ybin, PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
-model.ocu <- downscale.train(xyT.pc.bin, method = "GLM" , family = binomial(link = "logit"))
-model.reg <- downscale.train(xyT.pc    , method = "GLM" , family = Gamma(link = "log"), filt = ">0")
+# Downscaling PRECIPITATION - Principal Components (PCs) 
+# and gamma regression for the amount of precipitation
+xyT.pc     <- prepare_predictors(x = x,y = y, 
+              PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+xyT.pc.bin <- prepare_predictors(x = x,y = ybin, 
+              PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+model.ocu <- downscale.train(xyT.pc.bin, 
+              method = "GLM" , family = binomial(link = "logit"))
+model.reg <- downscale.train(xyT.pc, method = "GLM", 
+             family = Gamma(link = "log"), filt = ">0")
 }
 \author{
 J. Bano-Medina

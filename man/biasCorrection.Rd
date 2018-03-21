@@ -9,7 +9,8 @@ biasCorrection(y, x, newdata = NULL, precipitation = FALSE,
   cross.val = c("none", "loo", "kfold"), folds = NULL, window = NULL,
   scaling.type = c("additive", "multiplicative"), wet.threshold = 1,
   n.quantiles = NULL, extrapolation = c("none", "constant"), theta = 0.95,
-  join.members = FALSE)
+  join.members = FALSE, parallel = FALSE, max.ncores = 16,
+  ncores = NULL)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -32,8 +33,9 @@ and k-fold ("kfold") on an annual basis. The default option ("none") does not pe
 \item{folds}{Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
 the corresponding fold.}
 
-\item{window}{vector of length = 2 specifying the time window width used to calibrate and the target days (days that are being corrected).
- The window is centered on the target day/s (window width >= target days). 
+\item{window}{vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
+target days (days that are being corrected). If the window length = 1, the window width is no larger than the 
+target days. The window is centered on the target day/s (window width >= target days). 
 Default to \code{NULL}, which considers the whole period available.}
 
 \item{scaling.type}{Character indicating the type of the scaling method. Options are \code{"additive"} (default)
@@ -57,6 +59,13 @@ percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.}
 
 \item{join.members}{Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
 or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).}
+
+\item{parallel}{Logical. Should parallel execution be used?}
+
+\item{max.ncores}{Integer. Upper bound for user-defined number of cores.}
+
+\item{ncores}{Integer number of cores used in parallel computation. Self-selected number of
+cores is used when \code{ncpus = NULL} (the default), or when \code{maxcores} exceeds the default \code{ncores} value.}
 }
 \value{
 A calibrated grid of the same spatio-temporal extent than the input \code{"y"}
@@ -144,20 +153,26 @@ y <- VALUE_Iberia_pr
 x <- NCEP_Iberia_pr
 x$Data <- x$Data*86400
 
-eqm1 <- biasCorrection(y = y, x = x, 
+eqm1 <- biasCorrection(y = y, x = x,
+                       precipitation = TRUE,
                        method = "eqm",
-                       window = NULL)
-eqm1win <- biasCorrection(y = y, x = x, 
+                       window = NULL,
+                       wet.threshold = 0.1)
+eqm1win <- biasCorrection(y = y, x = x,
+                          precipitation = TRUE,
                           method = "eqm",
                           extrapolation = "none",
-                          window = c(31, 1))
+                          window = c(30, 15),
+                          wet.threshold = 0.1)
 eqm1folds <- biasCorrection(y = y, x = x,
+                            precipitation = TRUE,
                             method = "eqm",
-                            window = c(31, 1),
+                            window = c(30, 15),
+                            wet.threshold = 0.1,
                             cross.val = "kfold",
                             folds = list(1983:1989, 1990:1996, 1997:2002))
 
-quickDiagnostics(y, x, eqm1)
+quickDiagnostics(y, x, eqm1, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
