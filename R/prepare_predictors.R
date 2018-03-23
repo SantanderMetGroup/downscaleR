@@ -76,6 +76,7 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
     x <- getTemporalIntersection(obs = y, prd = x, which.return = "prd")
     dates <- getRefDates(x)
     xyCoords <- getCoordinates(x)
+    
     # LOCAL PREDICTORS
     nn <- NULL
     all.predictor.vars <- if (!is.null(global.vars)) {
@@ -111,7 +112,11 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
         x <- if (!is.null(PCA$which.combine)) {
             if (length(varnames) == length(PCA$which.combine)) combined.only <- TRUE
             if (combined.only) {
-                full.pca$COMBINED[[1]]$PCs
+                  if (!is.null(full.pca$COMBINED)) {
+                        full.pca$COMBINED[[1]]$PCs
+                  }else if (length(varnames) == 1) {
+                        full.pca[[varnames]][[1]]$PCs
+                  }
             } else {
                 combined.vars <- attributes(full.pca$COMBINED)$combined_variables
                 all.vars <- names(full.pca)[-length(full.pca)]
@@ -127,10 +132,13 @@ prepare_predictors <- function(x, y, global.vars = NULL, PCA = NULL, combined.on
     } 
     else {
         # Construct a predictor matrix of raw input grids
+        x <- redim(x, var = TRUE)
         nvars <- getShape(x, "var")
-        aux.list <- lapply(1:nvars, function(i) {
-            subsetGrid(x, var = varnames[i]) %>% redim(drop = TRUE) %>% extract2("Data") %>% array3Dto2Dmat()
-        })
+        suppressMessages(
+            aux.list <- lapply(1:nvars, function(i) {
+                  subsetGrid(x, var = varnames[i]) %>% redim(drop = TRUE) %>% extract2("Data") %>% array3Dto2Dmat()
+            })
+        )
         x <- do.call("cbind", aux.list)
         aux.list <- NULL
         
