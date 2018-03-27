@@ -12,7 +12,7 @@ downscale.predict(newdata, model)
 \item{model}{An object containing the statistical model as returned from  \code{\link[downscaleR]{downscale.train}}.}
 }
 \value{
-An object with the predictions.
+A list of predictions for each member.
 }
 \description{
 Downscale data to local scales by statistical models previously obtained by \code{\link[downscaleR]{downscale.train}}.
@@ -37,7 +37,7 @@ xyt     <- prepare_newdata(newdata = x, predictor = xyT)
 xyt.bin <- prepare_newdata(newdata = x, predictor = xyT.bin)
 # Downscaling PRECIPITATION
 # ... via analogs ...
-model <- downscale.train(xyT, method = "analogs", sel.fun = "mean", singlesite = FALSE)
+model <- downscale.train(xyT, method = "analogs", sel.fun = "mean", site = "multi")
 pred <- downscale.predict(xyt, model)
 # ... via a logistic regression (ocurrence of precipitation) 
 # and gaussian regression (amount of precipitation) ...
@@ -46,9 +46,9 @@ model.reg <- downscale.train(xyT,     method = "GLM", family = "gaussian", filt 
 pred.ocu <- downscale.predict(xyt.bin, model.ocu)
 pred.reg <- downscale.predict(xyt    , model.reg)
 # ... via a neural network ...
-model.ocu <- downscale.train(xyT.bin, method = "NN", singlesite = FALSE, 
+model.ocu <- downscale.train(xyT.bin, method = "NN",, site = "multi", 
                  learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear')
-model.reg <- downscale.train(xyT    , method = "NN", singlesite = FALSE, 
+model.reg <- downscale.train(xyT    , method = "NN", site = "multi", 
                  learningrate = 0.1, numepochs = 10, hidden = 5, output = 'linear')
 pred.ocu <- downscale.predict(xyT.bin, model.ocu)
 pred.reg <- downscale.predict(xyT    , model.reg)

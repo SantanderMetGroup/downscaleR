@@ -119,17 +119,17 @@ downscale <- function(y,
     gridT <- prepare_predictors(x,y,global.vars = getVarNames(x),PCA)
     gridt <- prepare_newdata(newdata,gridT)
     if (method == "analogs") {
-      model <- downscale.train(gridT,method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun, singlesite = FALSE)
-      yp <- downscale.predict(gridt,model)
+      model <- downscale.train(gridT,method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun, site = "multi")
+      yp <- downscale.predict(gridt,model)[[1]]
     }
     else if (method == "glm") {
       # Amounts
       model.reg <- downscale.train(gridT, method = "GLM", family = Gamma(link = "log"), filt = ">0", simulate = simulate)
-      yp.reg <- downscale.predict(gridt,model.reg)
+      yp.reg <- downscale.predict(gridt,model.reg)[[1]]
       # Ocurrence
       gridT <- prepare_predictors(x,y.ocu,global.vars = getVarNames(x),PCA)
       model.ocu <- downscale.train(gridT,method = "GLM", family = binomial(link = "logit"), simulate = simulate)
-      yp.ocu <- downscale.predict(gridt,model.ocu)
+      yp.ocu <- downscale.predict(gridt,model.ocu)[[1]]
       # Complete serie
       if (simulate == "no") {
         yp.ocu <- convert2bin(yp.ocu, ref.obs = y.ocu, ref.pred = yp.ocu)
@@ -142,12 +142,12 @@ downscale <- function(y,
     }
     else if (method == "lm") {
       model <- downscale.train(gridT,method = "GLM", family = "gaussian")
-      yp <- downscale.predict(gridt,model)
+      yp <- downscale.predict(gridt,model)[[1]]
     }
   }  
   else {# Leave-one-out and cross-validation 
     if (method == "analogs") {
-      yp <- downscale.cv(x,y,folds = folds, scale = TRUE, PCA = PCA, singlesite = FALSE,
+      yp <- downscale.cv(x,y,folds = folds, scale = TRUE, PCA = PCA, site = "multi",
                          method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun)
     }
     else if (method == "glm") {

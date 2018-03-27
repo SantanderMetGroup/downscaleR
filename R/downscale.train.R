@@ -20,9 +20,9 @@
 
 #' @title Downscale climate data.
 #' @description Downscale data to local scales by statistical methods: analogs, generalized linear models (GLM) and Neural Networks (NN). 
-#' @param grid An object grid. The input grid as returned by \code{\link[downscaleR]{prepare_predictors}}.
+#' @param obj An object. The object as returned by \code{\link[downscaleR]{prepare_predictors}}.
 #' @param method A string value. Type of transer function. Options are c("analogs","GLM","NN").
-#' @param singlesite A logical value. Wether to perform the study singlesite or multisite. Multisite option is only available when 
+#' @param site A character. Optional values are c("single","multi","mix). The study can be singlesite,multisite or mix (which is a mixture between local variables and global variables). Default is "single". Multisite option is only available when 
 #' the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP".
 #' @param filt A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
@@ -86,8 +86,8 @@
    #' }
 #' There are two things to consider. 
 #' 1) If family = "binomial" then type = "response" when predicting values.
-#' 2) Except for fitting = "MP", for the rest of the fitting options, the parameter singlesite must be TRUE, unless 
-#' we want a gLASSO, in this case singlesite must be FALSE.
+#' 2) Except for fitting = "MP", for the rest of the fitting options, the parameter site must be TRUE, unless 
+#' we want a gLASSO, in this case site must be FALSE.
 #' 
 #' }
 #' 
@@ -127,7 +127,7 @@
 #' # Downscaling PRECIPITATION
 #' # ... via analogs ...
 #' model <- downscale.train(xyT, method = "analogs", 
-#'          sel.fun = "mean", singlesite = FALSE)
+#'          sel.fun = "mean", site = "multi")
 #' # ... via a logistic regression (ocurrence of precipitation) 
 #' # and gaussian regression (amount of precipitation) ...
 #' model.ocu <- downscale.train(xyT.bin, method = "GLM", 
@@ -135,10 +135,10 @@
 #' model.reg <- downscale.train(xyT, method = "GLM", 
 #'                         family = "gaussian", filt = ">0")
 #' # ... via a neural network ...
-#' model.ocu <- downscale.train(xyT.bin, method = "NN", singlesite = FALSE, 
+#' model.ocu <- downscale.train(xyT.bin, method = "NN", site = "multi", 
 #'                              learningrate = 0.1, numepochs = 10, hidden = 5, 
 #'                               output = 'linear')
-#' model.reg <- downscale.train(xyT, method = "NN", singlesite = FALSE, 
+#' model.reg <- downscale.train(xyT, method = "NN", site = "multi", 
 #'                             learningrate = 0.1, numepochs = 10, 
 #'                              hidden = 5, output = 'linear')
 #' # Downscaling PRECIPITATION - Local model with the closest 
@@ -160,47 +160,71 @@
 #' model.reg <- downscale.train(xyT.pc, method = "GLM", 
 #'              family = Gamma(link = "log"), filt = ">0")
 
-downscale.train <- function(grid, method, singlesite = TRUE, filt = NULL, ...) {
-  dimNames <- getDim(grid$y)
-  pred <- grid$y
+downscale.train <- function(obj, method, site = c("single","multi","mix"), filt = NULL, ...) {
+  dimNames <- getDim(obj$y)
+  pred <- obj$y
 # Multi-site
-  if (!isTRUE(singlesite)) {
-    if (length(dim(grid$y$Data)) <= 1) {
-      yy = matrix(grid$y$Data,nrow = length(grid$y$Data), ncol = 1)}
+  if (site == "multi") {
+    if (length(dim(obj$y$Data)) <= 1) {
+      yy = matrix(obj$y$Data,nrow = length(obj$y$Data), ncol = 1)}
     else {
-      yy <- grid$y$Data}
+      yy <- obj$y$Data}
     if (method == "analogs") {
-      atomic_model <- downs.train(grid$x.global, yy, method, dates = getRefDates(grid$y), ...)}
+      atomic_model <- downs.train(obj$x.global, yy, method, dates = getRefDates(obj$y), ...)}
     else {
-      atomic_model <- downs.train(grid$x.global, yy, method, ...)}
-    if (method == "analogs") {atomic_model$dates$test <- getRefDates(grid$y)}
-    pred$Data    <- downs.predict(grid$x.global, method, atomic_model)}
+      atomic_model <- downs.train(obj$x.global, yy, method, ...)}
+    if (method == "analogs") {atomic_model$dates$test <- getRefDates(obj$y)}
+    pred$Data <- downs.predict(obj$x.global, method, atomic_model)}
 # Single-site
-  else{
-    stations <- ncol(as.matrix(grid$y$Data))
-    n.obs    <- nrow(as.matrix(grid$y$Data))
+  else if (site == "single") {
+    stations <- ncol(as.matrix(obj$y$Data))
+    n.obs    <- nrow(as.matrix(obj$y$Data))
     pred$Data    <- array(data = NA, dim = c(n.obs,stations))
     atomic_model <- vector("list",stations)
     for (i in 1:stations) {
-      if (!is.null(grid$x.local)) {
-        xx = grid$x.local[[i]]$member_1}
+      if (!is.null(obj$x.local)) {
+        xx = obj$x.local[[i]]$member_1}
       else {
-        xx = grid$x.global}
-      if (length(dim(grid$y$Data)) <= 1) {
-        yy = matrix(grid$y$Data,nrow = n.obs, ncol = 1)}
+        xx = obj$x.global}
+      if (length(dim(obj$y$Data)) <= 1) {
+        yy = matrix(obj$y$Data,nrow = n.obs, ncol = 1)}
       else{
-      yy = grid$y$Data[,i, drop = FALSE]}
+      yy = obj$y$Data[,i, drop = FALSE]}
       if (is.null(filt)) {ind = eval(parse(text = "which(!is.na(yy))"))}
       else {ind = eval(parse(text = paste0("which(!is.na(yy) & yy",filt,")")))}
       if (method == "analogs") {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, dates = getRefDates(grid$y)[ind], ...)}
+        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, dates = getRefDates(obj$y)[ind], ...)}
       else {
         atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, ...)}
-      if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(grid$y)}
-      pred$Data[,i] <- downs.predict(xx, method, atomic_model[[i]])}}
+      if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
+      pred$Data[,i] <- downs.predict(xx, method, atomic_model[[i]])}
+  }
+  # Mix - Global predictors with local predictors
+  else if (site == "mix") {
+    stations <- ncol(as.matrix(obj$y$Data))
+    n.obs    <- nrow(as.matrix(obj$y$Data))
+    pred$Data    <- array(data = NA, dim = c(n.obs,stations))
+    atomic_model <- vector("list",stations)
+    for (i in 1:stations) {
+      xx1 = obj$x.local[[i]]$member_1
+      xx2 = obj$x.global
+      xx <- cbind(xx1,xx2)
+      if (length(dim(obj$y$Data)) <= 1) {
+        yy = matrix(obj$y$Data,nrow = n.obs, ncol = 1)}
+      else{
+        yy = obj$y$Data[,i, drop = FALSE]}
+      if (is.null(filt)) {ind = eval(parse(text = "which(!is.na(yy))"))}
+      else {ind = eval(parse(text = paste0("which(!is.na(yy) & yy",filt,")")))}
+      if (method == "analogs") {
+        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, dates = getRefDates(obj$y)[ind], ...)}
+      else {
+        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, ...)}
+      if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
+      pred$Data[,i] <- downs.predict(xx, method, atomic_model[[i]])}
+  }
   
   attr(pred$Data, "dimensions") <- dimNames
-  model <- list("pred" = pred, "conf" = list("method" = method, "singlesite" = singlesite, "atomic_model" = atomic_model))
+  model <- list("pred" = pred, "conf" = list("method" = method, "site" = site, "atomic_model" = atomic_model))
   return(model)}
 
 ##############################################################################################################
