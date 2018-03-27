@@ -28,8 +28,11 @@
 #' or an integer indicating the number of folds. It can also be a list of folds indicating the years of each fold. 
 #' @param type A string, c("chronological","random"). Indicates how to split the data in folds. Default is "chronological".
 #' @param scale A logical value. If TRUE then the data is standardized. Default is FALSE.
-#' @param singlesite A logical value. Wether to perform the study singlesite or multisite. Multisite option is only available when
-#' the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP". 
+#' @param site A character. Optional values are c("single","multi","mix). The study can be singlesite,multisite or mix (which is a mixture between local variables and global variables). Multisite option is only available when 
+#' the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP".
+#' @param time.frame Character indicating the time frame to perform the scaling. Possible values are "none", which considers the climatological mean of the 
+#' whole period given in base and/or ref, "monthly", that performs the calculation on a monthly basis and "daily", for a julian day-based approach.
+#' @param spatial.frame Character indicating wether to perform the statistics of the field or per gridbox. Options are c("gridbox","field"), default is "gridbox.
 #' @param global.vars An optional character vector with the short names of the variables of the input x multigrid to be retained as global predictors 
 #' (use the getVarNames helper if not sure about variable names). 
 #' This argument just produces a call to subsetGrid, but it is included here for better flexibility in downscaling experiments (predictor screening...). 
@@ -90,7 +93,7 @@
 #' # Reconstructing the downscaled serie in 3 folds with a 
 #' # pre-processed of the predictors with principal component analysis.
 #' pred <- downscale.cv(x,y,folds = 3,type = "chronological", 
-#'                       method = "GLM", family = Gamma(link = "log"), filt = ">0",
+#'                      method = "GLM", family = Gamma(link = "log"), filt = ">0",
 #'                      PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
 #' # Reconstructing the downscaled serie in 3 folds with local predictors.
 #' pred <- downscale.cv(x,y,folds = 3,type = "chronological", 
@@ -98,7 +101,7 @@
 #'                      local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
 
 downscale.cv <- function(x, y, method,
-                         folds = 4, type = "chronological", scale = FALSE, singlesite = TRUE,
+                         folds = 4, type = "chronological", scale = FALSE, site = "single", spatial.frame = "gridbox", time.frame = "none",
                          global.vars = NULL, PCA = NULL, combined.only = TRUE, local.predictors = NULL, neurons = NULL, module = NULL,
                          filt = NULL, ...) {
   data <- dataSplit(x,y, f = folds, type = type)
@@ -106,16 +109,16 @@ downscale.cv <- function(x, y, method,
     print(paste("fold:",xx,"-->","calculating..."))
     xT <- data[[xx]]$train$x ; yT <- data[[xx]]$train$y
     xt <- data[[xx]]$test$x  ; yt <- data[[xx]]$test$y
-    if (isTRUE(scale)) {
-      xt <- localScaling(xt, base = xT, scale = scale, spatial.frame = "gridbox")
-      xT <- localScaling(xT, base = xT, scale = scale, spatial.frame = "gridbox")
+    if (scale) {
+      xt <- localScaling(xt, base = xT, scale = scale, spatial.frame = spatial.frame, time.frame = time.frame)
+      xT <- localScaling(xT, base = xT, scale = scale, spatial.frame = spatial.frame, time.frame = time.frame)
     }
     xT <- prepare_predictors(x = xT, y = yT, global.vars, PCA, combined.only, local.predictors, neurons, module)
     xt <- prepare_newdata(newdata = xt, predictor = xT)
-    model <- downscale.train(xT, method, singlesite, filt, ...)
+    model <- downscale.train(xT, method, site, filt, ...)
     if (all(as.vector(y$Data) %in% c(0,1,NA,NaN), na.rm = TRUE)) {
-      y.prob <- downscale.predict(xt, model)
-      if (singlesite == TRUE && method == "GLM") {
+      y.prob <- downscale.predict(xt, model)[[1]]
+      if ((site == "single" || site == "mix") && method == "GLM") {
         if (model$conf$atomic_model[[1]]$info$simulate == "yes") {
           y.bin  <- y.prob}
         else {
@@ -124,7 +127,7 @@ downscale.cv <- function(x, y, method,
         y.bin  <- convert2bin(y.prob, ref.obs = yT, ref.pred = model$pred)}
       out <- list(y.prob$Data, y.bin$Data)}
     else{
-      out <- list(downscale.predict(xt, model)$Data)}
+      out <- list(downscale.predict(xt, model)[[1]]$Data)}
     return(out)
     })
   

@@ -4,14 +4,15 @@
 \alias{downscale.train}
 \title{Downscale climate data.}
 \usage{
-downscale.train(grid, method, singlesite = TRUE, filt = NULL, ...)
+downscale.train(obj, method, site = c("single", "multi", "mix"),
+  filt = NULL, ...)
 }
 \arguments{
-\item{grid}{An object grid. The input grid as returned by \code{\link[downscaleR]{prepare_predictors}}.}
+\item{obj}{An object. The object as returned by \code{\link[downscaleR]{prepare_predictors}}.}
 
 \item{method}{A string value. Type of transer function. Options are c("analogs","GLM","NN").}
 
-\item{singlesite}{A logical value. Wether to perform the study singlesite or multisite. Multisite option is only available when 
+\item{site}{A character. Optional values are c("single","multi","mix). The study can be singlesite,multisite or mix (which is a mixture between local variables and global variables). Default is "single". Multisite option is only available when 
 the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP".}
 
 \item{filt}{A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.}
@@ -88,8 +89,8 @@ are permitted when fitting = "MP".
 }
 There are two things to consider. 
 1) If family = "binomial" then type = "response" when predicting values.
-2) Except for fitting = "MP", for the rest of the fitting options, the parameter singlesite must be TRUE, unless 
-we want a gLASSO, in this case singlesite must be FALSE.
+2) Except for fitting = "MP", for the rest of the fitting options, the parameter site must be TRUE, unless 
+we want a gLASSO, in this case site must be FALSE.
 
 }
 
@@ -119,7 +120,7 @@ xyT.bin <- prepare_predictors(x = x, y = ybin)
 # Downscaling PRECIPITATION
 # ... via analogs ...
 model <- downscale.train(xyT, method = "analogs", 
-         sel.fun = "mean", singlesite = FALSE)
+         sel.fun = "mean", site = "multi")
 # ... via a logistic regression (ocurrence of precipitation) 
 # and gaussian regression (amount of precipitation) ...
 model.ocu <- downscale.train(xyT.bin, method = "GLM", 
@@ -127,10 +128,10 @@ model.ocu <- downscale.train(xyT.bin, method = "GLM",
 model.reg <- downscale.train(xyT, method = "GLM", 
                         family = "gaussian", filt = ">0")
 # ... via a neural network ...
-model.ocu <- downscale.train(xyT.bin, method = "NN", singlesite = FALSE, 
+model.ocu <- downscale.train(xyT.bin, method = "NN", site = "multi", 
                              learningrate = 0.1, numepochs = 10, hidden = 5, 
                               output = 'linear')
-model.reg <- downscale.train(xyT, method = "NN", singlesite = FALSE, 
+model.reg <- downscale.train(xyT, method = "NN", site = "multi", 
                             learningrate = 0.1, numepochs = 10, 
                              hidden = 5, output = 'linear')
 # Downscaling PRECIPITATION - Local model with the closest 

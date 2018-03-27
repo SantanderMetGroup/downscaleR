@@ -5,7 +5,8 @@
 \title{Downscale climate data and reconstruct the temporal serie by splitting the data in k folds.}
 \usage{
 downscale.cv(x, y, method, folds = 4, type = "chronological",
-  scale = FALSE, singlesite = TRUE, global.vars = NULL, PCA = NULL,
+  scale = FALSE, site = "single", spatial.frame = "gridbox",
+  time.frame = "none", global.vars = NULL, PCA = NULL,
   combined.only = TRUE, local.predictors = NULL, neurons = NULL,
   module = NULL, filt = NULL, ...)
 }
@@ -23,8 +24,13 @@ or an integer indicating the number of folds. It can also be a list of folds ind
 
 \item{scale}{A logical value. If TRUE then the data is standardized. Default is FALSE.}
 
-\item{singlesite}{A logical value. Wether to perform the study singlesite or multisite. Multisite option is only available when
+\item{site}{A character. Optional values are c("single","multi","mix). The study can be singlesite,multisite or mix (which is a mixture between local variables and global variables). Multisite option is only available when 
 the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP".}
+
+\item{spatial.frame}{Character indicating wether to perform the statistics of the field or per gridbox. Options are c("gridbox","field"), default is "gridbox.}
+
+\item{time.frame}{Character indicating the time frame to perform the scaling. Possible values are "none", which considers the climatological mean of the 
+whole period given in base and/or ref, "monthly", that performs the calculation on a monthly basis and "daily", for a julian day-based approach.}
 
 \item{global.vars}{An optional character vector with the short names of the variables of the input x multigrid to be retained as global predictors 
 (use the getVarNames helper if not sure about variable names). 
@@ -98,7 +104,7 @@ pred <- downscale.cv(x,y,type = "chronological", scale = TRUE,
 # Reconstructing the downscaled serie in 3 folds with a 
 # pre-processed of the predictors with principal component analysis.
 pred <- downscale.cv(x,y,folds = 3,type = "chronological", 
-                      method = "GLM", family = Gamma(link = "log"), filt = ">0",
+                     method = "GLM", family = Gamma(link = "log"), filt = ">0",
                      PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
 # Reconstructing the downscaled serie in 3 folds with local predictors.
 pred <- downscale.cv(x,y,folds = 3,type = "chronological", 
