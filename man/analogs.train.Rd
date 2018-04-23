@@ -4,7 +4,7 @@
 \alias{analogs.train}
 \title{Donwscaling with the analogs method (train).}
 \usage{
-analogs.train(x, y, dates, n.analogs = 4, sel.fun = "mean", window = 0,
+analogs.train(x, y, dates, n.analogs = 4, sel.fun = "mean", window = 7,
   n.random = NULL, pool = 0)
 }
 \arguments{
