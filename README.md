@@ -16,7 +16,7 @@ devtools::install_github(c("SantanderMetGroup/transformeR", "SantanderMetGroup/d
 **EXAMPLE:** The following code trains three different downscaling methods (analogs, linear regression and neural networks) using principal components (explaining 95\% of the variance for each variable) and visualizes the results (the illustrative station and reanalysis data for DJF included in the package is used): 
 ```r
 library(downscaleR)
-data("VALUE_Iberia_pr","VALUE_Iberia_tas")
+data("VALUE_Iberia_tas")
 y <- VALUE_Iberia_tas 
 data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
 x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
