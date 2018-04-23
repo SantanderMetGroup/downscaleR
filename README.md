@@ -13,6 +13,25 @@ devtools::install_github(c("SantanderMetGroup/transformeR", "SantanderMetGroup/d
  
 **NOTE:** The utilities in `transformeR` were formerly part of `downscaleR` (up to v1.3-4). Since `downscaleR` v2.0-0, these are in `transformeR` and `downscaleR` is strictly aimed to statistical downscaling and bias correction. 
 
+**NOTE:** The following code trains three different downscaling methods (analogs, linear regression and neural networks) using principal components (explaining 95\% of the variance for each variable) and visualizes the results: 
+```r
+library(downscaleR)
+data("VALUE_Iberia_pr","VALUE_Iberia_tas")
+y <- VALUE_Iberia_tas 
+data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
+x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+data <- prepare_predictors(x = x, y = y,PCA = list(v.exp = 0.5))
+model1 <- downscale.train(data, method = "analogs", n.analogs = 1)
+model2 <- downscale.train(data, method = "GLM",family = gaussian)
+model3 <- downscale.train(data, method = "NN", hidden = c(10,5), output = "linear")
+# Extracting and plotting the results for Igueldo
+igueldo.2000 <- subsetGrid(y,station.id = "000234",years = 2000)
+analog.2000 <- subsetGrid(model1$pred,station.id = "000234",years = 2000)
+regress.2000 <- subsetGrid(model2$pred,station.id = "000234",years = 2000)
+neuralnet.2000 <- subsetGrid(model3$pred,station.id = "000234",years = 2000)
+temporalPlot(igueldo.2000, analog.2000, regress.2000, neuralnet.2000)
+```
+
 ---
 Reference and further information: 
 
