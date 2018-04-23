@@ -22,8 +22,7 @@
 #' @description Downscale data to local scales by statistical models previously obtained by \code{\link[downscaleR]{downscale.train}}.
 #' @param newdata The grid data. It should be an object as returned by  \code{\link[downscaleR]{prepare_newdata}}.
 #' @param model An object containing the statistical model as returned from  \code{\link[downscaleR]{downscale.train}}.
-#' @return A list of predictions for each member.
-#' @details The function can downscale in both global and local mode, though not simultaneously.
+#' @return A regular/irregular grid object.
 #' @author J. Bano-Medina
 #' @export
 #' @examples 
@@ -86,54 +85,70 @@
 
 downscale.predict <- function(newdata, model) {
   n <- length(newdata$x.global) # number of members
-  # p <- vector("list", length = n)
-  dimNames <- getDim(model$pred)
   p <- lapply(1:n, function(z) {
-    pred <- model$pred
-    pred$Dates <- newdata$Dates
     # Multi-site
-    if (model$conf$site == "multi") {
-      if (!is.list(newdata$x.global)) {
-        xx <- newdata$x.global}
-      else {
-        xx <- newdata$x.global[[z]]}
-      if (model$conf$method == "analogs") {model$conf$atomic_model$dates$test <- getRefDates(newdata)}
-      pred$Data <- downs.predict(xx, model$conf$method, model$conf$atomic_model)}
+    if (model$model$site == "multi") {
+      xx <- newdata$x.global[[z]]
+      if (model$model$method == "analogs") {model$model$atomic_model$dates$test <- getRefDates(newdata)}
+      yp <- downs.predict(xx, model$model$method, model$model$atomic_model)}
     # Single-site
-    else if (model$conf$site == "single") {
-      stations <- length(model$conf$atomic_model)
-      if (!is.null(newdata$x.local)) {
-        n.obs <- nrow(as.matrix(newdata$x.local[[1]][[z]]))}
+    else if (model$model$site == "single") {
+      stations <- length(model$model$atomic_model)
+      if (attr(newdata$x.global,"nature") == "local") {
+        n.obs <- nrow(newdata$x.local[[1]][[z]])}
       else {
-        n.obs <- nrow(as.matrix(newdata$x.global[[z]]))}
-      pred$Data <- array(data = NA, dim = c(n.obs,stations))
+        n.obs <- nrow(newdata$x.global[[z]])}
+      yp <- array(data = NA, dim = c(n.obs,stations))
       for (i in 1:stations) {
         if (!is.null(newdata$x.local)) {
           xx = newdata$x.local[[i]][[z]]}
         else {
           xx <- newdata$x.global[[z]]}
-        if (model$conf$method == "analogs") {model$conf$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
-        pred$Data[,i] <- downs.predict(xx, model$conf$method, model$conf$atomic_model[[i]])}
+        if (model$model$method == "analogs") {model$model$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
+        yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]])}
     }
     # Mix - Global predictors with local predictors
-    else if (model$conf$site == "mix") {
-      stations <- length(model$conf$atomic_model)
-      if (!is.null(newdata$x.local)) {
-        n.obs <- nrow(as.matrix(newdata$x.local[[1]][[z]]))}
+    else if (model$model$site == "mix") {
+      stations <- length(model$model$atomic_model)
+      if (attr(newdata$x.global,"nature") == "local") {
+        n.obs <- nrow(newdata$x.local[[1]][[z]])}
       else {
-        n.obs <- nrow(as.matrix(newdata$x.global[[z]]))}
-      pred$Data <- array(data = NA, dim = c(n.obs,stations))
+        n.obs <- nrow(newdata$x.global[[z]])}
+      yp <- array(data = NA, dim = c(n.obs,stations))
       for (i in 1:stations) {
         xx1 = newdata$x.local[[i]][[z]]
         xx2 = newdata$x.global[[z]]
         xx <- cbind(xx1,xx2)
-        if (model$conf$method == "analogs") {model$conf$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
-        pred$Data[,i] <- downs.predict(xx, model$conf$method, model$conf$atomic_model[[i]])}
+        if (model$model$method == "analogs") {model$model$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
+        yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]])}
     }
-    attr(pred$Data, "dimensions") <- dimNames
-    return(pred)
+    if (isRegular(model$pred)) {
+      yp <- mat2Dto3Darray(yp, x = model$pred$xyCoords$x, y = model$pred$xyCoords$y)
+    }
+    return(yp)
   })
-  return(p)
+  
+  if (isRegular(model$pred)) {
+    if (n > 1) {
+      p <- array(unlist(p), dim = c(n,dim(p[[1]])))
+      dimNames <- getDim(redim(model$pred))}
+    else {
+      p <- array(unlist(p), dim = dim(p[[1]]))
+      dimNames <- getDim(model$pred)}
+  }
+  else {
+    if (n > 1) {
+      p <- array(unlist(p), dim = c(n,dim(p[[1]])))
+      dimNames <- getDim(redim(model$pred,loc = TRUE))}
+    else {
+      p <- array(unlist(p), dim = dim(p[[1]]))
+      dimNames <- getDim(model$pred)}
+  }
+  pred <- model$pred
+  pred$Data <- p
+  attr(pred$Data, "dimensions") <- dimNames
+  pred$Dates <- newdata$Dates
+  return(pred)
 }
 
 ##############################################################################################################
