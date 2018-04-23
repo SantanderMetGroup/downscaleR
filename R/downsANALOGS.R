@@ -21,7 +21,7 @@
 #' The model would be the data where to search the analogs. For this reason this function only saves the information to search analogs in a list. 
 #' @author J. Bano-Medina
 #' @export
-analogs.train <- function(x, y, dates, n.analogs = 4, sel.fun = "mean", window = 0, n.random = NULL, pool = 0){
+analogs.train <- function(x, y, dates, n.analogs = 4, sel.fun = "mean", window = 7, n.random = NULL, pool = 0){
   if (n.analogs == 1) {sel.fun <- NULL}
   return(list("dataset_x" = x, "dataset_y" = y, "dates" = list("train" = dates), "info" = list("n.analogs" = n.analogs, "sel.fun" = sel.fun, "window" = window, "n.random" = n.random, "pool" = pool)))}
 
