@@ -133,9 +133,9 @@ model.reg <- downscale.train(xyT, method = "NN", site = "multi",
 # Downscaling PRECIPITATION - Local model with the closest 
 # 4 grid points and multisite linear regression.
 xyT.local <- prepare_predictors(x = x, y = y,
-                local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+                local.predictors = list(neigh.vars = "hus@850",n.neighs = 4))
 xyT.local.bin <- prepare_predictors(x = x, y = ybin,
-                 local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+                 local.predictors = list(neigh.vars = "hus@850",n.neighs = 4))
 model.ocu <- downscale.train(xyT.local.bin, method = "GLM", fitting = 'MP')
 model.reg <- downscale.train(xyT.local    , method = "GLM", fitting = 'MP')
 # Downscaling PRECIPITATION - Principal Components (PCs) 
