@@ -98,7 +98,7 @@
 #' # Reconstructing the downscaled serie in 3 folds with local predictors.
 #' pred <- downscale.cv(x,y,folds = 3,type = "chronological", 
 #'                      scale = TRUE, method = "GLM", filt = ">0",
-#'                      local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+#'                      local.predictors = list(neigh.vars = "hus@850",n.neighs = 4))
 
 downscale.cv <- function(x, y, method,
                          folds = 4, type = "chronological", scale = FALSE, site = "single", spatial.frame = "gridbox", time.frame = "none",

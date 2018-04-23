@@ -60,9 +60,9 @@
 #' pred.reg <- downscale.predict(xyT    , model.reg)
 #' # Downscaling PRECIPITATION - Local model with the closest 4 grid points.
 #' xyT.local     <- prepare_predictors(x = x,y = y,
-#'                      local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+#'                      local.predictors = list(neigh.vars = "hus@850",n.neighs = 4))
 #' xyT.local.bin <- prepare_predictors(x = x,y = ybin,
-#'                      local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
+#'                      local.predictors = list(neigh.vars = "hus@850",n.neighs = 4))
 #' xyt.local     <- prepare_newdata(newdata = x, predictor = xyT.local)
 #' xyt.local.bin <- prepare_newdata(newdata = x, predictor = xyT.local.bin)
 #' model.ocu <- downscale.train(xyT.local.bin, method = "GLM", fitting = 'MP')
