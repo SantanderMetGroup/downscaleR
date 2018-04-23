@@ -12,13 +12,10 @@ downscale.predict(newdata, model)
 \item{model}{An object containing the statistical model as returned from  \code{\link[downscaleR]{downscale.train}}.}
 }
 \value{
-A list of predictions for each member.
+A regular/irregular grid object.
 }
 \description{
 Downscale data to local scales by statistical models previously obtained by \code{\link[downscaleR]{downscale.train}}.
-}
-\details{
-The function can downscale in both global and local mode, though not simultaneously.
 }
 \examples{
 # Loading predictors

@@ -4,22 +4,21 @@
 \alias{downscale.train}
 \title{Downscale climate data.}
 \usage{
-downscale.train(obj, method, site = c("single", "multi", "mix"),
-  filt = NULL, ...)
+downscale.train(obj, method, filter = NULL, ...)
 }
 \arguments{
 \item{obj}{An object. The object as returned by \code{\link[downscaleR]{prepare_predictors}}.}
 
 \item{method}{A string value. Type of transer function. Options are c("analogs","GLM","NN").}
 
-\item{site}{A character. Optional values are c("single","multi","mix). The study can be singlesite,multisite or mix (which is a mixture between local variables and global variables). Default is "single". Multisite option is only available when 
-the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP".}
-
-\item{filt}{A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.}
+\item{filter}{A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 Everything concerning these parameters is explained in the section \code{Details}. 
 However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.}
+
+\item{site}{A character. Optional values are c("single","multi","mix). The study can be singlesite,multisite or mix (which is a mixture between local variables and global variables). Default is "single". Multisite option is only available when 
+the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP".}
 }
 \value{
 A list of objects that contains the prediction on the train dataset and the model.
@@ -126,7 +125,7 @@ model <- downscale.train(xyT, method = "analogs",
 model.ocu <- downscale.train(xyT.bin, method = "GLM", 
                            family = binomial(link = "logit"))
 model.reg <- downscale.train(xyT, method = "GLM", 
-                        family = "gaussian", filt = ">0")
+                        family = "gaussian", filter = ">0")
 # ... via a neural network ...
 model.ocu <- downscale.train(xyT.bin, method = "NN", site = "multi", 
                              learningrate = 0.1, numepochs = 10, hidden = 5, 
@@ -151,7 +150,7 @@ xyT.pc.bin <- prepare_predictors(x = x,y = ybin,
 model.ocu <- downscale.train(xyT.pc.bin, 
               method = "GLM" , family = binomial(link = "logit"))
 model.reg <- downscale.train(xyT.pc, method = "GLM", 
-             family = Gamma(link = "log"), filt = ">0")
+             family = Gamma(link = "log"), filter = ">0")
 }
 \author{
 J. Bano-Medina

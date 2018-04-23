@@ -27,22 +27,19 @@
 #' @param folds Could be a fraction, value between (0,1) indicating the fraction of the data that will define the train set, 
 #' or an integer indicating the number of folds. It can also be a list of folds indicating the years of each fold. 
 #' @param type A string, c("chronological","random"). Indicates how to split the data in folds. Default is "chronological".
-#' @param scale A logical value. If TRUE then the data is standardized. Default is FALSE.
-#' @param site A character. Optional values are c("single","multi","mix). The study can be singlesite,multisite or mix (which is a mixture between local variables and global variables). Multisite option is only available when 
-#' the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP".
+#' @param scale.list A list of the parameters related to scale grids. This parameter calls the function \code{\link[transformeR]{scaleGrid}}. See the function definition for details on the parameters accepted.
 #' @param time.frame Character indicating the time frame to perform the scaling. Possible values are "none", which considers the climatological mean of the 
 #' whole period given in base and/or ref, "monthly", that performs the calculation on a monthly basis and "daily", for a julian day-based approach.
-#' @param spatial.frame Character indicating wether to perform the statistics of the field or per gridbox. Options are c("gridbox","field"), default is "gridbox.
 #' @param global.vars An optional character vector with the short names of the variables of the input x multigrid to be retained as global predictors 
 #' (use the getVarNames helper if not sure about variable names). 
 #' This argument just produces a call to subsetGrid, but it is included here for better flexibility in downscaling experiments (predictor screening...). 
 #' For instance, it allows to use some specific variables contained in x as local predictors and the remaining ones, specified in subset.vars, 
 #' as either raw global predictors or to construct the combined PC.
-#' @param PCA Default to NULL, and not used. Otherwise, a named list of arguments in the form argument = value, 
+#' @param combined.only Optional, and only used if spatial.predictors parameters are passed. Should the combined PC be used as the only global predictor? Default to TRUE. 
+#' Otherwise, the combined PC constructed with which.combine argument in prinComp is append to the PCs of the remaining variables within the grid.
+#' @param spatial.predictors Default to NULL, and not used. Otherwise, a named list of arguments in the form argument = value, 
 #' with the arguments to be passed to prinComp to perform Principal Component Analysis of the predictors grid (x). 
 #' See Details on principal component analysis of predictors.
-#' @param combined.only Optional, and only used if PCA parameters are passed. Should the combined PC be used as the only global predictor? Default to TRUE. 
-#' Otherwise, the combined PC constructed with which.combine argument in prinComp is append to the PCs of the remaining variables within the grid.
 #' @param local.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the following arguments:
 #'  \itemize{
@@ -56,9 +53,13 @@
 #'    than one variable in \code{neigh.vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
 #'    length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
 #'  }
-#' @param neurons A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.
-#' @param module A numeric value. Indicates the size of the mask's module. Belongs to a specific type of ELM called RF-ELM.
-#' @param filt A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.
+#'  @param extended.predictors This is a parameter related to the extreme learning machine and reservoir computing framework where input data is randomly projected into a new space of size \code{n}. Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+#'  with the following arguments:
+#'  \itemize{
+#'    \item \code{n}: A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.
+#'    \item \code{module}: A numeric value (Optional). Indicates the size of the mask's module. Belongs to a specific type of ELM called RF-ELM.
+#'  }
+#' @param filter A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. 
 #' Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 #' Everything concerning these parameters is explained in the section \code{Details} of the function \code{\link[downscaleR]{downscale.train}}. However, if wanted, the atomic functions can be seen here: 
@@ -66,12 +67,12 @@
 #' @details The functon relies on \code{\link[downscaleR]{prepare_predictors}}, \code{\link[downscaleR]{prepare_newdata}}, \code{\link[downscaleR]{downscale.train}}, and \code{\link[downscaleR]{downscale.predict}}. 
 #' For more information please visit these functions.
 #' If the variable to downscale is the precipitation and it is a binary variable, then two temporal series will be returned:
-#' 1) The temporal serie with binary values filtered by a threshold adjusted by the train dataset, see \code{\link[transformeR]{convert2bin}} for more details.
+#' 1) The temporal serie with binary values filtered by a threshold adjusted by the train dataset, see \code{\link[transformeR]{binaryGrid}} for more details.
 #' 2) The temporal serie with the results obtained by the downscaling, without any binary converting process.
 #' We recommend to get rid of the NaN/NA when dealing with multisite mode.
 #' 
 #' @return The reconstructed downscaled temporal serie.
-#' @importFrom transformeR dataSplit convert2bin localScaling
+#' @importFrom transformeR dataSplit scaleGrid binaryGrid
 #' @author J. Bano-Medina
 #' @export
 #' @examples 
@@ -82,52 +83,56 @@
 #' y <- getTemporalIntersection(obs = y,prd = x, "obs" )
 #' x <- getTemporalIntersection(obs = y,prd = x, "prd" )
 #' # Reconstructing the downscaled serie in 3 folds
-#' pred <- downscale.cv(x,y,folds = 3,type = "chronological", 
-#'         scale = TRUE, method = "GLM", filt = ">0")
+#' pred <- downscale.cv(x,y,folds = 3,type.time = "chronological", 
+#'         method = "GLM", filter = ">0")
 #' # ... or with dates ...
-#' pred <- downscale.cv(x,y,type = "chronological", scale = TRUE, 
-#'                      method = "GLM", filt = ">0",
+#' pred <- downscale.cv(x,y,type.time = "chronological", 
+#'                      method = "GLM", filter = ">0",
 #'                      folds = list(c("1985","1986","1987","1988"),
 #'                                   c("1989","1990","1991","1992"),
 #'                                   c("1993","1994","1995")))
 #' # Reconstructing the downscaled serie in 3 folds with a 
 #' # pre-processed of the predictors with principal component analysis.
-#' pred <- downscale.cv(x,y,folds = 3,type = "chronological", 
-#'                      method = "GLM", family = Gamma(link = "log"), filt = ">0",
-#'                      PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
+#' pred <- downscale.cv(x,y,folds = 3,type.time = "chronological", 
+#'                      method = "GLM", family = Gamma(link = "log"), filter = ">0",
+#'                      spatial.predictors = list(which.combine = getVarNames(x),v.exp = 0.9))
 #' # Reconstructing the downscaled serie in 3 folds with local predictors.
-#' pred <- downscale.cv(x,y,folds = 3,type = "chronological", 
-#'                      scale = TRUE, method = "GLM", filt = ">0",
+#' pred <- downscale.cv(x,y,folds = 3,type.time = "chronological", 
+#'                      method = "GLM", filter = ">0",
 #'                      local.predictors = list(neigh.vars = "shum@850",n.neighs = 4))
 
 downscale.cv <- function(x, y, method,
-                         folds = 4, type = "chronological", scale = FALSE, site = "single", spatial.frame = "gridbox", time.frame = "none",
-                         global.vars = NULL, PCA = NULL, combined.only = TRUE, local.predictors = NULL, neurons = NULL, module = NULL,
-                         filt = NULL, ...) {
+                         folds = 4, type = "chronological", 
+                         scale.list = NULL,
+                         global.vars = NULL, combined.only = TRUE, spatial.predictors = NULL, local.predictors = NULL, extended.predictors = NULL,
+                         filter = NULL, ...) {
   data <- dataSplit(x,y, f = folds, type = type)
   p <- lapply(1:length(data), FUN = function(xx) {
     print(paste("fold:",xx,"-->","calculating..."))
     xT <- data[[xx]]$train$x ; yT <- data[[xx]]$train$y
     xt <- data[[xx]]$test$x  ; yt <- data[[xx]]$test$y
-    if (scale) {
-      xt <- localScaling(xt, base = xT, scale = scale, spatial.frame = spatial.frame, time.frame = time.frame)
-      xT <- localScaling(xT, base = xT, scale = scale, spatial.frame = spatial.frame, time.frame = time.frame)
+    if (!is.null(scale)) {
+      scale.list$base <- xT
+      scale.list$grid <- xt
+      xt <- do.call("scaleGrid",args = scale.list)
+      scale$grid <- xT
+      xT <- do.call("scaleGrid",args = scale.list)
     }
-    xT <- prepare_predictors(x = xT, y = yT, global.vars, PCA, combined.only, local.predictors, neurons, module)
-    xt <- prepare_newdata(newdata = xt, predictor = xT)
-    model <- downscale.train(xT, method, site, filt, ...)
+    xT <- prepareData(x = xT, y = yT, global.vars = global.vars, combined.only = combined.only, spatial.predictors = spatial.predictors, local.predictors = local.predictors, extended.predictors = extended.predictors)
+    xt <- prepareNewData(newdata = xt, data.structure = xT)
+    model <- downscale.train(xT, method, filter, ...)
     if (all(as.vector(y$Data) %in% c(0,1,NA,NaN), na.rm = TRUE)) {
-      y.prob <- downscale.predict(xt, model)[[1]]
-      if ((site == "single" || site == "mix") && method == "GLM") {
-        if (model$conf$atomic_model[[1]]$info$simulate == "yes") {
+      y.prob <- downscale.predict(xt, model)
+      if (method == "GLM") {
+        if (model$model$atomic_model[[1]]$info$simulate == "yes") {
           y.bin  <- y.prob}
         else {
-          y.bin  <- convert2bin(y.prob, ref.obs = yT, ref.pred = model$pred)}}
+          y.bin  <- binaryGrid(y.prob, ref.obs = yT, ref.pred = model$pred)}}
       else{
-        y.bin  <- convert2bin(y.prob, ref.obs = yT, ref.pred = model$pred)}
+        y.bin  <- binaryGrid(y.prob, ref.obs = yT, ref.pred = model$pred)}
       out <- list(y.prob$Data, y.bin$Data)}
     else{
-      out <- list(downscale.predict(xt, model)[[1]]$Data)}
+      out <- list(downscale.predict(xt, model)$Data)}
     return(out)
     })
   

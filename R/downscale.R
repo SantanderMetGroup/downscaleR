@@ -39,7 +39,7 @@
 #' using the mean and sigma parameters globally computed for the whole spatial domain.
 #' @return The prediction structure.
 #' @export 
-#' @importFrom transformeR localScaling
+#' @importFrom transformeR scaleGrid
 #' @examples
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' newdata <- subsetGrid(x, years = 1994:1995)
@@ -98,26 +98,26 @@ downscale <- function(y,
     folds <- unique(substr(as.Date(getRefDates(x)),1,4)) %>% as.list()
   }
   
-  if (!is.null(n.pcs)) {PCA <- list(n.eofs = c(rep(1,length(getVarNames(x))),n.pcs),which.combine = getVarNames(x))}
-  else {PCA <- NULL}
+  if (!is.null(n.pcs)) {spatial.predictors <- list(n.eofs = c(rep(1,length(getVarNames(x))),n.pcs),which.combine = getVarNames(x))}
+  else {spatial.predictors <- NULL}
   
   if (method == "glm") {
     if (simulate == "yes") {
-      y.ocu <- convert2bin(y,threshold = 0.01)
-      y <- convert2bin(y,threshold = 0.01, partial = TRUE)}
+      y.ocu <- binaryGrid(y,threshold = 0.01)
+      y <- binaryGrid(y,threshold = 0.01, partial = TRUE)}
     else{
-      y.ocu <- convert2bin(y,threshold = wet.threshold)  
-      y <- convert2bin(y,threshold = wet.threshold, partial = TRUE)  
+      y.ocu <- binaryGrid(y,threshold = wet.threshold)  
+      y <- binaryGrid(y,threshold = wet.threshold, partial = TRUE)  
     }
   }
   
   
   # Downscaling and cross-validation (if selected...)  
   if (cross.val == "none") {
-    newdata <- localScaling(newdata,base = x, scale = TRUE)
-    x <- localScaling(x,base = x, scale = TRUE)
-    gridT <- prepare_predictors(x,y,global.vars = getVarNames(x),PCA)
-    gridt <- prepare_newdata(newdata,gridT)
+    newdata <- scaleGrid(newdata,base = x, type = "standardize")
+    x <- scaleGrid(x,base = x, type = "standardize")
+    gridT <- prepareData(x,y,global.vars = getVarNames(x),spatial.predictors)
+    gridt <- prepareNewData(newdata,gridT)
     if (method == "analogs") {
       model <- downscale.train(gridT,method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun, site = "multi")
       yp <- downscale.predict(gridt,model)[[1]]
@@ -127,17 +127,17 @@ downscale <- function(y,
       model.reg <- downscale.train(gridT, method = "GLM", family = Gamma(link = "log"), filt = ">0", simulate = simulate)
       yp.reg <- downscale.predict(gridt,model.reg)[[1]]
       # Ocurrence
-      gridT <- prepare_predictors(x,y.ocu,global.vars = getVarNames(x),PCA)
+      gridT <- prepareData(x,y.ocu,global.vars = getVarNames(x),spatial.predictors)
       model.ocu <- downscale.train(gridT,method = "GLM", family = binomial(link = "logit"), simulate = simulate)
       yp.ocu <- downscale.predict(gridt,model.ocu)[[1]]
       # Complete serie
       if (simulate == "no") {
-        yp.ocu <- convert2bin(yp.ocu, ref.obs = y.ocu, ref.pred = yp.ocu)
+        yp.ocu <- binaryGrid(yp.ocu, ref.obs = y.ocu, ref.pred = yp.ocu)
       }
       yp <- y
       yp$Data <- yp.ocu$Data*yp.reg$Data
       if (simulate == "yes") {
-        yp <- convert2bin(yp,threshold = wet.threshold, partial = TRUE)
+        yp <- binaryGrid(yp,threshold = wet.threshold, partial = TRUE)
       }
     }
     else if (method == "lm") {
@@ -147,25 +147,25 @@ downscale <- function(y,
   }  
   else {# Leave-one-out and cross-validation 
     if (method == "analogs") {
-      yp <- downscale.cv(x,y,folds = folds, scale = TRUE, PCA = PCA, site = "multi",
+      yp <- downscale.cv(x,y,folds = folds, type = "standardize", spatial.predictors = spatial.predictors, site = "multi",
                          method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun)
     }
     else if (method == "glm") {
       # Ocurrence
-      yp.ocu <- downscale.cv(x,y.ocu,folds = folds, scale = TRUE, PCA = PCA,
+      yp.ocu <- downscale.cv(x,y.ocu,folds = folds, type = "standardize", spatial.predictors = spatial.predictors,
                              method = "GLM", family = binomial(link = "logit"), simulate = simulate)
       # Amounts
-      yp.reg <- downscale.cv(x,y,folds = folds, scale = TRUE, PCA = PCA,
+      yp.reg <- downscale.cv(x,y,folds = folds, type = "standardize", spatial.predictors = spatial.predictors,
                              method = "GLM", family = Gamma(link = "log"), filt = ">0", simulate = simulate)
       # Complete serie
       yp <- y
       yp$Data <- yp.ocu[[2]]$Data*yp.reg$Data
       if (simulate == "yes") {
-        yp <- convert2bin(yp,threshold = wet.threshold,partial = TRUE)
+        yp <- binaryGrid(yp,threshold = wet.threshold, partial = TRUE)
       }
     }
     else if (method == "lm") {
-      yp <- downscale.cv(x,y,folds = folds, scale = TRUE, PCA = PCA,
+      yp <- downscale.cv(x,y,folds = folds, type = "standardize", spatial.predictors = spatial.predictors,
                          method = "GLM", family = "gaussian")
     }
   }

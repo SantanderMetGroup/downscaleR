@@ -24,7 +24,7 @@
 #' @param method A string value. Type of transer function. Options are c("analogs","GLM","NN").
 #' @param site A character. Optional values are c("single","multi","mix). The study can be singlesite,multisite or mix (which is a mixture between local variables and global variables). Default is "single". Multisite option is only available when 
 #' the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP".
-#' @param filt A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.
+#' @param filter A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 #' Everything concerning these parameters is explained in the section \code{Details}. 
 #' However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
@@ -133,7 +133,7 @@
 #' model.ocu <- downscale.train(xyT.bin, method = "GLM", 
 #'                            family = binomial(link = "logit"))
 #' model.reg <- downscale.train(xyT, method = "GLM", 
-#'                         family = "gaussian", filt = ">0")
+#'                         family = "gaussian", filter = ">0")
 #' # ... via a neural network ...
 #' model.ocu <- downscale.train(xyT.bin, method = "NN", site = "multi", 
 #'                              learningrate = 0.1, numepochs = 10, hidden = 5, 
@@ -158,73 +158,94 @@
 #' model.ocu <- downscale.train(xyT.pc.bin, 
 #'               method = "GLM" , family = binomial(link = "logit"))
 #' model.reg <- downscale.train(xyT.pc, method = "GLM", 
-#'              family = Gamma(link = "log"), filt = ">0")
+#'              family = Gamma(link = "log"), filter = ">0")
 
-downscale.train <- function(obj, method, site = c("single","multi","mix"), filt = NULL, ...) {
+downscale.train <- function(obj, method, filter = NULL, ...) {
   dimNames <- getDim(obj$y)
   pred <- obj$y
-# Multi-site
-  if (site == "multi") {
-    if (length(dim(obj$y$Data)) <= 1) {
-      yy = matrix(obj$y$Data,nrow = length(obj$y$Data), ncol = 1)}
+  if ( method == "GLM") {
+    if (attr(obj,"nature") == "spatial+local") {
+      site <- "mix"}
     else {
-      yy <- obj$y$Data}
+      site <- "single"
+    }
+  }
+  if ( method == "NN" || method == "analogs") {
+    if (attr(obj,"nature") == "local") {
+      site <- "single"
+    }
+    else if (attr(obj,"nature") == "spatial+local") {
+      site <- "mix"
+    }
+    else {
+      site <- "multi"
+    }
+  }
+  
+  # Multi-site
+  if (site == "multi") {
+    yy <- obj$y$Data
     if (method == "analogs") {
       atomic_model <- downs.train(obj$x.global, yy, method, dates = getRefDates(obj$y), ...)}
-    else {
+    else {      
       atomic_model <- downs.train(obj$x.global, yy, method, ...)}
     if (method == "analogs") {atomic_model$dates$test <- getRefDates(obj$y)}
     pred$Data <- downs.predict(obj$x.global, method, atomic_model)}
-# Single-site
+  # Single-site
   else if (site == "single") {
-    stations <- ncol(as.matrix(obj$y$Data))
-    n.obs    <- nrow(as.matrix(obj$y$Data))
-    pred$Data    <- array(data = NA, dim = c(n.obs,stations))
+    pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(y$Data,"dimensions")
+    if (isRegular(y)) {
+      pred$Data <- array3Dto2Dmat(pred$Data)
+    }
+    stations <- dim(pred$Data)[which(getDim(pred) == "loc")]
     atomic_model <- vector("list",stations)
     for (i in 1:stations) {
-      if (!is.null(obj$x.local)) {
+      if (attr(obj,"nature") == "local") {
         xx = obj$x.local[[i]]$member_1}
       else {
         xx = obj$x.global}
-      if (length(dim(obj$y$Data)) <= 1) {
-        yy = matrix(obj$y$Data,nrow = n.obs, ncol = 1)}
-      else{
-      yy = obj$y$Data[,i, drop = FALSE]}
-      if (is.null(filt)) {ind = eval(parse(text = "which(!is.na(yy))"))}
-      else {ind = eval(parse(text = paste0("which(!is.na(yy) & yy",filt,")")))}
+      yy = obj$y$Data[,i, drop = FALSE]
+      if (is.null(filter)) {ind = eval(parse(text = "which(!is.na(yy))"))}
+      else {ind = eval(parse(text = paste0("which(!is.na(yy) & yy",filter,")")))}
       if (method == "analogs") {
         atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, dates = getRefDates(obj$y)[ind], ...)}
       else {
         atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, ...)}
       if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
-      pred$Data[,i] <- downs.predict(xx, method, atomic_model[[i]])}
+      pred$Data[,i] <- downs.predict(xx, method, atomic_model[[i]])
+    }
+    if (isRegular(y)) {
+      pred$Data <- mat2Dto3Darray(pred$Data, x = pred$xyCoords$x, y = pred$xyCoords$y)
+    }
   }
   # Mix - Global predictors with local predictors
   else if (site == "mix") {
-    stations <- ncol(as.matrix(obj$y$Data))
-    n.obs    <- nrow(as.matrix(obj$y$Data))
-    pred$Data    <- array(data = NA, dim = c(n.obs,stations))
+    pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(y$Data,"dimensions")
+    if (length(dim(y$Data)) > 2) {
+      pred$Data <- array3Dto2Dmat(pred$Data)
+    }
+    stations <- dim(pred$Data)[which(getDim(pred) == "loc")]
     atomic_model <- vector("list",stations)
     for (i in 1:stations) {
       xx1 = obj$x.local[[i]]$member_1
       xx2 = obj$x.global
       xx <- cbind(xx1,xx2)
-      if (length(dim(obj$y$Data)) <= 1) {
-        yy = matrix(obj$y$Data,nrow = n.obs, ncol = 1)}
-      else{
-        yy = obj$y$Data[,i, drop = FALSE]}
-      if (is.null(filt)) {ind = eval(parse(text = "which(!is.na(yy))"))}
-      else {ind = eval(parse(text = paste0("which(!is.na(yy) & yy",filt,")")))}
+      yy = obj$y$Data[,i, drop = FALSE]
+      if (is.null(filter)) {ind = eval(parse(text = "which(!is.na(yy))"))}
+      else {ind = eval(parse(text = paste0("which(!is.na(yy) & yy",filter,")")))}
       if (method == "analogs") {
         atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, dates = getRefDates(obj$y)[ind], ...)}
       else {
         atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, ...)}
       if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
       pred$Data[,i] <- downs.predict(xx, method, atomic_model[[i]])}
+    if (length(dim(y$Data)) > 2) {
+      pred$Data <- mat2Dto3Darray(pred$Data, x = pred$xyCoords$x, y = pred$xyCoords$y)
+    }
   }
   
   attr(pred$Data, "dimensions") <- dimNames
-  model <- list("pred" = pred, "conf" = list("method" = method, "site" = site, "atomic_model" = atomic_model))
+  model <- list("pred" = pred, "model" = list("method" = method, "site" = site, "atomic_model" = atomic_model))
   return(model)}
 
 ##############################################################################################################
