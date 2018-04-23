@@ -24,8 +24,7 @@ Prepare the prediction data according to the definition of the experiment
 \seealso{
 Other downscaling.helpers: \code{\link{predictor.nn.indices}},
   \code{\link{predictor.nn.values}},
-  \code{\link{prepareData}}, \code{\link{prepare_newdata}},
-  \code{\link{prepare_predictors}}
+  \code{\link{prepareData}}
 }
 \author{
 J Bedia

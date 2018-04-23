@@ -16,9 +16,6 @@ downscale.train(obj, method, filter = NULL, ...)
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 Everything concerning these parameters is explained in the section \code{Details}. 
 However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.}
-
-\item{site}{A character. Optional values are c("single","multi","mix). The study can be singlesite,multisite or mix (which is a mixture between local variables and global variables). Default is "single". Multisite option is only available when 
-the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP".}
 }
 \value{
 A list of objects that contains the prediction on the train dataset and the model.

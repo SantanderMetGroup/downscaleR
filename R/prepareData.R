@@ -44,7 +44,7 @@
 #'    than one variable in \code{vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
 #'    length as \code{vars} to indicate a different number of nearest neighbours for different variables.
 #'  }
-#'  @param extended.predictors This is a parameter related to the extreme learning machine and reservoir computing framework where input data is randomly projected into a new space of size \code{n}. Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+#' @param extended.predictors This is a parameter related to the extreme learning machine and reservoir computing framework where input data is randomly projected into a new space of size \code{n}. Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the following arguments:
 #'  \itemize{
 #'    \item \code{n}: A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.

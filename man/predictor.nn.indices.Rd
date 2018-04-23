@@ -27,9 +27,7 @@ Calculate spatial index position of nearest neighbors
 }
 \seealso{
 Other downscaling.helpers: \code{\link{predictor.nn.values}},
-  \code{\link{prepareData}}, \code{\link{prepareNewData}},
-  \code{\link{prepare_newdata}},
-  \code{\link{prepare_predictors}}
+  \code{\link{prepareData}}, \code{\link{prepareNewData}}
 }
 \author{
 J Bedia

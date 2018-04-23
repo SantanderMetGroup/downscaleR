@@ -48,8 +48,9 @@ with the following arguments:
   \item \code{n.neighs}: Integer. Number of nearest neighbours to use. If a single value is introduced, and there is more
   than one variable in \code{neigh.vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
   length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
-}
-@param extended.predictors This is a parameter related to the extreme learning machine and reservoir computing framework where input data is randomly projected into a new space of size \code{n}. Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+}}
+
+\item{extended.predictors}{This is a parameter related to the extreme learning machine and reservoir computing framework where input data is randomly projected into a new space of size \code{n}. Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 with the following arguments:
 \itemize{
   \item \code{n}: A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.
@@ -62,9 +63,6 @@ with the following arguments:
 Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 Everything concerning these parameters is explained in the section \code{Details} of the function \code{\link[downscaleR]{downscale.train}}. However, if wanted, the atomic functions can be seen here: 
 \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.}
-
-\item{time.frame}{Character indicating the time frame to perform the scaling. Possible values are "none", which considers the climatological mean of the 
-whole period given in base and/or ref, "monthly", that performs the calculation on a monthly basis and "daily", for a julian day-based approach.}
 }
 \value{
 The reconstructed downscaled temporal serie.

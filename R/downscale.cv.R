@@ -28,8 +28,6 @@
 #' or an integer indicating the number of folds. It can also be a list of folds indicating the years of each fold. 
 #' @param type A string, c("chronological","random"). Indicates how to split the data in folds. Default is "chronological".
 #' @param scale.list A list of the parameters related to scale grids. This parameter calls the function \code{\link[transformeR]{scaleGrid}}. See the function definition for details on the parameters accepted.
-#' @param time.frame Character indicating the time frame to perform the scaling. Possible values are "none", which considers the climatological mean of the 
-#' whole period given in base and/or ref, "monthly", that performs the calculation on a monthly basis and "daily", for a julian day-based approach.
 #' @param global.vars An optional character vector with the short names of the variables of the input x multigrid to be retained as global predictors 
 #' (use the getVarNames helper if not sure about variable names). 
 #' This argument just produces a call to subsetGrid, but it is included here for better flexibility in downscaling experiments (predictor screening...). 
@@ -53,7 +51,7 @@
 #'    than one variable in \code{neigh.vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
 #'    length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
 #'  }
-#'  @param extended.predictors This is a parameter related to the extreme learning machine and reservoir computing framework where input data is randomly projected into a new space of size \code{n}. Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+#' @param extended.predictors This is a parameter related to the extreme learning machine and reservoir computing framework where input data is randomly projected into a new space of size \code{n}. Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the following arguments:
 #'  \itemize{
 #'    \item \code{n}: A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.

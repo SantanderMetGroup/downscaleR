@@ -24,9 +24,7 @@ Constructs the local predictor matrices given their spatial index position
 }
 \seealso{
 Other downscaling.helpers: \code{\link{predictor.nn.indices}},
-  \code{\link{prepareData}}, \code{\link{prepareNewData}},
-  \code{\link{prepare_newdata}},
-  \code{\link{prepare_predictors}}
+  \code{\link{prepareData}}, \code{\link{prepareNewData}}
 }
 \author{
 J Bedia

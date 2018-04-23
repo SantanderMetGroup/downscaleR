@@ -22,8 +22,6 @@
 #' @description Downscale data to local scales by statistical methods: analogs, generalized linear models (GLM) and Neural Networks (NN). 
 #' @param obj An object. The object as returned by \code{\link[downscaleR]{prepare_predictors}}.
 #' @param method A string value. Type of transer function. Options are c("analogs","GLM","NN").
-#' @param site A character. Optional values are c("single","multi","mix). The study can be singlesite,multisite or mix (which is a mixture between local variables and global variables). Default is "single". Multisite option is only available when 
-#' the selected method is or analogs or NN. For GLM, multisite can only be performed when the optional parameter of GLM's \code{fitting}, is fitting = "MP".
 #' @param filter A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 #' Everything concerning these parameters is explained in the section \code{Details}. 

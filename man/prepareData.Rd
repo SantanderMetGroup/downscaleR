@@ -40,8 +40,9 @@ with the following arguments:
   \item \code{n}: Integer. Number of nearest neighbours to use. If a single value is introduced, and there is more
   than one variable in \code{vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
   length as \code{vars} to indicate a different number of nearest neighbours for different variables.
-}
-@param extended.predictors This is a parameter related to the extreme learning machine and reservoir computing framework where input data is randomly projected into a new space of size \code{n}. Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
+}}
+
+\item{extended.predictors}{This is a parameter related to the extreme learning machine and reservoir computing framework where input data is randomly projected into a new space of size \code{n}. Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 with the following arguments:
 \itemize{
   \item \code{n}: A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.
@@ -73,9 +74,7 @@ Configuration of data for flexible downscaling experiment definition
 \seealso{
 Other downscaling.helpers: \code{\link{predictor.nn.indices}},
   \code{\link{predictor.nn.values}},
-  \code{\link{prepareNewData}},
-  \code{\link{prepare_newdata}},
-  \code{\link{prepare_predictors}}
+  \code{\link{prepareNewData}}
 }
 \author{
 J. Bedia, D. San-Martín and J.M. Gutiérrez
