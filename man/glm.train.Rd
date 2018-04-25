@@ -47,8 +47,6 @@ However, the default ones can be found in \code{\link[stats]{family}}. If fittin
 Useful for the "poisson" family (e.g. log of exposure time), or for refining a model by starting at a current fit. 
 Default is NULL. If supplied, then values must also be supplied to the predict function.
 }
-\item \code{MP} Solves the ordinary least squares (OLS) by a Moore-Penrose (MP) inverse. No more optional parameters
-are permitted when fitting = "MP". Multisite can be performed in this way of fitting the model.
 }
 There are two things to consider. 
 1) If family = "binomial" then type = "response" when predicting values.

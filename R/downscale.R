@@ -24,7 +24,7 @@
 #' @param method Downscaling method. Options are c = ("analogs","glm","lm"). Glm can only be set when downscaling precipitation. 
 #' @param simulate Character. Options are \code{"no"}, \code{"yes"}.
 #' @param n.analogs Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.
-#' @param sel.fun Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n.neig = 1}.
+#' @param sel.fun Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n = 1}.
 #' Current values are \code{"mean"} (the default), \code{"wmean"},  \code{"max"},  \code{"min"} and  \code{"median"}.
 #' @param wet.threshold Value below which precipitation amount is considered zero 
 #' @param n.pcs Integer indicating the number of EOFs to be used as predictors
@@ -54,26 +54,20 @@
 #' yp <- downscale(y,x,newdata,method = "analogs")
 #' # kfold
 #' yp <- downscale(y,x,method = "analogs", n.pcs = 15,
-#'                cross.val = "kfold", folds = 2)
-#' yp <- downscale(y,x,method = "analogs", n.pcs = 15,
-#'               cross.val = "kfold", folds = list(c("1985","1986","1987"),
-#'                                                 c("1988","1989","1990"),
-#'                                                  c("1991","1992","1993")))
+#'                 cross.val = "kfold", folds = list(c("1985","1986","1987"),
+#'                                                   c("1988","1989","1990"),
+#'                                                   c("1991","1992","1993")))
 #' ### GLM ###
 #' # None
 #' yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10,
-#'                       wet.threshold = 1)
+#'                 wet.threshold = 1)
 #' yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10,
-#'                         wet.threshold = 1)
+#'                 wet.threshold = 1)
 #' # kfold
 #' yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
-#'                     cross.val = "kfold", folds = 2)
-#' yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10,
-#'                     cross.val = "kfold", folds = 2)
-#' yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
-#'                cross.val = "kfold", folds = list(c("1985","1986","1987"),
-#'                                                 c("1988","1989","1990"),
-#'                                                 c("1991","1992","1993")))
+#'                 cross.val = "kfold", folds = list(c("1985","1986","1987"),
+#'                                                   c("1988","1989","1990"),
+#'                                                   c("1991","1992","1993")))
 
 downscale <- function(y,
                        x,
@@ -119,17 +113,17 @@ downscale <- function(y,
     gridT <- prepareData(x,y,global.vars = getVarNames(x),spatial.predictors)
     gridt <- prepareNewData(newdata,gridT)
     if (method == "analogs") {
-      model <- downscale.train(gridT,method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun, site = "multi")
-      yp <- downscale.predict(gridt,model)[[1]]
+      model <- downscale.train(gridT,method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun)
+      yp <- downscale.predict(gridt,model)
     }
     else if (method == "glm") {
       # Amounts
       model.reg <- downscale.train(gridT, method = "GLM", family = Gamma(link = "log"), filter = ">0", simulate = simulate)
-      yp.reg <- downscale.predict(gridt,model.reg)[[1]]
+      yp.reg <- downscale.predict(gridt,model.reg)
       # Ocurrence
       gridT <- prepareData(x,y.ocu,global.vars = getVarNames(x),spatial.predictors)
       model.ocu <- downscale.train(gridT,method = "GLM", family = binomial(link = "logit"), simulate = simulate)
-      yp.ocu <- downscale.predict(gridt,model.ocu)[[1]]
+      yp.ocu <- downscale.predict(gridt,model.ocu)
       # Complete serie
       if (simulate == "no") {
         yp.ocu <- binaryGrid(yp.ocu, ref.obs = y.ocu, ref.pred = yp.ocu)
@@ -142,20 +136,20 @@ downscale <- function(y,
     }
     else if (method == "lm") {
       model <- downscale.train(gridT,method = "GLM", family = "gaussian")
-      yp <- downscale.predict(gridt,model)[[1]]
+      yp <- downscale.predict(gridt,model)
     }
   }  
   else {# Leave-one-out and cross-validation 
     if (method == "analogs") {
-      yp <- downscale.cv(x,y,folds = folds, type = "standardize", spatial.predictors = spatial.predictors, site = "multi",
+      yp <- downscale.cv(x,y,folds = folds, type = "chronological", scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
                          method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun)
     }
     else if (method == "glm") {
       # Ocurrence
-      yp.ocu <- downscale.cv(x,y.ocu,folds = folds, type = "standardize", spatial.predictors = spatial.predictors,
+      yp.ocu <- downscale.cv(x,y.ocu,folds = folds, type = "chronological", scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
                              method = "GLM", family = binomial(link = "logit"), simulate = simulate)
       # Amounts
-      yp.reg <- downscale.cv(x,y,folds = folds, type = "standardize", spatial.predictors = spatial.predictors,
+      yp.reg <- downscale.cv(x,y,folds = folds, type = "chronological", scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
                              method = "GLM", family = Gamma(link = "log"), filter = ">0", simulate = simulate)
       # Complete serie
       yp <- y
@@ -165,7 +159,7 @@ downscale <- function(y,
       }
     }
     else if (method == "lm") {
-      yp <- downscale.cv(x,y,folds = folds, type = "standardize", spatial.predictors = spatial.predictors,
+      yp <- downscale.cv(x,y,folds = folds,  type = "chronological", scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
                          method = "GLM", family = "gaussian")
     }
   }

@@ -39,8 +39,6 @@
   #' Useful for the "poisson" family (e.g. log of exposure time), or for refining a model by starting at a current fit. 
   #' Default is NULL. If supplied, then values must also be supplied to the predict function.
   #' }
-#' \item \code{MP} Solves the ordinary least squares (OLS) by a Moore-Penrose (MP) inverse. No more optional parameters
-#' are permitted when fitting = "MP". Multisite can be performed in this way of fitting the model.
 #' }
 #' There are two things to consider. 
 #' 1) If family = "binomial" then type = "response" when predicting values.
@@ -56,10 +54,6 @@ glm.train <- function(x, y, fitting = NULL, simulate = "no", ...) {
   if (is.null(fitting)) {
     df <- data.frame(cbind(y,x)); colnames(df) <- paste0('X',1:(dim(x)[2] + 1))
     weights <- glm(X1~.,data = df, ...)
-  }
-  else if (fitting == "MP") {
-    x <- cbind(x,array(data = 1,dim = c(nrow(x), 1)))
-    weights <- ginv(data.matrix(x)) %*% data.matrix(y)
   }
   else if (fitting == "stepwise") {
     df <- data.frame(cbind(y,x)); colnames(df) <- paste0('X',1:(dim(x)[2] + 1))
@@ -115,10 +109,6 @@ glm.predict <- function(x, weights, info) {
   if (is.null(info$fitting) || info$fitting == "stepwise") {
     df <- data.frame(x); colnames(df) <- paste0('X',2:(dim(x)[2] + 1))
     pred <- predict(weights, newdata = df, type = 'response')
-  }
-  else if (info$fitting == "MP") {
-    x <- cbind(x,array(data = 1,dim = c(nrow(x), 1)))
-    pred <- data.matrix(x) %*% weights
   }
   else if (info$fitting == "L1" || info$fitting == "L2" || info$fitting == "L1L2" || info$fitting == "gLASSO") {
     pred <- drop(predict(weights,x,type = "response"))

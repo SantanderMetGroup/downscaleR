@@ -20,7 +20,7 @@
 
 #' @title Downscale climate data.
 #' @description Downscale data to local scales by statistical methods: analogs, generalized linear models (GLM) and Neural Networks (NN). 
-#' @param obj An object. The object as returned by \code{\link[downscaleR]{prepare_predictors}}.
+#' @param obj An object. The object as returned by \code{\link[downscaleR]{prepareData}}.
 #' @param method A string value. Type of transer function. Options are c("analogs","GLM","NN").
 #' @param filter A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
@@ -79,8 +79,6 @@
       #' Useful for the "poisson" family (e.g. log of exposure time), or for refining a model by starting at a current fit. 
       #' Default is NULL. If supplied, then values must also be supplied to the predict function.
       #' }
-   #' \item \code{fitting = "MP"} Solves the ordinary least squares (OLS) by a Moore-Penrose (MP) inverse. No more optional parameters
-   #' are permitted when fitting = "MP".
    #' }
 #' There are two things to consider. 
 #' 1) If family = "binomial" then type = "response" when predicting values.
@@ -104,7 +102,7 @@
 #'    \item \code{pred}: An object with the same structure as the predictands input parameter, but with pred$Data being the predictions and not the observations.
 #'    \item \code{model}: A list with the information of the model: method, coefficients, fitting ...
 #'    }
-#'    
+#' @importFrom transformeR isRegular
 #' @author J. Bano-Medina
 #' @export
 #' @importFrom MASS ginv
@@ -117,46 +115,38 @@
 #' y <- VALUE_Iberia_pr
 #' y <- getTemporalIntersection(obs = y,prd = x, "obs" )
 #' x <- getTemporalIntersection(obs = y,prd = x, "prd" )
-#' ybin <- convert2bin(y, threshold = 1)
-#' x <- localScaling(x, base = x, scale = TRUE)
+#' ybin <- binaryGrid(y, threshold = 1)
+#' x <- scaleGrid(x, type = "standardize")
 #' # Prepare predictors and predictands
-#' xyT     <- prepare_predictors(x = x, y = y)
-#' xyT.bin <- prepare_predictors(x = x, y = ybin)
+#' xyT     <- prepareData(x = x, y = y)
+#' xyT.bin <- prepareData(x = x, y = ybin)
 #' # Downscaling PRECIPITATION
 #' # ... via analogs ...
-#' model <- downscale.train(xyT, method = "analogs", 
-#'          sel.fun = "mean", site = "multi")
-#' # ... via a logistic regression (ocurrence of precipitation) 
+#' model <- downscale.train(xyT, method = "analogs",
+#'                          sel.fun = "mean")
+#' # ... via a logistic regression (ocurrence of precipitation)
 #' # and gaussian regression (amount of precipitation) ...
-#' model.ocu <- downscale.train(xyT.bin, method = "GLM", 
-#'                            family = binomial(link = "logit"))
-#' model.reg <- downscale.train(xyT, method = "GLM", 
-#'                         family = "gaussian", filter = ">0")
+#' model.ocu <- downscale.train(xyT.bin, method = "GLM",
+#'                              family = binomial(link = "logit"))
+#' model.reg <- downscale.train(xyT, method = "GLM",
+#'                              family = "gaussian", filter = ">0")
 #' # ... via a neural network ...
-#' model.ocu <- downscale.train(xyT.bin, method = "NN", site = "multi", 
-#'                              learningrate = 0.1, numepochs = 10, hidden = 5, 
-#'                               output = 'linear')
-#' model.reg <- downscale.train(xyT, method = "NN", site = "multi", 
-#'                             learningrate = 0.1, numepochs = 10, 
+#' model.ocu <- downscale.train(xyT.bin, method = "NN",
+#'                              learningrate = 0.1, numepochs = 10, hidden = 5,
+#'                              output = 'linear')
+#' model.reg <- downscale.train(xyT, method = "NN",
+#'                              learningrate = 0.1, numepochs = 10,
 #'                              hidden = 5, output = 'linear')
-#' # Downscaling PRECIPITATION - Local model with the closest 
+#' # Downscaling PRECIPITATION - Local model with the closest
 #' # 4 grid points and multisite linear regression.
-#' xyT.local <- prepare_predictors(x = x, y = y,
-#'                 local.predictors = list(neigh.vars = "hus@850",n.neighs = 4))
-#' xyT.local.bin <- prepare_predictors(x = x, y = ybin,
-#'                  local.predictors = list(neigh.vars = "hus@850",n.neighs = 4))
-#' model.ocu <- downscale.train(xyT.local.bin, method = "GLM", fitting = 'MP')
-#' model.reg <- downscale.train(xyT.local    , method = "GLM", fitting = 'MP')
-#' # Downscaling PRECIPITATION - Principal Components (PCs) 
+#' xyT.local <- prepareData(x = x, y = y,
+#'                          local.predictors = list(vars = "hus@850",n = 4))
+#' model <- downscale.train(xyT.local,method = "analogs")
+#' # Downscaling PRECIPITATION - Principal Components (PCs)
 #' # and gamma regression for the amount of precipitation
-#' xyT.pc     <- prepare_predictors(x = x,y = y, 
-#'               PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
-#' xyT.pc.bin <- prepare_predictors(x = x,y = ybin, 
-#'               PCA = list(which.combine = getVarNames(x),v.exp = 0.9))
-#' model.ocu <- downscale.train(xyT.pc.bin, 
-#'               method = "GLM" , family = binomial(link = "logit"))
-#' model.reg <- downscale.train(xyT.pc, method = "GLM", 
-#'              family = Gamma(link = "log"), filter = ">0")
+#' xyT.pc     <- prepareData(x = x,y = y,
+#'                           spatial.predictors = list(which.combine = getVarNames(x),v.exp = 0.9))
+#' model <- downscale.train(xyT.local,method = "analogs")
 
 downscale.train <- function(obj, method, filter = NULL, ...) {
   dimNames <- getDim(obj$y)
@@ -191,11 +181,14 @@ downscale.train <- function(obj, method, filter = NULL, ...) {
     pred$Data <- downs.predict(obj$x.global, method, atomic_model)}
   # Single-site
   else if (site == "single") {
-    pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(y$Data,"dimensions")
-    if (isRegular(y)) {
+    pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(obj$y$Data,"dimensions")
+    regular <- FALSE
+    if (isRegular(obj$y)) {
       pred$Data <- array3Dto2Dmat(pred$Data)
+      obj$y$Data <- array3Dto2Dmat(obj$y$Data)
+      regular <- TRUE
     }
-    stations <- dim(pred$Data)[which(getDim(pred) == "loc")]
+    stations <- dim(pred$Data)[2]
     atomic_model <- vector("list",stations)
     for (i in 1:stations) {
       if (attr(obj,"nature") == "local") {
@@ -212,15 +205,18 @@ downscale.train <- function(obj, method, filter = NULL, ...) {
       if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
       pred$Data[,i] <- downs.predict(xx, method, atomic_model[[i]])
     }
-    if (isRegular(y)) {
+    if (regular) {
       pred$Data <- mat2Dto3Darray(pred$Data, x = pred$xyCoords$x, y = pred$xyCoords$y)
     }
   }
   # Mix - Global predictors with local predictors
   else if (site == "mix") {
-    pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(y$Data,"dimensions")
-    if (length(dim(y$Data)) > 2) {
+    pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(obj$y$Data,"dimensions")
+    regular <- FALSE
+    if (isRegular(obj$y)) {
       pred$Data <- array3Dto2Dmat(pred$Data)
+      obj$y$Data <- array3Dto2Dmat(obj$y$Data)
+      regular <- TRUE
     }
     stations <- dim(pred$Data)[which(getDim(pred) == "loc")]
     atomic_model <- vector("list",stations)
@@ -237,7 +233,7 @@ downscale.train <- function(obj, method, filter = NULL, ...) {
         atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, ...)}
       if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
       pred$Data[,i] <- downs.predict(xx, method, atomic_model[[i]])}
-    if (length(dim(y$Data)) > 2) {
+    if (regular) {
       pred$Data <- mat2Dto3Darray(pred$Data, x = pred$xyCoords$x, y = pred$xyCoords$y)
     }
   }

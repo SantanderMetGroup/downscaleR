@@ -22,7 +22,7 @@ downscale(y, x, newdata = x, method = c("analogs", "glm", "lm"),
 
 \item{n.analogs}{Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.}
 
-\item{sel.fun}{Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n.neig = 1}.
+\item{sel.fun}{Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n = 1}.
 Current values are \code{"mean"} (the default), \code{"wmean"},  \code{"max"},  \code{"min"} and  \code{"median"}.}
 
 \item{wet.threshold}{Value below which precipitation amount is considered zero}
@@ -60,24 +60,18 @@ yp <- downscale(y,x,method = "analogs")
 yp <- downscale(y,x,newdata,method = "analogs")
 # kfold
 yp <- downscale(y,x,method = "analogs", n.pcs = 15,
-               cross.val = "kfold", folds = 2)
-yp <- downscale(y,x,method = "analogs", n.pcs = 15,
-              cross.val = "kfold", folds = list(c("1985","1986","1987"),
-                                                c("1988","1989","1990"),
-                                                 c("1991","1992","1993")))
+                cross.val = "kfold", folds = list(c("1985","1986","1987"),
+                                                  c("1988","1989","1990"),
+                                                  c("1991","1992","1993")))
 ### GLM ###
 # None
 yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10,
-                      wet.threshold = 1)
+                wet.threshold = 1)
 yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10,
-                        wet.threshold = 1)
+                wet.threshold = 1)
 # kfold
 yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
-                    cross.val = "kfold", folds = 2)
-yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10,
-                    cross.val = "kfold", folds = 2)
-yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
-               cross.val = "kfold", folds = list(c("1985","1986","1987"),
-                                                c("1988","1989","1990"),
-                                                c("1991","1992","1993")))
+                cross.val = "kfold", folds = list(c("1985","1986","1987"),
+                                                  c("1988","1989","1990"),
+                                                  c("1991","1992","1993")))
 }
