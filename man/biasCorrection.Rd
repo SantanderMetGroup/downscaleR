@@ -5,9 +5,10 @@
 \title{Bias correction methods}
 \usage{
 biasCorrection(y, x, newdata = NULL, precipitation = FALSE,
-  method = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"),
+  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci"),
   cross.val = c("none", "loo", "kfold"), folds = NULL, window = NULL,
-  scaling.type = c("additive", "multiplicative"), wet.threshold = 1,
+  scaling.type = c("additive", "multiplicative"),
+  fitdistr.args = list(densfun = "normal"), wet.threshold = 1,
   n.quantiles = NULL, extrapolation = c("none", "constant"), theta = 0.95,
   join.members = FALSE, parallel = FALSE, max.ncores = 16,
   ncores = NULL)
@@ -25,7 +26,7 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 \item{precipitation}{Logical indicating if the data to be corrected is precipitation data.}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-\code{"scaling"}, \code{"gqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.}
+\code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.}
 
 \item{cross.val}{Should cross-validation be performed? methods available are leave-one-out ("loo") 
 and k-fold ("kfold") on an annual basis. The default option ("none") does not perform cross-validation.}
@@ -41,6 +42,11 @@ Default to \code{NULL}, which considers the whole period available.}
 \item{scaling.type}{Character indicating the type of the scaling method. Options are \code{"additive"} (default)
 or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
 selected as the bias correction method.}
+
+\item{fitdistr.args}{Further arguments passed to function \code{\link[MASS]{fitdistr}} 
+(\code{densfun}, \code{start}, \code{...}). Only used when applying the "pqm" method 
+(parametric quantile mapping). Please, read the \code{\link[MASS]{fitdistr}} help 
+document  carefully before setting the parameters in \code{fitdistr.args}.}
 
 \item{wet.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
 \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). See details on bias correction for precipitation.}
@@ -75,7 +81,7 @@ Implementation of several standard bias correction methods
 }
 \details{
 The methods available are \code{"eqm"}, \code{"delta"}, 
-\code{"scaling"}, \code{"gqm"}, \code{"gpqm"}\code{"loci"}, 
+\code{"scaling"}, \code{"pqm"}, \code{"gpqm"}\code{"loci"}, 
 \code{"ptr"}  (the four latter used only for precipitation) and 
 \code{"variance"} (only for temperature).
 
@@ -86,7 +92,7 @@ The methods available are \code{"eqm"}, \code{"delta"},
 This method consists on adding to the observations the mean change signal (delta method).
 This method is applicable to any kind of variable but it is preferable to avoid it for bounded variables
 (e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained
-(e.g. negative wind speeds...).
+(e.g. negative wind speeds...). This method corresponds to case g=1 and f=0 in Amengual et al. 2012. 
 
 \strong{Scaling}
 
@@ -96,23 +102,29 @@ correction is defined by parameter \code{scaling.type} (default is \code{additiv
 The additive version is preferably applicable to unbounded variables (e.g. temperature) 
 and the multiplicative to variables with a lower bound (e.g. precipitation, because it also preserves the frequency). 
 
+
 \strong{eqm}
 
 Empirical Quantile Mapping. This is a very extended bias correction method which consists on calibrating the simulated Cumulative Distribution Function (CDF) 
 by adding to the observed quantiles both the mean delta change and the individual delta changes in the corresponding quantiles. 
-This method is applicable to any kind of variable.
+This is equivalent to f=g=1 in Amengual et al. 2012. This method is applicable to any kind of variable.
 
-\strong{gqm}
 
-Gamma Quantile Mapping. This method is described in Piani et al. 2010 and is applicable only to precipitation. It is based on the initial assumption that both observed
-and simulated intensity distributions are well approximated by the gamma distribution, therefore is a parametric q-q map 
-that uses the theorical instead of the empirical distribution. 
+\strong{pqm}
+
+Parametric Quantile Mapping. It is based on the initial assumption that both observed and simulated intensity distributions are well approximated by a given distribution
+(see \code{\link[MASS]{fitdistr}} to check available distributions), therefore is a parametric q-q map that uses the theorical instead of the empirical distribution.
+For instance, the gamma distribution is described in Piani et al. 2010 and is applicable to precipitation. Other example is the weibull distribution, which
+is applicable to correct wind data (Tie et al. 2014).
  
 \strong{gpqm}
  
-Generalized Quantile Mapping. This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a 
-gamma distribution to values under the threshold given by the 95th percentile (following Yang et al. 2010) and a general Pareto 
-distribution (GPD) to values above the threshold.
+Generalized Quantile Mapping (described in Gutjahr and Heinemann 2013) is also a parametric quantile mapping (see
+method 'pqm') but using two teorethical distributions, the gamma distribution and Generalized Pareto Distribution (GPD).
+By default, It applies a gamma distribution to values under the threshold given by the 95th percentile 
+(following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. the threshold above 
+which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. 
+The user can specify a different threshold by modifying the parameter theta. It is applicable to precipitation data. 
 
 
 \strong{variance}
@@ -122,7 +134,7 @@ the mean and variance of temperature time series.
 
 \strong{loci}
 
-Local intensity scaling of precipitation. This methode is described in Schmidli et al. 2006. It adjust the mean as well as both wet-day frequencies and wet-day intensities.
+Local intensity scaling of precipitation. This method is described in Schmidli et al. 2006. It adjust the mean as well as both wet-day frequencies and wet-day intensities.
 The precipitation threshold is calculated such that the number of simulated days exceeding this threshold matches the number of observed days with precipitation larger than 1 mm.
 
 \strong{ptr}
@@ -135,7 +147,7 @@ of variation of corrected daily simulated precipitation with the coefficient of 
 
 
 In the case of precipitation a frequency adaptation has been implemented in all versions of 
-qqmap to alleviate the problems arising when the dry day frequency in the raw model output is larger
+quantile mapping to alleviate the problems arising when the dry day frequency in the raw model output is larger
  than in the observations (Wilcke et al. 2013). 
  
  The precipitation subroutines are switched-on when the variable name of the grid 
@@ -149,10 +161,10 @@ qqmap to alleviate the problems arising when the dry day frequency in the raw mo
 {
 data("VALUE_Iberia_pr")
 data("NCEP_Iberia_pr")
-y <- VALUE_Iberia_pr
-x <- NCEP_Iberia_pr
-x$Data <- x$Data*86400
+y <- EOBS_Iberia_pr
+x <- CORDEX_Iberia_pr
 
+# empirical
 eqm1 <- biasCorrection(y = y, x = x,
                        precipitation = TRUE,
                        method = "eqm",
@@ -176,6 +188,44 @@ quickDiagnostics(y, x, eqm1, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
+
+#parametric
+pqm1.gamm <- biasCorrection(y = y, x = x,
+                       method = "pqm",
+                       precipitation = TRUE,
+                       fitdistr.args = list(densfun = "gamma"))
+quickDiagnostics(y, x, pqm1.gamm, location = c(-2, 43))
+pqm1.wei <- biasCorrection(y = y, x = x,
+                       method = "pqm",
+                       precipitation = TRUE,
+                       fitdistr.args = list(densfun = "weibull"))
+quickDiagnostics(y, x, pqm1.wei, location = c(-2, 43))
+
+data("VALUE_Iberia_tas")
+data("CORDEX_Iberia_tas")
+y <- EOBS_Iberia_tas
+x <- CORDEX_Iberia_tas
+pqm1.norm <- biasCorrection(y = y, x = x,
+           method = "pqm",
+           fitdistr.args = list(densfun = "normal"))
+quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
+
+# correction of future climate change data
+data("CORDEX_Iberia_tas.rcp85")
+newdata <- CORDEX_Iberia_tas.rcp85
+eqm1win <- biasCorrection(y = y, x = x,
+                          newdata = newdata,
+                          precipitation = TRUE,
+                          method = "eqm",
+                          extrapolation = "constant",
+                          window = c(30, 15),
+                          wet.threshold = 0.1)
+quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
+pqm1.norm <- biasCorrection(y = y, x = x,
+                       newdata = newdata,
+                       method = "pqm",
+                       fitdistr.args = list(densfun = "normal"))
+quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
 }
 }
 \references{
@@ -187,6 +237,9 @@ quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
 \item C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
 
 \item O. Gutjahr and G. Heinemann (2013) Comparing precipitation bias correction methods for high-resolution regional climate simulations using COSMO-CLM, Theoretical and Applied Climatology, 114, 511-529
+
+\item M. R. Tye, D. B. Stephenson, G. J. Holland and R. W. Katz (2014) A Weibull Approach for Improving Climate Model Projections of Tropical Cyclone Wind-Speed Distributions, Journal of Climate, 27, 6119-6133
+
 }
 }
 \seealso{

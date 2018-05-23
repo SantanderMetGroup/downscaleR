@@ -18,7 +18,7 @@ target days. The window is centered on the target day/s (window width >= target 
 \item{delta.method}{logical (default is FALSE)}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-\code{"scaling"}, \code{"gqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.}
+\code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.}
 }
 \description{
 Get the index of the days that corresponding to the window and the target days centered in it.
