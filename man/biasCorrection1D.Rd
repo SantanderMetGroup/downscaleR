@@ -4,9 +4,8 @@
 \alias{biasCorrection1D}
 \title{Bias correction methods on 1D data}
 \usage{
-biasCorrection1D(o, p, s, method = method, scaling.type = scaling.type,
-  precip = FALSE, pr.threshold = 1, n.quantiles = NULL,
-  extrapolation = extrapolation, theta = 0.95, parallel = FALSE,
+biasCorrection1D(o, p, s, method, scaling.type, fitdistr.args, precip,
+  pr.threshold, n.quantiles, extrapolation, theta, parallel = FALSE,
   max.ncores = 16, ncores = NULL)
 }
 \arguments{
@@ -17,10 +16,13 @@ biasCorrection1D(o, p, s, method = method, scaling.type = scaling.type,
 \item{s}{A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-\code{"scaling"}, \code{"gqm"}, \code{"gpqm"}, \code{"variance"}, \code{"loci"} and \code{"ptr"}.}
+\code{"scaling"}, \code{"pqm"}, \code{"gpqm"}, \code{"variance"}, \code{"loci"} and \code{"ptr"}.}
 
 \item{scaling.type}{Character indicating the type of the scaling method. Options are \code{"additive"} (default)
 or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not selected as the bias correction method.}
+
+\item{fitdistr.args}{Distribution to use when applying the "pqm" method (parametric quantile mapping).
+Choices are "gamma" or "gaussian" (see details).}
 
 \item{precip}{Logical indicating if o, p, s is precipitation data.}
 

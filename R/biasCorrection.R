@@ -20,7 +20,7 @@
 #'
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.
+#'  \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.
 #' @param precipitation Logical indicating if the data to be corrected is precipitation data.
 #' @param cross.val Should cross-validation be performed? methods available are leave-one-out ("loo") 
 #' and k-fold ("kfold") on an annual basis. The default option ("none") does not perform cross-validation.
@@ -36,6 +36,10 @@
 #' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
 #' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
 #' selected as the bias correction method.
+#' @param  fitdistr.args Further arguments passed to function \code{\link[MASS]{fitdistr}} 
+#' (\code{densfun}, \code{start}, \code{...}). Only used when applying the "pqm" method 
+#' (parametric quantile mapping). Please, read the \code{\link[MASS]{fitdistr}} help 
+#' document  carefully before setting the parameters in \code{fitdistr.args}.
 #' @param n.quantiles Integer indicating the number of quantiles to be considered when method = "eqm". Default is NULL, 
 #' that considers all quantiles, i.e. \code{n.quantiles = length(x[i,j])} (being \code{i} and \code{j} the coordinates in a single location).
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
@@ -52,7 +56,7 @@
 #' @details
 #' 
 #' The methods available are \code{"eqm"}, \code{"delta"}, 
-#' \code{"scaling"}, \code{"gqm"}, \code{"gpqm"}\code{"loci"}, 
+#' \code{"scaling"}, \code{"pqm"}, \code{"gpqm"}\code{"loci"}, 
 #' \code{"ptr"}  (the four latter used only for precipitation) and 
 #' \code{"variance"} (only for temperature).
 #' 
@@ -63,7 +67,7 @@
 #' This method consists on adding to the observations the mean change signal (delta method).
 #' This method is applicable to any kind of variable but it is preferable to avoid it for bounded variables
 #' (e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained
-#' (e.g. negative wind speeds...).
+#' (e.g. negative wind speeds...). This method corresponds to case g=1 and f=0 in Amengual et al. 2012. 
 #' 
 #' \strong{Scaling}
 #' 
@@ -73,23 +77,29 @@
 #' The additive version is preferably applicable to unbounded variables (e.g. temperature) 
 #' and the multiplicative to variables with a lower bound (e.g. precipitation, because it also preserves the frequency). 
 #' 
+#' 
 #' \strong{eqm}
 #' 
 #' Empirical Quantile Mapping. This is a very extended bias correction method which consists on calibrating the simulated Cumulative Distribution Function (CDF) 
 #' by adding to the observed quantiles both the mean delta change and the individual delta changes in the corresponding quantiles. 
-#' This method is applicable to any kind of variable.
+#' This is equivalent to f=g=1 in Amengual et al. 2012. This method is applicable to any kind of variable.
 #' 
-#' \strong{gqm}
 #' 
-#' Gamma Quantile Mapping. This method is described in Piani et al. 2010 and is applicable only to precipitation. It is based on the initial assumption that both observed
-#' and simulated intensity distributions are well approximated by the gamma distribution, therefore is a parametric q-q map 
-#' that uses the theorical instead of the empirical distribution. 
+#' \strong{pqm}
+#' 
+#' Parametric Quantile Mapping. It is based on the initial assumption that both observed and simulated intensity distributions are well approximated by a given distribution
+#' (see \code{\link[MASS]{fitdistr}} to check available distributions), therefore is a parametric q-q map that uses the theorical instead of the empirical distribution.
+#' For instance, the gamma distribution is described in Piani et al. 2010 and is applicable to precipitation. Other example is the weibull distribution, which
+#' is applicable to correct wind data (Tie et al. 2014).
 #'  
 #' \strong{gpqm}
 #'  
-#' Generalized Quantile Mapping. This method is described in Gutjahr and Heinemann 2013. It is applicable only to precipitation and is similar to the Piani method. It applies a 
-#' gamma distribution to values under the threshold given by the 95th percentile (following Yang et al. 2010) and a general Pareto 
-#' distribution (GPD) to values above the threshold.
+#' Generalized Quantile Mapping (described in Gutjahr and Heinemann 2013) is also a parametric quantile mapping (see
+#' method 'pqm') but using two teorethical distributions, the gamma distribution and Generalized Pareto Distribution (GPD).
+#' By default, It applies a gamma distribution to values under the threshold given by the 95th percentile 
+#' (following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. the threshold above 
+#' which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. 
+#' The user can specify a different threshold by modifying the parameter theta. It is applicable to precipitation data. 
 #' 
 #' 
 #' \strong{variance}
@@ -99,7 +109,7 @@
 #' 
 #' \strong{loci}
 #' 
-#' Local intensity scaling of precipitation. This methode is described in Schmidli et al. 2006. It adjust the mean as well as both wet-day frequencies and wet-day intensities.
+#' Local intensity scaling of precipitation. This method is described in Schmidli et al. 2006. It adjust the mean as well as both wet-day frequencies and wet-day intensities.
 #' The precipitation threshold is calculated such that the number of simulated days exceeding this threshold matches the number of observed days with precipitation larger than 1 mm.
 #' 
 #'\strong{ptr}
@@ -112,7 +122,7 @@
 #' @section Note on the bias correction of precipitation:
 #' 
 #' In the case of precipitation a frequency adaptation has been implemented in all versions of 
-#' qqmap to alleviate the problems arising when the dry day frequency in the raw model output is larger
+#' quantile mapping to alleviate the problems arising when the dry day frequency in the raw model output is larger
 #'  than in the observations (Wilcke et al. 2013). 
 #'  
 #'  The precipitation subroutines are switched-on when the variable name of the grid 
@@ -140,16 +150,19 @@
 #' \item C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
 #'
 #' \item O. Gutjahr and G. Heinemann (2013) Comparing precipitation bias correction methods for high-resolution regional climate simulations using COSMO-CLM, Theoretical and Applied Climatology, 114, 511-529
+#' 
+#' \item M. R. Tye, D. B. Stephenson, G. J. Holland and R. W. Katz (2014) A Weibull Approach for Improving Climate Model Projections of Tropical Cyclone Wind-Speed Distributions, Journal of Climate, 27, 6119-6133
+#' 
 #' }
 #' @author S. Herrera, M. Iturbide, J. Bedia
 #' @export
 #' @examples {
 #' data("VALUE_Iberia_pr")
 #' data("NCEP_Iberia_pr")
-#' y <- VALUE_Iberia_pr
-#' x <- NCEP_Iberia_pr
-#' x$Data <- x$Data*86400
+#' y <- EOBS_Iberia_pr
+#' x <- CORDEX_Iberia_pr
 #' 
+#' # empirical
 #' eqm1 <- biasCorrection(y = y, x = x,
 #'                        precipitation = TRUE,
 #'                        method = "eqm",
@@ -173,16 +186,54 @@
 #' quickDiagnostics(y, x, eqm1, location = c(-2, 43))
 #' quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
 #' quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
+#' 
+#' #parametric
+#' pqm1.gamm <- biasCorrection(y = y, x = x,
+#'                        method = "pqm",
+#'                        precipitation = TRUE,
+#'                        fitdistr.args = list(densfun = "gamma"))
+#' quickDiagnostics(y, x, pqm1.gamm, location = c(-2, 43))
+#' pqm1.wei <- biasCorrection(y = y, x = x,
+#'                        method = "pqm",
+#'                        precipitation = TRUE,
+#'                        fitdistr.args = list(densfun = "weibull"))
+#' quickDiagnostics(y, x, pqm1.wei, location = c(-2, 43))
+#' 
+#' data("VALUE_Iberia_tas")
+#' data("CORDEX_Iberia_tas")
+#' y <- EOBS_Iberia_tas
+#' x <- CORDEX_Iberia_tas
+#' pqm1.norm <- biasCorrection(y = y, x = x,
+#'            method = "pqm",
+#'            fitdistr.args = list(densfun = "normal"))
+#' quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
+#' 
+#' # correction of future climate change data
+#' data("CORDEX_Iberia_tas.rcp85")
+#' newdata <- CORDEX_Iberia_tas.rcp85
+#' eqm1win <- biasCorrection(y = y, x = x,
+#'                           newdata = newdata,
+#'                           precipitation = TRUE,
+#'                           method = "eqm",
+#'                           extrapolation = "constant",
+#'                           window = c(30, 15),
+#'                           wet.threshold = 0.1)
+#' quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
+#' pqm1.norm <- biasCorrection(y = y, x = x,
+#'                        newdata = newdata,
+#'                        method = "pqm",
+#'                        fitdistr.args = list(densfun = "normal"))
+#' quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
 #' }
 
 
-
 biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
-                           method = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci"),
+                           method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci"),
                            cross.val = c("none", "loo", "kfold"),
                            folds = NULL,
                            window = NULL,
                            scaling.type = c("additive", "multiplicative"),
+                           fitdistr.args = list(densfun = "normal"),
                            wet.threshold = 1,
                            n.quantiles = NULL,
                            extrapolation = c("none", "constant"), 
@@ -191,7 +242,8 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            parallel = FALSE,
                            max.ncores = 16,
                            ncores = NULL) {
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "gqm", "gpqm", "loci", "ptr", "variance"))
+      if (method == "gqm") stop("'gqm' is not a valid choice anymore. Use method = 'pqm' instead and set fitdistr.args = list(densfun = 'gamma')")
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "ptr", "variance"))
       cross.val <- match.arg(cross.val, choices = c("none", "loo", "kfold"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
@@ -211,6 +263,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                        method = method,
                                        window = window,
                                        scaling.type = scaling.type,
+                                       fitdistr.args = fitdistr.args,
                                        pr.threshold = wet.threshold, 
                                        n.quantiles = n.quantiles, 
                                        extrapolation = extrapolation, 
@@ -254,6 +307,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                    method = method,
                                    window = window,
                                    scaling.type = scaling.type,
+                                   fitdistr.args = fitdistr.args,
                                    pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
                                    theta = theta, join.members = join.members,
                                    parallel = parallel,
@@ -276,13 +330,17 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
 #' @keywords internal
 #' @importFrom transformeR redim subsetGrid getDim
 
-biasCorrectionXD <- function(y, x, newdata, precipitation, 
-                             method = method,
-                             window = NULL,
-                             scaling.type = c("additive", "multiplicative"),
-                             pr.threshold = 1, n.quantiles = NULL, extrapolation = c("none", "constant"), 
-                             theta = .95,
-                             join.members = join.members,
+biasCorrectionXD <- function(y, x, newdata, 
+                             precipitation, 
+                             method,
+                             window,
+                             scaling.type,
+                             fitdistr.args,
+                             pr.threshold, 
+                             n.quantiles, 
+                             extrapolation, 
+                             theta,
+                             join.members,
                              parallel = FALSE,
                              max.ncores = 16,
                              ncores = NULL) {
@@ -356,6 +414,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
                         mat <- biasCorrection1D(o, p, s,
                                                 method = method,
                                                 scaling.type = scaling.type,
+                                                fitdistr.args = fitdistr.args,
                                                 precip = precip,
                                                 pr.threshold = pr.threshold,
                                                 n.quantiles = n.quantiles,
@@ -395,7 +454,7 @@ biasCorrectionXD <- function(y, x, newdata, precipitation,
 #' @param y A grid or station data containing the observed climate data for the training period
 #' @param newdata A grid containing the simulated climate for the test period.
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"gqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.
+#'  \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.
 #' @param window vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
 #' target days (days that are being corrected). If the window length = 1 the window width is no larger than the 
 #' target days. The window is centered on the target day/s (window width >= target days). 
@@ -484,10 +543,12 @@ getWindowIndex <- function(y, x, newdata, window, delta.method = FALSE){
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"gqm"}, \code{"gpqm"}, \code{"variance"}, \code{"loci"} and \code{"ptr"}. 
+#'  \code{"scaling"}, \code{"pqm"}, \code{"gpqm"}, \code{"variance"}, \code{"loci"} and \code{"ptr"}. 
 #' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
 #' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not selected as the bias correction method.
 #' @param precip Logical indicating if o, p, s is precipitation data.
+#' @param  fitdistr.args Distribution to use when applying the "pqm" method (parametric quantile mapping).
+#' Choices are "gamma" or "gaussian" (see details).
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). 
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
@@ -503,13 +564,14 @@ getWindowIndex <- function(y, x, newdata, window, delta.method = FALSE){
 #' @author M. Iturbide
 
 biasCorrection1D <- function(o, p, s,
-                             method = method, 
-                             scaling.type = scaling.type,
-                             precip = FALSE, 
-                             pr.threshold = 1,
-                             n.quantiles = NULL,
-                             extrapolation = extrapolation, 
-                             theta = .95,
+                             method, 
+                             scaling.type,
+                             fitdistr.args,
+                             precip, 
+                             pr.threshold,
+                             n.quantiles,
+                             extrapolation, 
+                             theta,
                              parallel = FALSE,
                              max.ncores = 16,
                              ncores = NULL) {
@@ -524,8 +586,8 @@ biasCorrection1D <- function(o, p, s,
             suppressWarnings(
                   mapply_fun(eqm, o, p, s, MoreArgs = list(precip, pr.threshold, n.quantiles, extrapolation))
             )
-      } else if (method == "gqm") {
-            mapply_fun(gqm, o, p, s, MoreArgs = list(precip, pr.threshold))
+      } else if (method == "pqm") {
+            mapply_fun(pqm, o, p, s, MoreArgs = list(fitdistr.args, precip, pr.threshold))
       } else if (method == "gpqm") {
             mapply_fun(gpqm, o, p, s, MoreArgs = list(precip, pr.threshold, theta))
       } else if (method == "variance") {
@@ -573,23 +635,35 @@ scaling <- function(o, p, s, scaling.type){
 
 
 
-#' @title Gamma Quantile Mapping method for bias correction
-#' @description Implementation of Gamma Quantile Mapping method for bias correction 
+#' @title Parametric Quantile Mapping method for bias correction
+#' @description Implementation of Parametric Quantile Mapping method for bias correction 
 #' @param o A vector (e.g. station data) containing the observed climate data for the training period
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{x}, but considering the test period.
 #' @param precip Logical indicating if o, p, s is precipitation data.
+#' @param  fitdistr.args Further arguments passed to function \code{\link[MASS]{fitdistr}} 
+#' (\code{densfun}, \code{start}, \code{...}). Only used when applying the "pqm" method 
+#' (parametric quantile mapping). Please, read the \code{\link[MASS]{fitdistr}} help 
+#' document  carefully before parameter setting in \code{fitdistr.args}.
 #' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
 #'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). 
 #' @importFrom MASS fitdistr
-#' @importFrom stats pgamma qgamma
+#' @importFrom stats pgamma qgamma 
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
 
-gqm <- function(o, p, s, precip, pr.threshold){
-      if (precip == FALSE) {
-            stop("method gqm is only applied to precipitation data")
-      } else {
+pqm <- function(o, p, s, fitdistr.args, precip, pr.threshold){
+      dfdistr <- cbind("df" = c( "beta", "cauchy", "chi-squared", "exponential", "f", "gamma", "geometric", "log-normal", "lognormal", "logistic", "negative binomial", "normal", "Poisson", "t", "weibull"),
+                        "p" = c("pbeta", "pcauchy", "pchisq", "pexp", "pf", "pgamma", "pegeom", "plnorm", "plnorm", "plogis", "pnbinom", "pnorm", "ppois", "pt", "pweibull"),
+                        "q" = c("qbeta", "qcauchy", "qchisq", "qexp", "qf", "qgamma", "qegeom", "qlnorm", "qlnorm", "qlogis", "qnbinom", "qnorm", "qpois", "qt", "qweibull"))
+      fitdistr.args <- fitdistr.args[which(names(fitdistr.args) != "x")]
+      statsfunp <- unname(dfdistr[which(dfdistr[,"df"] == fitdistr.args$densfun), "p"])
+      statsfunq <- unname(dfdistr[which(dfdistr[,"df"] == fitdistr.args$densfun), "q"])
+      run <- TRUE
+      ind.o <- 1:length(o)
+      ind.p <- 1:length(p)
+      rain <- 1:length(s)
+      if (precip) {
             threshold <- pr.threshold
             if (any(!is.na(o))) {
                   params <-  norain(o, p, threshold)
@@ -600,28 +674,39 @@ gqm <- function(o, p, s, precip, pr.threshold){
                   nP = NULL
             }
             if (is.null(nP)) {
+                  run <- FALSE
                   s <- rep(NA, length(s))
             } else if (nP[1] < length(o)) {
-                  ind <- which(o > threshold & !is.na(o))
-                  obsGamma <-  tryCatch({fitdistr(o[ind],"gamma")}, error = function(err){NULL})
-                  ind <- which(p > 0 & !is.na(p))
-                  prdGamma <- tryCatch({fitdistr(p[ind],"gamma")}, error = function(err){NULL})
+                  ind.o <- which(o > threshold & !is.na(o))
+                  ind.p <- which(p > 0 & !is.na(p))
                   rain <- which(s > Pth & !is.na(s))
                   noRain <- which(s <= Pth & !is.na(s))
-                  if(!is.null(prdGamma) & !is.null(obsGamma)) {
-                        auxF <- pgamma(s[rain], prdGamma$estimate[1], rate = prdGamma$estimate[2])
-                        s[rain] <- qgamma(auxF, obsGamma$estimate[1], rate = obsGamma$estimate[2])
-                        s[noRain] <- 0
-                  }else{
-                        warning("For the window step selected, location with not enough rainfall in y or x to adjust gamma.\n no bias correction applied in location.")
-                  }
             } else {
+                  run <- FALSE
                   warning("For the window step selected, location without rainfall above the threshold.\n no bias correction applied in location.")
             } 
       }
-      return(s)
-}
-
+      if (all(is.na(o[ind.o]))) {
+            run <- FALSE
+            s <- rep(NA, length(s))
+      }
+      if (run) {
+            fitdistr.args.o <- c("x" = list(o[ind.o]), fitdistr.args)
+            fitdistr.args.p <- c("x" = list(p[ind.p]), fitdistr.args)
+            obsGamma <- tryCatch({do.call("fitdistr", fitdistr.args.o)}, error = function(err){NULL})
+            prdGamma <- tryCatch({do.call("fitdistr", fitdistr.args.p)}, error = function(err){NULL})
+            if (!is.null(prdGamma) & !is.null(obsGamma)) {
+                  statsfun.args <- c(list(s[rain]), as.list(prdGamma$estimate))
+                  auxF <- do.call(statsfunp, statsfun.args)
+                  statsfun.args <- c(list(auxF), as.list(obsGamma$estimate))
+                  s[rain] <- do.call(statsfunq, statsfun.args)
+                  if (precip) s[noRain] <- 0
+            } else {
+                  warning("Fitting error for location and selected 'densfun'.")
+            }
+      }   
+      return(s)      
+}   
 #end
 
 #' @title Empirical Quantile Mapping method for bias correction
@@ -885,13 +970,14 @@ loci <- function(o, p, s, precip, pr.threshold){
       } else {
             threshold <- pr.threshold
             l <- length(which(o > threshold))
-            gcmr <- rev(sort(s))
+            gcmr <- rev(sort(p))
+            gcmrs <- rev(sort(s))
             Pgcm <- gcmr[l + 1]
-            # local scaling factor
+            Pgcms <- gcmrs[l + 1]
             mobs <- mean(o[which(o > threshold)], na.rm = TRUE)
-            mgcm <- mean(s[which(s > Pgcm)], na.rm = TRUE)
+            mgcm <- mean(p[which(p > Pgcm)], na.rm = TRUE)
             scaling <- (mobs - threshold) / (mgcm - Pgcm)
-            GCM <- (scaling*(s - Pgcm)) + threshold
+            GCM <- (scaling*(s - Pgcms)) + threshold
             GCM[which(GCM < threshold)] <- 0
       }
       return(GCM)
