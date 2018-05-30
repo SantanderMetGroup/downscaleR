@@ -108,10 +108,10 @@ downscale.cv <- function(x, y, method,
                          filter = NULL, ...) {
   data <- dataSplit(x,y, f = folds, type = type)
   p <- lapply(1:length(data), FUN = function(xx) {
-    print(paste("fold:",xx,"-->","calculating..."))
+    message(paste("fold:",xx,"-->","calculating..."))
     xT <- data[[xx]]$train$x ; yT <- data[[xx]]$train$y
     xt <- data[[xx]]$test$x  ; yt <- data[[xx]]$test$y
-    if (!is.null(scale)) {
+    if (!is.null(scale.list)) {
       scale.list$base <- xT
       scale.list$grid <- xt
       xt <- do.call("scaleGrid",args = scale.list)
