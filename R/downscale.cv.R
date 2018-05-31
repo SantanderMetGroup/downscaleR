@@ -21,7 +21,7 @@
 #' @title Downscale climate data and reconstruct the temporal serie by splitting the data in k folds.
 #' @description Downscale climate data and reconstruct the temporal serie by splitting the data in k folds. 
 #' Statistical downscaling methods are: analogs, generalized linear models (GLM) and Neural Networks (NN). 
-#' @param x The input grid. It should be an object as returned by \pkg{loadeR}.
+#' @param x The input grid (admits both single and multigrid, see \code{\link[transformeR]{makeMultiGrid}}). It should be an object as returned by \pkg{loadeR}.
 #' @param y The observations dataset. It should be an object as returned by \pkg{loadeR}.
 #' @param method A string value. Type of transer function. Options are c("analogs","GLM","NN").
 #' @param folds Could be a fraction, value between (0,1) indicating the fraction of the data that will define the train set, 
@@ -106,6 +106,8 @@ downscale.cv <- function(x, y, method,
                          scale.list = NULL,
                          global.vars = NULL, combined.only = TRUE, spatial.predictors = NULL, local.predictors = NULL, extended.predictors = NULL,
                          filter = NULL, ...) {
+  x <- getTemporalIntersection(x,y,which.return = "obs")
+  y <- getTemporalIntersection(x,y,which.return = "prd")
   data <- dataSplit(x,y, f = folds, type = type)
   p <- lapply(1:length(data), FUN = function(xx) {
     message(paste("fold:",xx,"-->","calculating..."))
