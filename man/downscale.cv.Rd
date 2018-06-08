@@ -10,7 +10,7 @@ downscale.cv(x, y, method, folds = 4, type = "chronological",
   extended.predictors = NULL, filter = NULL, ...)
 }
 \arguments{
-\item{x}{The input grid. It should be an object as returned by \pkg{loadeR}.}
+\item{x}{The input grid (admits both single and multigrid, see \code{\link[transformeR]{makeMultiGrid}}). It should be an object as returned by \pkg{loadeR}.}
 
 \item{y}{The observations dataset. It should be an object as returned by \pkg{loadeR}.}
 
