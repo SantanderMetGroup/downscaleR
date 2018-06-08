@@ -73,14 +73,16 @@
 #' @author J. Bano-Medina
 #' @export
 #' @examples 
+#' require(transformeR)
+#' data(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' x <- subsetGrid(x, years = 1985:1995)
 #' # Loading predictands
 #' y <- VALUE_Iberia_pr
-#' y <- getTemporalIntersection(obs = y,prd = x, "obs" )
-#' x <- getTemporalIntersection(obs = y,prd = x, "prd" )
+#' y <- getTemporalIntersection(obs = y, prd = x, "obs" )
+#' x <- getTemporalIntersection(obs = y, prd = x, "prd" )
 #' # Reconstructing the downscaled serie in 3 folds
-#' pred <- downscale.cv(x,y,folds = 3,type = "chronological",
+#' pred <- downscale.cv(x,y,folds = 3, type = "chronological",
 #'                      scale.list = list(type = "standardize"),
 #'                      method = "GLM", filter = ">0")
 #' # ... or with dates ...
