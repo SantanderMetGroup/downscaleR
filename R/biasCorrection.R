@@ -157,8 +157,8 @@
 #' @author S. Herrera, M. Iturbide, J. Bedia
 #' @export
 #' @examples {
-#' data("VALUE_Iberia_pr")
-#' data("NCEP_Iberia_pr")
+#' data("EOBS_Iberia_pr")
+#' data("CORDEX_Iberia_pr")
 #' y <- EOBS_Iberia_pr
 #' x <- CORDEX_Iberia_pr
 #' 
@@ -199,7 +199,7 @@
 #'                        fitdistr.args = list(densfun = "weibull"))
 #' quickDiagnostics(y, x, pqm1.wei, location = c(-2, 43))
 #' 
-#' data("VALUE_Iberia_tas")
+#' data("EOBS_Iberia_tas")
 #' data("CORDEX_Iberia_tas")
 #' y <- EOBS_Iberia_tas
 #' x <- CORDEX_Iberia_tas
