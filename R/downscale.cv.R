@@ -1,9 +1,6 @@
-##############################################################################################################
-#                     GENERAL DOWNSCALING                                                                    #
-##############################################################################################################
 ##     downscale.cv.R Downscale climate with cross validation.
 ##
-##     Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
+##     Copyright (C) 2018 Santander Meteorology Group (http://www.meteo.unican.es)
 ##
 ##     This program is free software: you can redistribute it and/or modify
 ##     it under the terms of the GNU General Public License as published by
@@ -118,6 +115,7 @@ downscale.cv <- function(x, y, method,
     if (!is.null(scale.list)) {
       scale.list$base <- xT
       scale.list$grid <- xt
+      scale.list$skip.season.check <- TRUE
       xt <- do.call("scaleGrid",args = scale.list)
       scale.list$grid <- xT
       xT <- do.call("scaleGrid",args = scale.list)
