@@ -2,7 +2,7 @@
 % Please edit documentation in R/downsANALOGS.R
 \name{analogs.train}
 \alias{analogs.train}
-\title{Donwscaling with the analogs method (train).}
+\title{Analogs}
 \usage{
 analogs.train(x, y, dates, n.analogs = 4, sel.fun = "mean", window = 7,
   n.random = NULL, pool = 0)
@@ -33,7 +33,7 @@ If window = 7, then 7 days after the observation date and the 7 days before the 
 A list containing the grid data, the observations and a list with information concerning the analogs.
 }
 \description{
-Donwscaling with the analogs method (train).
+Analog method implementation
 }
 \details{
 The analogs actually is not a model in the sense that it is not really trained. 

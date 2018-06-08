@@ -21,7 +21,7 @@
 #' @title Downscale climate data and reconstruct the temporal serie by splitting the data in k folds.
 #' @description Downscale climate data and reconstruct the temporal serie by splitting the data in k folds. 
 #' Statistical downscaling methods are: analogs, generalized linear models (GLM) and Neural Networks (NN). 
-#' @param x The input grid. It should be an object as returned by \pkg{loadeR}.
+#' @param x The input grid (admits both single and multigrid, see \code{\link[transformeR]{makeMultiGrid}}). It should be an object as returned by \pkg{loadeR}.
 #' @param y The observations dataset. It should be an object as returned by \pkg{loadeR}.
 #' @param method A string value. Type of transer function. Options are c("analogs","GLM","NN").
 #' @param folds Could be a fraction, value between (0,1) indicating the fraction of the data that will define the train set, 
@@ -73,14 +73,16 @@
 #' @author J. Bano-Medina
 #' @export
 #' @examples 
+#' require(transformeR)
+#' data(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' x <- subsetGrid(x, years = 1985:1995)
 #' # Loading predictands
 #' y <- VALUE_Iberia_pr
-#' y <- getTemporalIntersection(obs = y,prd = x, "obs" )
-#' x <- getTemporalIntersection(obs = y,prd = x, "prd" )
+#' y <- getTemporalIntersection(obs = y, prd = x, "obs" )
+#' x <- getTemporalIntersection(obs = y, prd = x, "prd" )
 #' # Reconstructing the downscaled serie in 3 folds
-#' pred <- downscale.cv(x,y,folds = 3,type = "chronological",
+#' pred <- downscale.cv(x,y,folds = 3, type = "chronological",
 #'                      scale.list = list(type = "standardize"),
 #'                      method = "GLM", filter = ">0")
 #' # ... or with dates ...
@@ -106,12 +108,14 @@ downscale.cv <- function(x, y, method,
                          scale.list = NULL,
                          global.vars = NULL, combined.only = TRUE, spatial.predictors = NULL, local.predictors = NULL, extended.predictors = NULL,
                          filter = NULL, ...) {
+  x <- getTemporalIntersection(x,y,which.return = "obs")
+  y <- getTemporalIntersection(x,y,which.return = "prd")
   data <- dataSplit(x,y, f = folds, type = type)
   p <- lapply(1:length(data), FUN = function(xx) {
-    print(paste("fold:",xx,"-->","calculating..."))
+    message(paste("fold:",xx,"-->","calculating..."))
     xT <- data[[xx]]$train$x ; yT <- data[[xx]]$train$y
     xt <- data[[xx]]$test$x  ; yt <- data[[xx]]$test$y
-    if (!is.null(scale)) {
+    if (!is.null(scale.list)) {
       scale.list$base <- xT
       scale.list$grid <- xt
       xt <- do.call("scaleGrid",args = scale.list)

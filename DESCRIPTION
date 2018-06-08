@@ -1,7 +1,7 @@
 Package: downscaleR
 Depends:
     R(>= 3.1.0),
-    transformeR(>= 1.1.0)
+    transformeR(>= 1.3.3)
 Imports:
     abind,
     utils,
@@ -28,7 +28,7 @@ Suggests:
 Type: Package
 Title: An R package for bias correction and statistical downscaling
 Version: 3.0.0
-Date: 2017-09-28
+Date: 2018-06-08
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquín Bedia <bediaj@unican.es> [aut, cre]",
@@ -40,13 +40,13 @@ Authors@R: as.person(c(
     "Sixto Herrera <sixto@predictia.es> [aut]",
     "Maialen Iturbide <miturbide@ifca.unican.es> [aut]",
     "Rodrigo Manzanas <rmanzanas@ifca.unican.es> [aut]",
-    "Jorge B. Medina <bmedina@ifca.unican.es> [ctb]",
+    "Jorge B. Medina <bmedina@ifca.unican.es> [aut]",
     "Beata Szabo-Takacs <szabo.b@czechglobe.cz> [ctb]",
     "Max Tuni <max@predictia.es> [ctb]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: https://github.com/SantanderMetGroup/downscaleR/wiki
 Encoding: UTF-8
-Description: Tools for climate data calibration (bias correction, qq-mapping...) and perfect-prog downscaling, as part of the climate4R bundle (see e.g. Cofiño et al 2017 <doi:10.1016/j.cliser.2017.07.001>). Focused on daily data, downscaleR is conceived for dealing also with seasonal forecast ensemble predictions.
+Description: Tools for climate data calibration (bias correction, qq-mapping...) and perfect-prog downscaling, as part of climate4R bundle (<http://meteo.unican.es/climate4R>). Focused on daily data, downscaleR is conceived for dealing also with seasonal forecast ensemble predictions.
 License: GPL (>= 3)
 LazyData: true
 RoxygenNote: 6.0.1

@@ -84,7 +84,7 @@ downscale.predict <- function(newdata, model) {
     if (model$model$site == "multi") {
       xx <- newdata$x.global[[z]]
       if (model$model$method == "analogs") {model$model$atomic_model$dates$test <- getRefDates(newdata)}
-      yp <- downs.predict(xx, model$model$method, model$model$atomic_model)}
+      yp <- as.matrix(downs.predict(xx, model$model$method, model$model$atomic_model))}
     # Single-site
     else if (model$model$site == "single") {
       stations <- length(model$model$atomic_model)

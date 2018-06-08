@@ -149,8 +149,6 @@
 #' model <- downscale.train(xyT.local,method = "analogs")
 
 downscale.train <- function(obj, method, filter = NULL, ...) {
-  dimNames <- getDim(obj$y)
-  pred <- obj$y
   if ( method == "GLM") {
     if (attr(obj,"nature") == "spatial+local") {
       site <- "mix"}
@@ -170,32 +168,47 @@ downscale.train <- function(obj, method, filter = NULL, ...) {
     }
   }
   
+  if (length(getDim(obj$y)) == 1) obj$y <- redim(obj$y, loc = TRUE, member = FALSE)
+  dimNames <- getDim(obj$y)
+  pred <- obj$y
+  
+  if (isRegular(obj$y)) {
+    mat.y <- array3Dto2Dmat(obj$y$Data)
+    mat.p <- matrix(data = NA, nrow = nrow(mat.y), ncol = ncol(mat.y))
+    regular <- TRUE
+  }
+  else {
+    mat.y <- obj$y$Data
+    mat.p <- matrix(data = NA, nrow = nrow(pred$Data), ncol = ncol(pred$Data))
+    regular <- FALSE  
+  }
+  
   # Multi-site
   if (site == "multi") {
-    yy <- obj$y$Data
+    yy <- mat.y
     if (method == "analogs") {
       atomic_model <- downs.train(obj$x.global, yy, method, dates = getRefDates(obj$y), ...)}
     else {      
       atomic_model <- downs.train(obj$x.global, yy, method, ...)}
     if (method == "analogs") {atomic_model$dates$test <- getRefDates(obj$y)}
-    pred$Data <- downs.predict(obj$x.global, method, atomic_model)}
+    mat.p <- as.matrix(downs.predict(obj$x.global, method, atomic_model))}
   # Single-site
   else if (site == "single") {
-    pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(obj$y$Data,"dimensions")
-    regular <- FALSE
-    if (isRegular(obj$y)) {
-      pred$Data <- array3Dto2Dmat(pred$Data)
-      obj$y$Data <- array3Dto2Dmat(obj$y$Data)
-      regular <- TRUE
-    }
-    stations <- dim(pred$Data)[2]
+    # pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(obj$y$Data,"dimensions")
+    # regular <- FALSE
+    # if (isRegular(obj$y)) {
+    #   pred$Data <- array3Dto2Dmat(pred$Data)
+    #   obj$y$Data <- array3Dto2Dmat(obj$y$Data)
+    #   regular <- TRUE
+    # }
+    stations <- dim(mat.p)[2]
     atomic_model <- vector("list",stations)
     for (i in 1:stations) {
       if (attr(obj,"nature") == "local") {
         xx = obj$x.local[[i]]$member_1}
       else {
         xx = obj$x.global}
-      yy = obj$y$Data[,i, drop = FALSE]
+      yy = mat.y[,i, drop = FALSE]
       if (is.null(filter)) {ind = eval(parse(text = "which(!is.na(yy))"))}
       else {ind = eval(parse(text = paste0("which(!is.na(yy) & yy",filter,")")))}
       if (method == "analogs") {
@@ -203,28 +216,25 @@ downscale.train <- function(obj, method, filter = NULL, ...) {
       else {
         atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, ...)}
       if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
-      pred$Data[,i] <- downs.predict(xx, method, atomic_model[[i]])
-    }
-    if (regular) {
-      pred$Data <- mat2Dto3Darray(pred$Data, x = pred$xyCoords$x, y = pred$xyCoords$y)
+      mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])
     }
   }
   # Mix - Global predictors with local predictors
   else if (site == "mix") {
-    pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(obj$y$Data,"dimensions")
-    regular <- FALSE
-    if (isRegular(obj$y)) {
-      pred$Data <- array3Dto2Dmat(pred$Data)
-      obj$y$Data <- array3Dto2Dmat(obj$y$Data)
-      regular <- TRUE
-    }
-    stations <- dim(pred$Data)[which(getDim(pred) == "loc")]
+    # pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(obj$y$Data,"dimensions")
+    # regular <- FALSE
+    # if (isRegular(obj$y)) {
+    #   pred$Data <- array3Dto2Dmat(pred$Data)
+    #   obj$y$Data <- array3Dto2Dmat(obj$y$Data)
+    #   regular <- TRUE
+    # }
+    stations <- dim(mat.p)[which(getDim(pred) == "loc")]
     atomic_model <- vector("list",stations)
     for (i in 1:stations) {
       xx1 = obj$x.local[[i]]$member_1
       xx2 = obj$x.global
       xx <- cbind(xx1,xx2)
-      yy = obj$y$Data[,i, drop = FALSE]
+      yy = mat.y[,i, drop = FALSE]
       if (is.null(filter)) {ind = eval(parse(text = "which(!is.na(yy))"))}
       else {ind = eval(parse(text = paste0("which(!is.na(yy) & yy",filter,")")))}
       if (method == "analogs") {
@@ -232,13 +242,16 @@ downscale.train <- function(obj, method, filter = NULL, ...) {
       else {
         atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, ...)}
       if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
-      pred$Data[,i] <- downs.predict(xx, method, atomic_model[[i]])}
-    if (regular) {
-      pred$Data <- mat2Dto3Darray(pred$Data, x = pred$xyCoords$x, y = pred$xyCoords$y)
-    }
+      mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])}
   }
-  
+  if (regular) {
+    pred$Data <- mat2Dto3Darray(mat.p, x = pred$xyCoords$x, y = pred$xyCoords$y)
+  } 
+  else {
+    pred$Data <- mat.p
+  }
   attr(pred$Data, "dimensions") <- dimNames
+  
   model <- list("pred" = pred, "model" = list("method" = method, "site" = site, "atomic_model" = atomic_model))
   return(model)}
 

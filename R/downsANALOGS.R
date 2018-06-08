@@ -1,8 +1,8 @@
 ##############################################################################################################
 #                     Analogs                                                                                #
 ##############################################################################################################
-#' @title Donwscaling with the analogs method (train).
-#' @description Donwscaling with the analogs method (train).
+#' @title Analogs
+#' @description Analog method implementation
 #' @param x The grid data. Class: matrix.
 #' @param y The observations data. Class: matrix.
 #' @param dates Dates of the grid and observations data.
