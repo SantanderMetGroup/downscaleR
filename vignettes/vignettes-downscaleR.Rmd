@@ -1,0 +1,110 @@
+---
+title: "vignettes_downscaleR"
+author: "Santander Meteorology Group"
+date: "11 de junio de 2018"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## 1. Introduction: Predictors and predictand
+As we mentioned in the [data transformation section](https://github.com/SantanderMetGroup/downscaleR/wiki/Standard-data-manipulation), [transformeR](https://github.com/SantanderMetGroup/transformeR/wiki) is an auxiliar package implementing a number of transformation and post-processing functionalities. Moreover, it provides a number of simple datasets (observations, reanalysis, climate change projections and seasonal forecasts, all restricted to a domain covering the Iberian peninsula) which will be used in this wiki to illustrate the functionalities of `downscaleR`.
+```{r,warning=FALSE, results="hide", message = FALSE}
+library(transformeR)
+data(package = "transformeR")
+```
+In order to illustrate the training and cross-validation of (perfect prog) downscaling methods we will use the `NCEP_Iberia` reanalysis data (including three common large scale predictors `psl`, `tas850`, `hus850`) as predictors, and the [VALUE](http://www.value-cost.eu) observations data for precipitation (`pr`) and mean temperature (`tas`) as predictands. Note that this dataset contains information for 11 stations in the Iberian peninsula; in some cases we will consider a single station (Igueldo - San Sebastian, Spain; ID = "000234") to graphically illustrate the results. The temporal coverage of these datasets is only winter data (DJF, 1983-2002). 
+
+These datasets were loaded with the `loadeR` package and preserve the data structure used in the `climate4R` framework, containing information about the variable (`Variable`), dates (`Dates`), coordinates (`xyCoordS`) and the data (`Data`). 
+```{r,warning=FALSE, results="hide", message = FALSE}
+library(downscaleR)
+# Selecting predictand (y) and predictor (x)
+data("VALUE_Iberia_pr","VALUE_Iberia_tas")
+y <- VALUE_Iberia_tas 
+data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
+x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+x <- scaleGrid(x, type = "standardize", spatial.frame = "field") # standardizing the predictors
+```
+In the case of station data, there is an additional element with station metadata (`Metadata`, including the station names and IDs: `y$Metadata`). The climatology of the predictand and predictors can be easily visualized with the `spatialPlot` function (from the `visualizeR` package).
+
+```{r,warning=FALSE, results="hide", message = FALSE}
+library(visualizeR)
+spatialPlot(climatology(y), backdrop.theme = "countries", colorkey=T)
+spatialPlot(climatology(x), backdrop.theme = "countries")
+```
+
+We could also use the functionalities of `transformeR` to select, e.g. a single station (Igueldo) for a particular period (e.g. year 2000) and plot the results.  
+
+```{r,warning=FALSE, results="hide", message = FALSE}
+igueldo.2000 <- subsetGrid(y,station.id = "000234",years = 2000)
+temporalPlot(igueldo.2000)
+```
+
+## 2. Model Training 
+
+`downscaleR` allows to prepare the specific predictors to be used to train the statistical downscaling model using the function `prepareData`, which allows to define local (from the nearest gridboxes for each station) and/o spatial (PCs from single or combined variables) predictors. Different options are illustrated below:
+
+```{r,warning=FALSE, results="hide", message = FALSE}
+data <- prepareData(x = x, y = y)
+data <- prepareData(x = x, y = y, 
+               local.predictors = list(n = 4, vars = getVarNames(x))) 
+data <- prepareData(x = x, y = y,
+               spatial.predictors = list(v.exp = 0.95))
+data <- prepareData(x = x, y = y, 
+               spatial.predictors = list(v.exp = 0.95),
+               local.predictors = list(n = 4, vars = getVarNames(x)))
+```
+The function `downscale.train` trains a specific downscaling method using the prepared data. It returns both the predicted values (`pred`) and the model (`model`), which can be used to obtained downscaled values for new data using the `downscale.predict` function. In the following example we train a model using the **method of analogs** (see below for additional methods):
+
+```{r,warning=FALSE, results="hide", message = FALSE}
+analog <- downscale.train(data, method = "analogs", n.analogs = 1) # The analog method
+```
+Note that the `analog$pred` preserves the same data structure of the predictand and, therefore, it can be transformed and visualized using the same functions. For instance, we can easily visualize the observations and predictions for the Igueldo station for a particular year (for the sake of visualization simplicity) as follows:
+```{r,warning=FALSE, results="hide", message = FALSE}
+igueldo.2000 <- subsetGrid(y,station.id = "000234",years = 2000)
+pred.2000 <- subsetGrid(analog$pred,station.id = "000234",years = 2000)
+temporalPlot(igueldo.2000, pred.2000)
+```
+
+Similarly to the previous example, `downscaleR` allows to train models using alternative downscaling methods:
+
+* **Linear (and generalized linear) models** (`method = "GLM"`). The argument `family` allows specifying the family (e.g. `family = gaussian`) or both the family and the link (e.g. `family = gaussian(link = "identity")`) following the same format and options as the stats package `glm` (used to train these methods):
+```{r,warning=FALSE, results="hide", message = FALSE}
+model <- downscale.train(data, method = "GLM",family = gaussian) # Linear regression
+```
+* **Neural network models** (`method = "NN"`). The argument `hidden` allows to specify the number of hidden layers and neurons (e.g. `hidden = c(10,5)` for two hidden layers with 10 and 5 neurons, respectively) with activation function specified by `activationfun`(e.g.  `activationfun = "sigm"` for sigmoidal); the output activation function can be specified by the argument ``output`(e.g. `output = "linear"` for regression or `output = "sigm"` for classification). A number ptional parameters corresponds control the learning process: `learningrate`, `momentum`, `numepochs`, etc., as given by the `deepnet` package (used to train these methods):
+```{r,warning=FALSE, results="hide", message = FALSE}
+model <- downscale.train(data, method = "NN", hidden = c(10,5), output = "linear") 
+```
+
+## 3. Model prediction
+Once the model is trained it can be used to predict the outcomes of the predictands for new (predictor) data. To this aim, the new data should include the same variables and geographical area as the predictor's definition used to train the downscaling method. The function `prepareNewData` allows to preprocess the new dataset indicating the new data and an existing predictor dataset (e.g. `data` in the current example). We could, for instance, apply the downscaling method to the training data (`x`) as follows:
+```{r,warning=FALSE, results="hide", message = FALSE}
+newdata <- prepareNewData(x,data)
+pred  <- downscale.predict(newdata, analog)
+```
+The result of `pred` would be identical to the predicted values already computed when training the model (`analog$pred`).
+
+As a more realistic application, we could split the data in two subsets (train and test) and perform a simple cross-validation as follows:
+```{r,warning=FALSE, results="hide", message = FALSE}
+xT <- subsetGrid(x, years = 1983:1999)  # training predictors
+yT <- subsetGrid(y, years = 1983:1999)   # training predictands
+data <- prepareData(xT,yT)       # preparing the data 
+analog <- downscale.train(data, method = "analogs", n.analogs = 1)
+xt <- subsetGrid(x, years = 2000)       # test predictors
+newdata <- prepareNewData(xt,data)     # preparing the new predictors
+pred  <- downscale.predict(newdata, analog)  # predicting 
+# visualizing the results
+yt <- subsetGrid(y,years = 2000)        
+temporalPlot(pred,yt)             # plotting predictions and observations
+```
+
+## 4. Model cross-validation
+`downscaleR` includes a specific function to cross-validate the downscaling methods, using a number of different alternatives (from a simple `split` to random or sequential `k-fold`). The arguments of the function are the same used in `downscale.train` including also the arguments of `prepareData` needed to preprocess the predictor data in order to prepare the training data.
+```{r,warning=FALSE, results="hide", message = FALSE}
+analog.cv <- downscale.cv(x = x, y = y, method = "analogs", n.analogs = 1, folds = 5,
+                 spatial.predictors = list(v.exp = 0.95),
+                 local.predictors = list(n = 4, vars = getVarNames(x)))
+```

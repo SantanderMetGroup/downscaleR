@@ -7,7 +7,7 @@
 downscale.cv(x, y, method, folds = 4, type = "chronological",
   scale.list = NULL, global.vars = NULL, combined.only = TRUE,
   spatial.predictors = NULL, local.predictors = NULL,
-  extended.predictors = NULL, filter = NULL, ...)
+  extended.predictors = NULL, condition = NULL, threshold = NULL, ...)
 }
 \arguments{
 \item{x}{The input grid (admits both single and multigrid, see \code{\link[transformeR]{makeMultiGrid}}). It should be an object as returned by \pkg{loadeR}.}
@@ -57,7 +57,11 @@ with the following arguments:
   \item \code{module}: A numeric value (Optional). Indicates the size of the mask's module. Belongs to a specific type of ELM called RF-ELM.
 }}
 
-\item{filter}{A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.}
+\item{condition}{Inequality operator to be applied considering the given threshold.
+\code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
+\code{"LT"} = lower than, \code{"LE"} = lower or equal than. We only train with the days that satisfy the condition.}
+
+\item{threshold}{An integer. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the parameter 'condition'. Then condition is set to "GE".}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. 
 Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
@@ -80,19 +84,21 @@ If the variable to downscale is the precipitation and it is a binary variable, t
 We recommend to get rid of the NaN/NA when dealing with multisite mode.
 }
 \examples{
+require(transformeR)
+data(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 x <- subsetGrid(x, years = 1985:1995)
 # Loading predictands
 y <- VALUE_Iberia_pr
-y <- getTemporalIntersection(obs = y,prd = x, "obs" )
-x <- getTemporalIntersection(obs = y,prd = x, "prd" )
+y <- getTemporalIntersection(obs = y, prd = x, "obs" )
+x <- getTemporalIntersection(obs = y, prd = x, "prd" )
 # Reconstructing the downscaled serie in 3 folds
-pred <- downscale.cv(x,y,folds = 3,type = "chronological",
+pred <- downscale.cv(x,y,folds = 3, type = "chronological",
                      scale.list = list(type = "standardize"),
-                     method = "GLM", filter = ">0")
+                     method = "GLM", condition = "GT", threshold = 0)
 # ... or with dates ...
 pred <- downscale.cv(x,y,type = "chronological",
-                     method = "GLM", filter = ">0",
+                     method = "GLM", condition = "GT", threshold = 0,
                      scale.list = list(type = "standardize"),
                      folds = list(c("1985","1986","1987","1988"),
                                   c("1989","1990","1991","1992"),
@@ -100,12 +106,12 @@ pred <- downscale.cv(x,y,type = "chronological",
 # Reconstructing the downscaled serie in 3 folds with spatial predictors
 pred <- downscale.cv(x,y,folds = 3,type = "chronological",
                      scale.list = list(type = "standardize"),
-                     method = "GLM", family = Gamma(link = "log"), filter = ">0",
+                     method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0,
                      spatial.predictors = list(which.combine = getVarNames(x),v.exp = 0.9))
 # Reconstructing the downscaled serie in 3 folds with local predictors.
 pred <- downscale.cv(x,y,folds = 3,type = "chronological",
                      scale.list = list(type = "standardize"),
-                     method = "GLM", filter = ">0",
+                     method = "GLM", condition = "GT", threshold = 0,
                      local.predictors = list(vars = "hus@850",n = 4))
 }
 \author{

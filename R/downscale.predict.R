@@ -51,7 +51,7 @@
 #'                              family = binomial(link = "logit"))
 #' pred <- downscale.predict(xyt, model = model.ocu)
 #' model.reg <- downscale.train(xyT, method = "GLM",
-#'                              family = "gaussian", filter = ">0")
+#'                              family = "gaussian", condition = "GT", threshold = 0)
 #' pred <- downscale.predict(xyt, model = model.reg)
 #' # ... via a neural network ...
 #' model.ocu <- downscale.train(xyT.bin, method = "NN",

@@ -4,14 +4,18 @@
 \alias{downscale.train}
 \title{Downscale climate data.}
 \usage{
-downscale.train(obj, method, filter = NULL, ...)
+downscale.train(obj, method, condition = NULL, threshold = NULL, ...)
 }
 \arguments{
 \item{obj}{An object. The object as returned by \code{\link[downscaleR]{prepareData}}.}
 
 \item{method}{A string value. Type of transer function. Options are c("analogs","GLM","NN").}
 
-\item{filter}{A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.}
+\item{condition}{Inequality operator to be applied considering the given threshold. We only train with the days that satisfy the condition.
+\code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
+\code{"LT"} = lower than, \code{"LE"} = lower or equal than.}
+
+\item{threshold}{An integer. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the parameter 'condition'. Then condition is set to "GE".}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 Everything concerning these parameters is explained in the section \code{Details}. 
@@ -120,7 +124,7 @@ model <- downscale.train(xyT, method = "analogs",
 model.ocu <- downscale.train(xyT.bin, method = "GLM",
                              family = binomial(link = "logit"))
 model.reg <- downscale.train(xyT, method = "GLM",
-                             family = "gaussian", filter = ">0")
+                             family = "gaussian", condition = "GT", threshold = 0)
 # ... via a neural network ...
 model.ocu <- downscale.train(xyT.bin, method = "NN",
                              learningrate = 0.1, numepochs = 10, hidden = 5,

@@ -118,7 +118,7 @@ downscale <- function(y,
     }
     else if (method == "glm") {
       # Amounts
-      model.reg <- downscale.train(gridT, method = "GLM", family = Gamma(link = "log"), filter = ">0", simulate = simulate)
+      model.reg <- downscale.train(gridT, method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0, simulate = simulate)
       yp.reg <- downscale.predict(gridt,model.reg)
       # Ocurrence
       gridT <- prepareData(x,y.ocu,global.vars = getVarNames(x),spatial.predictors)
@@ -150,7 +150,7 @@ downscale <- function(y,
                              method = "GLM", family = binomial(link = "logit"), simulate = simulate)
       # Amounts
       yp.reg <- downscale.cv(x,y,folds = folds, type = "chronological", scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
-                             method = "GLM", family = Gamma(link = "log"), filter = ">0", simulate = simulate)
+                             method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0, simulate = simulate)
       # Complete serie
       yp <- y
       yp$Data <- yp.ocu[[2]]$Data*yp.reg$Data
