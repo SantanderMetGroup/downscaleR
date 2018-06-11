@@ -1,0 +1,558 @@
+---
+title: "Bias Correction"
+author: "Santander MetGroup"
+date: "`r Sys.Date()`"
+header-includes:
+  - \usepackage[font={small}]{caption}
+output: 
+    rmarkdown::html_document:
+        fig_caption: yes
+        toc: yes
+        pandoc_args: [
+      "--number-sections",
+      "--number-offset=0"
+    ] 
+vignette: >
+  %\VignetteIndexEntry{mopa within the climate4R ecosystem}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                 message = FALSE,
+                 warning = FALSE,
+                 fig.align = "center",
+                 tidy = TRUE,
+                 cache = FALSE,
+                 fig.width = 9,
+                 fig.height = 5,
+                 fig.path = "bias_correction_figs/")
+```
+
+# Calibration and Cross-validation
+
+This is a worked example of the application of several bias correction methods. In order to show the way in which each method operates, in the next examples the correction is applied considering the same period for the train and test data (1983-2002), however, usually RCM or GCM are used for test.
+
+The example will be done on the NCEP/NCAR Reanalysis 1 dataset and the VALUE station dataset.
+
+Instead of station data, the observations might also be gridded data. 
+
+
+```{r}
+# If we have not installed the "devtools" library we should do it:
+# install.packages("devtools")
+# library(devtools)
+# Installing the downscaleR R-package
+# devtools::install_github("SantanderMetGroup/downscaleR")
+library(downscaleR)
+```
+
+## Data
+
+### Observations
+
+In this example we will bias correct winter precipitation and mean temperature for the Igueldo station, using as observations data from the VALUE_ECA&D dataset, considering the period 1983-2002 (type `help(VALUE_Iberia_pr)` and `help(VALUE_Iberia_tas)`).
+
+
+```{r}
+# precipitation
+data(VALUE_Iberia_pr)
+y <- VALUE_Iberia_pr
+# temperature
+data(VALUE_Iberia_tas)
+y.t <- VALUE_Iberia_tas
+```
+
+### Predictors
+
+
+NCEP reanalysis model data will be used as predictors and test data (type `help(NCEP_Iberia_pr)` and `help(NCEP_Iberia_tas)`). In order to transform NCEP precipitation units from Kg/m2/s to mm, we use function `gridArithmetics`. 
+
+```{r}
+# precipitation
+data(NCEP_Iberia_pr)
+x <- gridArithmetics(NCEP_Iberia_pr, 86400, operator = "*")
+
+# temperature
+data(NCEP_Iberia_tas)
+x.t <- NCEP_Iberia_tas
+
+```
+
+
+Next the climatology of NCEP precipitation (x) and the VALUE stations (y) are plotted with `spatialPlot` (from package `visualizeR`). In order to visualize the VALUE stations in the same map, we might use the functionalities of package `sp` (here function `SpatialPoints`).
+
+```{r}
+library(visualizeR)
+library(sp)
+spatialPlot(climatology(x), backdrop.theme = "coastline", 
+            sp.layout = list(list(SpatialPoints(getCoordinates(y)), 
+                                  pch = 17, col = "black", cex = 1.5)))
+```
+
+
+## Application of different bias correction methods
+
+### Methods
+The available properties to define the methods are:
+
+-method: "delta", "scaling", "eqm", "pqm" and "gpqm. See the examples below for further details in each method.
+
+-cross.val: For performing optional cross-validation (leave-one-year-out or k-fold).
+
+-window: Numeric value specifying the time window width used to calibrate. The window is centered on the target days. Default to NULL, which considers the whole period available.
+
+-scaling.type: Character indicating the type of the scaling method. Options are "additive" or "multiplicative". This argument is ignored if "scaling" is not selected as the bias correction method.
+
+-fitdist.args: Further arguments passed to function fitdistr (densfun, start, ...). Only used when applying the "pqm" method (parametric quantile mapping).
+
+-wet.threshold: The minimum value that is considered as a non-zero precipitation. Ignored for varcode values different from "pr".
+
+-n.quantiles: Quantiles to be considered when method = "eqm".
+
+-extrapolation: Character indicating the extrapolation method to be applied to correct test values that are out of the range of train values. Extrapolation is applied only to the "eqm" method. Options are "no" (Default: do not extrapolate) and "constant".
+
+-theta (only for method 'gpqm'): upper threshold (and lower for the left tail of the distributions, if needed) above which values are fitted to a Generalized Pareto Distribution (GPD). Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th percentile (5th percentile for the left tail). 
+
+-join.members: To indicate whether members should be corrected independently or joined.
+
+Type `help(biasCorrection)` for a detailed description.
+
+
+
+### Delta
+
+This method consists on adding to the observations the mean change signal (delta method). It is applicable to any kind of variable but it is preferable to avoid it for bounded variables
+(e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained (e.g. negative wind speeds...).
+
+```{r}
+cal <- biasCorrection(y = y, x = x, newdata = x, precipitation = TRUE, method = "delta")
+```
+
+
+```{r}
+cal.t <- biasCorrection (y = y.t, x = x.t, newdata = x.t, method = "delta")
+```
+
+
+Once we have calibrated the simulation for the test period, we can validate the result against the observational reference. This can be easily done with function `quickDiagnostics` that returns two graphs. The first shows time-series of the original simulation (red), the calibrated simulation (blue) and the observation (black). The second graph is the quantile-quantile plot, that better illustrates the effect of the applied method. Here we select the location that corresponds to the Igueldo station (`location = c(-2.0392, 43.3075)`):
+
+
+
+```{r}
+# precipitation
+quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+
+
+```{r}
+# temperature
+quickDiagnostics(y.t, x.t, cal.t, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+Package `visualizeR` also provides a function for plotting time series. In this case we will plot the time series for the Igueldo station.
+
+```{r, message=FALSE, warning=FALSE, results= 'hide'}
+# time series plotting for Igueldo station
+Igueldo.cal <- subsetGrid(cal, station.id = "000234")
+Ig.coords <- getCoordinates(Igueldo.cal)
+Igueldo.raw <- subsetGrid(x, lonLim = Ig.coords$x, latLim = Ig.coords$y) 
+temporalPlot(Igueldo.cal, Igueldo.raw, cols = c("blue", "red"))
+```
+
+As we can see in the graph, we are working with winter data. If we preffer to visualize these results as continuous series, we can set `x.axis = "index"`:
+
+
+```{r, message=FALSE, warning=FALSE, results= 'hide'}
+# time series plotting for Igueldo station
+temporalPlot(Igueldo.cal, Igueldo.raw, cols = c("blue", "red"), x.axis = "index")
+```
+
+Multiple grid objects can be passed to function `temporalPlot`.
+
+### Scaling
+
+This method is very similar to the delta method but, in this case, the correction consist on scaling the simulation with the difference (`scaling.type = "additive"`) or quotient (`scaling.type = "multiplicative"`) between the mean of the observations and the simulation in the train period. The *additive* version is preferably applicable to unbounded variables (e.g. temperature) and the *multiplicative* to variables with a lower bound (e.g. precipitation, because it also preserves the frequency). 
+
+See [Wetterhall et al.2012](http://www.nonlin-processes-geophys.net/19/623/2012/npg-19-623-2012.html) for a comparison with more sophisticated methods considering the scaling method as a benchmark. 
+
+```{r}
+#For precipitation
+cal <- biasCorrection(y = y, x = x, newdata = x, precipitation = TRUE, method = "scaling", 
+                       scaling.type = "multiplicative")
+#For temperature
+cal.t <- biasCorrection(y = y.t, x = x.t, newdata = x.t, method = "scaling",
+                         scaling.type = "additive")
+
+```
+
+```{r}
+# precipitation
+quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+
+```{r}
+# temperature
+quickDiagnostics(y.t, x.t, cal.t, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+
+
+### eQM
+
+The empirical quantile mapping is a very extended bias correction method which consists on calibrating the simulated Cumulative Distribution Function (CDF) by adding to the observed quantiles both the mean delta change and the individual delta changes in the corresponding quantile.
+
+
+```{r}
+
+cal <- biasCorrection(y = y, x = x, newdata = x, precipitation = TRUE, 
+                       method = "eqm")
+cal.t <- biasCorrection(y = y.t, x = x.t, newdata = x.t, 
+                         method = "eqm")
+```
+
+```{r}
+# precipitation
+quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+```{r}
+# temperature
+quickDiagnostics(y.t, x.t, cal.t, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+
+
+
+### PQM
+
+Parametric quantile mapping is based on the initial assumption that both observed and simulated intensity distributions are well approximated by a given distribution, therefore it uses the theorical instead of the empirical distribution. For instance, the use of the "gamma" distribution is described in  [Piani et al. 2010](http://link.springer.com/article/10.1007%2Fs00704-009-0134-9), and here an example of application:
+
+```{r}
+
+cal <- biasCorrection(y = y, x = x, newdata = x, precipitation = TRUE, 
+                      method = "pqm", fitdistr.args = list(densfun = "gamma"))
+```
+
+For temperature we use the "normal" distribution:
+
+```{r}
+cal.t <- biasCorrection(y = y.t, x = x.t, newdata = x.t, precipitation = TRUE, 
+                      method = "pqm", fitdistr.args = list(densfun = "normal"))
+
+```
+
+```{r}
+# precipitation
+quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+
+```{r}
+# precipitation
+quickDiagnostics(y.t, x.t, cal.t, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+### gpQM
+
+This method was proposed by  [Gutjahr and Heinemann 2013](http://link.springer.com/article/10.1007/s00704-013-0834-z). It is also a parametric quantile mapping based on a gamma and Generalized Pareto Distribution (GPD). By default, the threshold above which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. The user can specify a different threshold by modifying the parameter theta, by giving the observational (predicted) threshold in the first (second) row and Nnodes columns. 
+
+
+```{r}
+
+cal <- biasCorrection(y = y, x = x, newdata = x, precipitation = TRUE, 
+                       method = "gpqm", theta = .70)
+```
+
+```{r}
+# precipitation
+quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+## Cross validation
+
+```{r}
+# precipitation
+cal <- biasCorrection(y = y, x = x,
+                            precipitation = TRUE,
+                            method = "eqm",
+                            window = c(30, 15),
+                            wet.threshold = 0.1,
+                            cross.val = "kfold",
+                            folds = list(1983:1989, 1990:1996, 1997:2002))
+```
+```{r}
+# precipitation
+quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+## Working with a moving window (introducing seasonality)
+
+By default, the whole train period as defined by the user is considered to calibrate the methods. It is also interesting to correct each day of the year (doy) independently by using a moving window centered on each doy to calibrate the correction. Therefore, instead of having one correction function for the whole period , there would be one correction for each doy. The user can specify the length (in days) of the moving window by means of the property CorrectionWindow.
+
+```{r}
+# precipitation
+data(VALUE_Iberia_pr)
+y <- VALUE_Iberia_pr
+data(NCEP_Iberia_pr)
+x <- gridArithmetics(NCEP_Iberia_pr, 86400, operator = "*")
+
+cal <- biasCorrection(y = y, x = x,
+                            precipitation = TRUE,
+                            method = "eqm",
+                            wet.threshold = 0.1)
+
+cal.win <- biasCorrection(y = y, x = x,
+                            precipitation = TRUE,
+                            method = "eqm",
+                            window = c(30, 15),
+                            wet.threshold = 0.1)
+```
+
+```{r}
+# precipitation
+quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+```{r}
+# precipitation
+quickDiagnostics(y, x, cal.win, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+```{r, message=FALSE, warning=FALSE, results= 'hide'}
+# time series plotting for Igueldo station
+Igueldo.cal <- subsetGrid(cal, station.id = "000234")
+Igueldo.cal.win <- subsetGrid(cal.win, station.id = "000234")
+Ig.coords <- getCoordinates(Igueldo.cal)
+temporalPlot(Igueldo.cal, Igueldo.cal.win, cols = c("blue", "green"), x.axis = "index")
+```
+
+
+# Bias correction of climate change projections
+
+```{r}
+# precipitation
+data(VALUE_Iberia_pr)
+y <- VALUE_Iberia_pr
+data("CORDEX_Iberia_pr")
+x <- CORDEX_Iberia_pr
+data("CORDEX_Iberia_pr.rcp85")
+newdata <- CORDEX_Iberia_pr.rcp85
+cal <- biasCorrection(y = y, x = x,
+                          newdata = newdata,
+                          precipitation = TRUE,
+                          method = "eqm",
+                          extrapolation = "constant",
+                          window = c(30, 15),
+                          wet.threshold = 0.1)
+```
+
+
+```{r, message=FALSE, warning=FALSE, results= 'hide'}
+# time series plotting for Igueldo station
+VALUE.obs <- subsetGrid(y, station.id = "000234")
+CDX.cal <- subsetGrid(cal, station.id = "000234")
+CDX.hist <- interpGrid(x, getGrid(VALUE.obs))
+CDX.raw <- interpGrid(newdata, getGrid(VALUE.obs))
+temporalPlot(VALUE.obs, CDX.hist, CDX.cal, CDX.raw, 
+             cols = c("black", "red", "green", "red"))
+```
+
+# Bias correction of seasonal forecasts
+
+
+The goal of this practice is to apply and analyze the bias correction techniques shown in the previous demonstration to calibrate the direct output of the seasonal forecasting. 
+
+
+## Data
+
+We will bias correct the seasonal forecasting data from 9 models of CFS using as reference the E-OBS gridded observation data. The train period considered is 1983-2001 (observed period) and the test period is 2002 (non-observed period). Here we use the mean temperature for the winter season.
+
+
+```{r}
+# observation
+data(EOBS_Iberia_tas)
+y <- subsetGrid(EOBS_Iberia_tas, years = 1983:2001)
+
+# predictor
+data(CFS_Iberia_tas)
+x <- subsetGrid(CFS_Iberia_tas, years = 1983:2001)
+
+# predictor in the test period
+newdata <- subsetGrid(CFS_Iberia_tas, years = 2002)
+```
+
+```{r}
+library(visualizeR)
+spatialPlot(climatology(y, clim.fun = list(FUN = mean, na.rm = T)), 
+                backdrop.theme = "countries", 
+                scales = list(draw = T))
+```
+
+
+Function `spatialPlot` let us to draw all the members of CFS data in the same figure. 
+
+```{r}
+spatialPlot(climatology(x, clim.fun = list(FUN = mean, na.rm = T)), 
+                backdrop.theme = "countries", 
+                scales = list(draw = T))
+```
+
+
+## Bias correction applied to a observed period
+
+Next the "eqm" method of bias correction is applied using the function `biasCorrection` in downscaleR. In this particular example we illustrate an in-sample calibration approach (i.e., the bias correction parameters are estimated with all available data). Other approaches to account for the sampling error in these estimates may incorporate out-of-sample calibration. Note that out-of-sample strategies will be less prone to generate artificial skill due to overfitting. The definition of different periods for calibration and simulation can be specified through the arguments 'x' and 'newdata' respectively, that in this example (in-sample calibration) correspond to the same object. The consideration of the joint distribution of all members (important to preserve the multimember spread) is indicated through the argument `multi.member = TRUE`.
+
+```{r}
+cal <- biasCorrection(y = y,
+                      x = x,
+                      newdata = x,
+                      method = "eqm")
+
+```
+Once we have calibrated the simulation for the test period, we can validate the result against the observational reference. This can be easily done for a selected location with function `quickDiagnostics`, that returns two graphs. The first shows time-series of the original simulation (red), the calibrated simulation (blue) and the observation (black). The second graph is the quantile-quantile plot, that better illustrates the effect of the applied method.
+
+```{r}
+loc <- c(-5, 42)
+quickDiagnostics(y, x, cal, location = loc)
+```
+
+
+We can also plot the different grids.
+
+```{r}
+spatialPlot(climatology(cal))
+```
+
+
+## Bias correction applied to a non-observed period
+
+Next the "eqm" and "scaling" methods of bias correction are applied, using different periods for calibration and simulation.
+
+
+```{r}
+# In the case of the temperature these are two of the bias correction methods available:
+cal1 <- biasCorrection(y = y,
+                      x = x,
+                      newdata = newdata, 
+                      method = "scaling",
+                      scaling.type = "multiplicative")
+cal2 <- biasCorrection(y = y,
+                      x = x,
+                      newdata = newdata,
+                      method = "eqm")
+# This is a plot that performs the mean of all stations
+tercilePlot(CFS_Iberia_tas, obs = EOBS_Iberia_tas, year.target = 2002, color.pal = "ypb")# Raw skill
+```
+
+In order to show the spread of the spatial mean of the ensemble of bias correction methodologies we could use function `temporalPlot`.
+
+```{r}
+temporalPlot(y, x, newdata, cal1, cols = c("black", "red", "red", "blue"))
+```
+
+```{r}
+temporalPlot(newdata, cal1, cols = c("red", "blue"))
+```
+```{r}
+temporalPlot(cal1, cal2, cols = c("blue", "green"))
+```
+
+***
+
+[<-- Home page of the Wiki](https://github.com/SantanderMetGroup/downscaleR/wiki)
+
+```{r}
+print(sessionInfo())
+
+```
+
+
+# How to contribute with new bias correction methods
+
+
+Each method for bias correction in `downscaleR` (e.g. "eqm", "scaling",etc.) is built as an independent simple function that operates over vectors, being `biasCorrection` the wrapper function that deals with data dimensionality and subsetting of `grid` objects. This code structure allows to easily add new methods for bias correction, by adding a single new function ("method function") with no need of modifying the existing code. 
+
+Users of `downscaleR` are highly encouraged to contribute with new bias correction methods. In the following, requirements are detailed through examples.
+
+## Building the function 
+
+The minimum data required are three vectors, these are objects named `o`, `p` and `s`.
+
+`o` : A vector (e.g. station data) containing the observed climate data for the training period
+
+`p` : A vector containing the simulated climate by the model for the training period. 
+
+`s` : A vector containing the simulated climate for the variable used in `p`, but considering the test period.
+
+
+This is the function for the `delta` method:
+
+```{r}
+delta <- function(o, p, s){
+      corrected <- o + (mean(s) - mean(p))
+      return(corrected)
+}
+```
+
+Depending on the method, more arguments may be needed, for example, the `scaling.type` argument for the scaling method, that is selected by the user when applying the `biasCorrection` function and directly passed to the "method function":
+
+```{r}
+scaling <- function(o, p, s, scaling.type){
+      if (scaling.type == "additive") {
+            s - mean(p) + mean(o)
+      } else if (scaling.type == "multiplicative") {
+            (s/mean(p)) * mean(o)
+      }
+}
+```
+
+
+## Documentation 
+
+Functions must be documented with the format used by package `roxygen2`, by writing specially-structured comments preceding each function definition. The following heading in function `scaling` contains the minimum information required and could be used as a template:
+
+```{r}
+#' @title Scaling method for bias correction
+#' @description Implementation of Scaling method for bias correction 
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{x}, but considering the test period.
+#' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
+#' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not selected as the bias correction method.
+#' @author S. Herrera and M. Iturbide
+scaling <- function(o, p, s, scaling.type){
+      if (scaling.type == "additive") {
+            s - mean(p) + mean(o)
+      } else if (scaling.type == "multiplicative") {
+            (s/mean(p)) * mean(o)
+      }
+}
+#end
+```
+If the new method requires importing a function from another package, please add this information with `@importFrom` in the following manner:  @importFrom {package} {function 1} {function2} {function...}. For example:
+
+```{r}
+#' @importFrom stats pgamma qgamma
+```
+
+For more examples go to [http://kbroman.org/pkg_primer/pages/docs.html](http://kbroman.org/pkg_primer/pages/docs.html)
+
+
+***
+
+[<-- Home page of the Wiki](https://github.com/SantanderMetGroup/downscaleR/wiki)
+
+
+
+
+```{r}
+print(sessionInfo())
+```
+
+
+
