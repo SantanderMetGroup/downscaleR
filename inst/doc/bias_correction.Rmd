@@ -27,12 +27,13 @@ knitr::opts_chunk$set(echo = TRUE,
                  tidy = TRUE,
                  cache = FALSE,
                  fig.width = 9,
-                 fig.height = 5)
+                 fig.height = 5,
+                 fig.path = "bias_correction_figs/")
 ```
 
 # Calibration and Cross-validation
 
-This is a worked example of the application of several bias correction methods. In order to show the way in which each method operates, in the next examples the correction is applied considering the same period for the train and test data (1983-2002), however, usually RCM or GCM are used for test.
+This is a worked example of the application of several bias correction methods. In order to show the way in which each method operates, in the next examples the correction is applied considering the same period for the train and test data (1983-2002), however, usually RCM or GCM are used for test (see later sections).
 
 The example will be done on the NCEP/NCAR Reanalysis 1 dataset and the VALUE station dataset.
 
@@ -67,7 +68,7 @@ y.t <- VALUE_Iberia_tas
 ### Predictors
 
 
-NCEP reanalysis model data will be used as predictors and test data (type `help(NCEP_Iberia_pr)` and `help(NCEP_Iberia_tas)`). In order to transform NCEP precipitation units from Kg/m2/s to mm, we use function `gridArithmetics`. 
+NCEP reanalysis model data will be used as predictors and test data (type `help(NCEP_Iberia_pr)` and `help(NCEP_Iberia_tas)`). In order to transform NCEP precipitation units from Kg/m2/s to mm, here we use function `gridArithmetics` (package `transformeR`). 
 
 ```{r}
 # precipitation
@@ -81,7 +82,7 @@ x.t <- NCEP_Iberia_tas
 ```
 
 
-Next the climatology of NCEP precipitation (x) and the VALUE stations (y) are plotted with `spatialPlot` (from package `visualizeR`). In order to visualize the VALUE stations in the same map, we might use the functionalities of package `sp` (here function `SpatialPoints`).
+Next the climatology of NCEP precipitation (x) and the location of the VALUE stations (y) are plotted with `spatialPlot` (package `visualizeR`). In order to visualize the VALUE stations in the same map, we make use of the functionalities of package `sp` (here function `SpatialPoints`), as `spatialPlot` uses function `spplot` internally.
 
 ```{r}
 library(visualizeR)
@@ -227,9 +228,9 @@ quickDiagnostics(y.t, x.t, cal.t, type = "daily", location = c(-2.0392, 43.3075)
 
 
 
-### PQM
+### pQM
 
-Parametric quantile mapping is based on the initial assumption that both observed and simulated intensity distributions are well approximated by a given distribution, therefore it uses the theorical instead of the empirical distribution. For instance, the use of the "gamma" distribution is described in  [Piani et al. 2010](http://link.springer.com/article/10.1007%2Fs00704-009-0134-9), and here an example of application:
+Parametric quantile mapping is based on the initial assumption that both observed and simulated intensity distributions are well approximated by a given distribution, therefore it uses the theorical instead of the empirical distribution. For instance, the use of the "gamma" distribution is described in  [Piani et al. 2010](http://link.springer.com/article/10.1007%2Fs00704-009-0134-9), and here is an example of application:
 
 ```{r}
 
@@ -272,24 +273,9 @@ cal <- biasCorrection(y = y, x = x, newdata = x, precipitation = TRUE,
 quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
 ```
 
-
-## Working with a moving window (introducing seasonality)
-```{r}
-# precipitation
-cal <- biasCorrection(y = y, x = x,
-                            precipitation = TRUE,
-                            method = "eqm",
-                            window = c(30, 15),
-                            wet.threshold = 0.1)
-```
-
-```{r}
-# precipitation
-quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
-```
-
 ## Cross validation
 
+k-fold:
 ```{r}
 # precipitation
 cal <- biasCorrection(y = y, x = x,
@@ -300,15 +286,79 @@ cal <- biasCorrection(y = y, x = x,
                             cross.val = "kfold",
                             folds = list(1983:1989, 1990:1996, 1997:2002))
 ```
+
 ```{r}
 # precipitation
 quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
 ```
 
-# Bias correction of climate change projections
+leave-one-year-out:
 
 ```{r}
 # precipitation
+cal <- biasCorrection(y = y, x = x,
+                            precipitation = TRUE,
+                            method = "eqm",
+                            window = c(30, 15),
+                            wet.threshold = 0.1,
+                            cross.val = "loo")
+```
+
+## Working with a moving window (introducing seasonality)
+
+By default, the whole train period as defined by the user is considered to calibrate the methods. It is also interesting to correct each day (or group of days) of the year (doy) independently by using a moving window centered on each doy to calibrate the correction. Therefore, instead of having one correction function for the whole period, there would be one correction for each doy. The user can specify the length (in days) of the calibration moving window and the target days (doy) by means of the argument `window`.
+
+```{r}
+# precipitation
+data(VALUE_Iberia_pr)
+y <- VALUE_Iberia_pr
+data(NCEP_Iberia_pr)
+x <- gridArithmetics(NCEP_Iberia_pr, 86400, operator = "*")
+
+# NO window
+cal <- biasCorrection(y = y, x = x,
+                            precipitation = TRUE,
+                            method = "eqm",
+                            wet.threshold = 0.1)
+
+# Window: calibration window of 30 days to correct each 15 day time step
+cal.win <- biasCorrection(y = y, x = x,
+                            precipitation = TRUE,
+                            method = "eqm",
+                            window = c(30, 15),
+                            wet.threshold = 0.1)
+```
+
+```{r}
+# NO window
+quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+```{r}
+# Window
+quickDiagnostics(y, x, cal.win, type = "daily", location = c(-2.0392, 43.3075))
+```
+
+
+Compare the resulting time-series; NO-window (blue) vs Window (green):
+
+```{r, message=FALSE, warning=FALSE, results= 'hide'}
+# time series plotting for Igueldo station
+Igueldo.cal <- subsetGrid(cal, station.id = "000234")
+Igueldo.cal.win <- subsetGrid(cal.win, station.id = "000234")
+Ig.coords <- getCoordinates(Igueldo.cal)
+temporalPlot(Igueldo.cal, Igueldo.cal.win, cols = c("blue", "green"), x.axis = "index")
+```
+
+
+# Bias correction of climate change projections
+
+In the next example CORDEX climate change projections (period 2081-2100 and rcp8.5) are corrected using as observational reference VALUE station data (type `?VALUE_Iberia_pr`, `?CORDEX_Iberia_pr` and `CORDEX_Iberia_pr.rcp85`. 
+
+```{r}
+# precipitation
+data(VALUE_Iberia_pr)
+y <- VALUE_Iberia_pr
 data("CORDEX_Iberia_pr")
 x <- CORDEX_Iberia_pr
 data("CORDEX_Iberia_pr.rcp85")
@@ -322,31 +372,145 @@ cal <- biasCorrection(y = y, x = x,
                           wet.threshold = 0.1)
 ```
 
+Plot the resulting time series for Igueldo station with function `temporalPlot`:
 
-```{r}
-# precipitation
-quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
+```{r, message=FALSE, warning=FALSE, results= 'hide'}
+# time series plotting for Igueldo station
+VALUE.obs <- subsetGrid(y, station.id = "000234") # observation
+CDX.cal <- subsetGrid(cal, station.id = "000234") # CORDEX RCP8.5 corrected
+CDX.hist <- interpGrid(x, getGrid(VALUE.obs)) # CORDEX historical
+CDX.raw <- interpGrid(newdata, getGrid(VALUE.obs)) # CORDEX RCP8.5
+temporalPlot(VALUE.obs, CDX.hist, CDX.cal, CDX.raw, 
+             cols = c("black", "red", "green", "red"))
 ```
+
+Red series are the non-corrected CORDEX data (historical and rcp8.5), the black line is the observation and the green one is the corrected CORDEX rcp8.5 data.
 
 # Bias correction of seasonal forecasts
 
-```{r}
-# precipitation
-data("CFS_Iberia_pr")
-x <- CFS_Iberia_pr
-cal <- biasCorrection(y = y, x = x,
-                          newdata = x,
-                          precipitation = TRUE,
-                          method = "eqm",
-                          extrapolation = "constant",
-                          window = c(30, 15),
-                          wet.threshold = 0.1)
-```
+
+The goal of this practice is to apply and analyze the bias correction techniques shown in the previous demonstration to calibrate the direct output of the seasonal forecasting. 
+
+
+## Data
+
+We will bias correct the seasonal forecasting data from 9 models of CFS using as reference the E-OBS gridded observation data (type `EOBS_Iberia_tas` and `CFS_Iberia_tas`). The train period considered is 1983-2001 (observed period) and the test period is 2002 (non-observed period). Here we use the mean temperature for the winter season.
+
 
 ```{r}
-# precipitation
-quickDiagnostics(y, x, cal, type = "daily", location = c(-2.0392, 43.3075))
+# observation
+data(EOBS_Iberia_tas)
+y <- subsetGrid(EOBS_Iberia_tas, years = 1983:2001)
+
+# predictor
+data(CFS_Iberia_tas)
+x <- subsetGrid(CFS_Iberia_tas, years = 1983:2001)
+
+# predictor in the test period
+newdata <- subsetGrid(CFS_Iberia_tas, years = 2002)
 ```
+
+We can use `spatialPlot` to for example visualize the observed climatology of mean temperature:
+
+```{r}
+library(visualizeR)
+spatialPlot(climatology(y, clim.fun = list(FUN = mean, na.rm = T)), 
+                backdrop.theme = "countries", 
+                scales = list(draw = T))
+```
+
+
+Function `spatialPlot` let us to draw all the members of CFS data in the same figure. 
+
+```{r}
+spatialPlot(climatology(x, clim.fun = list(FUN = mean, na.rm = T)), 
+                backdrop.theme = "countries", 
+                scales = list(draw = T))
+```
+
+## Bias correction applied to a observed period
+
+Next the "eqm" method of bias correction is applied using the function `biasCorrection` in downscaleR. In this particular example we illustrate an in-sample calibration approach (i.e., the bias correction parameters are estimated with all available data). Other approaches to account for the sampling error in these estimates may incorporate out-of-sample calibration. Note that out-of-sample strategies will be less prone to generate artificial skill due to overfitting. The definition of different periods for calibration and simulation can be specified through the arguments 'x' and 'newdata' respectively, that in this example (in-sample calibration) correspond to the same object. The consideration of the joint distribution of all members (important to preserve the multimember spread) is indicated through the argument `multi.member = TRUE`.
+
+```{r}
+cal <- biasCorrection(y = y,
+                      x = x,
+                      newdata = x,
+                      method = "eqm")
+
+```
+Once we have calibrated the simulation for the test period, we can validate the result against the observational reference. This can be easily done for a selected location with function `quickDiagnostics`, that returns two graphs. The first shows time-series of the original simulation (red), the calibrated simulation (blue) and the observation (black). The second graph is the quantile-quantile plot, that better illustrates the effect of the applied method.
+
+```{r}
+loc <- c(-5, 42)
+quickDiagnostics(y, x, cal, location = loc)
+```
+
+
+We can also plot the different grids.
+
+```{r}
+spatialPlot(climatology(cal))
+```
+
+
+## Bias correction applied to a non-observed period
+
+
+This is a tercile plot (type `?tercilePlot`) that performs the mean of all stations and shows the skill of the seasonal forecasting models:
+
+```{r}
+tercilePlot(CFS_Iberia_tas, obs = EOBS_Iberia_tas, year.target = 2002, color.pal = "ypb")
+```
+
+Next the "eqm" and "scaling" methods of bias correction are applied, to bias correct out-of-sample data (`newdata`, year 2002).
+
+```{r}
+# In the case of the temperature these are two of the bias correction methods available:
+cal1 <- biasCorrection(y = y,
+                      x = x,
+                      newdata = newdata, 
+                      method = "scaling",
+                      scaling.type = "multiplicative")
+cal2 <- biasCorrection(y = y,
+                      x = x,
+                      newdata = newdata,
+                      method = "eqm")
+
+```
+
+In order to show the spread of the spatial mean of the ensemble and the effect of the correction we can use function `temporalPlot`. 
+
+Next we plot the data used for calibration and also the out-of-sample series (corrected with the "scaling" method and non-corrected):
+
+```{r}
+temporalPlot(y, x, newdata, cal1, cols = c("black", "red", "red", "blue"),
+             xyplot.custom = list(ylim = c(-2, 18)))
+```
+
+To see the effect of the correction in detail, next we only plot year 2002:
+
+```{r}
+temporalPlot(newdata, cal1, cols = c("red", "blue"), 
+             xyplot.custom = list(ylim = c(-2, 18)))
+```
+
+Finally, next we generate a similar plot to compare both bias correction methods. Here we can see that the "eqm" method results in less multi-member variability:
+
+```{r}
+temporalPlot(cal1, cal2, cols = c("blue", "green"), 
+             xyplot.custom = list(ylim = c(-2, 18)))
+```
+
+***
+
+[<-- Home page of the Wiki](https://github.com/SantanderMetGroup/downscaleR/wiki)
+
+```{r}
+print(sessionInfo())
+
+```
+
 
 # How to contribute with new bias correction methods
 
