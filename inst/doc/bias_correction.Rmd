@@ -13,7 +13,7 @@ output:
       "--number-offset=0"
     ] 
 vignette: >
-  %\VignetteIndexEntry{mopa within the climate4R ecosystem}
+  %\VignetteIndexEntry{Bias Correction}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 urlcolor: blue

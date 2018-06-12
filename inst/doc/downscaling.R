@@ -44,11 +44,11 @@ model <- downscale.train(data, method = "GLM",family = gaussian) # Linear regres
 ## ----warning=FALSE, results="hide", message = FALSE----------------------
 model <- downscale.train(data, method = "NN", hidden = c(10,5), output = "linear") 
 
-## ----warning=FALSE, results="hide", message = FALSE-----------------------------------------------
+## ----warning=FALSE, results="hide", message = FALSE----------------------
 newdata <- prepareNewData(x,data)
 pred  <- downscale.predict(newdata, analog)
 
-## ----warning=FALSE, results="hide", message = FALSE-----------------------------------------------
+## ----warning=FALSE, results="hide", message = FALSE----------------------
 xT <- subsetGrid(x, years = 1983:1999)  # training predictors
 yT <- subsetGrid(y, years = 1983:1999)   # training predictands
 data <- prepareData(xT,yT)       # preparing the data 
@@ -60,7 +60,7 @@ pred  <- downscale.predict(newdata, analog)  # predicting
 yt <- subsetGrid(y,years = 2000)        
 temporalPlot(pred,yt)             # plotting predictions and observations
 
-## ----warning=FALSE, results="hide", message = FALSE-----------------------------------------------
+## ----warning=FALSE, results="hide", message = FALSE----------------------
 analog.cv <- downscale.cv(x = x, y = y, method = "analogs", n.analogs = 1, folds = 5,
                  spatial.predictors = list(v.exp = 0.95),
                  local.predictors = list(n = 4, vars = getVarNames(x)))
