@@ -72,6 +72,7 @@
 #' 2) The temporal serie with the results obtained by the downscaling, without any binary converting process.
 #' We recommend to get rid of the NaN/NA when dealing with multisite mode.
 #' @return The reconstructed downscaled temporal serie.
+#' @seealso \url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
 #' @importFrom transformeR dataSplit scaleGrid binaryGrid
 #' @author J. Bano-Medina
 #' @export

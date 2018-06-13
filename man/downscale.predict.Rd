@@ -69,6 +69,9 @@ xyt.pc <- prepareNewData(newdata = x, data.structure = xyT.pc)
 model <- downscale.train(xyT.pc, method = "analogs")
 pred <- downscale.predict(xyt.pc, model = model)
 }
+\seealso{
+\url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
+}
 \author{
 J. Bano-Medina
 }

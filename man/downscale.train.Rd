@@ -143,6 +143,9 @@ xyT.pc     <- prepareData(x = x,y = y,
                           spatial.predictors = list(which.combine = getVarNames(x),v.exp = 0.9))
 model <- downscale.train(xyT.local,method = "analogs")
 }
+\seealso{
+\url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
+}
 \author{
 J. Bano-Medina
 }

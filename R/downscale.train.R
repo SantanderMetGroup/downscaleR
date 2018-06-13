@@ -105,6 +105,7 @@
 #'    \item \code{pred}: An object with the same structure as the predictands input parameter, but with pred$Data being the predictions and not the observations.
 #'    \item \code{model}: A list with the information of the model: method, coefficients, fitting ...
 #'    }
+#' @seealso \url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
 #' @importFrom transformeR isRegular
 #' @author J. Bano-Medina
 #' @export

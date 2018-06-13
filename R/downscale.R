@@ -38,6 +38,7 @@
 #' When the climate variables are used as predictors instead of the PCs, these are previously centered and scaled
 #' using the mean and sigma parameters globally computed for the whole spatial domain.
 #' @return The prediction structure.
+#' @seealso \url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
 #' @export 
 #' @importFrom transformeR scaleGrid
 #' @examples

@@ -114,6 +114,9 @@ pred <- downscale.cv(x,y,folds = 3,type = "chronological",
                      method = "GLM", condition = "GT", threshold = 0,
                      local.predictors = list(vars = "hus@850",n = 4))
 }
+\seealso{
+\url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
+}
 \author{
 J. Bano-Medina
 }

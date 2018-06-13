@@ -75,3 +75,6 @@ yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
                                                   c("1988","1989","1990"),
                                                   c("1991","1992","1993")))
 }
+\seealso{
+\url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
+}

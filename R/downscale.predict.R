@@ -23,6 +23,7 @@
 #' @param newdata The grid data. It should be an object as returned by  \code{\link[downscaleR]{prepareNewData}}.
 #' @param model An object containing the statistical model as returned from  \code{\link[downscaleR]{downscale.train}}.
 #' @return A regular/irregular grid object.
+#' @seealso \url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
 #' @author J. Bano-Medina
 #' @export
 #' @examples 
