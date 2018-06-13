@@ -281,7 +281,6 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
 #' @return An object with the information of the selected model.
 #' @details The optional parameters of neural networks can be found in the library \pkg{deepnet} via \code{\link[deepnet]{nn.train}}This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.train}}.
 #' @author J. Bano-Medina
-#' @export
 downs.train <- function(x, y, method, ...) {
   switch(method,
          analogs = atomic_model <- analogs.train(x, y, ...),

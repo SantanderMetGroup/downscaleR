@@ -49,7 +49,6 @@
 #' @author J. Bano-Medina
 #' @importFrom stats step formula
 #' @import glmnet
-#' @export
 glm.train <- function(x, y, fitting = NULL, simulate = "no", ...) {
   if (is.null(fitting)) {
     df <- data.frame(cbind(y,x)); colnames(df) <- paste0('X',1:(dim(x)[2] + 1))
@@ -104,7 +103,6 @@ glm.train <- function(x, y, fitting = NULL, simulate = "no", ...) {
 #' @details Predicts by using the base function \code{\link[stats]{predict}}. This function is internal and should not be used by the user.
 #' The user should use \code{\link[downscaleR]{downscale.predict}}.
 #' @author J. Bano-Medina
-#' @export
 glm.predict <- function(x, weights, info) {
   if (is.null(info$fitting) || info$fitting == "stepwise") {
     df <- data.frame(x); colnames(df) <- paste0('X',2:(dim(x)[2] + 1))

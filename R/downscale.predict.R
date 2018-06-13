@@ -156,7 +156,6 @@ downscale.predict <- function(newdata, model) {
 #' @return A matrix with the predictions.
 #' @details This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.predict}}.
 #' @author J. Bano-Medina
-#' @export
 downs.predict <- function(x, method, atomic_model){
   switch(method,
          analogs = pred <- analogs.test(x, atomic_model$dataset_x, atomic_model$dataset_y, atomic_model$dates, atomic_model$info),
