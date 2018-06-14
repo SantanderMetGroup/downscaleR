@@ -1,4 +1,4 @@
-##     downscale.cv.R Downscale climate with cross validation.
+##     downscale.cv.R Downscaling method calibration in cross validation mode.
 ##
 ##     Copyright (C) 2018 Santander Meteorology Group (http://www.meteo.unican.es)
 ##
@@ -54,18 +54,22 @@
 #'    \item \code{n}: A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.
 #'    \item \code{module}: A numeric value (Optional). Indicates the size of the mask's module. Belongs to a specific type of ELM called RF-ELM.
 #'  }
-#' @param filter A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.
+#' @param condition Inequality operator to be applied considering the given threshold.
+#' \code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
+#' \code{"LT"} = lower than, \code{"LE"} = lower or equal than. We only train with the days that satisfy the condition.
+#' @param threshold Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specification of the parameter \code{condition}. Then condition is set to \code{"GE"}.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. 
 #' Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 #' Everything concerning these parameters is explained in the section \code{Details} of the function \code{\link[downscaleR]{downscale.train}}. However, if wanted, the atomic functions can be seen here: 
 #' \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
-#' @details The functon relies on \code{\link[downscaleR]{prepareData}}, \code{\link[downscaleR]{prepareNewData}}, \code{\link[downscaleR]{downscale.train}}, and \code{\link[downscaleR]{downscale.predict}}. 
+#' @details The function relies on \code{\link[downscaleR]{prepareData}}, \code{\link[downscaleR]{prepareNewData}}, \code{\link[downscaleR]{downscale.train}}, and \code{\link[downscaleR]{downscale.predict}}. 
 #' For more information please visit these functions.
 #' If the variable to downscale is the precipitation and it is a binary variable, then two temporal series will be returned:
 #' 1) The temporal serie with binary values filtered by a threshold adjusted by the train dataset, see \code{\link[transformeR]{binaryGrid}} for more details.
 #' 2) The temporal serie with the results obtained by the downscaling, without any binary converting process.
-#' We recommend to get rid of the NaN/NA when dealing with multisite mode.
+#' We recommend to get remove missing data prior to multisite calibration.
 #' @return The reconstructed downscaled temporal serie.
+#' @seealso \url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
 #' @importFrom transformeR dataSplit scaleGrid binaryGrid
 #' @author J. Bano-Medina
 #' @export
@@ -81,10 +85,10 @@
 #' # Reconstructing the downscaled serie in 3 folds
 #' pred <- downscale.cv(x,y,folds = 3, type = "chronological",
 #'                      scale.list = list(type = "standardize"),
-#'                      method = "GLM", filter = ">0")
+#'                      method = "GLM", condition = "GT", threshold = 0)
 #' # ... or with dates ...
 #' pred <- downscale.cv(x,y,type = "chronological",
-#'                      method = "GLM", filter = ">0",
+#'                      method = "GLM", condition = "GT", threshold = 0,
 #'                      scale.list = list(type = "standardize"),
 #'                      folds = list(c("1985","1986","1987","1988"),
 #'                                   c("1989","1990","1991","1992"),
@@ -92,19 +96,20 @@
 #' # Reconstructing the downscaled serie in 3 folds with spatial predictors
 #' pred <- downscale.cv(x,y,folds = 3,type = "chronological",
 #'                      scale.list = list(type = "standardize"),
-#'                      method = "GLM", family = Gamma(link = "log"), filter = ">0",
+#'                      method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0,
 #'                      spatial.predictors = list(which.combine = getVarNames(x),v.exp = 0.9))
 #' # Reconstructing the downscaled serie in 3 folds with local predictors.
 #' pred <- downscale.cv(x,y,folds = 3,type = "chronological",
 #'                      scale.list = list(type = "standardize"),
-#'                      method = "GLM", filter = ">0",
+#'                      method = "GLM", condition = "GT", threshold = 0,
 #'                      local.predictors = list(vars = "hus@850", n = 4))
+
 
 downscale.cv <- function(x, y, method,
                          folds = 4, type = "chronological", 
                          scale.list = NULL,
                          global.vars = NULL, combined.only = TRUE, spatial.predictors = NULL, local.predictors = NULL, extended.predictors = NULL,
-                         filter = NULL, ...) {
+                         condition = NULL, threshold = NULL, ...) {
   x <- getTemporalIntersection(x,y,which.return = "obs")
   y <- getTemporalIntersection(x,y,which.return = "prd")
   data <- dataSplit(x,y, f = folds, type = type)
@@ -122,7 +127,7 @@ downscale.cv <- function(x, y, method,
     }
     xT <- prepareData(x = xT, y = yT, global.vars = global.vars, combined.only = combined.only, spatial.predictors = spatial.predictors, local.predictors = local.predictors, extended.predictors = extended.predictors)
     xt <- prepareNewData(newdata = xt, data.structure = xT)
-    model <- downscale.train(xT, method, filter, ...)
+    model <- downscale.train(xT, method, condition, threshold, ...)
     if (all(as.vector(y$Data) %in% c(0,1,NA,NaN), na.rm = TRUE)) {
       y.prob <- downscale.predict(xt, model)
       if (method == "GLM") {

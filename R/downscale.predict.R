@@ -23,6 +23,7 @@
 #' @param newdata The grid data. It should be an object as returned by  \code{\link[downscaleR]{prepareNewData}}.
 #' @param model An object containing the statistical model as returned from  \code{\link[downscaleR]{downscale.train}}.
 #' @return A regular/irregular grid object.
+#' @seealso \url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
 #' @author J. Bano-Medina
 #' @export
 #' @examples 
@@ -51,7 +52,7 @@
 #'                              family = binomial(link = "logit"))
 #' pred <- downscale.predict(xyt, model = model.ocu)
 #' model.reg <- downscale.train(xyT, method = "GLM",
-#'                              family = "gaussian", filter = ">0")
+#'                              family = "gaussian", condition = "GT", threshold = 0)
 #' pred <- downscale.predict(xyt, model = model.reg)
 #' # ... via a neural network ...
 #' model.ocu <- downscale.train(xyT.bin, method = "NN",
@@ -156,7 +157,6 @@ downscale.predict <- function(newdata, model) {
 #' @return A matrix with the predictions.
 #' @details This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.predict}}.
 #' @author J. Bano-Medina
-#' @export
 downs.predict <- function(x, method, atomic_model){
   switch(method,
          analogs = pred <- analogs.test(x, atomic_model$dataset_x, atomic_model$dataset_y, atomic_model$dates, atomic_model$info),

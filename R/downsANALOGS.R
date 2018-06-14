@@ -20,7 +20,6 @@
 #' @details The analogs actually is not a model in the sense that it is not really trained. 
 #' The model would be the data where to search the analogs. For this reason this function only saves the information to search analogs in a list. 
 #' @author J. Bano-Medina
-#' @export
 analogs.train <- function(x, y, dates, n.analogs = 4, sel.fun = "mean", window = 7, n.random = NULL, pool = 0){
   if (n.analogs == 1) {sel.fun <- NULL}
   return(list("dataset_x" = x, "dataset_y" = y, "dates" = list("train" = dates), "info" = list("n.analogs" = n.analogs, "sel.fun" = sel.fun, "window" = window, "n.random" = n.random, "pool" = pool)))}
@@ -36,7 +35,6 @@ analogs.train <- function(x, y, dates, n.analogs = 4, sel.fun = "mean", window =
 #' @details The selected functions use the base R functions: \code{\link[base]{mean}}, \code{\link[stats]{median}}, \code{\link[stats]{weighted.mean}}, \code{\link[stats]{quantile}}, \code{\link[base]{Extremes}}.
 #' @author J. Bano-Medina
 #' @importFrom stats dist weighted.mean
-#' @export
 #' @importFrom fields rdist
 analogs.test <- function(newdata, x, y, dates, info) {
   # Dealing with dates

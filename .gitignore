@@ -9,4 +9,5 @@ downscaleR.Rproj
 .Rprofile
 *.Rbuildignore
 R/lmdown.R
-inst/doc
+vignettes/bias_correction_figs
+.cache

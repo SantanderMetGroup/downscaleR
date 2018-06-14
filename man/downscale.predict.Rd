@@ -43,7 +43,7 @@ model.ocu <- downscale.train(xyT.bin, method = "GLM",
                              family = binomial(link = "logit"))
 pred <- downscale.predict(xyt, model = model.ocu)
 model.reg <- downscale.train(xyT, method = "GLM",
-                             family = "gaussian", filter = ">0")
+                             family = "gaussian", condition = "GT", threshold = 0)
 pred <- downscale.predict(xyt, model = model.reg)
 # ... via a neural network ...
 model.ocu <- downscale.train(xyT.bin, method = "NN",
@@ -68,6 +68,9 @@ xyT.pc <- prepareData(x = x,y = y,
 xyt.pc <- prepareNewData(newdata = x, data.structure = xyT.pc)
 model <- downscale.train(xyT.pc, method = "analogs")
 pred <- downscale.predict(xyt.pc, model = model)
+}
+\seealso{
+\url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
 }
 \author{
 J. Bano-Medina

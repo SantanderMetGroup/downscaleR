@@ -2,16 +2,20 @@
 % Please edit documentation in R/downscale.train.R
 \name{downscale.train}
 \alias{downscale.train}
-\title{Downscale climate data.}
+\title{Calibration of downscaling methods}
 \usage{
-downscale.train(obj, method, filter = NULL, ...)
+downscale.train(obj, method, condition = NULL, threshold = NULL, ...)
 }
 \arguments{
-\item{obj}{An object. The object as returned by \code{\link[downscaleR]{prepareData}}.}
+\item{obj}{The object as returned by \code{\link[downscaleR]{prepareData}}.}
 
-\item{method}{A string value. Type of transer function. Options are c("analogs","GLM","NN").}
+\item{method}{Character string indicating the type of method/transfer function. Currently accepted values are \code{"analogs"}, \code{"GLM"} or \code{"NN"}.}
 
-\item{filter}{A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.}
+\item{condition}{Inequality operator to be applied to the given \code{"threshold"}. Only the days that satisfy the condition will be used for training the model.
+\code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
+\code{"LT"} = lower than, \code{"LE"} = lower or equal than.}
+
+\item{threshold}{Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the argument \code{condition}. Then condition is set to \code{"GE"}.}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 Everything concerning these parameters is explained in the section \code{Details}. 
@@ -25,7 +29,7 @@ A list of objects that contains the prediction on the train dataset and the mode
    }
 }
 \description{
-Downscale data to local scales by statistical methods: analogs, generalized linear models (GLM) and Neural Networks (NN).
+Calibration of downscaling methods. Currently analogs, generalized linear models (GLM) and Neural Networks (NN) are available.
 }
 \details{
 The function can downscale in both global and local mode, though not simultaneously. 
@@ -120,7 +124,7 @@ model <- downscale.train(xyT, method = "analogs",
 model.ocu <- downscale.train(xyT.bin, method = "GLM",
                              family = binomial(link = "logit"))
 model.reg <- downscale.train(xyT, method = "GLM",
-                             family = "gaussian", filter = ">0")
+                             family = "gaussian", condition = "GT", threshold = 0)
 # ... via a neural network ...
 model.ocu <- downscale.train(xyT.bin, method = "NN",
                              learningrate = 0.1, numepochs = 10, hidden = 5,
@@ -138,6 +142,9 @@ model <- downscale.train(xyT.local,method = "analogs")
 xyT.pc     <- prepareData(x = x,y = y,
                           spatial.predictors = list(which.combine = getVarNames(x),v.exp = 0.9))
 model <- downscale.train(xyT.local,method = "analogs")
+}
+\seealso{
+\url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
 }
 \author{
 J. Bano-Medina

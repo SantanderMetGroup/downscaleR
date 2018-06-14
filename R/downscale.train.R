@@ -1,6 +1,6 @@
-##     downscale.train.R Downscale climate data.
+##     downscale.train.R Calibration of downscaling methods
 ##
-##     Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
+##     Copyright (C) 2018 Santander Meteorology Group (http://www.meteo.unican.es)
 ##
 ##     This program is free software: you can redistribute it and/or modify
 ##     it under the terms of the GNU General Public License as published by
@@ -15,11 +15,14 @@
 ##     You should have received a copy of the GNU General Public License
 ##     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#' @title Downscale climate data.
-#' @description Downscale data to local scales by statistical methods: analogs, generalized linear models (GLM) and Neural Networks (NN). 
-#' @param obj An object. The object as returned by \code{\link[downscaleR]{prepareData}}.
-#' @param method A string value. Type of transer function. Options are c("analogs","GLM","NN").
-#' @param filter A logical expression (i.e. = ">0"). This will filter all values that do not accomplish that logical statement. Default is NULL.
+#' @title Calibration of downscaling methods
+#' @description Calibration of downscaling methods. Currently analogs, generalized linear models (GLM) and Neural Networks (NN) are available. 
+#' @param obj The object as returned by \code{\link[downscaleR]{prepareData}}.
+#' @param method Character string indicating the type of method/transfer function. Currently accepted values are \code{"analogs"}, \code{"GLM"} or \code{"NN"}.
+#' @param condition Inequality operator to be applied to the given \code{"threshold"}. Only the days that satisfy the condition will be used for training the model.
+#' \code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
+#' \code{"LT"} = lower than, \code{"LE"} = lower or equal than.
+#' @param threshold Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the argument \code{condition}. Then condition is set to \code{"GE"}.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 #' Everything concerning these parameters is explained in the section \code{Details}. 
 #' However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
@@ -99,11 +102,10 @@
 #'    \item \code{pred}: An object with the same structure as the predictands input parameter, but with pred$Data being the predictions and not the observations.
 #'    \item \code{model}: A list with the information of the model: method, coefficients, fitting ...
 #'    }
+#' @seealso \url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
 #' @importFrom transformeR isRegular
 #' @author J. Bano-Medina
 #' @export
-#' @importFrom MASS ginv
-#' @import deepnet 
 #' @examples
 #' # Loading predictors
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
@@ -126,7 +128,7 @@
 #' model.ocu <- downscale.train(xyT.bin, method = "GLM",
 #'                              family = binomial(link = "logit"))
 #' model.reg <- downscale.train(xyT, method = "GLM",
-#'                              family = "gaussian", filter = ">0")
+#'                              family = "gaussian", condition = "GT", threshold = 0)
 #' # ... via a neural network ...
 #' model.ocu <- downscale.train(xyT.bin, method = "NN",
 #'                              learningrate = 0.1, numepochs = 10, hidden = 5,
@@ -145,9 +147,10 @@
 #'                           spatial.predictors = list(which.combine = getVarNames(x),v.exp = 0.9))
 #' model <- downscale.train(xyT.local,method = "analogs")
 
-downscale.train <- function(obj, method, filter = NULL, ...) {
+downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...) {
+  method <- match.arg(method, choices = c("analogs", "GLM", "NN"))
   if ( method == "GLM") {
-    if (attr(obj,"nature") == "spatial+local") {
+    if (attr(obj, "nature") == "spatial+local") {
       site <- "mix"}
     else {
       site <- "single"
@@ -163,6 +166,16 @@ downscale.train <- function(obj, method, filter = NULL, ...) {
     else {
       site <- "multi"
     }
+  }
+  if (!is.null(threshold) & is.null(condition)) condition = "GE"
+  if (!is.null(condition)) {
+    if (is.null(threshold)) stop("Please specify the threshold value with parameter 'threshold'")
+    ineq <- switch(condition,
+                   "GT" = ">",
+                   "GE" = ">=",
+                   "LT" = "<",
+                   "LE" = "<=")
+    
   }
   
   if (length(getDim(obj$y)) == 1) obj$y <- redim(obj$y, loc = TRUE, member = FALSE)
@@ -206,8 +219,8 @@ downscale.train <- function(obj, method, filter = NULL, ...) {
       else {
         xx = obj$x.global}
       yy = mat.y[,i, drop = FALSE]
-      if (is.null(filter)) {ind = eval(parse(text = "which(!is.na(yy))"))}
-      else {ind = eval(parse(text = paste0("which(!is.na(yy) & yy",filter,")")))}
+      if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
+      else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
       if (method == "analogs") {
         atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, dates = getRefDates(obj$y)[ind], ...)}
       else {
@@ -232,8 +245,8 @@ downscale.train <- function(obj, method, filter = NULL, ...) {
       xx2 = obj$x.global
       xx <- cbind(xx1,xx2)
       yy = mat.y[,i, drop = FALSE]
-      if (is.null(filter)) {ind = eval(parse(text = "which(!is.na(yy))"))}
-      else {ind = eval(parse(text = paste0("which(!is.na(yy) & yy",filter,")")))}
+      if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
+      else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
       if (method == "analogs") {
         atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, dates = getRefDates(obj$y)[ind], ...)}
       else {
@@ -264,11 +277,12 @@ downscale.train <- function(obj, method, filter = NULL, ...) {
 #' @return An object with the information of the selected model.
 #' @details The optional parameters of neural networks can be found in the library \pkg{deepnet} via \code{\link[deepnet]{nn.train}}This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.train}}.
 #' @author J. Bano-Medina
-#' @export
+#' @import deepnet 
+
 downs.train <- function(x, y, method, ...) {
   switch(method,
-         analogs = atomic_model <- analogs.train(x, y, ...),
-         GLM     = atomic_model <- glm.train(x, y, ...),
-         NN      = atomic_model <- nn.train(x, y,  ...))
+         "analogs" = atomic_model <- analogs.train(x, y, ...),
+         "GLM"     = atomic_model <- glm.train(x, y, ...),
+         "NN"      = atomic_model <- nn.train(x, y,  ...))
   return(atomic_model)}
 
