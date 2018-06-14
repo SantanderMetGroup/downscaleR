@@ -1,7 +1,7 @@
 New in downscaleR
 =================
 
-* New user interface for flexible definition of predictors (`prepareData`) and prediction data (`prepareNewData`). See [the wiki](https://github.com/SantanderMetGroup/downscaleR/wiki) for worked examples
+* New user interface for flexible definition of predictors (`prepareData`) and prediction data (`prepareNewData`). 
 * New method (neural networks) available for perfect-prog downscaling 
 * New workhorse function `downscale` for perfect-prog/MOS downscaling with different methods (GLM, Analogs..., more soon)
 * Flexible method calibration/prediction via `downscale.train` and `downscale.predict`
@@ -10,6 +10,7 @@ New in downscaleR
 * New options for a more flexible parametric quantile mapping method design
 * All changes in predictor/predictand definition have been double-checked against MeteoLab for consistency
 * Other documentation updates and enhancements
+* See the updates in the [wiki](https://github.com/SantanderMetGroup/downscaleR/wiki) for worked examples
 
 
 
