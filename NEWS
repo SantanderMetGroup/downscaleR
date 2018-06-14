@@ -1,9 +1,14 @@
 New in downscaleR
 =================
 
-* Bug fix in nearest neighbour indexing for local predictor definition
-* Bug fix in the recovery of the combined PCs of the prediction data from the predictor combined EOFs
-* All changes in predictor/predictand definition have been double-checked against MeteoLab for consistency (thanks to J. B. Medina)
+* New user interface for flexible definition of predictors (`prepareData`) and prediction data (`prepareNewData`). See [the wiki](https://github.com/SantanderMetGroup/downscaleR/wiki) for worked examples
+* New method (neural networks) available for perfect-prog downscaling 
+* New workhorse function `downscale` for perfect-prog/MOS downscaling with different methods (GLM, Analogs..., more soon)
+* Flexible method calibration/prediction via `downscale.train` and `downscale.predict`
+* New helper function for flexible cross-validation experimental setups: `downscale.cv`
+* Improved efficiency in `biasCorrection`, including a parallelization option
+* New options for a more flexible parametric quantile mapping method design
+* All changes in predictor/predictand definition have been double-checked against MeteoLab for consistency
 * Other documentation updates and enhancements
 
 

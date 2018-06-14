@@ -98,7 +98,7 @@
 #' pred <- downscale.cv(x,y,folds = 3,type = "chronological",
 #'                      scale.list = list(type = "standardize"),
 #'                      method = "GLM", filter = ">0",
-#'                      local.predictors = list(vars = "hus@850",n = 4))
+#'                      local.predictors = list(vars = "hus@850", n = 4))
 
 downscale.cv <- function(x, y, method,
                          folds = 4, type = "chronological", 
