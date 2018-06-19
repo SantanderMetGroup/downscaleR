@@ -14,25 +14,25 @@ downscale.cv(x, y, method, folds = 4, type = "chronological",
 
 \item{y}{The observations dataset. It should be an object as returned by \pkg{loadeR}.}
 
-\item{method}{A string value. Type of transer function. Options are c("analogs","GLM","NN").}
+\item{method}{A string value. Type of transer function. Currently implemented options are \code{"analogs"}, \code{"GLM"} and \code{"NN"}.}
 
 \item{folds}{Could be a fraction, value between (0,1) indicating the fraction of the data that will define the train set, 
 or an integer indicating the number of folds. It can also be a list of folds indicating the years of each fold.}
 
-\item{type}{A string, c("chronological","random"). Indicates how to split the data in folds. Default is "chronological".}
+\item{type}{A character string. Possible values are \code{"chronological"} (the default) and \code{"random"}. Indicates how to split the data in folds.}
 
 \item{scale.list}{A list of the parameters related to scale grids. This parameter calls the function \code{\link[transformeR]{scaleGrid}}. See the function definition for details on the parameters accepted.}
 
 \item{global.vars}{An optional character vector with the short names of the variables of the input x multigrid to be retained as global predictors 
-(use the getVarNames helper if not sure about variable names). 
-This argument just produces a call to subsetGrid, but it is included here for better flexibility in downscaling experiments (predictor screening...). 
+(use the \code{\link[transformeR]{getVarNames}} helper if not sure about variable names). 
+This argument just produces a call to \code{\link[transformeR]{subsetGrid}}, but it is included here for better flexibility in downscaling experiments (predictor screening...). 
 For instance, it allows to use some specific variables contained in x as local predictors and the remaining ones, specified in subset.vars, 
 as either raw global predictors or to construct the combined PC.}
 
-\item{combined.only}{Optional, and only used if spatial.predictors parameters are passed. Should the combined PC be used as the only global predictor? Default to TRUE. 
-Otherwise, the combined PC constructed with which.combine argument in prinComp is append to the PCs of the remaining variables within the grid.}
+\item{combined.only}{Optional, and only used if \code{spatial.predictors} parameters are passed. Should the combined PC be used as the only global predictor? Default to TRUE. 
+Otherwise, the combined PC constructed with \code{which.combine} argument in \code{\link[transformeR]{prinComp}} is append to the PCs of the remaining variables within the grid.}
 
-\item{spatial.predictors}{Default to NULL, and not used. Otherwise, a named list of arguments in the form argument = value, 
+\item{spatial.predictors}{Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form argument = value, 
 with the arguments to be passed to prinComp to perform Principal Component Analysis of the predictors grid (x). 
 See Details on principal component analysis of predictors.}
 
@@ -61,7 +61,7 @@ with the following arguments:
 \code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
 \code{"LT"} = lower than, \code{"LE"} = lower or equal than. We only train with the days that satisfy the condition.}
 
-\item{threshold}{An integer. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the parameter 'condition'. Then condition is set to "GE".}
+\item{threshold}{Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specification of the parameter \code{condition}. Then condition is set to \code{"GE"}.}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. 
 Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
@@ -76,12 +76,12 @@ Downscale climate data and reconstruct the temporal serie by splitting the data 
 Statistical downscaling methods are: analogs, generalized linear models (GLM) and Neural Networks (NN).
 }
 \details{
-The functon relies on \code{\link[downscaleR]{prepareData}}, \code{\link[downscaleR]{prepareNewData}}, \code{\link[downscaleR]{downscale.train}}, and \code{\link[downscaleR]{downscale.predict}}. 
+The function relies on \code{\link[downscaleR]{prepareData}}, \code{\link[downscaleR]{prepareNewData}}, \code{\link[downscaleR]{downscale.train}}, and \code{\link[downscaleR]{downscale.predict}}. 
 For more information please visit these functions.
 If the variable to downscale is the precipitation and it is a binary variable, then two temporal series will be returned:
 1) The temporal serie with binary values filtered by a threshold adjusted by the train dataset, see \code{\link[transformeR]{binaryGrid}} for more details.
 2) The temporal serie with the results obtained by the downscaling, without any binary converting process.
-We recommend to get rid of the NaN/NA when dealing with multisite mode.
+We recommend to get remove missing data prior to multisite calibration.
 }
 \examples{
 require(transformeR)
@@ -90,13 +90,13 @@ x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 x <- subsetGrid(x, years = 1985:1995)
 # Loading predictands
 y <- VALUE_Iberia_pr
-y <- getTemporalIntersection(obs = y, prd = x, "obs" )
-x <- getTemporalIntersection(obs = y, prd = x, "prd" )
+y <- getTemporalIntersection(obs = y, prd = x, "obs")
+x <- getTemporalIntersection(obs = y, prd = x, "prd")
 # Reconstructing the downscaled serie in 3 folds
 pred <- downscale.cv(x,y,folds = 3, type = "chronological",
                      scale.list = list(type = "standardize"),
                      method = "GLM", condition = "GT", threshold = 0)
-# ... or with dates ...
+# ... fold definition by years ...
 pred <- downscale.cv(x,y,type = "chronological",
                      method = "GLM", condition = "GT", threshold = 0,
                      scale.list = list(type = "standardize"),
@@ -104,15 +104,15 @@ pred <- downscale.cv(x,y,type = "chronological",
                                   c("1989","1990","1991","1992"),
                                   c("1993","1994","1995")))
 # Reconstructing the downscaled serie in 3 folds with spatial predictors
-pred <- downscale.cv(x,y,folds = 3,type = "chronological",
+pred <- downscale.cv(x, y, folds = 3, type = "chronological",
                      scale.list = list(type = "standardize"),
                      method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0,
-                     spatial.predictors = list(which.combine = getVarNames(x),v.exp = 0.9))
+                     spatial.predictors = list(which.combine = getVarNames(x), v.exp = 0.9))
 # Reconstructing the downscaled serie in 3 folds with local predictors.
 pred <- downscale.cv(x,y,folds = 3,type = "chronological",
                      scale.list = list(type = "standardize"),
                      method = "GLM", condition = "GT", threshold = 0,
-                     local.predictors = list(vars = "hus@850",n = 4))
+                     local.predictors = list(vars = "hus@850", n = 4))
 }
 \seealso{
 \url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.

@@ -2,20 +2,20 @@
 % Please edit documentation in R/downscale.train.R
 \name{downscale.train}
 \alias{downscale.train}
-\title{Downscale climate data.}
+\title{Calibration of downscaling methods}
 \usage{
 downscale.train(obj, method, condition = NULL, threshold = NULL, ...)
 }
 \arguments{
-\item{obj}{An object. The object as returned by \code{\link[downscaleR]{prepareData}}.}
+\item{obj}{The object as returned by \code{\link[downscaleR]{prepareData}}.}
 
-\item{method}{A string value. Type of transer function. Options are c("analogs","GLM","NN").}
+\item{method}{Character string indicating the type of method/transfer function. Currently accepted values are \code{"analogs"}, \code{"GLM"} or \code{"NN"}.}
 
-\item{condition}{Inequality operator to be applied considering the given threshold. We only train with the days that satisfy the condition.
+\item{condition}{Inequality operator to be applied to the given \code{"threshold"}. Only the days that satisfy the condition will be used for training the model.
 \code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
 \code{"LT"} = lower than, \code{"LE"} = lower or equal than.}
 
-\item{threshold}{An integer. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the parameter 'condition'. Then condition is set to "GE".}
+\item{threshold}{Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the argument \code{condition}. Then condition is set to \code{"GE"}.}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 Everything concerning these parameters is explained in the section \code{Details}. 
@@ -29,7 +29,7 @@ A list of objects that contains the prediction on the train dataset and the mode
    }
 }
 \description{
-Downscale data to local scales by statistical methods: analogs, generalized linear models (GLM) and Neural Networks (NN).
+Calibration of downscaling methods. Currently analogs, generalized linear models (GLM) and Neural Networks (NN) are available.
 }
 \details{
 The function can downscale in both global and local mode, though not simultaneously. 

@@ -20,7 +20,7 @@ data("VALUE_Iberia_tas")
 y <- VALUE_Iberia_tas 
 data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
 x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
-data <- prepare_predictors(x = x, y = y,PCA = list(v.exp = 0.5))
+data <- prepareData(x = x, y = y, spatial.predictors = list(v.exp = 0.95))
 model1 <- downscale.train(data, method = "analogs", n.analogs = 1)
 model2 <- downscale.train(data, method = "GLM",family = gaussian)
 model3 <- downscale.train(data, method = "NN", hidden = c(10,5), output = "linear")
@@ -29,6 +29,7 @@ igueldo.2000 <- subsetGrid(y,station.id = "000234",years = 2000)
 analog.2000 <- subsetGrid(model1$pred,station.id = "000234",years = 2000)
 regress.2000 <- subsetGrid(model2$pred,station.id = "000234",years = 2000)
 neuralnet.2000 <- subsetGrid(model3$pred,station.id = "000234",years = 2000)
+library(visualizeR)
 temporalPlot(igueldo.2000, analog.2000, regress.2000, neuralnet.2000)
 ```
 
