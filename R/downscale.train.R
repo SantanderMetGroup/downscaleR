@@ -168,9 +168,18 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
       site <- "mix"
     }
     else {
-      site <- "multi"
+      if (length(getDim(obj$y)) == 1) {
+        obj$y <- redim(obj$y, loc = TRUE, member = FALSE)
+        site <- "single"
+      }
+      else{
+        site <- "multi"
+      }
     }
   }
+  
+  dimNames <- getDim(obj$y)
+  pred <- obj$y
   
   if (!is.null(threshold) & is.null(condition)) condition = "GE"
   if (!is.null(condition)) {
@@ -182,10 +191,6 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
                    "LE" = "<=")
     
   }
-  
-  if (length(getDim(obj$y)) == 1) obj$y <- redim(obj$y, loc = TRUE, member = FALSE)
-  dimNames <- getDim(obj$y)
-  pred <- obj$y
   
   if (isRegular(obj$y)) {
     mat.y <- array3Dto2Dmat(obj$y$Data)
@@ -200,11 +205,20 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
   
   # Multi-site
   if (site == "multi") {
+    xx <- obj$x.global
     yy <- mat.y
+    dates.y <- getRefDates(obj$y)
+    if (anyNA(yy)) {
+      ind <- sapply(1:ncol(yy),FUN = function(z){which(is.na(yy[,z]))}) %>% unlist() %>% unique()
+      message(paste(round(length(ind)/nrow(yy)*100,digits = 2),"% of observations contain NaN. They were found and removed for the downscaling ..."))
+      yy <- yy[-ind,,drop = FALSE]
+      xx <- xx[-ind,,drop = FALSE]
+      dates.y <- getRefDates(obj$y)[-ind]
+    }
     if (method == "analogs") {
-      atomic_model <- downs.train(obj$x.global, yy, method, dates = getRefDates(obj$y), ...)}
+      atomic_model <- downs.train(xx, yy, method, dates = dates.y, ...)}
     else {      
-      atomic_model <- downs.train(obj$x.global, yy, method, ...)}
+      atomic_model <- downs.train(xx, yy, method, ...)}
     if (method == "analogs") {atomic_model$dates$test <- getRefDates(obj$y)}
     mat.p <- as.matrix(downs.predict(obj$x.global, method, atomic_model))}
   # Single-site
