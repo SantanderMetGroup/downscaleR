@@ -173,13 +173,9 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
       }
     }
   }
-<<<<<<< HEAD
-  
   dimNames <- getDim(obj$y)
   pred <- obj$y
-  
-=======
->>>>>>> devel
+
   if (!is.null(threshold) & is.null(condition)) condition = "GE"
   if (!is.null(condition)) {
     if (is.null(threshold)) stop("Please specify the threshold value with parameter 'threshold'")
