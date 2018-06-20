@@ -38,8 +38,13 @@
 #' When the climate variables are used as predictors instead of the PCs, these are previously centered and scaled
 #' using the mean and sigma parameters globally computed for the whole spatial domain.
 #' @return The prediction structure.
-#' @seealso \url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
+#' @seealso 
+#' downscale.train for training a downscaling model
+#' downscale.predict for prediction for a a test dataset with a trained model for 
+#' downscale.cv for automatic cross-validation 
+#' \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
 #' @export 
+#' @family downscaling.functions
 #' @importFrom transformeR scaleGrid
 #' @examples
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)

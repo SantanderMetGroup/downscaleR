@@ -76,5 +76,12 @@ yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
                                                   c("1991","1992","1993")))
 }
 \seealso{
-\url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
+downscale.train for training a downscaling model
+downscale.predict for prediction for a a test dataset with a trained model for 
+downscale.cv for automatic cross-validation 
+\href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
+
+Other downscaling.functions: \code{\link{downscale.cv}},
+  \code{\link{downscale.predict}},
+  \code{\link{downscale.train}}
 }

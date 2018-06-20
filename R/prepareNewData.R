@@ -21,6 +21,7 @@
 #' @param data.structure A structure, as returned by \code{\link{prepareData}}
 #' @return A named list with the components required by the downscaling method in order to perform the predictions
 #' @export
+#' @seealso \href{https://github.com/SantanderMetGroup/downscaleR/wiki/preparing-predictor-data}{downscaleR Wiki} for preparing predictors for downscaling and seasonal forecasting.
 #' @author J Bedia
 #' @examples 
 #' # See the dedicated vignette by typing:
@@ -28,6 +29,16 @@
 #' @family downscaling.helpers
 #' @importFrom transformeR getVarNames subsetGrid redim getShape getCoordinates grid2PCs getRefDates array3Dto2Dmat grid2PCs
 #' @importFrom magrittr %>% extract2 
+#' @examples
+#' # Loading data
+#' data("VALUE_Iberia_tas")
+#' y <- VALUE_Iberia_tas 
+#' data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
+#' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+#' # Calculating EOFs
+#' data <- prepareData(x = x, y = y, spatial.predictors = list(v.exp = 0.95))
+#' # Projecting a new dataset to the calculated EOFs
+#' newdata <- prepareNewData(x,data)
 
 prepareNewData <- function(newdata, data.structure) {
   x.varnames <- attr(data.structure, "predictor.vars")

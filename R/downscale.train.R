@@ -89,8 +89,8 @@
 #' 
 #' \strong{Neural Networks}
 #' Neural network is based on the library \pkg{deepnet}. The optional parameters corresponds to those in \code{\link[deepnet]{nn.train}}
-#' and are: \code{initW} = NULL, \code{initB} = NULL, \code{hidden} = c(10), \code{activationfun} = "sigm", \code{learningrate} = 0.8, \code{momentum} = 0.5, 
-#' \code{learningrate_scale} = 1, \code{output} = "sigm", \code{numepochs} = 3, \code{batchsize} = 100, \code{hidden_dropout} = 0, \code{visible_dropout} = 0. The values indicated are the default values.
+#' and are: \code{initW} = NULL, \code{initB} = NULL, \code{hidden} = c(10), \code{activationfun} = "sigm", \code{learningrate} = 0.001, \code{momentum} = 0.5, 
+#' \code{learningrate_scale} = 1, \code{output} = "sigm", \code{numepochs} = 5000, \code{batchsize} = 100, \code{hidden_dropout} = 0, \code{visible_dropout} = 0. The values indicated are the default values.
 #' 
 #' \strong{Help}
 #' 
@@ -102,50 +102,29 @@
 #'    \item \code{pred}: An object with the same structure as the predictands input parameter, but with pred$Data being the predictions and not the observations.
 #'    \item \code{model}: A list with the information of the model: method, coefficients, fitting ...
 #'    }
-#' @seealso \url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
+#' @seealso 
+#' prepareData for different options to define predictors (local gridboxes, PCs, etc.)
+#' downscale.predict for prediction for a a test dataset with a trained model for 
+#' downscale.cv for cross-validation
+#' \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
 #' @importFrom transformeR isRegular
 #' @author J. Bano-Medina
+#' @family downscaling.functions
 #' @export
 #' @examples
-#' # Loading predictors
-#' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
-#' x <- subsetGrid(x, years = 1985:1995)
-#' # Loading predictands
-#' y <- VALUE_Iberia_pr
-#' y <- getTemporalIntersection(obs = y,prd = x, "obs" )
-#' x <- getTemporalIntersection(obs = y,prd = x, "prd" )
-#' ybin <- binaryGrid(y, threshold = 1)
-#' x <- scaleGrid(x, type = "standardize")
-#' # Prepare predictors and predictands
-#' xyT     <- prepareData(x = x, y = y)
-#' xyT.bin <- prepareData(x = x, y = ybin)
-#' # Downscaling PRECIPITATION
-#' # ... via analogs ...
-#' model <- downscale.train(xyT, method = "analogs",
-#'                          sel.fun = "mean")
-#' # ... via a logistic regression (ocurrence of precipitation)
-#' # and gaussian regression (amount of precipitation) ...
-#' model.ocu <- downscale.train(xyT.bin, method = "GLM",
-#'                              family = binomial(link = "logit"))
-#' model.reg <- downscale.train(xyT, method = "GLM",
-#'                              family = "gaussian", condition = "GT", threshold = 0)
-#' # ... via a neural network ...
-#' model.ocu <- downscale.train(xyT.bin, method = "NN",
-#'                              learningrate = 0.1, numepochs = 10, hidden = 5,
-#'                              output = 'linear')
-#' model.reg <- downscale.train(xyT, method = "NN",
-#'                              learningrate = 0.1, numepochs = 10,
-#'                              hidden = 5, output = 'linear')
-#' # Downscaling PRECIPITATION - Local model with the closest
-#' # 4 grid points and multisite linear regression.
-#' xyT.local <- prepareData(x = x, y = y,
-#'                          local.predictors = list(vars = "hus@850",n = 4))
-#' model <- downscale.train(xyT.local,method = "analogs")
-#' # Downscaling PRECIPITATION - Principal Components (PCs)
-#' # and gamma regression for the amount of precipitation
-#' xyT.pc     <- prepareData(x = x,y = y,
-#'                           spatial.predictors = list(which.combine = getVarNames(x),v.exp = 0.9))
-#' model <- downscale.train(xyT.local,method = "analogs")
+#' # Loading data
+#' data("VALUE_Iberia_tas")
+#' y <- VALUE_Iberia_tas
+#' data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
+#' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+#' # Preparing the predictors
+#' data <- prepareData(x = x, y = y, spatial.predictors = list(v.exp = 0.95))
+#' # Training downscaling methods
+#' model.analogs <- downscale.train(data, method = "analogs", n.analogs = 1)
+#' model.regression <- downscale.train(data, method = "GLM",family = gaussian)
+#' model.nnets <- downscale.train(data, method = "NN", hidden = c(10,5), output = "linear")
+#' # Plotting the results for station 5
+#' plot(y$Data[,5],model.analogs$pred$Data[,5], xlab = "obs", ylab = "pred")
 
 downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...) {
   method <- match.arg(method, choices = c("analogs", "GLM", "NN"))
@@ -205,7 +184,7 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
     dates.y <- getRefDates(obj$y)
     if (anyNA(yy)) {
       ind <- sapply(1:ncol(yy),FUN = function(z){which(is.na(yy[,z]))}) %>% unlist() %>% unique()
-      message(paste(round(length(ind)/nrow(yy)*100,digits = 2),"% of observations contain NaN. They were found and removed for the downscaling ..."))
+      message(paste(round(length(ind)/nrow(yy)*100,digits = 2),"% of observations contains NaN, removed from the training phase ..."))
       yy <- yy[-ind,,drop = FALSE]
       xx <- xx[-ind,,drop = FALSE]
       dates.y <- getRefDates(obj$y)[-ind]
@@ -294,9 +273,20 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
 #' @import deepnet 
 
 downs.train <- function(x, y, method, ...) {
+  if (method == "NN") {
+    arglist <- list(...)
+    arglist[["x"]] <- x
+    arglist[["y"]] <- y
+    if (is.null(arglist[["numepochs"]])) arglist[["numepochs"]] <- 5000
+    if (is.null(arglist[["learningrate"]])) arglist[["learningrate"]] <- 0.001
+  }
+  
   switch(method,
          "analogs" = atomic_model <- analogs.train(x, y, ...),
          "GLM"     = atomic_model <- glm.train(x, y, ...),
-         "NN"      = atomic_model <- nn.train(x, y,  ...))
+         "NN"      = atomic_model <- do.call("nn.train",arglist))
+  
+  
+  
   return(atomic_model)}
 

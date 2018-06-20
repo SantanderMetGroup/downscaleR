@@ -69,12 +69,29 @@
 #'  
 #' @importFrom transformeR getTemporalIntersection getRefDates getCoordinates getVarNames
 #' @importFrom magrittr %<>% %>% 
-#'  
+#' @seealso \href{https://github.com/SantanderMetGroup/downscaleR/wiki/preparing-predictor-data}{downscaleR Wiki} for preparing predictors for downscaling and seasonal forecasting.
 #' @family downscaling.helpers
-#'  
 #' @export
 #'  
 #' @author J. Bedia, D. San-Martín and J.M. Gutiérrez 
+#' @examples
+#' # Loading data
+#' data("VALUE_Iberia_tas")
+#' y <- VALUE_Iberia_tas 
+#' data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
+#' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+#' # Raw data
+#' data <- prepareData(x = x, y = y)
+#' # Using PCs as predictors. Number of EOFS: 10,5,5 for the 3 input variables
+#' data <- prepareData(x = x, y = y, spatial.predictors = list(n.eofs = c(10,5,5)))
+#' # Using joined PCs as predictors. Explained variance 95%
+#' data <- prepareData(x = x, y = y, 
+#' spatial.predictors = list(v.exp = 0.95, which.combine =getVarNames(x)))
+#' # Using local predictors: the 4 closest gridboxes
+#' data <- prepareData(x = x, y = y,local.predictors = list(n=4, vars = getVarNames(x)))
+#' # Using joined PCs and local predictors: the 4 closest gridboxes
+#' data <- prepareData(x = x, y = y,local.predictors = list(n=4, vars = getVarNames(x)),
+#' spatial.predictors = list(v.exp = 0.95, which.combine =getVarNames(x)))
 
 prepareData <- function(x, y, global.vars = NULL, combined.only = TRUE, spatial.predictors = NULL, local.predictors = NULL, extended.predictors = NULL) {
     y <- getTemporalIntersection(obs = y, prd = x, which.return = "obs")

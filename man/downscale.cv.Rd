@@ -82,6 +82,8 @@ If the variable to downscale is the precipitation and it is a binary variable, t
 1) The temporal serie with binary values filtered by a threshold adjusted by the train dataset, see \code{\link[transformeR]{binaryGrid}} for more details.
 2) The temporal serie with the results obtained by the downscaling, without any binary converting process.
 We recommend to get remove missing data prior to multisite calibration.
+According to the concept of cross-validation, a particular year should not appear in more than one fold. For example,
+if fold.1 = c("1988","1989") and fold.2 = c("1989","1990") this will cause an error.
 }
 \examples{
 require(transformeR)
@@ -115,7 +117,12 @@ pred <- downscale.cv(x,y,folds = 3,type = "chronological",
                      local.predictors = list(vars = "hus@850", n = 4))
 }
 \seealso{
-\url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
+downscale.train for training a downscaling model
+downscale.predict for prediction for a a test dataset with a trained model for 
+\href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
+
+Other downscaling.functions: \code{\link{downscale.predict}},
+  \code{\link{downscale.train}}, \code{\link{downscale}}
 }
 \author{
 J. Bano-Medina

@@ -23,7 +23,7 @@
 #' @param method A string value. Type of transer function. Currently implemented options are \code{"analogs"}, \code{"GLM"} and \code{"NN"}.
 #' @param folds Could be a fraction, value between (0,1) indicating the fraction of the data that will define the train set, 
 #' or an integer indicating the number of folds. It can also be a list of folds indicating the years of each fold. 
-#' @param type A character string. Possible values are \code{"chronological"} (the default) and \code{"random"}. Indicates how to split the data in folds. 
+#' @param sampling.strategy A character string. Possible values are \code{"chronological"} (the default) and \code{"random"}. Indicates how to split the data in folds. 
 #' @param scale.list A list of the parameters related to scale grids. This parameter calls the function \code{\link[transformeR]{scaleGrid}}. See the function definition for details on the parameters accepted.
 #' @param global.vars An optional character vector with the short names of the variables of the input x multigrid to be retained as global predictors 
 #' (use the \code{\link[transformeR]{getVarNames}} helper if not sure about variable names). 
@@ -68,9 +68,15 @@
 #' 1) The temporal serie with binary values filtered by a threshold adjusted by the train dataset, see \code{\link[transformeR]{binaryGrid}} for more details.
 #' 2) The temporal serie with the results obtained by the downscaling, without any binary converting process.
 #' We recommend to get remove missing data prior to multisite calibration.
+#' According to the concept of cross-validation, a particular year should not appear in more than one fold. For example,
+#' if fold.1 = c("1988","1989") and fold.2 = c("1989","1990") this will cause an error.
 #' @return The reconstructed downscaled temporal serie.
-#' @seealso \url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
+#' @seealso 
+#' downscale.train for training a downscaling model
+#' downscale.predict for prediction for a a test dataset with a trained model for 
+#' \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
 #' @importFrom transformeR dataSplit scaleGrid binaryGrid
+#' @family downscaling.functions
 #' @author J. Bano-Medina
 #' @export
 #' @examples 
@@ -109,6 +115,11 @@ downscale.cv <- function(x, y, method,
                          scale.list = NULL,
                          global.vars = NULL, combined.only = TRUE, spatial.predictors = NULL, local.predictors = NULL, extended.predictors = NULL,
                          condition = NULL, threshold = NULL, ...) {
+  
+  if (is.list(folds)) {
+    if (any(duplicated(unlist(folds)))) stop("Years can not appear in more than one fold")
+  }
+  
   x <- getTemporalIntersection(x,y,which.return = "obs")
   y <- getTemporalIntersection(x,y,which.return = "prd")
   data <- dataSplit(x,y, f = folds, type = type)

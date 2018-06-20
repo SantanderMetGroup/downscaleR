@@ -18,59 +18,40 @@ A regular/irregular grid object.
 Downscale data to local scales by statistical models previously obtained by \code{\link[downscaleR]{downscale.train}}.
 }
 \examples{
-# Loading predictors
-x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
-x <- subsetGrid(x, years = 1985:1995)
-# Loading predictands
-y <- VALUE_Iberia_pr
-y <- getTemporalIntersection(obs = y,prd = x, "obs" )
-x <- getTemporalIntersection(obs = y,prd = x, "prd" )
-ybin <- binaryGrid(y, threshold = 1)
-x <- scaleGrid(x, type = "standardize")
-# Prepare predictors and predictands
-xyT     <- prepareData(x = x, y = y)
-xyT.bin <- prepareData(x = x, y = ybin)
-xyt     <- prepareNewData(newdata = x, data.structure = xyT)
-xyt.bin <- prepareNewData(newdata = x, data.structure = xyT.bin)
-# Downscaling PRECIPITATION
-# ... via analogs ...
-model <- downscale.train(xyT, method = "analogs",
-                         sel.fun = "mean")
-pred <- downscale.predict(xyt, model = model)
-# ... via a logistic regression (ocurrence of precipitation)
-# and gaussian regression (amount of precipitation) ...
-model.ocu <- downscale.train(xyT.bin, method = "GLM",
-                             family = binomial(link = "logit"))
-pred <- downscale.predict(xyt, model = model.ocu)
-model.reg <- downscale.train(xyT, method = "GLM",
-                             family = "gaussian", condition = "GT", threshold = 0)
-pred <- downscale.predict(xyt, model = model.reg)
-# ... via a neural network ...
-model.ocu <- downscale.train(xyT.bin, method = "NN",
-                             learningrate = 0.1, numepochs = 10, hidden = 5,
-                             output = 'linear')
-pred <- downscale.predict(xyt, model = model.ocu)
-model.reg <- downscale.train(xyT, method = "NN",
-                             learningrate = 0.1, numepochs = 10,
-                             hidden = 5, output = 'linear')
-pred <- downscale.predict(xyt, model = model.reg)
-# Downscaling PRECIPITATION - Local model with the closest
-# 4 grid points and multisite linear regression.
-xyT.local <- prepareData(x = x, y = y,
-                         local.predictors = list(vars = "hus@850",n = 4))
-xyt.local <- prepareNewData(newdata = x, data.structure = xyT.local)
-model <- downscale.train(xyT.local,method = "analogs")
-pred <- downscale.predict(xyt.local, model = model)
-# Downscaling PRECIPITATION - Principal Components (PCs)
-# and gamma regression for the amount of precipitation
-xyT.pc <- prepareData(x = x,y = y,
-                      spatial.predictors = list(which.combine = getVarNames(x),v.exp = 0.9))
-xyt.pc <- prepareNewData(newdata = x, data.structure = xyT.pc)
-model <- downscale.train(xyT.pc, method = "analogs")
-pred <- downscale.predict(xyt.pc, model = model)
+# Loading data
+library(downscaleR)
+data("VALUE_Iberia_tas")
+y <- VALUE_Iberia_tas
+data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
+x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+
+# Example1: Basic example (without cross-validation)
+data <- prepareData(x = x, y = y, spatial.predictors = list(v.exp = 0.95))
+model.analogs <- downscale.train(data, method = "analogs", n.analogs = 1)
+newdata <- prepareNewData(x,data)
+pred <- downscale.predict(newdata, model.analogs)
+# This produces the same result as model.analogs$pred
+
+# Example2:  Splitting data in train and test (simple cross-validation)
+xT <- subsetGrid(x, years = 1983:1999)  # training predictors
+yT <- subsetGrid(y, years = 1983:1999)   # training predictands
+data <- prepareData(xT,yT)       # preparing the data
+model.analogs <- downscale.train(data, method = "analogs", n.analogs = 1)
+xt <- subsetGrid(x, years = 2000)       # test predictors
+yt <- subsetGrid(y, years = 2000)       # test predictors
+newdata <- prepareNewData(xt,data)     # preparing the new predictors
+pred  <- downscale.predict(newdata, model.analogs)  # predicting
+# Plotting the results for station 5
+plot(yt$Data[,5],pred$Data[,5])
 }
 \seealso{
-\url{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models} for detailed examples.
+downscale.train for training a downscaling model
+prepareNewData for predictor preparation with new (test) data
+downscale.cv for automatic cross-validation 
+\href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
+
+Other downscaling.functions: \code{\link{downscale.cv}},
+  \code{\link{downscale.train}}, \code{\link{downscale}}
 }
 \author{
 J. Bano-Medina

@@ -20,8 +20,19 @@ Prepare the prediction data according to the definition of the experiment
 \examples{
 # See the dedicated vignette by typing:
 # utils::vignette(topic = "configuring_newdata", package = "downscaleR")
+# Loading data
+data("VALUE_Iberia_tas")
+y <- VALUE_Iberia_tas 
+data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
+x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+# Calculating EOFs
+data <- prepareData(x = x, y = y, spatial.predictors = list(v.exp = 0.95))
+# Projecting a new dataset to the calculated EOFs
+newdata <- prepareNewData(x,data)
 }
 \seealso{
+\href{https://github.com/SantanderMetGroup/downscaleR/wiki/preparing-predictor-data}{downscaleR Wiki} for preparing predictors for downscaling and seasonal forecasting.
+
 Other downscaling.helpers: \code{\link{predictor.nn.indices}},
   \code{\link{predictor.nn.values}},
   \code{\link{prepareData}}
