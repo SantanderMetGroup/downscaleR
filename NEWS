@@ -1,5 +1,6 @@
-New in downscaleR
-=================
+# DownscaleR changelog
+
+## v3.0.0
 
 * New user interface for flexible definition of predictors (`prepareData`) and prediction data (`prepareNewData`). 
 * New method (neural networks) available for perfect-prog downscaling 
@@ -12,5 +13,9 @@ New in downscaleR
 * Other documentation updates and enhancements
 * See the updates in the [wiki](https://github.com/SantanderMetGroup/downscaleR/wiki) for worked examples
 
+## v3.0.1
+
+* Improved `downscale.cv` input arguments, and its documentation. Added new option for leave-one-year-out cross validation
+* Other documentation updates
 
 

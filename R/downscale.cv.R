@@ -15,13 +15,14 @@
 ##     You should have received a copy of the GNU General Public License
 ##     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-#' @title Downscale climate data and reconstruct the temporal serie by splitting the data in k folds.
-#' @description Downscale climate data and reconstruct the temporal serie by splitting the data in k folds. 
-#' Statistical downscaling methods are: analogs, generalized linear models (GLM) and Neural Networks (NN). 
+#' @title Downscale climate data and reconstruct the temporal serie by splitting the data following a user-defined scheme
+#' @description Downscale climate data and reconstruct the temporal serie by splitting the data following a user-defined scheme.
+#' The statistical downscaling methods currently implemented are: analogs, generalized linear models (GLM) and Neural Networks (NN). 
 #' @param x The input grid (admits both single and multigrid, see \code{\link[transformeR]{makeMultiGrid}}). It should be an object as returned by \pkg{loadeR}.
 #' @param y The observations dataset. It should be an object as returned by \pkg{loadeR}.
 #' @param method A string value. Type of transer function. Currently implemented options are \code{"analogs"}, \code{"GLM"} and \code{"NN"}.
-#' @param sampling.strategy Specifies a sampling strategy to define the training and test subsets. Possible values are \code{"kfold.random"}, \code{"kfold.chronological"} and \code{"leave-one-year-out"}.
+#' @param sampling.strategy Specifies a sampling strategy to define the training and test subsets. Possible values are 
+#' \code{"kfold.chronological"} (the default), \code{"kfold.random"} and \code{"leave-one-year-out"}.
 #' The \code{sampling.strategy} choices are next described:
 #' \itemize{
 #'   \item \code{"kfold.random"} creates the number of folds indicated in the \code{folds} argument by randomly sampling the entries along the time dimension.
@@ -31,7 +32,7 @@
 #' The first two choices will be controlled by the argument \code{folds} (see below)
 #' @param folds This arguments controls the number of folds, or how these folds are created (ignored if \code{sampling.strategy = "leave-one-year-out"}). If it is given as a fraction in the range (0-1), 
 #' it splits the data in two subsets, one for training and one for testing, being the given value the fraction of the data used for training (i.e., 0.75 will split the data so that 75\% of the instances are used for training, and the remaining 25\% for testing). 
-#' In case it is an integer value, it sets the number of folds in which the data will be split (e.g., \code{folds = 10} for the classical 10-fold cross validation). 
+#' In case it is an integer value (the default, which is 4), it sets the number of folds in which the data will be split (e.g., \code{folds = 10} for the classical 10-fold cross validation). 
 #' Alternatively, this argument can be passed as a list, each element of the list being a vector of years to be included in each fold (See examples).
 #' @param scale.list A list of the parameters related to scale grids. This parameter calls the function \code{\link[transformeR]{scaleGrid}}. See the function definition for details on the parameters accepted.
 #' @param global.vars An optional character vector with the short names of the variables of the input x multigrid to be retained as global predictors 
@@ -72,16 +73,24 @@
 #' Everything concerning these parameters is explained in the section \code{Details} of the function \code{\link[downscaleR]{downscale.train}}. However, if wanted, the atomic functions can be seen here: 
 #' \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
 #' @details The function relies on \code{\link[downscaleR]{prepareData}}, \code{\link[downscaleR]{prepareNewData}}, \code{\link[downscaleR]{downscale.train}}, and \code{\link[downscaleR]{downscale.predict}}. 
-#' For more information please visit these functions.#' The function is envisaged to be flexible enough for allowing a fine-tuning of the cross-validation scheme. It uses internally the \pkg{transformeR} 
+#' For more information please visit these functions. It is envisaged to allow for a flexible fine-tuning of the cross-validation scheme. It uses internally the \pkg{transformeR} 
 #' helper \code{\link[transformeR]{dataSplit}} for flexible data folding. 
 #' Note that the indices for data splitting are obtained using \code{\link[transformeR]{getYearsAsINDEX}} when needed (e.g. in leave-one-year-out cross validation), 
 #' thus adequately handling potential inconsistencies in year selection when dealing with year-crossing seasons (e.g. DJF).
-#' If the variable to downscale is the precipitation and it is a binary variable, then two temporal series will be returned:
-#' 1) The temporal serie with binary values filtered by a threshold adjusted by the train dataset, see \code{\link[transformeR]{binaryGrid}} for more details.
-#' 2) The temporal serie with the results obtained by the downscaling, without any binary converting process.
-#' We recommend to get remove missing data prior to multisite calibration.
-#' According to the concept of cross-validation, a particular year should not appear in more than one fold. For example,
-#' if fold.1 = c("1988","1989") and fold.2 = c("1989","1990") this will cause an error.
+#' 
+#' If the variable to downscale is the precipitation and it is a binary variable,
+#'  then two temporal series will be returned:
+#' \enumerate{
+#' \item The temporal serie with binary values filtered by a threshold adjusted by the train dataset, see \code{\link[transformeR]{binaryGrid}} for more details.
+#' \item The temporal serie with the results obtained by the downscaling, without binary conversion process.
+#' }
+#' 
+#' Missing data removal is recommended prior to multisite calibration.
+#' 
+#' According to the concept of cross-validation, a particular year should not appear in more than one fold
+#' (i.e., folds should constitute disjoint sets). For example, the choice \code{fold =list(c(1988,1989), c(1989, 1990))}
+#'  will raise an error, as 1989 appears in more than one fold.
+#' 
 #' @return The reconstructed downscaled temporal serie.
 #' @seealso 
 #' downscale.train for training a downscaling model
