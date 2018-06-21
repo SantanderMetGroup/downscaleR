@@ -67,9 +67,6 @@ Configuration of data for flexible downscaling experiment definition
  \code{subset.vars}.
 }
 \examples{
-# See the dedicated vignette by typing:
-# utils::vignette(topic = "configuring_predictors", package = "downscaleR")
- 
 # Loading data
 data("VALUE_Iberia_tas")
 y <- VALUE_Iberia_tas 

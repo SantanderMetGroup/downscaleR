@@ -53,10 +53,6 @@
 #' @return A named list with components \code{y} (the predictand), \code{x.global} (global predictors, 2D matrix), \code{x.local} (local predictors, a list) 
 #' and \code{pca} (\code{\link[transformeR]{prinComp}} output), and other attributes. See Examples.
 #'  
-#' @examples 
-#' # See the dedicated vignette by typing:
-#' # utils::vignette(topic = "configuring_predictors", package = "downscaleR")
-#'  
 #' @details   
 #'  \strong{Temporal consistency}
 #'  Note that \code{x} (predictors) and \code{y} predictands are checked for temporal consistency

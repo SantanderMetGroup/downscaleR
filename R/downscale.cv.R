@@ -21,9 +21,18 @@
 #' @param x The input grid (admits both single and multigrid, see \code{\link[transformeR]{makeMultiGrid}}). It should be an object as returned by \pkg{loadeR}.
 #' @param y The observations dataset. It should be an object as returned by \pkg{loadeR}.
 #' @param method A string value. Type of transer function. Currently implemented options are \code{"analogs"}, \code{"GLM"} and \code{"NN"}.
-#' @param folds Could be a fraction, value between (0,1) indicating the fraction of the data that will define the train set, 
-#' or an integer indicating the number of folds. It can also be a list of folds indicating the years of each fold. 
-#' @param sampling.strategy A character string. Possible values are \code{"chronological"} (the default) and \code{"random"}. Indicates how to split the data in folds. 
+#' @param sampling.strategy Specifies a sampling strategy to define the training and test subsets. Possible values are \code{"kfold.random"}, \code{"kfold.chronological"} and \code{"leave-one-year-out"}.
+#' The \code{sampling.strategy} choices are next described:
+#' \itemize{
+#'   \item \code{"kfold.random"} creates the number of folds indicated in the \code{folds} argument by randomly sampling the entries along the time dimension.
+#'   \item \code{"kfold.chronological"} is similar to \code{"kfold.random"}, but the sampling is performed in ascending order along the time dimension.
+#'   \item \code{"leave-one-year-out"}. This schema performs a leave-one-year-out cross validation. It is equivalent to introduce in the argument \code{folds} a list of all years one by one.
+#' }
+#' The first two choices will be controlled by the argument \code{folds} (see below)
+#' @param folds This arguments controls the number of folds, or how these folds are created (ignored if \code{sampling.strategy = "leave-one-year-out"}). If it is given as a fraction in the range (0-1), 
+#' it splits the data in two subsets, one for training and one for testing, being the given value the fraction of the data used for training (i.e., 0.75 will split the data so that 75\% of the instances are used for training, and the remaining 25\% for testing). 
+#' In case it is an integer value, it sets the number of folds in which the data will be split (e.g., \code{folds = 10} for the classical 10-fold cross validation). 
+#' Alternatively, this argument can be passed as a list, each element of the list being a vector of years to be included in each fold (See examples).
 #' @param scale.list A list of the parameters related to scale grids. This parameter calls the function \code{\link[transformeR]{scaleGrid}}. See the function definition for details on the parameters accepted.
 #' @param global.vars An optional character vector with the short names of the variables of the input x multigrid to be retained as global predictors 
 #' (use the \code{\link[transformeR]{getVarNames}} helper if not sure about variable names). 
@@ -38,15 +47,15 @@
 #' @param local.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the following arguments:
 #'  \itemize{
-#'    \item \code{neigh.vars}: names of the variables in \code{x} to be used as local predictors
-#'    \item \code{neigh.fun}: Optional. Aggregation function for the selected local neighbours.
+#'    \item \code{vars}: names of the variables in \code{x} to be used as local predictors
+#'    \item \code{fun}: Optional. Aggregation function for the selected local neighbours.
 #'    The aggregation function is specified as a list, indicating the name of the aggregation function in
 #'     first place (as character), and other optional arguments to be passed to the aggregation function.
-#'     For instance, to compute the average skipping missing values: \code{neigh.fun = list(FUN= "mean", na.rm = TRUE)}.
+#'     For instance, to compute the average skipping missing values: \code{fun = list(FUN= "mean", na.rm = TRUE)}.
 #'     Default to NULL, meaning that no aggregation is performed.
-#'    \item \code{n.neighs}: Integer. Number of nearest neighbours to use. If a single value is introduced, and there is more
-#'    than one variable in \code{neigh.vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
-#'    length as \code{neigh.vars} to indicate a different number of nearest neighbours for different variables.
+#'    \item \code{n}: Integer. Number of nearest neighbours to use. If a single value is introduced, and there is more
+#'    than one variable in \code{vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
+#'    length as \code{vars} to indicate a different number of nearest neighbours for different variables.
 #'  }
 #' @param extended.predictors This is a parameter related to the extreme learning machine and reservoir computing framework where input data is randomly projected into a new space of size \code{n}. Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
 #'  with the following arguments:
@@ -63,7 +72,10 @@
 #' Everything concerning these parameters is explained in the section \code{Details} of the function \code{\link[downscaleR]{downscale.train}}. However, if wanted, the atomic functions can be seen here: 
 #' \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
 #' @details The function relies on \code{\link[downscaleR]{prepareData}}, \code{\link[downscaleR]{prepareNewData}}, \code{\link[downscaleR]{downscale.train}}, and \code{\link[downscaleR]{downscale.predict}}. 
-#' For more information please visit these functions.
+#' For more information please visit these functions.#' The function is envisaged to be flexible enough for allowing a fine-tuning of the cross-validation scheme. It uses internally the \pkg{transformeR} 
+#' helper \code{\link[transformeR]{dataSplit}} for flexible data folding. 
+#' Note that the indices for data splitting are obtained using \code{\link[transformeR]{getYearsAsINDEX}} when needed (e.g. in leave-one-year-out cross validation), 
+#' thus adequately handling potential inconsistencies in year selection when dealing with year-crossing seasons (e.g. DJF).
 #' If the variable to downscale is the precipitation and it is a binary variable, then two temporal series will be returned:
 #' 1) The temporal serie with binary values filtered by a threshold adjusted by the train dataset, see \code{\link[transformeR]{binaryGrid}} for more details.
 #' 2) The temporal serie with the results obtained by the downscaling, without any binary converting process.
@@ -88,40 +100,60 @@
 #' y <- VALUE_Iberia_pr
 #' y <- getTemporalIntersection(obs = y, prd = x, "obs")
 #' x <- getTemporalIntersection(obs = y, prd = x, "prd")
-#' # Reconstructing the downscaled serie in 3 folds
-#' pred <- downscale.cv(x,y,folds = 3, type = "chronological",
-#'                      scale.list = list(type = "standardize"),
-#'                      method = "GLM", condition = "GT", threshold = 0)
-#' # ... fold definition by years ...
-#' pred <- downscale.cv(x,y,type = "chronological",
-#'                      method = "GLM", condition = "GT", threshold = 0,
-#'                      scale.list = list(type = "standardize"),
-#'                      folds = list(c("1985","1986","1987","1988"),
-#'                                   c("1989","1990","1991","1992"),
-#'                                   c("1993","1994","1995")))
-#' # Reconstructing the downscaled serie in 3 folds with spatial predictors
-#' pred <- downscale.cv(x, y, folds = 3, type = "chronological",
+#' # ... kfold in 3 parts equally divided ...
+#' pred <- downscale.cv(x, y, folds = 3, sampling.strategy = "kfold.chronological",
 #'                      scale.list = list(type = "standardize"),
 #'                      method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0,
 #'                      spatial.predictors = list(which.combine = getVarNames(x), v.exp = 0.9))
+#' # ... kfold by years ...
+#' pred <- downscale.cv(x,y,sampling.strategy = "kfold.chronological",
+#'                      method = "GLM", condition = "GT", threshold = 0,
+#'                      scale.list = list(type = "standardize"),
+#'                      folds = list(c(1985,1986,1987,1988),
+#'                                   c(1989,1990,1991,1992),
+#'                                   c(1993,1994,1995)))
+#' # ... leave one year out  ...
+#' pred <- downscale.cv(x,y,sampling.strategy = "leave-one-year-out",
+#'                      method = "GLM", condition = "GT", threshold = 0,
+#'                      scale.list = list(type = "standardize"))
 #' # Reconstructing the downscaled serie in 3 folds with local predictors.
-#' pred <- downscale.cv(x,y,folds = 3,type = "chronological",
+#' pred <- downscale.cv(x,y,folds = 3, sampling.strategy = "kfold.chronological",
 #'                      scale.list = list(type = "standardize"),
 #'                      method = "GLM", condition = "GT", threshold = 0,
 #'                      local.predictors = list(vars = "hus@850", n = 4))
 
+
 downscale.cv <- function(x, y, method,
-                         folds = 4, type = "chronological", 
+                         sampling.strategy = "kfold.chronological", folds = 4, 
                          scale.list = NULL,
                          global.vars = NULL, combined.only = TRUE, spatial.predictors = NULL, local.predictors = NULL, extended.predictors = NULL,
                          condition = NULL, threshold = NULL, ...) {
+  
+  x <- getTemporalIntersection(x,y,which.return = "obs")
+  y <- getTemporalIntersection(x,y,which.return = "prd")
+  
+  if (sampling.strategy == "leave-one-year-out") {
+    type <- "chronological"
+    folds <- as.list(getYearsAsINDEX(y) %>% unique())
+  }
+  
+  if (sampling.strategy == "kfold.chronological") {
+    type <- "chronological"
+    if (!is.numeric(folds)) {
+      folds.user <- unlist(folds) %>% unique()
+      folds.data <- getYearsAsINDEX(y) %>% unique()
+      if (any(folds.user != folds.data)) stop("In the parameters folds you have indicated years that do not belong to the dataset. Please revise the setup of this parameter.")
+    }
+  }
+  if (sampling.strategy == "kfold.random") {
+    type <- "random"
+    if (!is.numeric(folds)) stop("In kfold.random, the parameter folds represent the NUMBER of folds and thus, it should be a NUMERIC value.")
+  }
   
   if (is.list(folds)) {
     if (any(duplicated(unlist(folds)))) stop("Years can not appear in more than one fold")
   }
   
-  x <- getTemporalIntersection(x,y,which.return = "obs")
-  y <- getTemporalIntersection(x,y,which.return = "prd")
   data <- dataSplit(x,y, f = folds, type = type)
   p <- lapply(1:length(data), FUN = function(xx) {
     message(paste("fold:",xx,"-->","calculating..."))

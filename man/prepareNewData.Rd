@@ -18,8 +18,6 @@ A named list with the components required by the downscaling method in order to 
 Prepare the prediction data according to the definition of the experiment
 }
 \examples{
-# See the dedicated vignette by typing:
-# utils::vignette(topic = "configuring_newdata", package = "downscaleR")
 # Loading data
 data("VALUE_Iberia_tas")
 y <- VALUE_Iberia_tas 

@@ -30,8 +30,10 @@
 #' @param n.pcs Integer indicating the number of EOFs to be used as predictors
 #' @param cross.val Should cross-validation be performed? methods available are leave-one-out (\code{"loocv"})
 #'  and k-fold (\code{"kfold"}). Default to \code{"none"}, which does not perform cross-validation.
-#' @param folds Only requiered if \code{cross.val = "kfold"}, otherwise ignored. Could be a fraction, value between (0,1) indicating the fraction of the data that will define the train set, 
-#' or an integer indicating the number of folds. It can also be a list of folds indicating the years of each fold. 
+#' @param folds This arguments controls the number of folds, or how these folds are created (ignored if \code{cross.val = "loocv"}). Folds are always splitted chronologically. If it is given as a fraction in the range (0-1), 
+#' it splits the data in two subsets, one for training and one for testing, being the given value the fraction of the data used for training (i.e., 0.75 will split the data so that 75\% of the instances are used for training, and the remaining 25\% for testing). 
+#' In case it is an integer value, it sets the number of folds in which the data will be split (e.g., \code{folds = 10} for the classical 10-fold cross validation). 
+#' Alternatively, this argument can be passed as a list, each element of the list being a vector of years to be included in each fold (See examples). 
 #' 
 #' @details
 #' \strong{Scaling and centering}
@@ -60,9 +62,13 @@
 #' yp <- downscale(y,x,newdata,method = "analogs")
 #' # kfold
 #' yp <- downscale(y,x,method = "analogs", n.pcs = 15,
-#'                 cross.val = "kfold", folds = list(c("1985","1986","1987"),
-#'                                                   c("1988","1989","1990"),
-#'                                                   c("1991","1992","1993")))
+#'                 cross.val = "kfold", folds = list(c(1985,1986,1987),
+#'                                                   c(1988,1989,1990),
+#'                                                   c(1991,1992,1993)))
+#' # Leave-one-year-out
+#' yp <- downscale(y,x,method = "analogs", n.pcs = 15,
+#'                 cross.val = "loocv")
+#' 
 #' ### GLM ###
 #' # None
 #' yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10,
@@ -71,9 +77,9 @@
 #'                 wet.threshold = 1)
 #' # kfold
 #' yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
-#'                 cross.val = "kfold", folds = list(c("1985","1986","1987"),
-#'                                                   c("1988","1989","1990"),
-#'                                                   c("1991","1992","1993")))
+#'                 cross.val = "kfold", folds = list(c(1985,1986,1987),
+#'                                                   c(1988,1989,1990),
+#'                                                   c(1991,1992,1993)))
 
 downscale <- function(y,
                        x,
@@ -95,7 +101,10 @@ downscale <- function(y,
   if (!identical(as.Date(getRefDates(x)),as.Date(getRefDates(y)))) {stop("Dates of x and y do not mach, please try using getTemporalIntersection function from package transformeR")}
   if (cross.val == "kfold" && is.null(folds)) message("Please, specify the number of folds with the parameter: folds")
   if (cross.val == "loocv") {
-    folds <- unique(substr(as.Date(getRefDates(x)),1,4)) %>% as.list()
+    sampling.strategy <- "leave-one-year-out"
+  }
+  if (cross.val == "kfold") {
+    sampling.strategy <- "kfold.chronological"
   }
   
   if (!is.null(n.pcs)) {spatial.predictors <- list(n.eofs = c(rep(1,length(getVarNames(x))),n.pcs),which.combine = getVarNames(x))}
@@ -147,15 +156,15 @@ downscale <- function(y,
   }  
   else {# Leave-one-out and cross-validation 
     if (method == "analogs") {
-      yp <- downscale.cv(x,y,folds = folds, type = "chronological", scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
+      yp <- downscale.cv(x,y,folds = folds, sampling.strategy = sampling.strategy, scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
                          method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun)
     }
     else if (method == "glm") {
       # Ocurrence
-      yp.ocu <- downscale.cv(x,y.ocu,folds = folds, type = "chronological", scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
+      yp.ocu <- downscale.cv(x,y.ocu,folds = folds, sampling.strategy = sampling.strategy, scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
                              method = "GLM", family = binomial(link = "logit"), simulate = simulate)
       # Amounts
-      yp.reg <- downscale.cv(x,y,folds = folds, type = "chronological", scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
+      yp.reg <- downscale.cv(x,y,folds = folds, sampling.strategy = sampling.strategy, scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
                              method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0, simulate = simulate)
       # Complete serie
       yp <- y
@@ -165,7 +174,7 @@ downscale <- function(y,
       }
     }
     else if (method == "lm") {
-      yp <- downscale.cv(x,y,folds = folds,  type = "chronological", scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
+      yp <- downscale.cv(x,y,folds = folds, sampling.strategy = sampling.strategy, scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
                          method = "GLM", family = "gaussian")
     }
   }

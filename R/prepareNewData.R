@@ -23,9 +23,6 @@
 #' @export
 #' @seealso \href{https://github.com/SantanderMetGroup/downscaleR/wiki/preparing-predictor-data}{downscaleR Wiki} for preparing predictors for downscaling and seasonal forecasting.
 #' @author J Bedia
-#' @examples 
-#' # See the dedicated vignette by typing:
-#' # utils::vignette(topic = "configuring_newdata", package = "downscaleR")
 #' @family downscaling.helpers
 #' @importFrom transformeR getVarNames subsetGrid redim getShape getCoordinates grid2PCs getRefDates array3Dto2Dmat grid2PCs
 #' @importFrom magrittr %>% extract2 

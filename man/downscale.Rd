@@ -32,8 +32,10 @@ Current values are \code{"mean"} (the default), \code{"wmean"},  \code{"max"},  
 \item{cross.val}{Should cross-validation be performed? methods available are leave-one-out (\code{"loocv"})
 and k-fold (\code{"kfold"}). Default to \code{"none"}, which does not perform cross-validation.}
 
-\item{folds}{Only requiered if \code{cross.val = "kfold"}, otherwise ignored. Could be a fraction, value between (0,1) indicating the fraction of the data that will define the train set, 
-or an integer indicating the number of folds. It can also be a list of folds indicating the years of each fold.}
+\item{folds}{This arguments controls the number of folds, or how these folds are created (ignored if \code{cross.val = "loocv"}). Folds are always splitted chronologically. If it is given as a fraction in the range (0-1), 
+it splits the data in two subsets, one for training and one for testing, being the given value the fraction of the data used for training (i.e., 0.75 will split the data so that 75\% of the instances are used for training, and the remaining 25\% for testing). 
+In case it is an integer value, it sets the number of folds in which the data will be split (e.g., \code{folds = 10} for the classical 10-fold cross validation). 
+Alternatively, this argument can be passed as a list, each element of the list being a vector of years to be included in each fold (See examples).}
 }
 \value{
 The prediction structure.
@@ -60,9 +62,13 @@ yp <- downscale(y,x,method = "analogs")
 yp <- downscale(y,x,newdata,method = "analogs")
 # kfold
 yp <- downscale(y,x,method = "analogs", n.pcs = 15,
-                cross.val = "kfold", folds = list(c("1985","1986","1987"),
-                                                  c("1988","1989","1990"),
-                                                  c("1991","1992","1993")))
+                cross.val = "kfold", folds = list(c(1985,1986,1987),
+                                                  c(1988,1989,1990),
+                                                  c(1991,1992,1993)))
+# Leave-one-year-out
+yp <- downscale(y,x,method = "analogs", n.pcs = 15,
+                cross.val = "loocv")
+
 ### GLM ###
 # None
 yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10,
@@ -71,9 +77,9 @@ yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10,
                 wet.threshold = 1)
 # kfold
 yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
-                cross.val = "kfold", folds = list(c("1985","1986","1987"),
-                                                  c("1988","1989","1990"),
-                                                  c("1991","1992","1993")))
+                cross.val = "kfold", folds = list(c(1985,1986,1987),
+                                                  c(1988,1989,1990),
+                                                  c(1991,1992,1993)))
 }
 \seealso{
 downscale.train for training a downscaling model
