@@ -1040,7 +1040,7 @@ varCoeficient <- function(delta,data,cv){
 #' @return A grid without members, with additional attributes to retrieve the original structure after bias correction
 #' @seealso \code{\link{recoverMemberDim}}, for recovering the original structure after bias correction.
 #' @keywords internal
-#' @importFrom transformeR subsetGrid redim getShape bindGrid.time
+#' @importFrom transformeR subsetGrid redim getShape bindGrid
 #' @author J Bedia
 
 flatMemberDim <- function(grid) {
@@ -1050,7 +1050,7 @@ flatMemberDim <- function(grid) {
       aux.ltime <- lapply(1:n.mem.join, function(x) {
             subsetGrid(grid, members = x)
       })
-      out <- do.call("bindGrid.time", aux.ltime)
+      out <- do.call("bindGrid", c(aux.ltime, dimension = "time"))
       attr(out, "orig.mem.shape") <- n.mem.join
       attr(out, "orig.time.shape") <- n.time.join
       return(out)
@@ -1063,7 +1063,7 @@ flatMemberDim <- function(grid) {
 #' @param newdata The 'newdata' object, needed to recover relevant metadata (i.e. initialization dates and member names)
 #' @return A (bias-corrected) multimember grid
 #' @keywords internal
-#' @importFrom transformeR subsetDimension bindGrid.member
+#' @importFrom transformeR subsetDimension bindGrid
 #' @seealso \code{\link{flatMemberDim}}, for \dQuote{flattening} the member structure
 #' @author J Bedia
 
@@ -1078,6 +1078,6 @@ recoverMemberDim <- function(plain.grid, bc.grid, newdata) {
             aux$Members <- newdata$Members[[m]]
             return(aux)
       })
-      do.call("bindGrid.member", aux.list)
+      do.call("bindGrid", c(aux.list, dimension = "member"))
 }
 
