@@ -20,5 +20,6 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 * Improved `downscale.cv` input arguments, and its documentation. Added new option for leave-one-year-out cross validation
 * Other documentation updates
 
-## v3.0.2 (in devel)
+## v3.0.2 (30 Jul 2018)
+* Replaced calls to bindGrid.time by bindGrid (the former not exported anymore)
 

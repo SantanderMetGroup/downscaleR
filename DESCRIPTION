@@ -1,7 +1,7 @@
 Package: downscaleR
 Depends:
     R(>= 3.1.0),
-    transformeR(>= 1.4.0),
+    transformeR(>= 1.4.3),
     deepnet,
     glmnet
 Imports:
@@ -28,7 +28,7 @@ Suggests:
 Type: Package
 Title: An R package for bias correction and statistical downscaling
 Version: 3.0.2
-Date: 2018-07-12
+Date: 2018-07-30
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquín Bedia <bediaj@unican.es> [aut, cre]",
