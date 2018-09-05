@@ -243,10 +243,10 @@ predictor.nn.indices <- function(vars = NULL, n = NULL, x, y) {
       }
       # The index list has the same length as the number of local predictor variables, containing a matrix of index positions
       local.pred.list <- lapply(1:length(vars), function(j) {
-            ind.mat <- vapply(1:nrow(coords.y), FUN.VALUE = numeric(n[j]), FUN = function(i) {
+            ind.mat <- matrix(data = vapply(1:nrow(coords.y), FUN.VALUE = numeric(n[j]), FUN = function(i) {
                   dists <- sqrt((coords.y[i,1] - coords.x[,1])^2 + (coords.y[i,2] - coords.x[,2])^2)
-                  which(dists %in% sort(dists)[1:n[j]])
-            })
+                  which(dists %in% sort(dists)[1:n[j]])[1:n[j]]
+            }), nrow = n[j], ncol = nrow(coords.y))
       })
       names(local.pred.list) <- vars
       return(local.pred.list)
