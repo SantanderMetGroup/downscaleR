@@ -627,9 +627,9 @@ delta <- function(o, p, s){
 
 scaling <- function(o, p, s, scaling.type){
       if (scaling.type == "additive") {
-            s - mean(p) + mean(o)
+            s - mean(p) + mean(o, na.rm = TRUE)
       } else if (scaling.type == "multiplicative") {
-            (s/mean(p)) * mean(o)
+            (s/mean(p)) * mean(o, na.rm = TRUE)
       }
 }
 
