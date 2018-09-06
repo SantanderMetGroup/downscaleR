@@ -105,7 +105,7 @@ downscale.predict <- function(newdata, model) {
   
   if (isRegular(model$pred)) {
     if (n > 1) {
-      p <- array(unlist(p), dim = c(n,dim(p[[1]])))
+      p <- array(unlist(p), dim = c(dim(p[[1]]),n)) %>% aperm(c(4,1,2,3))
       dimNames <- getDim(redim(model$pred))}
     else {
       p <- array(unlist(p), dim = dim(p[[1]]))
@@ -113,7 +113,7 @@ downscale.predict <- function(newdata, model) {
   }
   else {
     if (n > 1) {
-      p <- array(unlist(p), dim = c(n,dim(p[[1]])))
+      p <- array(unlist(p), dim = c(dim(p[[1]]),n)) %>% aperm(c(3,1,2))
       dimNames <- getDim(redim(model$pred,loc = TRUE))}
     else {
       p <- array(unlist(p), dim = dim(p[[1]]))
