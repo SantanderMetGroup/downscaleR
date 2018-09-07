@@ -443,7 +443,11 @@ biasCorrectionXD <- function(y, x, newdata,
       bc$Dates <- sim$Dates
       ## Recover the member dimension when join.members=TRUE:
       if (isTRUE(join.members)) {
-            bc <- recoverMemberDim(plain.grid = sim, bc.grid = bc, newdata = newdata)
+            if (method == "delta") {
+                  bc <- recoverMemberDim(plain.grid = pred, bc.grid = bc, newdata = newdata)
+            }else{
+                  bc <- recoverMemberDim(plain.grid = sim, bc.grid = bc, newdata = newdata)      
+            }
       } else {
             bc$InitializationDates <- sim$InitializationDates
             bc$Members <- sim$Members
@@ -1065,7 +1069,7 @@ flatMemberDim <- function(grid) {
 
 #' @title Recover member multimember structure
 #' @description Recover member multimember structure after application of \code{\link{flatMemberDim}}
-#' @param flat.grid A \dQuote{flattened} grid used as predictor in \code{biasCorrection} (the 'pred' object)
+#' @param plain.grid A \dQuote{flattened} grid used as predictor in \code{biasCorrection} (the 'pred' object)
 #' @param bc.grid The bias-corrected output (the 'bc' object), still without its member structure 
 #' @param newdata The 'newdata' object, needed to recover relevant metadata (i.e. initialization dates and member names)
 #' @return A (bias-corrected) multimember grid
