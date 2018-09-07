@@ -354,17 +354,24 @@ biasCorrectionXD <- function(y, x, newdata,
       message("[", Sys.time(), "] Argument precipitation is set as ", precip, ", please ensure that this matches your data.")
       bc <- y
       if (isTRUE(join.members)) {
+            n.mem.aux <- getShape(sim)["member"]
             pred <- flatMemberDim(pred)
             pred <- redim(pred, drop = T)
             sim <- flatMemberDim(sim)
             sim <- redim(sim, drop = T)
+            y <- bindGrid(rep(list(y), n.mem.aux), dimension = "time")
       }
+      y <- redim(y, drop = TRUE)
       y <- redim(y, member = FALSE, runtime = FALSE)
       pred <- redim(pred, member = TRUE, runtime = TRUE)
       sim <- redim(sim, member = TRUE, runtime = TRUE)
       dimNames <- attr(y$Data, "dimensions")
-      n.run <- getShape(sim)[1]
-      n.mem <- getShape(sim)[2]
+      n.run <- getShape(sim)["runtime"]
+      n.mem <- getShape(sim)["member"]
+      if (join.members & !is.null(window)) {
+            message("[", Sys.time(), "] Window option is not yet implemented for joined members and will be ignored")
+            window <- NULL
+      }
       if (!is.null(window)) {
             win <- getWindowIndex(y = y, x = pred, newdata = sim, window = window, delta.method = delta.method)
       } else {
