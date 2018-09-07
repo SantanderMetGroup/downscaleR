@@ -355,9 +355,9 @@ biasCorrectionXD <- function(y, x, newdata,
       bc <- y
       if (isTRUE(join.members)) {
             n.mem.aux <- getShape(sim)["member"]
-            pred <- flatMemberDim(pred)
+            pred <- flatMemberDim(pred, station)
             pred <- redim(pred, drop = T)
-            sim <- flatMemberDim(sim)
+            sim <- flatMemberDim(sim, station)
             sim <- redim(sim, drop = T)
             y <- bindGrid(rep(list(y), n.mem.aux), dimension = "time")
       }
@@ -369,7 +369,7 @@ biasCorrectionXD <- function(y, x, newdata,
       n.run <- getShape(sim)["runtime"]
       n.mem <- getShape(sim)["member"]
       if (join.members & !is.null(window)) {
-            message("[", Sys.time(), "] Window option is not yet implemented for joined members and will be ignored")
+            message("[", Sys.time(), "] Window option is currently not supported for joined members and will be ignored")
             window <- NULL
       }
       if (!is.null(window)) {
@@ -1054,8 +1054,9 @@ varCoeficient <- function(delta,data,cv){
 #' @importFrom transformeR subsetGrid redim getShape bindGrid
 #' @author J Bedia
 
-flatMemberDim <- function(grid) {
-      grid <- redim(grid, member = TRUE)     
+flatMemberDim <- function(grid, station) {
+      isRegular(grid)
+      grid <- redim(grid, member = TRUE, loc = station)     
       n.mem.join <- getShape(grid, "member")
       n.time.join <- getShape(grid, "time")
       aux.ltime <- lapply(1:n.mem.join, function(x) {
