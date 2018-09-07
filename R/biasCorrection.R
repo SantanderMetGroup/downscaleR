@@ -253,10 +253,6 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
             newdata <- x 
             nwdatamssg <- FALSE
       }
-      if ("loc" %in% getDim(y) & isTRUE(join.members)) {
-            join.members <- FALSE
-            warning("The option 'join.members=TRUE' is currently not supported for station data predictand. It was reset to 'FALSE'.")
-      }
       if (cross.val == "none") {
             output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
                                        precipitation = precipitation,

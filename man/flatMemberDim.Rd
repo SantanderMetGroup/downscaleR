@@ -4,7 +4,7 @@
 \alias{flatMemberDim}
 \title{Concatenate members}
 \usage{
-flatMemberDim(grid)
+flatMemberDim(grid, station)
 }
 \arguments{
 \item{grid}{Input (multimember) grid}

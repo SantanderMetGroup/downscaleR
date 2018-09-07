@@ -7,11 +7,11 @@
 recoverMemberDim(plain.grid, bc.grid, newdata)
 }
 \arguments{
+\item{plain.grid}{A \dQuote{flattened} grid used as predictor in \code{biasCorrection} (the 'pred' object)}
+
 \item{bc.grid}{The bias-corrected output (the 'bc' object), still without its member structure}
 
 \item{newdata}{The 'newdata' object, needed to recover relevant metadata (i.e. initialization dates and member names)}
-
-\item{flat.grid}{A \dQuote{flattened} grid used as predictor in \code{biasCorrection} (the 'pred' object)}
 }
 \value{
 A (bias-corrected) multimember grid
