@@ -14,8 +14,17 @@ glm.train(x, y, fitting = NULL, simulate = "no", model.verbose = "yes",
 
 \item{fitting}{A string indicating the types of objective functions and how to fit the linear model.}
 
-\item{simulate}{A string indicating wether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma 
+\item{simulate}{A string indicating wether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma}
+
+\item{model.verbose}{String value. Indicates wether the information concerning the model infered is limited to the 
+essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+recommended when you want to save memory. Only operates for GLM.
 or binomial families.}
+
+\item{stepwise.arg}{A list contatining two parameters: steps and direction. When performing a stepwise search
+we can limit the search by indicating a maximum number of variables to be included in the model (parameter \code{steps}). We can also indicate
+wheter we want to perform a forward or a backward search with the parameter direction. For more information \code{\link[stats]{step}}.
+Thus an example would be: stepwise.arg = list(steps = 5, direction = "backward"). Default is NULL what indicates an unlimited forward stepwise search.}
 
 \item{...}{Optional parameters. See the parameter fitting for more information.
 \itemize{

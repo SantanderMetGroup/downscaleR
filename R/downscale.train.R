@@ -23,6 +23,9 @@
 #' \code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
 #' \code{"LT"} = lower than, \code{"LE"} = lower or equal than.
 #' @param threshold Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the argument \code{condition}. Then condition is set to \code{"GE"}.
+#' @param model.verbose String value. Indicates wether the information concerning the model infered is limited to the 
+#' essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+#' recommended when you want to save memory. Only operates for GLM.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 #' Everything concerning these parameters is explained in the section \code{Details}. 
 #' However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
@@ -63,7 +66,9 @@
       #' The ‘factory-fresh’ default is na.omit. Another possible value is NULL, no action. Value na.exclude can be useful.
       #' }
     #' \item \code{fitting = "stepwise"} Indicates a stepwise regression via \code{\link[stats]{glm}} and \code{\link[stats]{step}}.
-    #' The optional parameters are the same than for fitting = NULL. The stepwise performs always a forward selection search stopping
+    #' The optional parameters are the same than for fitting = NULL. Stepwise can be performed backward or forward, as well as we can limit
+    #' the number of steps. This can be done by the additional optional parameter \code{stepwise.arg}, which is a list contatining two parameters that belong 
+    #' to \code{\link[stats]{step}}: steps and direction. An example would be: stepwise.arg = list(steps = 5, direction = "backward"). Default is NULL what indicates an unlimited forward stepwise search.
     #' \item \code{fitting = c("L1","L2","L1L2","gLASSO")}. These four options refer to ridge regression (L1 penalty), lasso regression (L2 penalty),
     #' elastic-net regression (L1L2 penalty) and group Lasso regression (group L2 penalty). The model is fitted via 
     #' \code{\link[glmnet]{glmnet}} and the corresponding penalties are found via \code{\link[glmnet]{cv.glmnet}}. This function \code{\link[glmnet]{glmnet}}
@@ -266,6 +271,9 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
 #' @param x The input grid. Class: matrix.
 #' @param y The observations dataset. Class: matrix.
 #' @param method Type of transer function. Options are: analogs, GLM and NN. 
+#' @param model.verbose String value. Indicates wether the information concerning the model infered is limited to the 
+#' essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+#' recommended when you want to save memory. Only operates for GLM.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. For this reason see the atomic functions for more details: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
 #' @return An object with the information of the selected model.
 #' @details The optional parameters of neural networks can be found in the library \pkg{deepnet} via \code{\link[deepnet]{nn.train}}This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.train}}.
