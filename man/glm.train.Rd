@@ -4,7 +4,8 @@
 \alias{glm.train}
 \title{Donwscaling with generalized linear models (GLM).}
 \usage{
-glm.train(x, y, fitting = NULL, simulate = "no", ...)
+glm.train(x, y, fitting = NULL, simulate = "no", model.verbose = "yes",
+  stepwise.arg = NULL, ...)
 }
 \arguments{
 \item{x}{The grid data. Class: matrix.}

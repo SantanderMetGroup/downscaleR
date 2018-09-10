@@ -4,7 +4,7 @@
 \alias{downs.train}
 \title{Switch to selected downscale method.}
 \usage{
-downs.train(x, y, method, ...)
+downs.train(x, y, method, model.verbose = "yes", ...)
 }
 \arguments{
 \item{x}{The input grid. Class: matrix.}

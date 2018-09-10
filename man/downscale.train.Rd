@@ -4,7 +4,8 @@
 \alias{downscale.train}
 \title{Calibration of downscaling methods}
 \usage{
-downscale.train(obj, method, condition = NULL, threshold = NULL, ...)
+downscale.train(obj, method, condition = NULL, threshold = NULL,
+  model.verbose = "yes", ...)
 }
 \arguments{
 \item{obj}{The object as returned by \code{\link[downscaleR]{prepareData}}.}

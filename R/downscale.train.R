@@ -126,7 +126,7 @@
 #' # Plotting the results for station 5
 #' plot(y$Data[,5],model.analogs$pred$Data[,5], xlab = "obs", ylab = "pred")
 
-downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...) {
+downscale.train <- function(obj, method, condition = NULL, threshold = NULL, model.verbose = "yes", ...) {
   method <- match.arg(method, choices = c("analogs", "GLM", "NN"))
   if ( method == "GLM") {
     if (attr(obj, "nature") == "spatial+local") {
@@ -190,9 +190,9 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
       dates.y <- getRefDates(obj$y)[-ind]
     }
     if (method == "analogs") {
-      atomic_model <- downs.train(xx, yy, method, dates = dates.y, ...)}
+      atomic_model <- downs.train(xx, yy, method, model.verbose, dates = dates.y, ...)}
     else {      
-      atomic_model <- downs.train(xx, yy, method, ...)}
+      atomic_model <- downs.train(xx, yy, method, model.verbose, ...)}
     if (method == "analogs") {atomic_model$dates$test <- getRefDates(obj$y)}
     mat.p <- as.matrix(downs.predict(obj$x.global, method, atomic_model))}
   # Single-site
@@ -215,9 +215,9 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
       if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
       else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
       if (method == "analogs") {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, dates = getRefDates(obj$y)[ind], ...)}
+        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
       else {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, ...)}
+        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)}
       if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
       mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])
     }
@@ -241,9 +241,9 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
       if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
       else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
       if (method == "analogs") {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, dates = getRefDates(obj$y)[ind], ...)}
+        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
       else {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, ...)}
+        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)}
       if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
       mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])}
   }
@@ -272,7 +272,7 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
 #' @author J. Bano-Medina
 #' @import deepnet 
 
-downs.train <- function(x, y, method, ...) {
+downs.train <- function(x, y, method, model.verbose = "yes", ...) {
   if (method == "NN") {
     arglist <- list(...)
     arglist[["x"]] <- x
@@ -283,7 +283,7 @@ downs.train <- function(x, y, method, ...) {
   
   switch(method,
          "analogs" = atomic_model <- analogs.train(x, y, ...),
-         "GLM"     = atomic_model <- glm.train(x, y, ...),
+         "GLM"     = atomic_model <- glm.train(x, y, model.verbose = model.verbose,...),
          "NN"      = atomic_model <- do.call("nn.train",arglist))
   
   

@@ -49,7 +49,9 @@
 #' @author J. Bano-Medina
 #' @importFrom stats step formula
 #' @import glmnet
-glm.train <- function(x, y, fitting = NULL, simulate = "no", ...) {
+glm.train <- function(x, y, fitting = NULL, simulate = "no", model.verbose = "yes",
+                      stepwise.arg = NULL,
+                      ...) {
   if (is.null(fitting)) {
     df <- data.frame(cbind(y,x)); colnames(df) <- paste0('X',1:(dim(x)[2] + 1))
     weights <- glm(X1~.,data = df, ...)
@@ -58,8 +60,15 @@ glm.train <- function(x, y, fitting = NULL, simulate = "no", ...) {
     df <- data.frame(cbind(y,x)); colnames(df) <- paste0('X',1:(dim(x)[2] + 1))
     fullmod <- glm(X1~.,data = df,...)
     nothing <- glm(X1~1.,data = df,...)
-    weights <- step(nothing, scope = list(lower = formula(nothing),upper = formula(fullmod)),
-                    direction = "forward")
+    if (is.null(stepwise.arg)) {
+      weights <- step(nothing, scope = list(lower = formula(nothing),upper = formula(fullmod)),
+                      direction = "forward")
+    }
+    else {
+      if (is.null(stepwise.arg$steps) || is.null(stepwise.arg$direction)) message("Please, specify both the number of maximum desired variables (parameter: steps) and the direction of the search")
+      weights <- step(nothing, scope = list(lower = formula(nothing),upper = formula(fullmod)),
+                    direction = stepwise.arg$direction, steps = stepwise.arg$steps)
+    }
   }
   else if (fitting == "L1") {
     cv <- cv.glmnet(x,y,alpha = 1, ...)
@@ -88,6 +97,17 @@ glm.train <- function(x, y, fitting = NULL, simulate = "no", ...) {
     weights <- glmnet(x,y,alpha = 0, family = "mgaussian", type.multinomial = "grouped", ...)
   }
   
+  if (model.verbose == "no") {
+    weights$fitted.values <- NULL
+    weights$effects <- NULL
+    weights$qr$qr <- NULL
+    weights$fitted.values <- NULL
+    weights$linear.predictors <- NULL
+    weights$prior.weights <- NULL
+    weights$y <- NULL
+    weights$model <- NULL
+    weights$data <- NULL
+  }
   arglist <- list(...) 
   if (is.null(arglist$family)) {family = "gaussian"}
   else {family <- arglist$family}
