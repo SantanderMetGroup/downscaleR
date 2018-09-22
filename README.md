@@ -2,9 +2,7 @@
 
 **downscaleR** is an R package for empirical-statistical downscaling focusing on daily data and covering the most popular approaches (bias correction, Model Output Statistics, Perfect Prognosis) and techniques (e.g. quantile mapping, regression, analogs, neural networks). This package has been conceived to work in the framework of both seasonal forecasting and climate change studies. Thus, it considers ensemble members as a basic dimension of the data structure. Find out more about this package at the [downscaleR wiki](https://github.com/SantanderMetGroup/downscaleR/wiki). 
 
-This package is part of the [climate4R bundle](http://www.meteo.unican.es/climate4r), formed by `loadeR`, `transformeR`, `downscaleR` and `visualizeR`.
-
-The recommended installation procedure is to use the `install_github` command from the devtools R package (see the installation info in the wiki):
+This package is part of the [climate4R bundle](http://www.meteo.unican.es/climate4r), formed by `loadeR`, `transformeR`, `downscaleR` and `visualizeR`. The recommended installation procedure is to use the `install_github` command from the devtools R package:
 
 ```r
 devtools::install_github(c("SantanderMetGroup/transformeR", "SantanderMetGroup/downscaleR"))
@@ -34,10 +32,11 @@ temporalPlot(igueldo.2000, analog.2000, regression.2000, neuralnet.2000)
 ```
 
 ---
-References and further information: 
+Reference and further information: 
 
-Iturbide et al. (2018) climate4R: An R-based Framework for Climate Data Access, Post-processing and Bias Correction. Submitted to **Environmental Modeling and Software***, http://www.meteo.unican.es/climate4r_paper 
+**[General description of the climate4R framework]** Iturbide et al. (2018) climate4R: An R-based Open Framework for Reproducible Climate Data Access and Post-processing. **Environmental Modelling and Software**. https://doi.org/10.1016/j.envsoft.2018.09.009
+Check out the companion notebooks for the two examples [GitHub](https://github.com/SantanderMetGroup/notebooks).
 
-Cofiño et al. (2017) The ECOMS User Data Gateway: Towards seasonal forecast data provision and research reproducibility in the era of Climate Services. **Climate Services**, http://dx.doi.org/10.1016/j.cliser.2017.07.001.
+**[Seasonal forecasting applications]** Cofiño et al. (2018) The ECOMS User Data Gateway: Towards seasonal forecast data provision and research reproducibility in the era of Climate Services. **Climate Services**, 9, 33-43. http://doi.org/10.1016/j.cliser.2017.07.001
 
 
