@@ -1,0 +1,18 @@
+bibentry(bibtype = "Article",
+         title = "climate4R: An R-based open framework for reproducible climate data access and post-processing",
+         author = c(person(given = "Maialen", family =  "Iturbide", role = "aut"),
+                  person(given = "Joaquín", family =  "Bedia", role = "aut"),
+                  person(given = "Sixto", family = "Herrera", role = "aut"),
+                  person(given = "Jorge", family = "Baño-Medina", role = "aut"),
+                  person(given = "Jesús", family =  "Fernández", role = "aut"),
+                  person(given = "M. Dolores", family =  "Frías", role = "aut"),
+                  person(given = "Rodrigo", family =  "Manzanas", role = "aut"),
+                  person(given = "Daniel", family = "San-Martín", role = "aut"),
+                  person(given = "Ezequiel", family =  "Cimadevilla", role = "aut"),
+                  person(given = "Antonio S.", family = "Cofiño", role = "aut"),
+                  person(given = "José Manuel", family =  "Gutiérrez", role = "aut")),
+         journal = "Environmental Modelling & Software",
+         url = "http://www.meteo.unican.es/climate4r",
+         year = "2018",
+         doi = "https://doi.org/10.1016/j.envsoft.2018.09.009"
+)

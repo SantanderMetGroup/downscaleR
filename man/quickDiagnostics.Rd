@@ -5,8 +5,8 @@
 \title{Plots daily/annual series and the annual correlation map of different grid objects}
 \usage{
 quickDiagnostics(obs, raw, downscaled = NULL, location = NULL,
-  type = c("daily", "interannual"), members = NULL, na.tolerance = 0.3,
-  ylim = NULL, main = NULL)
+  type = c("daily", "interannual"), members = NULL,
+  na.tolerance = 0.3, ylim = NULL, main = NULL)
 }
 \arguments{
 \item{obs}{grid of observations.}
@@ -57,3 +57,4 @@ quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
 \author{
 M. Iturbide
 }
+\concept{visualization}

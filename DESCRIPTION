@@ -28,7 +28,7 @@ Suggests:
 Type: Package
 Title: An R package for bias correction and statistical downscaling
 Version: 3.0.3
-Date: 2018-08-30
+Date: 2018-09-23
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquín Bedia <bediaj@unican.es> [aut, cre]",
@@ -49,5 +49,5 @@ Encoding: UTF-8
 Description: Tools for climate data calibration (bias correction, qq-mapping...) and perfect-prog downscaling, as part of climate4R bundle (<http://meteo.unican.es/climate4R>). Focused on daily data, downscaleR is conceived for dealing also with seasonal forecast ensemble predictions.
 License: GPL (>= 3)
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 VignetteBuilder: knitr
