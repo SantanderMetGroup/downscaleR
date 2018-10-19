@@ -169,7 +169,8 @@ eqm1 <- biasCorrection(y = y, x = x,
                        precipitation = TRUE,
                        method = "eqm",
                        window = NULL,
-                       wet.threshold = 0.1)
+                       wet.threshold = 0.1,
+                       join.members = TRUE)
 eqm1win <- biasCorrection(y = y, x = x,
                           precipitation = TRUE,
                           method = "eqm",
@@ -184,7 +185,6 @@ eqm1folds <- biasCorrection(y = y, x = x,
                             cross.val = "kfold",
                             folds = list(1983:1989, 1990:1996, 1997:2002))
 
-quickDiagnostics(y, x, eqm1, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
@@ -226,6 +226,19 @@ pqm1.norm <- biasCorrection(y = y, x = x,
                        method = "pqm",
                        fitdistr.args = list(densfun = "normal"))
 quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
+
+# Correction of multimember datasets considering the joint
+# distribution of all members
+data("EOBS_Iberia_pr")
+data("CFS_Iberia_pr")
+y <- EOBS_Iberia_pr
+x <- CFS_Iberia_pr
+eqm.join <- biasCorrection(y = y, x = x,
+                           precipitation = TRUE,
+                           method = "eqm",
+                           window = NULL,
+                           wet.threshold = 0.1,
+                           join.members = TRUE)
 }
 }
 \references{

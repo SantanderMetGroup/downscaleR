@@ -167,7 +167,8 @@
 #'                        precipitation = TRUE,
 #'                        method = "eqm",
 #'                        window = NULL,
-#'                        wet.threshold = 0.1)
+#'                        wet.threshold = 0.1,
+#'                        join.members = TRUE)
 #' eqm1win <- biasCorrection(y = y, x = x,
 #'                           precipitation = TRUE,
 #'                           method = "eqm",
@@ -182,7 +183,6 @@
 #'                             cross.val = "kfold",
 #'                             folds = list(1983:1989, 1990:1996, 1997:2002))
 #' 
-#' quickDiagnostics(y, x, eqm1, location = c(-2, 43))
 #' quickDiagnostics(y, x, eqm1, location = c(-2, 43))
 #' quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
 #' quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
@@ -224,7 +224,21 @@
 #'                        method = "pqm",
 #'                        fitdistr.args = list(densfun = "normal"))
 #' quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
+#' 
+#' # Correction of multimember datasets considering the joint
+#' # distribution of all members
+#' data("EOBS_Iberia_pr")
+#' data("CFS_Iberia_pr")
+#' y <- EOBS_Iberia_pr
+#' x <- CFS_Iberia_pr
+#' eqm.join <- biasCorrection(y = y, x = x,
+#'                            precipitation = TRUE,
+#'                            method = "eqm",
+#'                            window = NULL,
+#'                            wet.threshold = 0.1,
+#'                            join.members = TRUE)
 #' }
+
 
 
 biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
@@ -349,13 +363,16 @@ biasCorrectionXD <- function(y, x, newdata,
       precip <- precipitation
       message("[", Sys.time(), "] Argument precipitation is set as ", precip, ", please ensure that this matches your data.")
       bc <- y
-      if (isTRUE(join.members)) {
+      if (isTRUE(join.members) & getShape(redim(sim))["member"] > 1) {
             n.mem.aux <- getShape(sim)["member"]
             pred <- flatMemberDim(pred, station)
             pred <- redim(pred, drop = T)
             sim <- flatMemberDim(sim, station)
             sim <- redim(sim, drop = T)
             y <- bindGrid(rep(list(y), n.mem.aux), dimension = "time")
+      } else if (isTRUE(join.members) & !getShape(redim(sim))["member"] > 1) {
+            warning("There is only one member, argument join.members ignored.")
+            join.members <- FALSE
       }
       y <- redim(y, drop = TRUE)
       y <- redim(y, member = FALSE, runtime = FALSE)
@@ -872,7 +889,7 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
 #end
 
 #' @title norain
-#' @description presprocess to bias correct precipitation data
+#' @description presprocess to bias correct precipitation data following Themeßl et al. (2012).
 #' @param o A vector (e.g. station data) containing the observed climate data for the training period
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param threshold The minimum value that is considered as a non-zero precipitation. Ignored for
@@ -884,8 +901,8 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
 
 norain <- function(o, p , threshold){
       nPo <- sum(as.double(o <= threshold & !is.na(o)), na.rm = TRUE)
-      nPp <- ceiling(length(p) * nPo / length(o))
-      if (nPo >= 0 & nPo < length(o)) {
+      nPp <- ceiling(length(which(!is.na(p))) * nPo / length(which(!is.na(o))))
+      if (nPo >= 0 & nPo < length(which(!is.na(o)))) {
             ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
             Ps <- sort(p, decreasing = FALSE, na.last = NA)
             Pth <- Ps[nPp + 1]
@@ -911,23 +928,23 @@ norain <- function(o, p , threshold){
                   Ps <- sort(Ps, decreasing = FALSE, na.last = NA)
             }
             if (nPo > 0) {
-                  ind <- min(nPp, length(p))
+                  ind <- min(nPp, length(which(!is.na(p))))
                   Ps[1:ind] <- 0
             }
             p[ix] <- Ps
+            
       } else {
-            if (nPo == length(o)) {
+            if (nPo == length(which(!is.na(o)))) {
                   ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
                   Ps <- sort(p, decreasing = FALSE, na.last = NA)
                   Pth <- Ps[nPp]
-                  ind <- min(nPp, length(p))
+                  ind <- min(nPp, length(which(!is.na(p))))
                   Ps[1:ind] <- 0
                   p[ix] <- Ps
             }
       }
       return(list("nP" = c(nPo,nPp), "Pth" = Pth, "p" = p)) 
 }
-
 #end
 
 #' @title Variance scaling of temperature
@@ -1051,7 +1068,6 @@ varCoeficient <- function(delta,data,cv){
 #' @author J Bedia
 
 flatMemberDim <- function(grid, station) {
-      isRegular(grid)
       grid <- redim(grid, member = TRUE, loc = station)     
       n.mem.join <- getShape(grid, "member")
       n.time.join <- getShape(grid, "time")
