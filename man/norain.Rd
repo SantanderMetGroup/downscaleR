@@ -15,7 +15,7 @@ norain(o, p, threshold)
 \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
 }
 \description{
-presprocess to bias correct precipitation data
+presprocess to bias correct precipitation data following Themeßl et al. (2012).
 }
 \author{
 S. Herrera and M. Iturbide
