@@ -4,7 +4,7 @@
 \alias{downs.train}
 \title{Switch to selected downscale method.}
 \usage{
-downs.train(x, y, method, ...)
+downs.train(x, y, method, model.verbose = "yes", ...)
 }
 \arguments{
 \item{x}{The input grid. Class: matrix.}
@@ -12,6 +12,10 @@ downs.train(x, y, method, ...)
 \item{y}{The observations dataset. Class: matrix.}
 
 \item{method}{Type of transer function. Options are: analogs, GLM and NN.}
+
+\item{model.verbose}{String value. Indicates wether the information concerning the model infered is limited to the 
+essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+recommended when you want to save memory. Only operates for GLM.}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. For this reason see the atomic functions for more details: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.}
 }

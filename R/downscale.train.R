@@ -23,6 +23,9 @@
 #' \code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
 #' \code{"LT"} = lower than, \code{"LE"} = lower or equal than.
 #' @param threshold Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the argument \code{condition}. Then condition is set to \code{"GE"}.
+#' @param model.verbose String value. Indicates wether the information concerning the model infered is limited to the 
+#' essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+#' recommended when you want to save memory. Only operates for GLM.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 #' Everything concerning these parameters is explained in the section \code{Details}. 
 #' However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
@@ -63,7 +66,9 @@
       #' The ‘factory-fresh’ default is na.omit. Another possible value is NULL, no action. Value na.exclude can be useful.
       #' }
     #' \item \code{fitting = "stepwise"} Indicates a stepwise regression via \code{\link[stats]{glm}} and \code{\link[stats]{step}}.
-    #' The optional parameters are the same than for fitting = NULL. The stepwise performs always a forward selection search stopping
+    #' The optional parameters are the same than for fitting = NULL. Stepwise can be performed backward or forward, as well as we can limit
+    #' the number of steps. This can be done by the additional optional parameter \code{stepwise.arg}, which is a list contatining two parameters that belong 
+    #' to \code{\link[stats]{step}}: steps and direction. An example would be: stepwise.arg = list(steps = 5, direction = "backward"). Default is NULL what indicates an unlimited forward stepwise search.
     #' \item \code{fitting = c("L1","L2","L1L2","gLASSO")}. These four options refer to ridge regression (L1 penalty), lasso regression (L2 penalty),
     #' elastic-net regression (L1L2 penalty) and group Lasso regression (group L2 penalty). The model is fitted via 
     #' \code{\link[glmnet]{glmnet}} and the corresponding penalties are found via \code{\link[glmnet]{cv.glmnet}}. This function \code{\link[glmnet]{glmnet}}
@@ -126,7 +131,7 @@
 #' # Plotting the results for station 5
 #' plot(y$Data[,5],model.analogs$pred$Data[,5], xlab = "obs", ylab = "pred")
 
-downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...) {
+downscale.train <- function(obj, method, condition = NULL, threshold = NULL, model.verbose = "yes", ...) {
   method <- match.arg(method, choices = c("analogs", "GLM", "NN"))
   if ( method == "GLM") {
     if (attr(obj, "nature") == "spatial+local") {
@@ -190,9 +195,9 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
       dates.y <- getRefDates(obj$y)[-ind]
     }
     if (method == "analogs") {
-      atomic_model <- downs.train(xx, yy, method, dates = dates.y, ...)}
+      atomic_model <- downs.train(xx, yy, method, model.verbose, dates = dates.y, ...)}
     else {      
-      atomic_model <- downs.train(xx, yy, method, ...)}
+      atomic_model <- downs.train(xx, yy, method, model.verbose, ...)}
     if (method == "analogs") {atomic_model$dates$test <- getRefDates(obj$y)}
     mat.p <- as.matrix(downs.predict(obj$x.global, method, atomic_model))}
   # Single-site
@@ -215,9 +220,9 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
       if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
       else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
       if (method == "analogs") {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, dates = getRefDates(obj$y)[ind], ...)}
+        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
       else {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, ...)}
+        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)}
       if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
       mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])
     }
@@ -241,9 +246,9 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
       if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
       else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
       if (method == "analogs") {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, dates = getRefDates(obj$y)[ind], ...)}
+        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
       else {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, ...)}
+        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)}
       if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
       mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])}
   }
@@ -266,13 +271,16 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, ...
 #' @param x The input grid. Class: matrix.
 #' @param y The observations dataset. Class: matrix.
 #' @param method Type of transer function. Options are: analogs, GLM and NN. 
+#' @param model.verbose String value. Indicates wether the information concerning the model infered is limited to the 
+#' essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+#' recommended when you want to save memory. Only operates for GLM.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. For this reason see the atomic functions for more details: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
 #' @return An object with the information of the selected model.
 #' @details The optional parameters of neural networks can be found in the library \pkg{deepnet} via \code{\link[deepnet]{nn.train}}This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.train}}.
 #' @author J. Bano-Medina
 #' @import deepnet 
 
-downs.train <- function(x, y, method, ...) {
+downs.train <- function(x, y, method, model.verbose = "yes", ...) {
   if (method == "NN") {
     arglist <- list(...)
     arglist[["x"]] <- x
@@ -283,7 +291,7 @@ downs.train <- function(x, y, method, ...) {
   
   switch(method,
          "analogs" = atomic_model <- analogs.train(x, y, ...),
-         "GLM"     = atomic_model <- glm.train(x, y, ...),
+         "GLM"     = atomic_model <- glm.train(x, y, model.verbose = model.verbose,...),
          "NN"      = atomic_model <- do.call("nn.train",arglist))
   
   

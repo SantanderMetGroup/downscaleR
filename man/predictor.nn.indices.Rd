@@ -32,4 +32,5 @@ Other downscaling.helpers: \code{\link{predictor.nn.values}},
 \author{
 J Bedia
 }
+\concept{downscaling.helpers}
 \keyword{internal}

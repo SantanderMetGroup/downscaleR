@@ -4,7 +4,8 @@
 \alias{downscale.train}
 \title{Calibration of downscaling methods}
 \usage{
-downscale.train(obj, method, condition = NULL, threshold = NULL, ...)
+downscale.train(obj, method, condition = NULL, threshold = NULL,
+  model.verbose = "yes", ...)
 }
 \arguments{
 \item{obj}{The object as returned by \code{\link[downscaleR]{prepareData}}.}
@@ -16,6 +17,10 @@ downscale.train(obj, method, condition = NULL, threshold = NULL, ...)
 \code{"LT"} = lower than, \code{"LE"} = lower or equal than.}
 
 \item{threshold}{Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the argument \code{condition}. Then condition is set to \code{"GE"}.}
+
+\item{model.verbose}{String value. Indicates wether the information concerning the model infered is limited to the 
+essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+recommended when you want to save memory. Only operates for GLM.}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 Everything concerning these parameters is explained in the section \code{Details}. 
@@ -68,7 +73,9 @@ The default is set by the na.action setting of options, and is na.fail if that i
 The ‘factory-fresh’ default is na.omit. Another possible value is NULL, no action. Value na.exclude can be useful.
 }
 \item \code{fitting = "stepwise"} Indicates a stepwise regression via \code{\link[stats]{glm}} and \code{\link[stats]{step}}.
-The optional parameters are the same than for fitting = NULL. The stepwise performs always a forward selection search stopping
+The optional parameters are the same than for fitting = NULL. Stepwise can be performed backward or forward, as well as we can limit
+the number of steps. This can be done by the additional optional parameter \code{stepwise.arg}, which is a list contatining two parameters that belong 
+to \code{\link[stats]{step}}: steps and direction. An example would be: stepwise.arg = list(steps = 5, direction = "backward"). Default is NULL what indicates an unlimited forward stepwise search.
 \item \code{fitting = c("L1","L2","L1L2","gLASSO")}. These four options refer to ridge regression (L1 penalty), lasso regression (L2 penalty),
 elastic-net regression (L1L2 penalty) and group Lasso regression (group L2 penalty). The model is fitted via 
 \code{\link[glmnet]{glmnet}} and the corresponding penalties are found via \code{\link[glmnet]{cv.glmnet}}. This function \code{\link[glmnet]{glmnet}}
@@ -129,3 +136,4 @@ Other downscaling.functions: \code{\link{downscale.cv}},
 \author{
 J. Bano-Medina
 }
+\concept{downscaling.functions}

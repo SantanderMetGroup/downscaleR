@@ -24,5 +24,11 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 * Replaced calls to bindGrid.time by bindGrid (the former not exported anymore)
 
 ## v3.0.3 (30 Aug 2018)
-* NAs are now removed from observation data series when using the scaling method  for biasCorrection.
+* NAs are now removed from observation data series when using the scaling method for biasCorrection.
+
+## v3.0.4 (23 Sep 2018)
+ * Add new CITATION
+ * Edited startup package message
+
+
 
