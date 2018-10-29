@@ -418,9 +418,9 @@ biasCorrectionXD <- function(y, x, newdata,
                                     message("[", Sys.time(), "] Bias-correcting ", attr(pred, "orig.mem.shape"), " members considering their joint distribution...")
                               }
                         }
-                        o = yw[, ,]
-                        p = pw[l, m, , ,] 
-                        s = sw[l, m, , ,]
+                        o = yw[, , , drop = FALSE]
+                        p = adrop(pw[l, m, , , , drop = FALSE], drop = c(T, T, F, F, F))
+                        s = adrop(sw[l, m, , , , drop = FALSE], drop = c(T, T, F, F, F))
                         data <- list(o, p, s)
                         if (!station) {
                               data <- lapply(1:length(data), function(x) {
@@ -690,7 +690,7 @@ pqm <- function(o, p, s, fitdistr.args, precip, pr.threshold){
       if (precip) {
             threshold <- pr.threshold
             if (any(!is.na(o))) {
-                  params <-  norain(o, p, threshold)
+                  params <-  adjustPrecipFreq(o, p, threshold)
                   p <- params$p
                   nP <- params$nP
                   Pth <- params$Pth
@@ -724,7 +724,7 @@ pqm <- function(o, p, s, fitdistr.args, precip, pr.threshold){
                   auxF <- do.call(statsfunp, statsfun.args)
                   statsfun.args <- c(list(auxF), as.list(obsGamma$estimate))
                   s[rain] <- do.call(statsfunq, statsfun.args)
-                  if (precip) s[noRain] <- 0
+                  if (precip) s[adjustPrecipFreq] <- 0
             } else {
                   warning("Fitting error for location and selected 'densfun'.")
             }
@@ -752,7 +752,7 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
       if (precip == TRUE) {
             threshold <- pr.threshold
             if (any(!is.na(o))) {
-                  params <-  norain(o, p, threshold)
+                  params <-  adjustPrecipFreq(o, p, threshold)
                   p <- params$p
                   nP <- params$nP
                   Pth <- params$Pth
@@ -849,7 +849,7 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
       } else {
             threshold <- pr.threshold
             if (any(!is.na(o))) {
-                  params <-  norain(o, p, threshold)
+                  params <-  adjustPrecipFreq(o, p, threshold)
                   p <- params$p
                   nP <- params$nP
                   Pth <- params$Pth
@@ -888,43 +888,54 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
 
 #end
 
-#' @title norain
-#' @description presprocess to bias correct precipitation data following Themeßl et al. (2012).
+#' @title adjustPrecipFreq
+#' @description Adjusts precipitation frequency in 'p' (prediction) to the observed frequency in 'o'. 
+#' It constitutes a preprocess to bias correct precipitation data following Themeßl et al. (2012). 
 #' @param o A vector (e.g. station data) containing the observed climate data for the training period
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param threshold The minimum value that is considered as a non-zero precipitation. Ignored for
-#'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). 
+#'  \code{varcode} values different from \code{"pr"}. Default to 1 in the main function 
+#'  biasCorrection (assuming mm). 
 #' @importFrom MASS fitdistr
 #' @keywords internal
 #' @importFrom stats rgamma
 #' @author S. Herrera and M. Iturbide
 
-norain <- function(o, p , threshold){
-      nPo <- sum(as.double(o <= threshold & !is.na(o)), na.rm = TRUE)
+adjustPrecipFreq <- function(o, p , threshold){
+      # Number of dry days in 'o' 
+      nPo <- sum(as.double(o < threshold & !is.na(o)), na.rm = TRUE)
+      # Number of dry days that must be in 'p' to equal precip frequency in 'o'
       nPp <- ceiling(length(which(!is.na(p))) * nPo / length(which(!is.na(o))))
       if (nPo >= 0 & nPo < length(which(!is.na(o)))) {
+            # Index and values of ordered 'p'
             ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
             Ps <- sort(p, decreasing = FALSE, na.last = NA)
+            # pr.threshold in 'p' 
             Pth <- Ps[nPp + 1]
-            if (Pth <= threshold) {
+            # If the threshold is lower in 'p' than in 'o'... 
+            if (Pth < threshold) {  # Themeßl modification (simulating rain for model dry days) 
+                  # Order 'o' values
                   Os <- sort(o, decreasing = FALSE, na.last = NA)
-                  indP <- which(Ps > threshold & !is.na(Ps))
+                  indP <- which(Ps >= threshold & !is.na(Ps))
                   if (length(indP) == 0) {
+                        # If there are no precipitation days (over threshold) in 'p'...
                         indP <- max(which(!is.na(Ps)))
                         indO <- min(c(length(Os), ceiling(length(Os) * indP/length(Ps))))
                   } else {
-                        indP <- min(which(Ps > threshold & !is.na(Ps)))
+                        indP <- min(which(Ps >= threshold & !is.na(Ps)))
                         indO <- ceiling(length(Os) * indP/length(Ps))
                   }
                   # [Shape parameter Scale parameter]
                   if (length(unique(Os[(nPo + 1):indO])) < 6) {
                         Ps[(nPp + 1):indP] <- mean(Os[(nPo + 1):indO], na.rm = TRUE)
                   } else {
+                        # simulate precip for 'p' with a gamma adjusted in 'o' for values between
                         auxOs <- Os[(nPo + 1):indO]
                         auxOs <- auxOs[which(!is.na(auxOs))]
                         auxGamma <- fitdistr(auxOs, "gamma")
                         Ps[(nPp + 1):indP] <- rgamma(indP - nPp, auxGamma$estimate[1], rate = auxGamma$estimate[2])
                   }
+                  # order 'Ps' after simulation
                   Ps <- sort(Ps, decreasing = FALSE, na.last = NA)
             }
             if (nPo > 0) {
