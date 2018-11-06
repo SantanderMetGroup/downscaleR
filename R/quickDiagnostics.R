@@ -27,10 +27,11 @@
 #' #quickDiagnostics(obs = y, raw = x, location = c(-2, 43), type = "interannual")
 #' eqm1win <- biasCorrection(y = y, x = x,
 #'                           method = "eqm",
+#'                           precipitation = TRUE,
 #'                           extrapolation = "none")
 #' quickDiagnostics(y, x, eqm1win)
 #' quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
-#' #quickDiagnostics(obs = y, raw = x, downscaled = eqm1win, 
+#' #quickDiagnostics(obs = y, raw = x, downscaled = eqm1win,
 #' # location = c(-2, 43), type = "interannual")
 #' }
 

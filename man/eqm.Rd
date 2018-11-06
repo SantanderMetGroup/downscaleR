@@ -13,14 +13,20 @@ eqm(o, p, s, precip, pr.threshold, n.quantiles, extrapolation)
 
 \item{s}{A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.}
 
-\item{precip}{Logical indicating if o, p, s is precipitation data.}
+\item{precip}{Logical for precipitation data. If TRUE Adjusts precipitation 
+frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
+precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+parameter \code{pr.threshold} is used (see below).}
 
-\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
-\code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
+\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored when 
+\code{precip = FALSE}. See details in function \code{biasCorrection}.}
+
+\item{n.quantiles}{Integer indicating the number of quantiles to be considered when method = "eqm". Default is NULL, 
+that considers all quantiles, i.e. \code{n.quantiles = length(p)}.}
 
 \item{extrapolation}{Character indicating the extrapolation method to be applied to correct values in
 \code{"s"} that are out of the range of \code{"p"}. Extrapolation is applied only to the \code{"eqm"} method, 
-thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).}
+thus, this argument is ignored if other bias correction method is selected.}
 }
 \description{
 Implementation of Empirical Quantile Mapping method for bias correction

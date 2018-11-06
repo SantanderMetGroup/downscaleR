@@ -16,22 +16,31 @@ biasCorrection1D(o, p, s, method, scaling.type, fitdistr.args, precip,
 \item{s}{A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-\code{"scaling"}, \code{"pqm"}, \code{"gpqm"}, \code{"variance"}, \code{"loci"} and \code{"ptr"}.}
+\code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details in 
+function \code{\link{biasCorrection}}.}
 
-\item{scaling.type}{Character indicating the type of the scaling method. Options are \code{"additive"} (default)
-or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not selected as the bias correction method.}
+\item{scaling.type}{Character indicating the type of the scaling method. Options are \code{"additive"} 
+or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
+selected as the bias correction method.}
 
-\item{fitdistr.args}{Distribution to use when applying the "pqm" method (parametric quantile mapping).
-Choices are "gamma" or "gaussian" (see details).}
+\item{fitdistr.args}{Further arguments passed to function \code{\link[MASS]{fitdistr}} 
+(\code{densfun}, \code{start}, \code{...}). Only used when applying the "pqm" method 
+(parametric quantile mapping). Please, read the \code{\link[MASS]{fitdistr}} help 
+document  carefully before setting the parameters in \code{fitdistr.args}.}
 
-\item{precip}{Logical indicating if o, p, s is precipitation data.}
+\item{precip}{Logical for precipitation data. If TRUE Adjusts precipitation 
+frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
+precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+parameter \code{pr.threshold} is used (see below).}
 
-\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
-\code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
+\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored when 
+\code{precip = FALSE}. See details in function \code{biasCorrection}.}
+
+\item{n.quantiles}{Integer indicating the number of quantiles to be considered when method = "eqm".}
 
 \item{extrapolation}{Character indicating the extrapolation method to be applied to correct values in
-\code{"s"} that are out of the range of \code{"p"}. Extrapolation is applied only to the \code{"eqm"} method, 
-thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).}
+\code{newdata} that are out of the range of \code{x}. Extrapolation is applied only to the \code{"eqm"} method, 
+thus, this argument is ignored if other bias correction method is selected.}
 
 \item{theta}{numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 

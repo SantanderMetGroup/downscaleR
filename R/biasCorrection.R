@@ -21,18 +21,20 @@
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 #'  \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.
-#' @param precipitation Logical indicating if the data to be corrected is precipitation data.
-#' @param cross.val Should cross-validation be performed? methods available are leave-one-out ("loo") 
-#' and k-fold ("kfold") on an annual basis. The default option ("none") does not perform cross-validation.
-#' @param folds Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
-#' the corresponding fold.
-#' @param wet.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
-#'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). See details on bias correction for precipitation.
+#' @param precipitation Logical for precipitation data (default to FALSE). If TRUE Adjusts precipitation 
+#' frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
+#' precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+#' parameter \code{wet.threshold} is used (see below).
+#' @param cross.val Logical (default to FALSE). Should cross-validation be performed? methods available are 
+#' leave-one-out ("loo") and k-fold ("kfold") on an annual basis. The default option ("none") does not 
+#' perform cross-validation.
+#' @param folds Only requiered if \code{cross.val = "kfold"}. A list of vectors, each containing the years 
+#' to be grouped in the corresponding fold.
+#' @param wet.threshold The minimum value that is considered as a non-zero precipitation. Ignored when 
+#' \code{precipitation = FALSE}. Default to 1 (assuming mm). See details on bias correction for precipitation.
 #' @param window vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
-#' target days (days that are being corrected). If the window length = 1, the window width is no larger than the 
-#' target days. The window is centered on the target day/s (window width >= target days). 
-#' Default to \code{NULL}, which considers the whole period available.
-#' 
+#' target days (days that are being corrected). The window is centered on the target day/s 
+#' (window width >= target days). Default to \code{NULL}, which considers the whole period.
 #' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
 #' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
 #' selected as the bias correction method.
@@ -41,7 +43,8 @@
 #' (parametric quantile mapping). Please, read the \code{\link[MASS]{fitdistr}} help 
 #' document  carefully before setting the parameters in \code{fitdistr.args}.
 #' @param n.quantiles Integer indicating the number of quantiles to be considered when method = "eqm". Default is NULL, 
-#' that considers all quantiles, i.e. \code{n.quantiles = length(x[i,j])} (being \code{i} and \code{j} the coordinates in a single location).
+#' that considers all quantiles, i.e. \code{n.quantiles = length(x[i,j])} (being \code{i} and \code{j} the 
+#' coordinates in a single location).
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
 #' \code{newdata} that are out of the range of \code{x}. Extrapolation is applied only to the \code{"eqm"} method, 
 #' thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).
@@ -213,7 +216,6 @@
 #' newdata <- CORDEX_Iberia_tas.rcp85
 #' eqm1win <- biasCorrection(y = y, x = x,
 #'                           newdata = newdata,
-#'                           precipitation = TRUE,
 #'                           method = "eqm",
 #'                           extrapolation = "constant",
 #'                           window = c(30, 15),
@@ -425,12 +427,12 @@ biasCorrectionXD <- function(y, x, newdata,
                         if (!station) {
                               data <- lapply(1:length(data), function(x) {
                                     attr(data[[x]], "dimensions") <- dimNames
-                                    array3Dto2Dmat(data[[x]])
+                                    abind(array3Dto2Dmat(data[[x]]), along = 3)
                               }) 
                         }
-                        o <- lapply(seq_len(ncol(data[[1]])), function(i) data[[1]][,i])
-                        p <- lapply(seq_len(ncol(data[[2]])), function(i) data[[2]][,i])
-                        s <- lapply(seq_len(ncol(data[[3]])), function(i) data[[3]][,i])
+                        o <- lapply(seq_len(ncol(data[[1]])), function(i) data[[1]][,i,1])
+                        p <- lapply(seq_len(ncol(data[[2]])), function(i) data[[2]][,i,1])
+                        s <- lapply(seq_len(ncol(data[[3]])), function(i) data[[3]][,i,1])
                         mat <- biasCorrection1D(o, p, s,
                                                 method = method,
                                                 scaling.type = scaling.type,
@@ -482,7 +484,7 @@ biasCorrectionXD <- function(y, x, newdata,
 #' @param window vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
 #' target days (days that are being corrected). If the window length = 1 the window width is no larger than the 
 #' target days. The window is centered on the target day/s (window width >= target days). 
-#' @param delta.method logical (default is FALSE)
+#' @param delta.method Logical (default is FALSE).
 #' @keywords internal
 #' @author M. Iturbide
 
@@ -567,22 +569,32 @@ getWindowIndex <- function(y, x, newdata, window, delta.method = FALSE){
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"pqm"}, \code{"gpqm"}, \code{"variance"}, \code{"loci"} and \code{"ptr"}. 
-#' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
-#' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not selected as the bias correction method.
-#' @param precip Logical indicating if o, p, s is precipitation data.
-#' @param  fitdistr.args Distribution to use when applying the "pqm" method (parametric quantile mapping).
-#' Choices are "gamma" or "gaussian" (see details).
-#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
-#'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). 
+#'  \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details in 
+#'  function \code{\link{biasCorrection}}.
+#' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} 
+#' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
+#' selected as the bias correction method.
+#' @param  fitdistr.args Further arguments passed to function \code{\link[MASS]{fitdistr}} 
+#' (\code{densfun}, \code{start}, \code{...}). Only used when applying the "pqm" method 
+#' (parametric quantile mapping). Please, read the \code{\link[MASS]{fitdistr}} help 
+#' document  carefully before setting the parameters in \code{fitdistr.args}.
+#' @param precip Logical for precipitation data. If TRUE Adjusts precipitation 
+#' frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
+#' precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+#' parameter \code{pr.threshold} is used (see below).
+#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored when 
+#' \code{precip = FALSE}. See details in function \code{biasCorrection}.
+#' @param n.quantiles Integer indicating the number of quantiles to be considered when method = "eqm". 
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
-#' \code{"s"} that are out of the range of \code{"p"}. Extrapolation is applied only to the \code{"eqm"} method, 
-#' thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).
+#' \code{newdata} that are out of the range of \code{x}. Extrapolation is applied only to the \code{"eqm"} method, 
+#' thus, this argument is ignored if other bias correction method is selected.
 #' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 #' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 #' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
 #' percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.
 #' @template templateParallelParams
+#' 
+#' 
 #' @importFrom transformeR parallelCheck selectPar.pplyFun
 #' @keywords internal
 #' @author M. Iturbide
@@ -623,7 +635,64 @@ biasCorrection1D <- function(o, p, s,
       }
 }
 
+#' @title adjustPrecipFreq
+#' @description Adjusts precipitation frequency in 'p' (prediction) to the observed frequency in 'o'. 
+#' It constitutes a preprocess to bias correct precipitation data following Themeßl et al. (2012). 
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param threshold The minimum value that is considered as a non-zero precipitation. 
+#' @importFrom MASS fitdistr
+#' @keywords internal
+#' @importFrom stats rgamma
+#' @author S. Herrera and M. Iturbide
 
+adjustPrecipFreq <- function(o, p , threshold){
+      nPo <- sum(as.double(o <= threshold & !is.na(o)), na.rm = TRUE)
+      nPp <- ceiling(length(which(!is.na(p))) * nPo / length(which(!is.na(o))))
+      if (nPo >= 0 & nPo < length(which(!is.na(o)))) {
+            ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
+            Ps <- sort(p, decreasing = FALSE, na.last = NA)
+            Pth <- Ps[nPp + 1]
+            if (Pth <= threshold) {
+                  Os <- sort(o, decreasing = FALSE, na.last = NA)
+                  indP <- which(Ps > threshold & !is.na(Ps))
+                  if (length(indP) == 0) {
+                        indP <- max(which(!is.na(Ps)))
+                        indO <- min(c(length(Os), ceiling(length(Os) * indP/length(Ps))))
+                  } else {
+                        indP <- min(which(Ps > threshold & !is.na(Ps)))
+                        indO <- ceiling(length(Os) * indP/length(Ps))
+                  }
+                  # [Shape parameter Scale parameter]
+                  if (length(unique(Os[(nPo + 1):indO])) < 6) {
+                        Ps[(nPp + 1):indP] <- mean(Os[(nPo + 1):indO], na.rm = TRUE)
+                  } else {
+                        auxOs <- Os[(nPo + 1):indO]
+                        auxOs <- auxOs[which(!is.na(auxOs))]
+                        auxGamma <- fitdistr(auxOs, "gamma")
+                        Ps[(nPp + 1):indP] <- rgamma(indP - nPp, auxGamma$estimate[1], rate = auxGamma$estimate[2])
+                  }
+                  Ps <- sort(Ps, decreasing = FALSE, na.last = NA)
+            }
+            if (nPo > 0) {
+                  ind <- min(nPp, length(which(!is.na(p))))
+                  Ps[1:ind] <- 0
+            }
+            p[ix] <- Ps
+            
+      } else {
+            if (nPo == length(which(!is.na(o)))) {
+                  ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
+                  Ps <- sort(p, decreasing = FALSE, na.last = NA)
+                  Pth <- Ps[nPp]
+                  ind <- min(nPp, length(which(!is.na(p))))
+                  Ps[1:ind] <- 0
+                  p[ix] <- Ps
+            }
+      }
+      return(list("nP" = c(nPo,nPp), "Pth" = Pth, "p" = p)) 
+}
+#end
 
 #' @title Delta method for bias correction
 #' @description Implementation of Delta method for bias correction 
@@ -664,13 +733,16 @@ scaling <- function(o, p, s, scaling.type){
 #' @param o A vector (e.g. station data) containing the observed climate data for the training period
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{x}, but considering the test period.
-#' @param precip Logical indicating if o, p, s is precipitation data.
 #' @param  fitdistr.args Further arguments passed to function \code{\link[MASS]{fitdistr}} 
 #' (\code{densfun}, \code{start}, \code{...}). Only used when applying the "pqm" method 
 #' (parametric quantile mapping). Please, read the \code{\link[MASS]{fitdistr}} help 
 #' document  carefully before parameter setting in \code{fitdistr.args}.
-#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
-#'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). 
+#' @param precip Logical for precipitation data. If TRUE Adjusts precipitation 
+#' frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
+#' precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+#' parameter \code{pr.threshold} is used (see below).
+#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored when 
+#' \code{precip = FALSE}. See details in function \code{biasCorrection}.
 #' @importFrom MASS fitdistr
 #' @importFrom stats pgamma qgamma 
 #' @keywords internal
@@ -724,7 +796,7 @@ pqm <- function(o, p, s, fitdistr.args, precip, pr.threshold){
                   auxF <- do.call(statsfunp, statsfun.args)
                   statsfun.args <- c(list(auxF), as.list(obsGamma$estimate))
                   s[rain] <- do.call(statsfunq, statsfun.args)
-                  if (precip) s[adjustPrecipFreq] <- 0
+                  if (precip) s[noRain] <- 0
             } else {
                   warning("Fitting error for location and selected 'densfun'.")
             }
@@ -738,12 +810,17 @@ pqm <- function(o, p, s, fitdistr.args, precip, pr.threshold){
 #' @param o A vector (e.g. station data) containing the observed climate data for the training period
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
-#' @param precip Logical indicating if o, p, s is precipitation data.
-#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
-#'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). 
+#' @param precip Logical for precipitation data. If TRUE Adjusts precipitation 
+#' frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
+#' precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+#' parameter \code{pr.threshold} is used (see below).
+#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored when 
+#' \code{precip = FALSE}. See details in function \code{biasCorrection}.
+#' @param n.quantiles Integer indicating the number of quantiles to be considered when method = "eqm". Default is NULL, 
+#' that considers all quantiles, i.e. \code{n.quantiles = length(p)}.
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
 #' \code{"s"} that are out of the range of \code{"p"}. Extrapolation is applied only to the \code{"eqm"} method, 
-#' thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).
+#' thus, this argument is ignored if other bias correction method is selected. 
 #' @keywords internal
 #' @importFrom stats approxfun ecdf quantile
 #' @author S. Herrera and M. Iturbide
@@ -829,13 +906,16 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
 #' @param o A vector (e.g. station data) containing the observed climate data for the training period
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
-#' @param precip Logical indicating if o, p, s is precipitation data.
-#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored for
-#'  \code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). 
+#' @param precip Logical for precipitation data. If TRUE Adjusts precipitation 
+#' frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
+#' precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+#' parameter \code{pr.threshold} is used (see below).
+#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored when 
+#' \code{precip = FALSE}. See details in function \code{biasCorrection}.
 #' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 #' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 #' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
-#' percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.
+#' percentile (5th percentile for the left tail). 
 #' @importFrom evd fpot
 #' @importFrom MASS fitdistr
 #' @importFrom evd qgpd pgpd
@@ -888,75 +968,6 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
 
 #end
 
-#' @title adjustPrecipFreq
-#' @description Adjusts precipitation frequency in 'p' (prediction) to the observed frequency in 'o'. 
-#' It constitutes a preprocess to bias correct precipitation data following Themeßl et al. (2012). 
-#' @param o A vector (e.g. station data) containing the observed climate data for the training period
-#' @param p A vector containing the simulated climate by the model for the training period. 
-#' @param threshold The minimum value that is considered as a non-zero precipitation. Ignored for
-#'  \code{varcode} values different from \code{"pr"}. Default to 1 in the main function 
-#'  biasCorrection (assuming mm). 
-#' @importFrom MASS fitdistr
-#' @keywords internal
-#' @importFrom stats rgamma
-#' @author S. Herrera and M. Iturbide
-
-adjustPrecipFreq <- function(o, p , threshold){
-      # Number of dry days in 'o' 
-      nPo <- sum(as.double(o < threshold & !is.na(o)), na.rm = TRUE)
-      # Number of dry days that must be in 'p' to equal precip frequency in 'o'
-      nPp <- ceiling(length(which(!is.na(p))) * nPo / length(which(!is.na(o))))
-      if (nPo >= 0 & nPo < length(which(!is.na(o)))) {
-            # Index and values of ordered 'p'
-            ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
-            Ps <- sort(p, decreasing = FALSE, na.last = NA)
-            # pr.threshold in 'p' 
-            Pth <- Ps[nPp + 1]
-            # If the threshold is lower in 'p' than in 'o'... 
-            if (Pth < threshold) {  # Themeßl modification (simulating rain for model dry days) 
-                  # Order 'o' values
-                  Os <- sort(o, decreasing = FALSE, na.last = NA)
-                  indP <- which(Ps >= threshold & !is.na(Ps))
-                  if (length(indP) == 0) {
-                        # If there are no precipitation days (over threshold) in 'p'...
-                        indP <- max(which(!is.na(Ps)))
-                        indO <- min(c(length(Os), ceiling(length(Os) * indP/length(Ps))))
-                  } else {
-                        indP <- min(which(Ps >= threshold & !is.na(Ps)))
-                        indO <- ceiling(length(Os) * indP/length(Ps))
-                  }
-                  # [Shape parameter Scale parameter]
-                  if (length(unique(Os[(nPo + 1):indO])) < 6) {
-                        Ps[(nPp + 1):indP] <- mean(Os[(nPo + 1):indO], na.rm = TRUE)
-                  } else {
-                        # simulate precip for 'p' with a gamma adjusted in 'o' for values between
-                        auxOs <- Os[(nPo + 1):indO]
-                        auxOs <- auxOs[which(!is.na(auxOs))]
-                        auxGamma <- fitdistr(auxOs, "gamma")
-                        Ps[(nPp + 1):indP] <- rgamma(indP - nPp, auxGamma$estimate[1], rate = auxGamma$estimate[2])
-                  }
-                  # order 'Ps' after simulation
-                  Ps <- sort(Ps, decreasing = FALSE, na.last = NA)
-            }
-            if (nPo > 0) {
-                  ind <- min(nPp, length(which(!is.na(p))))
-                  Ps[1:ind] <- 0
-            }
-            p[ix] <- Ps
-            
-      } else {
-            if (nPo == length(which(!is.na(o)))) {
-                  ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
-                  Ps <- sort(p, decreasing = FALSE, na.last = NA)
-                  Pth <- Ps[nPp]
-                  ind <- min(nPp, length(which(!is.na(p))))
-                  Ps[1:ind] <- 0
-                  p[ix] <- Ps
-            }
-      }
-      return(list("nP" = c(nPo,nPp), "Pth" = Pth, "p" = p)) 
-}
-#end
 
 #' @title Variance scaling of temperature
 #' @description Implementation of Variance scaling of temperature method for bias correction
@@ -996,7 +1007,8 @@ variance <- function(o, p, s, precip) {
 #' @param p A vector containing the simulated climate by the model for the training or test period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param precip Logical indicating if o, p, s is precipitation data.
-#' @param pr.threshold The minimum value that is considered as a non-zero precipitation.
+#' @param pr.threshold The minimum value that is considered as a non-zero precipitation. Ignored when 
+#' \code{precip = FALSE}. See details in function \code{biasCorrection}.
 #' @author B. Szabo-Takacs
 
 loci <- function(o, p, s, precip, pr.threshold){

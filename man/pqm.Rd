@@ -18,10 +18,13 @@ pqm(o, p, s, fitdistr.args, precip, pr.threshold)
 (parametric quantile mapping). Please, read the \code{\link[MASS]{fitdistr}} help 
 document  carefully before parameter setting in \code{fitdistr.args}.}
 
-\item{precip}{Logical indicating if o, p, s is precipitation data.}
+\item{precip}{Logical for precipitation data. If TRUE Adjusts precipitation 
+frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
+precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+parameter \code{pr.threshold} is used (see below).}
 
-\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
-\code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
+\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored when 
+\code{precip = FALSE}. See details in function \code{biasCorrection}.}
 }
 \description{
 Implementation of Parametric Quantile Mapping method for bias correction

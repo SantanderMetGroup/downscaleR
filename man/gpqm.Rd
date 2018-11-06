@@ -13,15 +13,18 @@ gpqm(o, p, s, precip, pr.threshold, theta)
 
 \item{s}{A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.}
 
-\item{precip}{Logical indicating if o, p, s is precipitation data.}
+\item{precip}{Logical for precipitation data. If TRUE Adjusts precipitation 
+frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
+precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+parameter \code{pr.threshold} is used (see below).}
 
-\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
-\code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm).}
+\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored when 
+\code{precip = FALSE}. See details in function \code{biasCorrection}.}
 
 \item{theta}{numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
-percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.}
+percentile (5th percentile for the left tail).}
 }
 \description{
 Implementation of Generalized Quantile Mapping method for bias correction

@@ -15,7 +15,8 @@ loci(o, p, s, precip, pr.threshold)
 
 \item{precip}{Logical indicating if o, p, s is precipitation data.}
 
-\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation.}
+\item{pr.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored when 
+\code{precip = FALSE}. See details in function \code{biasCorrection}.}
 }
 \description{
 Implementation of Local intensity scaling of precipitation method for bias correction based on Vincent Moron's local_scaling function in weaclim toolbox in Matlab

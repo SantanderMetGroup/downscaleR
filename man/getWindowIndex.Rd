@@ -15,7 +15,7 @@ getWindowIndex(y, x, newdata, window, delta.method = FALSE)
 target days (days that are being corrected). If the window length = 1 the window width is no larger than the 
 target days. The window is centered on the target day/s (window width >= target days).}
 
-\item{delta.method}{logical (default is FALSE)}
+\item{delta.method}{Logical (default is FALSE).}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.}
