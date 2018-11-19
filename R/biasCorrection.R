@@ -638,59 +638,49 @@ biasCorrection1D <- function(o, p, s,
 #' @title adjustPrecipFreq
 #' @description Adjusts precipitation frequency in 'p' (prediction) to the observed frequency in 'o'. 
 #' It constitutes a preprocess to bias correct precipitation data following Themeßl et al. (2012). 
-#' @param o A vector (e.g. station data) containing the observed climate data for the training period
-#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param obs A vector (e.g. station data) containing the observed climate data for the training period
+#' @param pred A vector containing the simulated climate by the model for the training period. 
 #' @param threshold The minimum value that is considered as a non-zero precipitation. 
 #' @importFrom MASS fitdistr
 #' @keywords internal
 #' @importFrom stats rgamma
 #' @author S. Herrera and M. Iturbide
 
-adjustPrecipFreq <- function(o, p , threshold){
-      nPo <- sum(as.double(o <= threshold & !is.na(o)), na.rm = TRUE)
-      nPp <- ceiling(length(which(!is.na(p))) * nPo / length(which(!is.na(o))))
-      if (nPo >= 0 & nPo < length(which(!is.na(o)))) {
-            ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
-            Ps <- sort(p, decreasing = FALSE, na.last = NA)
-            Pth <- Ps[nPp + 1]
-            if (Pth <= threshold) {
-                  Os <- sort(o, decreasing = FALSE, na.last = NA)
-                  indP <- which(Ps > threshold & !is.na(Ps))
-                  if (length(indP) == 0) {
-                        indP <- max(which(!is.na(Ps)))
-                        indO <- min(c(length(Os), ceiling(length(Os) * indP/length(Ps))))
-                  } else {
-                        indP <- min(which(Ps > threshold & !is.na(Ps)))
-                        indO <- ceiling(length(Os) * indP/length(Ps))
-                  }
-                  # [Shape parameter Scale parameter]
-                  if (length(unique(Os[(nPo + 1):indO])) < 6) {
-                        Ps[(nPp + 1):indP] <- mean(Os[(nPo + 1):indO], na.rm = TRUE)
-                  } else {
-                        auxOs <- Os[(nPo + 1):indO]
-                        auxOs <- auxOs[which(!is.na(auxOs))]
-                        auxGamma <- fitdistr(auxOs, "gamma")
-                        Ps[(nPp + 1):indP] <- rgamma(indP - nPp, auxGamma$estimate[1], rate = auxGamma$estimate[2])
-                  }
-                  Ps <- sort(Ps, decreasing = FALSE, na.last = NA)
+adjustPrecipFreq <- function(obs, pred, threshold){
+      o <- obs[!is.na(obs)]
+      p <- pred[!is.na(pred)]
+      # Number of dry days in 'o' 
+      nPo <- sum(as.double(o < threshold))
+      # Number of dry days that must be in 'p' to equal precip frequency in 'o'
+      nPp <- ceiling(length(p) * nPo / length(o))
+      # Index and values of ordered 'p'
+      ix <- sort(p, decreasing = FALSE, index.return = TRUE)$ix
+      Ps <- sort(p, decreasing = FALSE)
+      Pth <- max(Ps[nPp:(nPp + 1)], na.rm = TRUE) # in case nPp == length(Ps)
+      # Themeßl (Themessl) modification (simulating rain for model dry days) 
+      inddrzl <- which(Ps[(nPp + 1):length(Ps)] < threshold)
+      if (length(inddrzl) > 0) { 
+            Os <- sort(o, decreasing = FALSE, na.last = NA)
+            indO <- ceiling(length(Os) * (nPp + max(inddrzl))/length(Ps))
+            auxOs <- Os[(nPo + 1):indO]
+            if (length(unique(auxOs)) > 6) {
+                  # simulate precip for 'p' with a gamma adjusted in 'o' for values between
+                  auxGamma <- fitdistr(auxOs, "gamma")
+                  Ps[(nPp + 1):(nPp + max(inddrzl))] <- rgamma(length(inddrzl), auxGamma$estimate[1], rate = auxGamma$estimate[2])
+            } else {
+                  Ps[(nPp + 1):(nPp + max(inddrzl))] <- mean(auxOs)
             }
-            if (nPo > 0) {
-                  ind <- min(nPp, length(which(!is.na(p))))
-                  Ps[1:ind] <- 0
-            }
-            p[ix] <- Ps
-            
-      } else {
-            if (nPo == length(which(!is.na(o)))) {
-                  ix <- sort(p, decreasing = FALSE, na.last = NA, index.return = TRUE)$ix
-                  Ps <- sort(p, decreasing = FALSE, na.last = NA)
-                  Pth <- Ps[nPp]
-                  ind <- min(nPp, length(which(!is.na(p))))
-                  Ps[1:ind] <- 0
-                  p[ix] <- Ps
-            }
+            # order 'Ps' after simulation
+            Ps <- sort(Ps, decreasing = FALSE, na.last = NA)
       }
-      return(list("nP" = c(nPo,nPp), "Pth" = Pth, "p" = p)) 
+      # Make 0-s
+      if (nPo > 0) {
+            ind <- min(nPp, length(p))
+            Ps[1:ind] <- 0
+      }
+      p[ix] <- Ps
+      pred[!is.na(pred)] <- p
+      return(list("nP" = c(nPo,nPp), "Pth" = Pth, "p" = pred)) 
 }
 #end
 
