@@ -107,7 +107,7 @@ glm.train <- function(x, y, fitting = NULL, simulate = "no", model.verbose = "ye
   if (model.verbose == "no") {
     weights$fitted.values <- NULL
     weights$effects <- NULL
-    weights$qr$qr <- NULL
+    # weights$qr$qr <- NULL
     weights$fitted.values <- NULL
     weights$linear.predictors <- NULL
     weights$prior.weights <- NULL
@@ -139,13 +139,13 @@ glm.predict <- function(x, weights, info) {
     pred <- drop(predict(weights,x,type = "response"))
   }
   if (info$simulate == "yes") {
-    if (info$family == "binomial") {
+    if (info$family$family == "binomial") {
       rnd <- runif(length(pred), min = 0, max = 1)
       ind01 <- which(pred > rnd)
       pred[ind01] <- 1
       pred[-ind01] <- 0
     }
-    else if (info$family == "Gamma") {
+    else if (info$family$family == "Gamma") {
       pred <- rgamma(n = length(pred), shape = 1/summary(weights)$dispersion, scale = summary(weights)$dispersion * pred)
     }
   }

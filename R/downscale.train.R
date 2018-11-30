@@ -187,18 +187,18 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
     xx <- obj$x.global
     yy <- mat.y
     dates.y <- getRefDates(obj$y)
-    if (anyNA(yy)) {
-      ind <- sapply(1:ncol(yy),FUN = function(z){which(is.na(yy[,z]))}) %>% unlist() %>% unique()
-      message(paste(round(length(ind)/nrow(yy)*100,digits = 2),"% of observations contains NaN, removed from the training phase ..."))
-      yy <- yy[-ind,,drop = FALSE]
-      xx <- xx[-ind,,drop = FALSE]
-      dates.y <- getRefDates(obj$y)[-ind]
-    }
     if (method == "analogs") {
-      atomic_model <- downs.train(xx, yy, method, model.verbose, dates = dates.y, ...)}
+      atomic_model <- downs.train(xx, yy, method, model.verbose, dates = dates.y, ...)
+      atomic_model$dates$test <- getRefDates(obj$y)}
     else {      
+      if (anyNA(yy)) {
+        ind <- sapply(1:ncol(yy),FUN = function(z){which(is.na(yy[,z]))}) %>% unlist() %>% unique()
+        message(paste(round(length(ind)/nrow(yy)*100,digits = 2),"% of observations contains NaN, removed from the training phase ..."))
+        yy <- yy[-ind,,drop = FALSE]
+        xx <- xx[-ind,,drop = FALSE]
+        dates.y <- getRefDates(obj$y)[-ind]
+      }
       atomic_model <- downs.train(xx, yy, method, model.verbose, ...)}
-    if (method == "analogs") {atomic_model$dates$test <- getRefDates(obj$y)}
     mat.p <- as.matrix(downs.predict(obj$x.global, method, atomic_model))}
   # Single-site
   else if (site == "single") {
