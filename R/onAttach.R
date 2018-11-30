@@ -3,7 +3,7 @@
 
 .onAttach <- function(...) {
       pkgname <- "downscaleR"
-      lib <- system.file(package = pkgname)
+      # lib <- system.file(package = pkgname)
       ver <- packageDescription(pkgname)$Version
       builddate <- packageDescription(pkgname)$Date
       mess <- paste(pkgname, " version ", ver, " (", builddate,") is loaded", sep = "")
@@ -25,6 +25,7 @@
                   packageStartupMessage(ver.mess)
             }
       }
+      packageStartupMessage("Please use 'citation(\"downscaleR\")' to cite this package.")
 }
 # End
 

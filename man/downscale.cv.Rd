@@ -7,8 +7,8 @@
 downscale.cv(x, y, method, sampling.strategy = "kfold.chronological",
   folds = 4, scale.list = NULL, global.vars = NULL,
   combined.only = TRUE, spatial.predictors = NULL,
-  local.predictors = NULL, extended.predictors = NULL, condition = NULL,
-  threshold = NULL, ...)
+  local.predictors = NULL, extended.predictors = NULL,
+  condition = NULL, threshold = NULL, ...)
 }
 \arguments{
 \item{x}{The input grid (admits both single and multigrid, see \code{\link[transformeR]{makeMultiGrid}}). It should be an object as returned by \pkg{loadeR}.}
@@ -148,3 +148,4 @@ Other downscaling.functions: \code{\link{downscale.predict}},
 \author{
 J. Bano-Medina
 }
+\concept{downscaling.functions}

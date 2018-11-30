@@ -9,9 +9,9 @@ biasCorrection(y, x, newdata = NULL, precipitation = FALSE,
   cross.val = c("none", "loo", "kfold"), folds = NULL, window = NULL,
   scaling.type = c("additive", "multiplicative"),
   fitdistr.args = list(densfun = "normal"), wet.threshold = 1,
-  n.quantiles = NULL, extrapolation = c("none", "constant"), theta = 0.95,
-  join.members = FALSE, parallel = FALSE, max.ncores = 16,
-  ncores = NULL)
+  n.quantiles = NULL, extrapolation = c("none", "constant"),
+  theta = 0.95, join.members = FALSE, parallel = FALSE,
+  max.ncores = 16, ncores = NULL)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -23,21 +23,24 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 
 \item{newdata}{A grid containing the simulated climate for the variables used in \code{x}, but considering the test period.}
 
-\item{precipitation}{Logical indicating if the data to be corrected is precipitation data.}
+\item{precipitation}{Logical for precipitation data (default to FALSE). If TRUE Adjusts precipitation 
+frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
+precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+parameter \code{wet.threshold} is used (see below).}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.}
 
-\item{cross.val}{Should cross-validation be performed? methods available are leave-one-out ("loo") 
-and k-fold ("kfold") on an annual basis. The default option ("none") does not perform cross-validation.}
+\item{cross.val}{Logical (default to FALSE). Should cross-validation be performed? methods available are 
+leave-one-out ("loo") and k-fold ("kfold") on an annual basis. The default option ("none") does not 
+perform cross-validation.}
 
-\item{folds}{Only requiered if cross.val = "kfold". A list of vectors, each containing the years to be grouped in 
-the corresponding fold.}
+\item{folds}{Only requiered if \code{cross.val = "kfold"}. A list of vectors, each containing the years 
+to be grouped in the corresponding fold.}
 
 \item{window}{vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
-target days (days that are being corrected). If the window length = 1, the window width is no larger than the 
-target days. The window is centered on the target day/s (window width >= target days). 
-Default to \code{NULL}, which considers the whole period available.}
+target days (days that are being corrected). The window is centered on the target day/s 
+(window width >= target days). Default to \code{NULL}, which considers the whole period.}
 
 \item{scaling.type}{Character indicating the type of the scaling method. Options are \code{"additive"} (default)
 or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
@@ -48,11 +51,12 @@ selected as the bias correction method.}
 (parametric quantile mapping). Please, read the \code{\link[MASS]{fitdistr}} help 
 document  carefully before setting the parameters in \code{fitdistr.args}.}
 
-\item{wet.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored for
-\code{varcode} values different from \code{"pr"}. Default to 1 (assuming mm). See details on bias correction for precipitation.}
+\item{wet.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored when 
+\code{precipitation = FALSE}. Default to 1 (assuming mm). See details on bias correction for precipitation.}
 
 \item{n.quantiles}{Integer indicating the number of quantiles to be considered when method = "eqm". Default is NULL, 
-that considers all quantiles, i.e. \code{n.quantiles = length(x[i,j])} (being \code{i} and \code{j} the coordinates in a single location).}
+that considers all quantiles, i.e. \code{n.quantiles = length(x[i,j])} (being \code{i} and \code{j} the 
+coordinates in a single location).}
 
 \item{extrapolation}{Character indicating the extrapolation method to be applied to correct values in
 \code{newdata} that are out of the range of \code{x}. Extrapolation is applied only to the \code{"eqm"} method, 
@@ -169,7 +173,8 @@ eqm1 <- biasCorrection(y = y, x = x,
                        precipitation = TRUE,
                        method = "eqm",
                        window = NULL,
-                       wet.threshold = 0.1)
+                       wet.threshold = 0.1,
+                       join.members = TRUE)
 eqm1win <- biasCorrection(y = y, x = x,
                           precipitation = TRUE,
                           method = "eqm",
@@ -184,7 +189,6 @@ eqm1folds <- biasCorrection(y = y, x = x,
                             cross.val = "kfold",
                             folds = list(1983:1989, 1990:1996, 1997:2002))
 
-quickDiagnostics(y, x, eqm1, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
 quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
@@ -215,7 +219,6 @@ data("CORDEX_Iberia_tas.rcp85")
 newdata <- CORDEX_Iberia_tas.rcp85
 eqm1win <- biasCorrection(y = y, x = x,
                           newdata = newdata,
-                          precipitation = TRUE,
                           method = "eqm",
                           extrapolation = "constant",
                           window = c(30, 15),
@@ -226,6 +229,19 @@ pqm1.norm <- biasCorrection(y = y, x = x,
                        method = "pqm",
                        fitdistr.args = list(densfun = "normal"))
 quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
+
+# Correction of multimember datasets considering the joint
+# distribution of all members
+data("EOBS_Iberia_pr")
+data("CFS_Iberia_pr")
+y <- EOBS_Iberia_pr
+x <- CFS_Iberia_pr
+eqm.join <- biasCorrection(y = y, x = x,
+                           precipitation = TRUE,
+                           method = "eqm",
+                           window = NULL,
+                           wet.threshold = 0.1,
+                           join.members = TRUE)
 }
 }
 \references{
@@ -252,3 +268,4 @@ Other downscaling: \code{\link{glimpr}},
 \author{
 S. Herrera, M. Iturbide, J. Bedia
 }
+\concept{downscaling}
