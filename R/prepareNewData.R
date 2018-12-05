@@ -90,10 +90,12 @@ prepareNewData <- function(newdata, data.structure) {
       })
       pca.mat.list <- NULL
     } else {# The COMBINED PC is being used
-      pca.mat.list <- lapply(1:length(global.pred.vars), function(i) {
-        aux <- subsetGrid(newdata, var = global.pred.vars[i]) %>% redim(member = TRUE)
-        escala <- attributes(data.structure$pca[[i]][[1]]$orig)$'scaled:scale'
-        center <- attributes(data.structure$pca[[i]][[1]]$orig)$'scaled:center'
+      combined.pred.vars <- attr(data.structure$pca$COMBINED, "combined_variables")
+      pca.mat.list <- lapply(1:length(combined.pred.vars), function(i) {
+        z <- match(combined.pred.vars[i],global.pred.vars)
+        aux <- subsetGrid(newdata, var = global.pred.vars[z]) %>% redim(member = TRUE)
+        escala <- attributes(data.structure$pca[[z]][[1]]$orig)$'scaled:scale'
+        center <- attributes(data.structure$pca[[z]][[1]]$orig)$'scaled:center'
         n.mem <- getShape(aux, "member")
         lapply(1:n.mem, function(j) {
           subsetGrid(aux, members = j, drop = TRUE) %>% extract2("Data") %>% array3Dto2Dmat() %>% scale(center = center, scale = escala)
