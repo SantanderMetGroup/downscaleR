@@ -4,5 +4,6 @@
 #'   output statistics) approaches, or a set of predictors in the case of \emph{perfect prog} downscaling approaches (possibly
 #'   after principal component analysis via the \code{\link{prinComp}} output).
 #' @param newdata A grid containing the simulated climate for the variables used in \code{x}, but considering the test period.
-
+#' If \code{x} is a multimember grid (the member dimension is > 1), the function assumes that the order of 
+#' the members is the same in \code{newdata}.
 
