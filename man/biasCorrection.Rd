@@ -9,9 +9,9 @@ biasCorrection(y, x, newdata = NULL, precipitation = FALSE,
   cross.val = c("none", "loo", "kfold"), folds = NULL, window = NULL,
   scaling.type = c("additive", "multiplicative"),
   fitdistr.args = list(densfun = "normal"), wet.threshold = 1,
-  n.quantiles = NULL, extrapolation = c("none", "constant"),
-  theta = 0.95, join.members = FALSE, parallel = FALSE,
-  max.ncores = 16, ncores = NULL)
+  n.quantiles = NULL, extrapolation = c("none", "constant"), theta = 0.95,
+  join.members = FALSE, parallel = FALSE, max.ncores = 16,
+  ncores = NULL)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -268,4 +268,3 @@ Other downscaling: \code{\link{glimpr}},
 \author{
 S. Herrera, M. Iturbide, J. Bedia
 }
-\concept{downscaling}

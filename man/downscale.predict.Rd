@@ -56,4 +56,3 @@ Other downscaling.functions: \code{\link{downscale.cv}},
 \author{
 J. Bano-Medina
 }
-\concept{downscaling.functions}
