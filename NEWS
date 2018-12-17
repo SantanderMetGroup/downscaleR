@@ -31,8 +31,8 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
  * Edited startup package message
 
 ## v3.0.5 (17 Dic 2018)
- * Code improvement
  * Add important explanation in the biasCorrection documentation
  * Bug fix in argument which.combine of prepareData 
  * Adapt biasCorrection to grids with a single dimension (time) 
  * NA handling in precipitation frequency adjustment in biasCorrection
+ * Code improvement
