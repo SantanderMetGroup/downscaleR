@@ -4,12 +4,12 @@
 \alias{adjustPrecipFreq}
 \title{adjustPrecipFreq}
 \usage{
-adjustPrecipFreq(o, p, threshold)
+adjustPrecipFreq(obs, pred, threshold)
 }
 \arguments{
-\item{o}{A vector (e.g. station data) containing the observed climate data for the training period}
+\item{obs}{A vector (e.g. station data) containing the observed climate data for the training period}
 
-\item{p}{A vector containing the simulated climate by the model for the training period.}
+\item{pred}{A vector containing the simulated climate by the model for the training period.}
 
 \item{threshold}{The minimum value that is considered as a non-zero precipitation.}
 }
