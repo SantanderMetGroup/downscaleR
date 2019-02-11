@@ -1313,91 +1313,91 @@ recoverMemberDim <- function(plain.grid, bc.grid, newdata) {
 #'                                                         ncores = NULL))
 #' }
 
-eqm1 <- biasCorrection.chunk(output.path = getwd(),
-                             n.chunks = 10,
-                             loginUDG.args = list(username = "miturbide", password = "iturbide.14"),
-                             dataset.y = "WATCH_WFDEI",
-                             dataset.x = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
-                             dataset.newdata = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
-                             loadGridData.args = list(var = "tasmax",
-                                                      years = 1971:2000,
-                                                      lonLim = c(-10, 10),
-                                                      latLim = c(36, 45)),
-                             biasCorrection.args = list(precipitation = FALSE,
-                                                        method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci"),
-                                                        cross.val = c("none", "loo", "kfold"),
-                                                        folds = NULL,
-                                                        window = NULL,
-                                                        scaling.type = c("additive", "multiplicative"),
-                                                        fitdistr.args = list(densfun = "normal"),
-                                                        wet.threshold = 1,
-                                                        n.quantiles = NULL,
-                                                        extrapolation = c("none", "constant"),
-                                                        theta = .95,
-                                                        join.members = FALSE,
-                                                        parallel = FALSE,
-                                                        max.ncores = 16,
-                                                        ncores = NULL))
-
-biasCorrection.chunk <- function(output.path = getwd(),
-                           n.chunks = 10,
-                           loginUDG.args = list(NULL),
-                           dataset.y = "WATCH_WFDEI",
-                           dataset.x = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
-                           dataset.newdata = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
-                           loadGridData.args = list(var = "tasmax", 
-                                                    years = 1971:2000, 
-                                                    lonLim = c(-10, 10), 
-                                                    latLim = c(36, 45)),
-                           biasCorrection.args = list(precipitation = FALSE,
-                              method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci"),
-                              cross.val = c("none", "loo", "kfold"),
-                              folds = NULL,
-                              window = NULL,
-                              scaling.type = c("additive", "multiplicative"),
-                              fitdistr.args = list(densfun = "normal"),
-                              wet.threshold = 1,
-                              n.quantiles = NULL,
-                              extrapolation = c("none", "constant"), 
-                              theta = .95,
-                              join.members = FALSE,
-                              parallel = FALSE,
-                              max.ncores = 16,
-                              ncores = NULL)) {
-      suppressWarnings(dir.create(output.path))
-      message("[", Sys.time(), "] Rdata will be saved in ", output.path)
-      do.call("loginUDG", login.UDG)
-      di.y <- dataInventory(dataset.y)
-      lats.y <- di.y[[loadGridData.args[["var"]]]]$Dimensions$lat$Values
-      if (is.null(lats.y)) stop("dataset.y does not contain the requested variable")
-      lats.y <- lats.y[which.min(abs(lats.y - latLim[1]))[1]:(which.min(abs(lats.y - latLim[2]))[1] + 1)]
-      n.lats.y <- length(lats.y)
-      n.lat.chunk <- ceiling(n.lats.y/n.chunks)
-      aux.ind <- rep(1:(n.chunks - 1), each = n.lat.chunk)
-      ind <- c(aux.ind, rep((max(aux.ind) + 1), each = n.lats.y - length(aux.ind)))
-      message("[", Sys.time(), "] y contains ", n.lats.y, " latitudes. Bias correction will be applied in ",n.chunks, " chunks of about ", n.lat.chunk, " latitudes.")
-      lat.list <- split(lats.y, f = ind)
-      lat.range.chunk <- lapply(lat.list, range)
-      lat.range.chunk.x <- lapply(lat.range.chunk, function(x) c(x[1] - 3, x[2] + 3))
-      
-      file.dir <- character()
-      for (i in 1:length(lat.range.chunk)) {
-            loadGridData.args[["dataset"]] <- dataset.y
-            loadGridData.args[["latLim"]] <- lat.range.chunk[[i]]
-            y <- do.call("loadGridData", loadGridData.args)
-            loadGridData.args[["dataset"]] <- dataset.x
-            loadGridData.args[["latLim"]] <- lat.range.chunk.x[[i]]
-            x <- do.call("loadGridData", loadGridData.args)
-            if (!is.null(dataset.newdata)) {
-                  loadGridData.args[["dataset"]] <- dataset.newdata
-                  newdata <- do.call("loadGridData", loadGridData.args)
-            } else {
-                  newdata <- NULL
-            }
-            bc <- do.call("biasCorrection", biasCorrection.args)
-            file.dir[i] <- paste0(output.path, "/chunk", i, ".rda")
-            save(bc, file = paste0(output.path, "/chunk", i, ".rda"))
-      }
-      return(file.dir)
-}
-
+# eqm1 <- biasCorrection.chunk(output.path = getwd(),
+#                              n.chunks = 10,
+#                              loginUDG.args = list(username = "miturbide", password = "iturbide.14"),
+#                              dataset.y = "WATCH_WFDEI",
+#                              dataset.x = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
+#                              dataset.newdata = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
+#                              loadGridData.args = list(var = "tasmax",
+#                                                       years = 1971:2000,
+#                                                       lonLim = c(-10, 10),
+#                                                       latLim = c(36, 45)),
+#                              biasCorrection.args = list(precipitation = FALSE,
+#                                                         method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci"),
+#                                                         cross.val = c("none", "loo", "kfold"),
+#                                                         folds = NULL,
+#                                                         window = NULL,
+#                                                         scaling.type = c("additive", "multiplicative"),
+#                                                         fitdistr.args = list(densfun = "normal"),
+#                                                         wet.threshold = 1,
+#                                                         n.quantiles = NULL,
+#                                                         extrapolation = c("none", "constant"),
+#                                                         theta = .95,
+#                                                         join.members = FALSE,
+#                                                         parallel = FALSE,
+#                                                         max.ncores = 16,
+#                                                         ncores = NULL))
+# 
+# biasCorrection.chunk <- function(output.path = getwd(),
+#                            n.chunks = 10,
+#                            loginUDG.args = list(NULL),
+#                            dataset.y = "WATCH_WFDEI",
+#                            dataset.x = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
+#                            dataset.newdata = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
+#                            loadGridData.args = list(var = "tasmax", 
+#                                                     years = 1971:2000, 
+#                                                     lonLim = c(-10, 10), 
+#                                                     latLim = c(36, 45)),
+#                            biasCorrection.args = list(precipitation = FALSE,
+#                               method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci"),
+#                               cross.val = c("none", "loo", "kfold"),
+#                               folds = NULL,
+#                               window = NULL,
+#                               scaling.type = c("additive", "multiplicative"),
+#                               fitdistr.args = list(densfun = "normal"),
+#                               wet.threshold = 1,
+#                               n.quantiles = NULL,
+#                               extrapolation = c("none", "constant"), 
+#                               theta = .95,
+#                               join.members = FALSE,
+#                               parallel = FALSE,
+#                               max.ncores = 16,
+#                               ncores = NULL)) {
+#       suppressWarnings(dir.create(output.path))
+#       message("[", Sys.time(), "] Rdata will be saved in ", output.path)
+#       do.call("loginUDG", login.UDG)
+#       di.y <- dataInventory(dataset.y)
+#       lats.y <- di.y[[loadGridData.args[["var"]]]]$Dimensions$lat$Values
+#       if (is.null(lats.y)) stop("dataset.y does not contain the requested variable")
+#       lats.y <- lats.y[which.min(abs(lats.y - latLim[1]))[1]:(which.min(abs(lats.y - latLim[2]))[1] + 1)]
+#       n.lats.y <- length(lats.y)
+#       n.lat.chunk <- ceiling(n.lats.y/n.chunks)
+#       aux.ind <- rep(1:(n.chunks - 1), each = n.lat.chunk)
+#       ind <- c(aux.ind, rep((max(aux.ind) + 1), each = n.lats.y - length(aux.ind)))
+#       message("[", Sys.time(), "] y contains ", n.lats.y, " latitudes. Bias correction will be applied in ",n.chunks, " chunks of about ", n.lat.chunk, " latitudes.")
+#       lat.list <- split(lats.y, f = ind)
+#       lat.range.chunk <- lapply(lat.list, range)
+#       lat.range.chunk.x <- lapply(lat.range.chunk, function(x) c(x[1] - 3, x[2] + 3))
+#       
+#       file.dir <- character()
+#       for (i in 1:length(lat.range.chunk)) {
+#             loadGridData.args[["dataset"]] <- dataset.y
+#             loadGridData.args[["latLim"]] <- lat.range.chunk[[i]]
+#             y <- do.call("loadGridData", loadGridData.args)
+#             loadGridData.args[["dataset"]] <- dataset.x
+#             loadGridData.args[["latLim"]] <- lat.range.chunk.x[[i]]
+#             x <- do.call("loadGridData", loadGridData.args)
+#             if (!is.null(dataset.newdata)) {
+#                   loadGridData.args[["dataset"]] <- dataset.newdata
+#                   newdata <- do.call("loadGridData", loadGridData.args)
+#             } else {
+#                   newdata <- NULL
+#             }
+#             bc <- do.call("biasCorrection", biasCorrection.args)
+#             file.dir[i] <- paste0(output.path, "/chunk", i, ".rda")
+#             save(bc, file = paste0(output.path, "/chunk", i, ".rda"))
+#       }
+#       return(file.dir)
+# }
+# 
