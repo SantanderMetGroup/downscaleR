@@ -5,8 +5,8 @@
 \title{Perfect-prog downscaling}
 \usage{
 downscale(y, x, newdata = x, method = c("analogs", "glm", "lm"),
-  simulate = c("no", "yes"), n.analogs = 1, sel.fun = c("mean", "wmean",
-  "max", "min", "median"), wet.threshold = 0.1, n.pcs = NULL,
+  simulate = c("no", "yes"), n.analogs = 1, sel.fun = c("mean",
+  "wmean", "max", "min", "median"), wet.threshold = 0.1, n.pcs = NULL,
   cross.val = c("none", "loocv", "kfold"), folds = NULL)
 }
 \arguments{
@@ -91,3 +91,4 @@ Other downscaling.functions: \code{\link{downscale.cv}},
   \code{\link{downscale.predict}},
   \code{\link{downscale.train}}
 }
+\concept{downscaling.functions}

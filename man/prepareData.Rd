@@ -95,3 +95,4 @@ Other downscaling.helpers: \code{\link{predictor.nn.indices}},
 \author{
 J. Bedia, D. San-Martín and J.M. Gutiérrez
 }
+\concept{downscaling.helpers}
