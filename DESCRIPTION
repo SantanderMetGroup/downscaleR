@@ -1,10 +1,10 @@
 Package: downscaleR
 Depends:
     R(>= 3.1.0),
-    transformeR(>= 1.4.3),
-    deepnet,
-    glmnet
+    transformeR(>= 1.4.3)
 Imports:
+    deepnet,
+    glmnet,
     abind,
     utils,
     RCurl,
