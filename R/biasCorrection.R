@@ -334,6 +334,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
             output$Data <- bindata
             attr(output$Data, "dimensions") <- dimNames
             output$Dates <- x$Dates
+            output$Data[which(is.infinite(output$Data))] <- NA
       }
       return(output)
 }
@@ -623,7 +624,9 @@ biasCorrection1D <- function(o, p, s,
                   mapply_fun(eqm, o, p, s, MoreArgs = list(precip, pr.threshold, n.quantiles, extrapolation))
             )
       } else if (method == "pqm") {
+            suppressWarnings(
             mapply_fun(pqm, o, p, s, MoreArgs = list(fitdistr.args, precip, pr.threshold))
+            )
       } else if (method == "gpqm") {
             mapply_fun(gpqm, o, p, s, MoreArgs = list(precip, pr.threshold, theta))
       } else if (method == "variance") {
