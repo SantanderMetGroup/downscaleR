@@ -4,8 +4,7 @@
 \alias{isimip}
 \title{Bias correction ISI-MIP method}
 \usage{
-isimip(y, x, newdata, threshold = 1, type = c("additive",
-  "multiplicative"))
+isimip(y, x, newdata, threshold = 1, type = c("additive", "multiplicative"))
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -101,4 +100,3 @@ Other downscaling: \code{\link{biasCorrection}},
 \author{
 S. Herrera
 }
-\concept{downscaling}

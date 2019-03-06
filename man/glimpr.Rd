@@ -29,5 +29,4 @@ Other downscaling: \code{\link{biasCorrection}},
 \author{
 J Bedia, M Iturbide
 }
-\concept{downscaling}
 \keyword{internal}

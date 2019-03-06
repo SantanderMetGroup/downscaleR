@@ -217,14 +217,19 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
       else {
         xx = obj$x.global}
       yy = mat.y[,i, drop = FALSE]
-      if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
-      else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
-      if (method == "analogs") {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
-      else {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)}
-      if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
-      mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])
+      if (all(is.na(yy))) {
+        mat.p[,i] <- yy
+        }
+      else{
+        if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
+        else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
+        if (method == "analogs") {
+          atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
+        else {
+          atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)}
+        if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
+        mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])
+      }
     }
   }
   # Mix - Global predictors with local predictors
@@ -243,14 +248,19 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
       xx2 = obj$x.global
       xx <- cbind(xx1,xx2)
       yy = mat.y[,i, drop = FALSE]
-      if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
-      else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
-      if (method == "analogs") {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
-      else {
-        atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)}
-      if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
-      mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])}
+      if (all(is.na(yy))) {
+        mat.p[,i] <- yy
+      }
+      else{
+        if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
+        else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
+        if (method == "analogs") {
+          atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
+        else {
+          atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)}
+        if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
+        mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])}
+    }
   }
   if (regular) {
     pred$Data <- mat2Dto3Darray(mat.p, x = pred$xyCoords$x, y = pred$xyCoords$y)

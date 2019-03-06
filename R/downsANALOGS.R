@@ -68,14 +68,15 @@ analogs.test <- function(newdata, x, y, dates, info) {
       else{dist.pool <- dist.sorted[(info$n.analogs + 1):(info$n.analogs + info$pool)]}
       ind.pool <- match(dist.pool,x)
       value.pool <- matrix(y[ind.pool,], nrow = info$pool, ncol = ncol(y))
-      value.analogs <- sapply(1:ncol(value.analogs), function(i) {
+      value.analogs.new <- sapply(1:ncol(value.analogs), function(i) {
         if (anyNA(value.analogs[,i])) {
           ind.no <- which(is.na(value.analogs[,i]))
           ind.yes <- setdiff(1:nrow(value.analogs),ind.no)
           value.analogs[,i] <- c(value.analogs[ind.yes,i],value.analogs[ind.no,i])
           limit_replacement2 <- min(c(length(ind.no),nrow(value.pool)))
           limit_replacement1 <- nrow(value.analogs) - length(ind.no) + limit_replacement2
-          value.analogs[(nrow(value.analogs) + 1 - length(ind.no)):limit_replacement1,i] <- value.pool[1:limit_replacement2,i]
+          ind.yes.pool <- which(!is.na(value.pool[,i]))[1:limit_replacement2]
+          value.analogs[(nrow(value.analogs) + 1 - length(ind.no)):limit_replacement1,i] <- value.pool[ind.yes.pool,i]
           value.analogs[,i]}
         else{
           value.analogs[,i]}
@@ -88,11 +89,13 @@ analogs.test <- function(newdata, x, y, dates, info) {
           value.analogs[,i] <- c(value.analogs[ind.yes,i],value.analogs[ind.no,i])
           limit_replacement2 <- min(c(length(ind.no),nrow(value.pool)))
           limit_replacement1 <- nrow(value.analogs) - length(ind.no) + limit_replacement2
-          dist.analogs[(nrow(value.analogs) + 1 - length(ind.no)):limit_replacement1,i] <- dist.pool[1:limit_replacement2]
+          ind.yes.pool <- which(!is.na(value.pool[,i]))[1:limit_replacement2]
+          dist.analogs[(nrow(value.analogs) + 1 - length(ind.no)):limit_replacement1,i] <- dist.pool[ind.yes.pool]
           dist.analogs[,i]}
         else{
           dist.analogs[,i]}
       })
+      value.analogs <- value.analogs.new; rm(value.analogs.new)
     }
     dist.analogs <- matrix(dist.analogs, nrow = info$n.analogs, ncol = ncol(y))
     # Random analogs (if selected)

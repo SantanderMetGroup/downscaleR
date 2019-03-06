@@ -79,8 +79,15 @@ downscale.predict <- function(newdata, model) {
           xx = newdata$x.local[[i]][[z]]}
         else {
           xx <- newdata$x.global[[z]]}
+        
+        if (is.null(model$model$atomic_model[[i]])) {
+          yp[,i] <- rep(NaN,n.obs)  
+        }
+        else {
         if (model$model$method == "analogs") {model$model$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
-        yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]])}
+        yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]])
+        }
+      }
     }
     # Mix - Global predictors with local predictors
     else if (model$model$site == "mix") {
@@ -94,8 +101,13 @@ downscale.predict <- function(newdata, model) {
         xx1 = newdata$x.local[[i]][[z]]
         xx2 = newdata$x.global[[z]]
         xx <- cbind(xx1,xx2)
+        if (is.null(model$model$atomic_model[[i]])) {
+          yp[,i] <- rep(NaN,n.obs)  
+        }
+        else {
         if (model$model$method == "analogs") {model$model$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
         yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]])}
+      }
     }
     if (isRegular(model$pred)) {
       yp <- mat2Dto3Darray(yp, x = model$pred$xyCoords$x, y = model$pred$xyCoords$y)
