@@ -84,8 +84,12 @@ downscale.predict <- function(newdata, model) {
           yp[,i] <- rep(NaN,n.obs)  
         }
         else {
-        if (model$model$method == "analogs") {model$model$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
-        yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]])
+          if (model$model$method == "analogs") {model$model$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
+          if (is.null(model$model$atomic_model[[i]])) {
+            yp[,i] = rep(NA, 1, n.obs)
+          } else {
+            yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]])
+          }
         }
       }
     }
@@ -105,8 +109,13 @@ downscale.predict <- function(newdata, model) {
           yp[,i] <- rep(NaN,n.obs)  
         }
         else {
-        if (model$model$method == "analogs") {model$model$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
-        yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]])}
+          if (model$model$method == "analogs") {model$model$atomic_model[[i]]$dates$test <- getRefDates(newdata)}
+          if (is.null(model$model$atomic_model[[i]])) {
+            yp[,i] = rep(NA, 1, n.obs)
+          } else {
+            yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]])
+          }
+        }
       }
     }
     if (isRegular(model$pred)) {

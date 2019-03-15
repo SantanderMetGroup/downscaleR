@@ -23,6 +23,8 @@ downscale.chunk <- function(x, y, newdata,
     if (z < 10) {zn <- paste0(0,z)}
     else {zn <- z}
     lapply(1:(length(p)+1), function(zzz) {
+    # lapply(2:(length(p)+1), function(zzz) {
+    # lapply(1:1, function(zzz) {
       if (zzz == 1) {
         grid <- model$pred
       }

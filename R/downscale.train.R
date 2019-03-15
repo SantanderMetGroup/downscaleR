@@ -226,9 +226,20 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
         if (method == "analogs") {
           atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
         else {
-          atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)}
+          tryCatch({
+            atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)
+          } , error = function(x) {
+            warning(sprintf("... couldn't create model for point %d out of %d ...",
+                            i, stations))
+            # atomic_model[[i]] = NULL
+          })
+        }
         if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
-        mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])
+        if (is.null(atomic_model[[i]])) {
+          mat.p[,i] = rep(NA, 1, nrow(mat.p))
+        } else {
+          mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])
+        }
       }
     }
   }
@@ -241,7 +252,7 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
     #   obj$y$Data <- array3Dto2Dmat(obj$y$Data)
     #   regular <- TRUE
     # }
-    stations <- dim(mat.p)[which(getDim(pred) == "loc")]
+    stations <- dim(mat.p)[2]
     atomic_model <- vector("list",stations)
     for (i in 1:stations) {
       xx1 = obj$x.local[[i]]$member_1
@@ -257,7 +268,14 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
         if (method == "analogs") {
           atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
         else {
-          atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)}
+          tryCatch ({
+            atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)
+          } , error = function(x) {
+            warning(sprintf("... couldn't create model for point %d out of %d ...",
+                            i, stations))
+            # atomic_model[[i]] = NULL
+          })
+        }
         if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
         mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])}
     }

@@ -197,7 +197,7 @@ downscale.cv <- function(x, y, method,
     pred <- lapply(1:length(p[[1]]), function(i) {
       pred <- y
       dimNames <- getDim(pred)
-      pp <- lapply(1:length(data), function(z) p[[z]][[i]])  ; pred$Data   <- do.call(rbind,as.matrix(pp))
+      pp <- lapply(1:length(data), function(z) p[[z]][[i]])  ; pred$Data   <- do.call(abind,list(pp,along=1)) %>% unname()
       attr(pred$Data, "dimensions") <- dimNames  
       return(pred)})
     if (length(pred) == 1) pred <- pred[[1]]
