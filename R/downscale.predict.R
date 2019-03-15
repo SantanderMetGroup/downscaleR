@@ -157,6 +157,7 @@ downscale.predict <- function(newdata, model) {
 #' @param atomic_model An object containing the statistical model of the selected method.
 #' @return A matrix with the predictions.
 #' @details This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.predict}}.
+#' @importFrom deepnet nn.predict
 #' @author J. Bano-Medina
 downs.predict <- function(x, method, atomic_model){
   switch(method,

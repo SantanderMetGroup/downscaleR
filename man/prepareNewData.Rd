@@ -38,3 +38,4 @@ Other downscaling.helpers: \code{\link{predictor.nn.indices}},
 \author{
 J Bedia
 }
+\concept{downscaling.helpers}

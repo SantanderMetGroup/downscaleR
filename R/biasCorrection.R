@@ -334,6 +334,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
             output$Data <- bindata
             attr(output$Data, "dimensions") <- dimNames
             output$Dates <- x$Dates
+            output$Data[which(is.infinite(output$Data))] <- NA
       }
       return(output)
 }
@@ -623,7 +624,9 @@ biasCorrection1D <- function(o, p, s,
                   mapply_fun(eqm, o, p, s, MoreArgs = list(precip, pr.threshold, n.quantiles, extrapolation))
             )
       } else if (method == "pqm") {
+            suppressWarnings(
             mapply_fun(pqm, o, p, s, MoreArgs = list(fitdistr.args, precip, pr.threshold))
+            )
       } else if (method == "gpqm") {
             mapply_fun(gpqm, o, p, s, MoreArgs = list(precip, pr.threshold, theta))
       } else if (method == "variance") {
@@ -1118,3 +1121,286 @@ recoverMemberDim <- function(plain.grid, bc.grid, newdata) {
       do.call("bindGrid", c(aux.list, dimension = "member"))
 }
 
+
+#     biasCorrection.chunk.R Bias correction methods
+#
+#     Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
+#
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+# 
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU General Public License for more details.
+# 
+#     You should have received a copy of the GNU General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#' @title Bias correction methods applied to each latitude (chunk)
+#' @description Internal function that applies function \code{biasCorrection} 
+#' to each latitude in \code{y} (chunk). 
+#'
+#' @template templateObsPredSim
+#' @param output.path Path to the directory where the bias corrected *.rda objects are stored.
+#' Default is the working directory.
+#' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
+#'  \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.
+#' @param precipitation Logical for precipitation data (default to FALSE). If TRUE Adjusts precipitation 
+#' frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
+#' precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+#' parameter \code{wet.threshold} is used (see below).
+#' @param cross.val Logical (default to FALSE). Should cross-validation be performed? methods available are 
+#' leave-one-out ("loo") and k-fold ("kfold") on an annual basis. The default option ("none") does not 
+#' perform cross-validation.
+#' @param folds Only requiered if \code{cross.val = "kfold"}. A list of vectors, each containing the years 
+#' to be grouped in the corresponding fold.
+#' @param wet.threshold The minimum value that is considered as a non-zero precipitation. Ignored when 
+#' \code{precipitation = FALSE}. Default to 1 (assuming mm). See details on bias correction for precipitation.
+#' @param window vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
+#' target days (days that are being corrected). The window is centered on the target day/s 
+#' (window width >= target days). Default to \code{NULL}, which considers the whole period.
+#' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} (default)
+#' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
+#' selected as the bias correction method.
+#' @param  fitdistr.args Further arguments passed to function \code{\link[MASS]{fitdistr}} 
+#' (\code{densfun}, \code{start}, \code{...}). Only used when applying the "pqm" method 
+#' (parametric quantile mapping). Please, read the \code{\link[MASS]{fitdistr}} help 
+#' document  carefully before setting the parameters in \code{fitdistr.args}.
+#' @param n.quantiles Integer indicating the number of quantiles to be considered when method = "eqm". Default is NULL, 
+#' that considers all quantiles, i.e. \code{n.quantiles = length(x[i,j])} (being \code{i} and \code{j} the 
+#' coordinates in a single location).
+#' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
+#' \code{newdata} that are out of the range of \code{x}. Extrapolation is applied only to the \code{"eqm"} method, 
+#' thus, this argument is ignored if other bias correction method is selected. Default is \code{"none"} (do not extrapolate).
+#' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
+#' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
+#' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
+#' percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.
+#' @param join.members Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
+#'  or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).
+#' @template templateParallelParams
+#'  
+#' @details
+#' 
+#' The methods available are \code{"eqm"}, \code{"delta"}, 
+#' \code{"scaling"}, \code{"pqm"}, \code{"gpqm"}\code{"loci"}, 
+#' \code{"ptr"}  (the four latter used only for precipitation) and 
+#' \code{"variance"} (only for temperature).
+#' 
+#'  These are next briefly described: 
+#'  
+#' \strong{Delta}
+#'
+#' This method consists on adding to the observations the mean change signal (delta method).
+#' This method is applicable to any kind of variable but it is preferable to avoid it for bounded variables
+#' (e.g. precipitation, wind speed, etc.) because values out of the variable range could be obtained
+#' (e.g. negative wind speeds...). This method corresponds to case g=1 and f=0 in Amengual et al. 2012. 
+#' 
+#' \strong{Scaling}
+#' 
+#' This method consists on scaling the simulation  with the difference (additive) or quotient (multiplicative) 
+#' between the observed and simulated means in the train period. The \code{additive} or \code{multiplicative}
+#' correction is defined by parameter \code{scaling.type} (default is \code{additive}).
+#' The additive version is preferably applicable to unbounded variables (e.g. temperature) 
+#' and the multiplicative to variables with a lower bound (e.g. precipitation, because it also preserves the frequency). 
+#' 
+#' 
+#' \strong{eqm}
+#' 
+#' Empirical Quantile Mapping. This is a very extended bias correction method which consists on calibrating the simulated Cumulative Distribution Function (CDF) 
+#' by adding to the observed quantiles both the mean delta change and the individual delta changes in the corresponding quantiles. 
+#' This is equivalent to f=g=1 in Amengual et al. 2012. This method is applicable to any kind of variable.
+#' 
+#' 
+#' \strong{pqm}
+#' 
+#' Parametric Quantile Mapping. It is based on the initial assumption that both observed and simulated intensity distributions are well approximated by a given distribution
+#' (see \code{\link[MASS]{fitdistr}} to check available distributions), therefore is a parametric q-q map that uses the theorical instead of the empirical distribution.
+#' For instance, the gamma distribution is described in Piani et al. 2010 and is applicable to precipitation. Other example is the weibull distribution, which
+#' is applicable to correct wind data (Tie et al. 2014).
+#'  
+#' \strong{gpqm}
+#'  
+#' Generalized Quantile Mapping (described in Gutjahr and Heinemann 2013) is also a parametric quantile mapping (see
+#' method 'pqm') but using two teorethical distributions, the gamma distribution and Generalized Pareto Distribution (GPD).
+#' By default, It applies a gamma distribution to values under the threshold given by the 95th percentile 
+#' (following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. the threshold above 
+#' which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. 
+#' The user can specify a different threshold by modifying the parameter theta. It is applicable to precipitation data. 
+#' 
+#' 
+#' \strong{variance}
+#' 
+#' Variance scaling of temperature. This method is described in Chen et al. 2011. It is applicable only to temperature. It corrects
+#' the mean and variance of temperature time series.
+#' 
+#' \strong{loci}
+#' 
+#' Local intensity scaling of precipitation. This method is described in Schmidli et al. 2006. It adjust the mean as well as both wet-day frequencies and wet-day intensities.
+#' The precipitation threshold is calculated such that the number of simulated days exceeding this threshold matches the number of observed days with precipitation larger than 1 mm.
+#' 
+#'\strong{ptr}
+#'
+#' Power transformation of precipitation. This method is described in Leander and Buishand 2007 and is applicable only to precipitation. It adjusts the variance statistics of precipitation
+#' time series in an exponential form. The power parameter is estimated on a monthly basis using a 90-day window centered on the interval. The power is defined by matching the coefficient
+#' of variation of corrected daily simulated precipitation with the coefficient of variation of observed daily precipitation. It is calculated by root-finding algorithm using Brent's method.
+#'
+#'
+#' @section Note on the bias correction of precipitation:
+#' 
+#' In the case of precipitation a frequency adaptation has been implemented in all versions of 
+#' quantile mapping to alleviate the problems arising when the dry day frequency in the raw model output is larger
+#'  than in the observations (Wilcke et al. 2013). 
+#'  
+#'  The precipitation subroutines are switched-on when the variable name of the grid 
+#'  (i.e., the value returned by \code{gridData$Variable$varName}) is one of the following: 
+#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (\code{\link[loadeR]{C4R.vocabulary}}), \code{"precipitation"} or \code{"precip"}.
+#'  Thus, caution must be taken to ensure that the correct bias correction is being undertaken when dealing with
+#'  non-standard variables.
+#'     
+#' 
+#' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration and \code{\link{quickDiagnostics}} 
+#' for an outlook of the results.
+#' @return Calibrated grids for each latitudinal chunk (with the same spatio-temporal extent than the chunked input \code{"y"}). 
+#' This objects are saved in the specified \code{output.path}. The object obatained in the workspace 
+#' is a charecter string of the listed files.
+#' @family downscaling
+#' 
+#' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim
+#' @importFrom abind adrop
+#'
+#' @references
+#'
+#' \itemize{
+#' \item R.A.I. Wilcke, T. Mendlik and A. Gobiet (2013) Multi-variable error correction of regional climate models. Climatic Change, 120, 871-887
+#'
+#' \item A. Amengual, V. Homar, R. Romero, S. Alonso, and C. Ramis (2012) A Statistical Adjustment of Regional Climate Model Outputs to Local Scales: Application to Platja de Palma, Spain. J. Clim., 25, 939-957
+#'
+#' \item C. Piani, J. O. Haerter and E. Coppola (2009) Statistical bias correction for daily precipitation in regional climate models over Europe, Theoretical and Applied Climatology, 99, 187-192
+#'
+#' \item O. Gutjahr and G. Heinemann (2013) Comparing precipitation bias correction methods for high-resolution regional climate simulations using COSMO-CLM, Theoretical and Applied Climatology, 114, 511-529
+#' 
+#' \item M. R. Tye, D. B. Stephenson, G. J. Holland and R. W. Katz (2014) A Weibull Approach for Improving Climate Model Projections of Tropical Cyclone Wind-Speed Distributions, Journal of Climate, 27, 6119-6133
+#' 
+#' }
+#' @author M. Iturbide
+#' @examples {
+#' # empirical
+#' eqm1 <- biasCorrection.chunk(output.path = getwd(),
+#'                              n.chunks = 10,
+#'                              login.UDG,
+#'                              dataset.y = "WATCH_WFDEI",
+#'                              dataset.x = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
+#'                              dataset.newdata = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
+#'                              loadGridData.args = list(var = "tasmax", 
+#'                                                       years = 1971:2000, 
+#'                                                       lonLim = c(-10, 10), 
+#'                                                       latLim = c(36, 45)),
+#'                              biasCorrection.args = list(precipitation = FALSE,
+#'                                                         method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci"),
+#'                                                         cross.val = c("none", "loo", "kfold"),
+#'                                                         folds = NULL,
+#'                                                         window = NULL,
+#'                                                         scaling.type = c("additive", "multiplicative"),
+#'                                                         fitdistr.args = list(densfun = "normal"),
+#'                                                         wet.threshold = 1,
+#'                                                         n.quantiles = NULL,
+#'                                                         extrapolation = c("none", "constant"), 
+#'                                                         theta = .95,
+#'                                                         join.members = FALSE,
+#'                                                         parallel = FALSE,
+#'                                                         max.ncores = 16,
+#'                                                         ncores = NULL))
+#' }
+
+# eqm1 <- biasCorrection.chunk(output.path = getwd(),
+#                              n.chunks = 10,
+#                              loginUDG.args = list(username = "miturbide", password = "iturbide.14"),
+#                              dataset.y = "WATCH_WFDEI",
+#                              dataset.x = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
+#                              dataset.newdata = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
+#                              loadGridData.args = list(var = "tasmax",
+#                                                       years = 1971:2000,
+#                                                       lonLim = c(-10, 10),
+#                                                       latLim = c(36, 45)),
+#                              biasCorrection.args = list(precipitation = FALSE,
+#                                                         method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci"),
+#                                                         cross.val = c("none", "loo", "kfold"),
+#                                                         folds = NULL,
+#                                                         window = NULL,
+#                                                         scaling.type = c("additive", "multiplicative"),
+#                                                         fitdistr.args = list(densfun = "normal"),
+#                                                         wet.threshold = 1,
+#                                                         n.quantiles = NULL,
+#                                                         extrapolation = c("none", "constant"),
+#                                                         theta = .95,
+#                                                         join.members = FALSE,
+#                                                         parallel = FALSE,
+#                                                         max.ncores = 16,
+#                                                         ncores = NULL))
+# 
+# biasCorrection.chunk <- function(output.path = getwd(),
+#                            n.chunks = 10,
+#                            loginUDG.args = list(NULL),
+#                            dataset.y = "WATCH_WFDEI",
+#                            dataset.x = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
+#                            dataset.newdata = "CORDEX-EUR11_EC-EARTH_r12i1p1_historical_RCA4_v1",
+#                            loadGridData.args = list(var = "tasmax", 
+#                                                     years = 1971:2000, 
+#                                                     lonLim = c(-10, 10), 
+#                                                     latLim = c(36, 45)),
+#                            biasCorrection.args = list(precipitation = FALSE,
+#                               method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci"),
+#                               cross.val = c("none", "loo", "kfold"),
+#                               folds = NULL,
+#                               window = NULL,
+#                               scaling.type = c("additive", "multiplicative"),
+#                               fitdistr.args = list(densfun = "normal"),
+#                               wet.threshold = 1,
+#                               n.quantiles = NULL,
+#                               extrapolation = c("none", "constant"), 
+#                               theta = .95,
+#                               join.members = FALSE,
+#                               parallel = FALSE,
+#                               max.ncores = 16,
+#                               ncores = NULL)) {
+#       suppressWarnings(dir.create(output.path))
+#       message("[", Sys.time(), "] Rdata will be saved in ", output.path)
+#       do.call("loginUDG", login.UDG)
+#       di.y <- dataInventory(dataset.y)
+#       lats.y <- di.y[[loadGridData.args[["var"]]]]$Dimensions$lat$Values
+#       if (is.null(lats.y)) stop("dataset.y does not contain the requested variable")
+#       lats.y <- lats.y[which.min(abs(lats.y - latLim[1]))[1]:(which.min(abs(lats.y - latLim[2]))[1] + 1)]
+#       n.lats.y <- length(lats.y)
+#       n.lat.chunk <- ceiling(n.lats.y/n.chunks)
+#       aux.ind <- rep(1:(n.chunks - 1), each = n.lat.chunk)
+#       ind <- c(aux.ind, rep((max(aux.ind) + 1), each = n.lats.y - length(aux.ind)))
+#       message("[", Sys.time(), "] y contains ", n.lats.y, " latitudes. Bias correction will be applied in ",n.chunks, " chunks of about ", n.lat.chunk, " latitudes.")
+#       lat.list <- split(lats.y, f = ind)
+#       lat.range.chunk <- lapply(lat.list, range)
+#       lat.range.chunk.x <- lapply(lat.range.chunk, function(x) c(x[1] - 3, x[2] + 3))
+#       
+#       file.dir <- character()
+#       for (i in 1:length(lat.range.chunk)) {
+#             loadGridData.args[["dataset"]] <- dataset.y
+#             loadGridData.args[["latLim"]] <- lat.range.chunk[[i]]
+#             y <- do.call("loadGridData", loadGridData.args)
+#             loadGridData.args[["dataset"]] <- dataset.x
+#             loadGridData.args[["latLim"]] <- lat.range.chunk.x[[i]]
+#             x <- do.call("loadGridData", loadGridData.args)
+#             if (!is.null(dataset.newdata)) {
+#                   loadGridData.args[["dataset"]] <- dataset.newdata
+#                   newdata <- do.call("loadGridData", loadGridData.args)
+#             } else {
+#                   newdata <- NULL
+#             }
+#             bc <- do.call("biasCorrection", biasCorrection.args)
+#             file.dir[i] <- paste0(output.path, "/chunk", i, ".rda")
+#             save(bc, file = paste0(output.path, "/chunk", i, ".rda"))
+#       }
+#       return(file.dir)
+# }
+# 

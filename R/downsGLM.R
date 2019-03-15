@@ -55,7 +55,7 @@
 #' @details This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.train}} or \code{\link[downscaleR]{downscale.cv}}.
 #' @author J. Bano-Medina
 #' @importFrom stats step formula
-#' @import glmnet
+#' @importFrom glmnet glmnet cv.glmnet
 glm.train <- function(x, y, fitting = NULL, simulate = "no", model.verbose = "yes",
                       stepwise.arg = NULL,
                       ...) {
