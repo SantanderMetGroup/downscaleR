@@ -16,7 +16,7 @@ biasCorrection1D(o, p, s, method, scaling.type, fitdistr.args, precip,
 \item{s}{A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-\code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details in 
+\code{"scaling"}, \code{"pqm"} , \code{"gpqm"}, \code{"mva"}, \code{"variance"},\code{"loci"} and \code{"ptr"}. See details in 
 function \code{\link{biasCorrection}}.}
 
 \item{scaling.type}{Character indicating the type of the scaling method. Options are \code{"additive"} 

@@ -104,6 +104,8 @@
 #' which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. 
 #' The user can specify a different threshold by modifying the parameter theta. It is applicable to precipitation data. 
 #' 
+#' \strong{mva}
+#' Mean and Variance Adjustment.
 #' 
 #' \strong{variance}
 #' 
@@ -259,7 +261,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            max.ncores = 16,
                            ncores = NULL) {
       if (method == "gqm") stop("'gqm' is not a valid choice anymore. Use method = 'pqm' instead and set fitdistr.args = list(densfun = 'gamma')")
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "ptr", "variance"))
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "mva", "loci", "ptr", "variance"))
       cross.val <- match.arg(cross.val, choices = c("none", "loo", "kfold"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
@@ -570,7 +572,7 @@ getWindowIndex <- function(y, x, newdata, window, delta.method = FALSE){
 #' @param p A vector containing the simulated climate by the model for the training period. 
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details in 
+#'  \code{"scaling"}, \code{"pqm"} , \code{"gpqm"}, \code{"mva"}, \code{"variance"},\code{"loci"} and \code{"ptr"}. See details in 
 #'  function \code{\link{biasCorrection}}.
 #' @param scaling.type Character indicating the type of the scaling method. Options are \code{"additive"} 
 #' or \code{"multiplicative"} (see details). This argument is ignored if \code{"scaling"} is not 
@@ -629,6 +631,8 @@ biasCorrection1D <- function(o, p, s,
             )
       } else if (method == "gpqm") {
             mapply_fun(gpqm, o, p, s, MoreArgs = list(precip, pr.threshold, theta))
+      } else if (method == "mva") {
+            mapply_fun(mva, o, p, s) 
       } else if (method == "variance") {
             mapply_fun(variance, o, p, s, MoreArgs = list(precip))
       } else if (method == "loci") {
@@ -718,7 +722,6 @@ scaling <- function(o, p, s, scaling.type){
             (s/mean(p)) * mean(o, na.rm = TRUE)
       }
 }
-
 
 
 #' @title Parametric Quantile Mapping method for bias correction
@@ -960,6 +963,19 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
 }
 
 #end
+
+#' @title Mean and Variance Adjustment
+#' @description Mean and Variance Adjustment method for bias correction
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
+#' @keywords internal
+#' @author M. Iturbide
+
+mva <- function(o, p, s){
+      corrected <- (s - mean(p)) + sd(o)/sd(p) + mean(o)
+      return(corrected)
+}
 
 
 #' @title Variance scaling of temperature
