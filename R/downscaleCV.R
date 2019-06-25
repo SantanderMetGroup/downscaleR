@@ -1,4 +1,4 @@
-##     downscale.cv.R Downscaling method calibration in cross validation mode.
+##     downscaleCV.R Downscaling method calibration in cross validation mode.
 ##
 ##     Copyright (C) 2018 Santander Meteorology Group (http://www.meteo.unican.es)
 ##
@@ -34,45 +34,18 @@
 #' it splits the data in two subsets, one for training and one for testing, being the given value the fraction of the data used for training (i.e., 0.75 will split the data so that 75\% of the instances are used for training, and the remaining 25\% for testing). 
 #' In case it is an integer value (the default, which is 4), it sets the number of folds in which the data will be split (e.g., \code{folds = 10} for the classical 10-fold cross validation). 
 #' Alternatively, this argument can be passed as a list, each element of the list being a vector of years to be included in each fold (See examples).
-#' @param scale.list A list of the parameters related to scale grids. This parameter calls the function \code{\link[transformeR]{scaleGrid}}. See the function definition for details on the parameters accepted.
-#' @param global.vars An optional character vector with the short names of the variables of the input x multigrid to be retained as global predictors 
-#' (use the \code{\link[transformeR]{getVarNames}} helper if not sure about variable names). 
-#' This argument just produces a call to \code{\link[transformeR]{subsetGrid}}, but it is included here for better flexibility in downscaling experiments (predictor screening...). 
-#' For instance, it allows to use some specific variables contained in x as local predictors and the remaining ones, specified in subset.vars, 
-#' as either raw global predictors or to construct the combined PC.
-#' @param combined.only Optional, and only used if \code{spatial.predictors} parameters are passed. Should the combined PC be used as the only global predictor? Default to TRUE. 
-#' Otherwise, the combined PC constructed with \code{which.combine} argument in \code{\link[transformeR]{prinComp}} is append to the PCs of the remaining variables within the grid.
-#' @param spatial.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form argument = value, 
-#' with the arguments to be passed to prinComp to perform Principal Component Analysis of the predictors grid (x). 
-#' See Details on principal component analysis of predictors.
-#' @param local.predictors Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
-#'  with the following arguments:
-#'  \itemize{
-#'    \item \code{vars}: names of the variables in \code{x} to be used as local predictors
-#'    \item \code{fun}: Optional. Aggregation function for the selected local neighbours.
-#'    The aggregation function is specified as a list, indicating the name of the aggregation function in
-#'     first place (as character), and other optional arguments to be passed to the aggregation function.
-#'     For instance, to compute the average skipping missing values: \code{fun = list(FUN= "mean", na.rm = TRUE)}.
-#'     Default to NULL, meaning that no aggregation is performed.
-#'    \item \code{n}: Integer. Number of nearest neighbours to use. If a single value is introduced, and there is more
-#'    than one variable in \code{vars}, the same value is used for all variables. Otherwise, this should be a vector of the same
-#'    length as \code{vars} to indicate a different number of nearest neighbours for different variables.
-#'  }
-#' @param extended.predictors This is a parameter related to the extreme learning machine and reservoir computing framework where input data is randomly projected into a new space of size \code{n}. Default to \code{NULL}, and not used. Otherwise, a named list of arguments in the form \code{argument = value},
-#'  with the following arguments:
-#'  \itemize{
-#'    \item \code{n}: A numeric value. Indicates the size of the random nonlinear dimension where the input data is projected.
-#'    \item \code{module}: A numeric value (Optional). Indicates the size of the mask's module. Belongs to a specific type of ELM called RF-ELM.
-#'  }
+#' @param scaleGrid.args A list of the parameters related to scale grids. This parameter calls the function \code{\link[transformeR]{scaleGrid}}. See the function definition for details on the parameters accepted.
+#' @param prepareData.args A list with the arguments of the \code{\link[downscaleR]{prepareData}} function. Please refer to \code{\link[downscaleR]{prepareData}} help for
+#' more details about this parameter.
 #' @param condition Inequality operator to be applied considering the given threshold.
 #' \code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
 #' \code{"LT"} = lower than, \code{"LE"} = lower or equal than. We only train with the days that satisfy the condition.
 #' @param threshold Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specification of the parameter \code{condition}. Then condition is set to \code{"GE"}.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. 
 #' Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
-#' Everything concerning these parameters is explained in the section \code{Details} of the function \code{\link[downscaleR]{downscale.train}}. However, if wanted, the atomic functions can be seen here: 
+#' Everything concerning these parameters is explained in the section \code{Details} of the function \code{\link[downscaleR]{downscaleTrain}}. However, if wanted, the atomic functions can be seen here: 
 #' \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
-#' @details The function relies on \code{\link[downscaleR]{prepareData}}, \code{\link[downscaleR]{prepareNewData}}, \code{\link[downscaleR]{downscale.train}}, and \code{\link[downscaleR]{downscale.predict}}. 
+#' @details The function relies on \code{\link[downscaleR]{prepareData}}, \code{\link[downscaleR]{prepareNewData}}, \code{\link[downscaleR]{downscaleTrain}}, and \code{\link[downscaleR]{downscalePredict}}. 
 #' For more information please visit these functions. It is envisaged to allow for a flexible fine-tuning of the cross-validation scheme. It uses internally the \pkg{transformeR} 
 #' helper \code{\link[transformeR]{dataSplit}} for flexible data folding. 
 #' Note that the indices for data splitting are obtained using \code{\link[transformeR]{getYearsAsINDEX}} when needed (e.g. in leave-one-year-out cross validation), 
@@ -93,8 +66,8 @@
 #' 
 #' @return The reconstructed downscaled temporal serie.
 #' @seealso 
-#' downscale.train for training a downscaling model
-#' downscale.predict for prediction for a a test dataset with a trained model for 
+#' downscaleTrain for training a downscaling model
+#' downscalePredict for prediction for a a test dataset with a trained model for 
 #' \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
 #' @importFrom transformeR dataSplit scaleGrid binaryGrid
 #' @family downscaling.functions
@@ -110,33 +83,39 @@
 #' y <- getTemporalIntersection(obs = y, prd = x, "obs")
 #' x <- getTemporalIntersection(obs = y, prd = x, "prd")
 #' # ... kfold in 3 parts equally divided ...
-#' pred <- downscale.cv(x, y, folds = 3, sampling.strategy = "kfold.chronological",
-#'                      scale.list = list(type = "standardize"),
+#' pred <- downscaleCV(x, y, folds = 3, sampling.strategy = "kfold.chronological",
+#'                      scaleGrid.args = list(type = "standardize"),
 #'                      method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0,
-#'                      spatial.predictors = list(which.combine = getVarNames(x), v.exp = 0.9))
+#'                      prepareData.args = list(
+#'                      "spatial.predictors" = list(which.combine = getVarNames(x), v.exp = 0.9)))
 #' # ... kfold by years ...
-#' pred <- downscale.cv(x,y,sampling.strategy = "kfold.chronological",
+#' pred <- downscaleCV(x,y,sampling.strategy = "kfold.chronological",
 #'                      method = "GLM", condition = "GT", threshold = 0,
-#'                      scale.list = list(type = "standardize"),
+#'                      scaleGrid.args = list(type = "standardize"),
 #'                      folds = list(c(1985,1986,1987,1988),
 #'                                   c(1989,1990,1991,1992),
 #'                                   c(1993,1994,1995)))
 #' # ... leave one year out  ...
-#' pred <- downscale.cv(x,y,sampling.strategy = "leave-one-year-out",
+#' pred <- downscaleCV(x,y,sampling.strategy = "leave-one-year-out",
 #'                      method = "GLM", condition = "GT", threshold = 0,
-#'                      scale.list = list(type = "standardize"))
+#'                      scaleGrid.args = list(type = "standardize"))
 #' # Reconstructing the downscaled serie in 3 folds with local predictors.
-#' pred <- downscale.cv(x,y,folds = 3, sampling.strategy = "kfold.chronological",
-#'                      scale.list = list(type = "standardize"),
+#' pred <- downscaleCV(x,y,folds = 3, sampling.strategy = "kfold.chronological",
+#'                      scaleGrid.args = list(type = "standardize"),
 #'                      method = "GLM", condition = "GT", threshold = 0,
-#'                      local.predictors = list(vars = "hus@850", n = 4))
+#'                      prepareData.args = list("local.predictors" = list(vars = "hus@850", n = 4)))
 
-
-downscale.cv <- function(x, y, method,
+downscaleCV <- function(x, y, method,
                          sampling.strategy = "kfold.chronological", folds = 4, 
-                         scale.list = NULL,
-                         global.vars = NULL, combined.only = TRUE, spatial.predictors = NULL, local.predictors = NULL, extended.predictors = NULL,
+                         scaleGrid.args = NULL,
+                         prepareData.args = list("global.vars" = NULL, "combined.only" = TRUE, "spatial.predictors" = NULL, "local.predictors" = NULL, "extended.predictors" = NULL),
                          condition = NULL, threshold = NULL, ...) {
+  
+  if (!exists("global.vars",prepareData.args)) prepareData.args$global.vars <- NULL
+  if (!exists("combined.only",prepareData.args)) prepareData.args$combined.only <- TRUE
+  if (!exists("spatial.predictors",prepareData.args)) prepareData.args$spatial.predictors <- NULL
+  if (!exists("local.predictors",prepareData.args)) prepareData.args$local.predictors <- NULL
+  if (!exists("extended.predictors",prepareData.args)) prepareData.args$extended.predictors <- NULL
   
   x <- getTemporalIntersection(x,y,which.return = "obs")
   y <- getTemporalIntersection(x,y,which.return = "prd")
@@ -168,19 +147,19 @@ downscale.cv <- function(x, y, method,
     message(paste("fold:",xx,"-->","calculating..."))
     xT <- data[[xx]]$train$x ; yT <- data[[xx]]$train$y
     xt <- data[[xx]]$test$x  ; yt <- data[[xx]]$test$y
-    if (!is.null(scale.list)) {
-      scale.list$base <- xT
-      scale.list$grid <- xt
-      scale.list$skip.season.check <- TRUE
-      xt <- do.call("scaleGrid",args = scale.list)
-      scale.list$grid <- xT
-      xT <- do.call("scaleGrid",args = scale.list)
+    if (!is.null(scaleGrid.args)) {
+      scaleGrid.args$base <- xT
+      scaleGrid.args$grid <- xt
+      scaleGrid.args$skip.season.check <- TRUE
+      xt <- do.call("scaleGrid",args = scaleGrid.args)
+      scaleGrid.args$grid <- xT
+      xT <- do.call("scaleGrid",args = scaleGrid.args)
     }
-    xT <- prepareData(x = xT, y = yT, global.vars = global.vars, combined.only = combined.only, spatial.predictors = spatial.predictors, local.predictors = local.predictors, extended.predictors = extended.predictors)
+    xT <- prepareData(x = xT, y = yT,  global.vars = prepareData.args$global.vars, combined.only = prepareData.args$combined.only, spatial.predictors = prepareData.args$spatial.predictors,local.predictors = prepareData.args$local.predictors,extended.predictors = prepareData.args$extended.predictors)
     xt <- prepareNewData(newdata = xt, data.structure = xT)
-    model <- downscale.train(xT, method, condition, threshold, ...)
+    model <- downscaleTrain(xT, method, condition, threshold, ...)
     if (all(as.vector(y$Data) %in% c(0,1,NA,NaN), na.rm = TRUE)) {
-      y.prob <- downscale.predict(xt, model)
+      y.prob <- downscalePredict(xt, model)
       if (method == "GLM") {
         if (model$model$atomic_model[[1]]$info$simulate == "yes") {
           y.bin  <- y.prob}
@@ -190,7 +169,7 @@ downscale.cv <- function(x, y, method,
         y.bin  <- binaryGrid(y.prob, ref.obs = yT, ref.pred = model$pred)}
       out <- list(y.prob$Data, y.bin$Data)}
     else{
-      out <- list(downscale.predict(xt, model)$Data)}
+      out <- list(downscalePredict(xt, model)$Data)}
     return(out)
     })
   

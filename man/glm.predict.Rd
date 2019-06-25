@@ -18,11 +18,11 @@ if it is deterministic or stochastic.}
 The predicted matrix.
 }
 \description{
-Donwscaling with a given generalized linear models (GLM) calculated in \code{\link[downscaleR]{downscale.predict}} via \code{\link[downscaleR]{glm.train}}.
+Donwscaling with a given generalized linear models (GLM) calculated in \code{\link[downscaleR]{downscalePredict}} via \code{\link[downscaleR]{glm.train}}.
 }
 \details{
 Predicts by using the base function \code{\link[stats]{predict}}. This function is internal and should not be used by the user.
-The user should use \code{\link[downscaleR]{downscale.predict}}.
+The user should use \code{\link[downscaleR]{downscalePredict}}.
 }
 \author{
 J. Bano-Medina

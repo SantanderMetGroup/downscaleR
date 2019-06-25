@@ -1,4 +1,4 @@
-##     downscale.train.R Calibration of downscaling methods
+##     downscaleTrain.R Calibration of downscaling methods
 ##
 ##     Copyright (C) 2018 Santander Meteorology Group (http://www.meteo.unican.es)
 ##
@@ -107,14 +107,11 @@
 #'    \item \code{pred}: An object with the same structure as the predictands input parameter, but with pred$Data being the predictions and not the observations.
 #'    \item \code{model}: A list with the information of the model: method, coefficients, fitting ...
 #'    }
-#' @seealso 
-#' prepareData for different options to define predictors (local gridboxes, PCs, etc.)
-#' downscale.predict for prediction for a a test dataset with a trained model for 
-#' downscale.cv for cross-validation
 #' \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
 #' @importFrom transformeR isRegular
 #' @author J. Bano-Medina
 #' @family downscaling.functions
+#' @importFrom transformeR gridArithmetics
 #' @export
 #' @examples
 #' # Loading data
@@ -125,13 +122,13 @@
 #' # Preparing the predictors
 #' data <- prepareData(x = x, y = y, spatial.predictors = list(v.exp = 0.95))
 #' # Training downscaling methods
-#' model.analogs <- downscale.train(data, method = "analogs", n.analogs = 1)
-#' model.regression <- downscale.train(data, method = "GLM",family = gaussian)
-#' model.nnets <- downscale.train(data, method = "NN", hidden = c(10,5), output = "linear")
+#' model.analogs <- downscaleTrain(data, method = "analogs", n.analogs = 1)
+#' model.regression <- downscaleTrain(data, method = "GLM",family = gaussian)
+#' model.nnets <- downscaleTrain(data, method = "NN", hidden = c(10,5), output = "linear")
 #' # Plotting the results for station 5
 #' plot(y$Data[,5],model.analogs$pred$Data[,5], xlab = "obs", ylab = "pred")
 
-downscale.train <- function(obj, method, condition = NULL, threshold = NULL, model.verbose = "yes", ...) {
+downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, model.verbose = "yes", ...) {
   method <- match.arg(method, choices = c("analogs", "GLM", "NN"))
   if ( method == "GLM") {
     if (attr(obj, "nature") == "spatial+local") {
@@ -159,7 +156,7 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
   }
   dimNames <- getDim(obj$y)
   pred <- obj$y
-
+  
   if (!is.null(threshold) & is.null(condition)) condition = "GE"
   if (!is.null(condition)) {
     if (is.null(threshold)) stop("Please specify the threshold value with parameter 'threshold'")
@@ -170,6 +167,15 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
                    "LE" = "<=")
     
   }
+  
+  # if (!is.null(threshold)) {
+  #   if (condition == "GE") {
+  #     epsilon <- 0.001
+  #     obj$y <- gridArithmetics(obj$y,threshold-epsilon,operator = "-")
+  #   } else if (condition == "GT") {
+  #     obj$y <- gridArithmetics(obj$y,threshold,operator = "-")
+  #   }
+  # }
   
   if (isRegular(obj$y)) {
     mat.y <- array3Dto2Dmat(obj$y$Data)
@@ -202,13 +208,6 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
     mat.p <- as.matrix(downs.predict(obj$x.global, method, atomic_model))}
   # Single-site
   else if (site == "single") {
-    # pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(obj$y$Data,"dimensions")
-    # regular <- FALSE
-    # if (isRegular(obj$y)) {
-    #   pred$Data <- array3Dto2Dmat(pred$Data)
-    #   obj$y$Data <- array3Dto2Dmat(obj$y$Data)
-    #   regular <- TRUE
-    # }
     stations <- dim(mat.p)[2]
     atomic_model <- vector("list",stations)
     for (i in 1:stations) {
@@ -219,7 +218,7 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
       yy = mat.y[,i, drop = FALSE]
       if (all(is.na(yy))) {
         mat.p[,i] <- yy
-        }
+      }
       else{
         if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
         else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
@@ -245,13 +244,6 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
   }
   # Mix - Global predictors with local predictors
   else if (site == "mix") {
-    # pred$Data    <- array(data = NA, dim = dim(obj$y$Data)); attr(pred$Data,"dimensions") <- attr(obj$y$Data,"dimensions")
-    # regular <- FALSE
-    # if (isRegular(obj$y)) {
-    #   pred$Data <- array3Dto2Dmat(pred$Data)
-    #   obj$y$Data <- array3Dto2Dmat(obj$y$Data)
-    #   regular <- TRUE
-    # }
     stations <- dim(mat.p)[2]
     atomic_model <- vector("list",stations)
     for (i in 1:stations) {
@@ -288,14 +280,17 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
   }
   attr(pred$Data, "dimensions") <- dimNames
   
-  model <- list("pred" = pred, "model" = list("method" = method, "site" = site, "atomic_model" = atomic_model))
-  return(model)}
+  # if (!is.null(threshold)) {pred <- gridArithmetics(pred,threshold,operator = "+")}
+  
+  model <- list("pred" = pred, "model" = list("method" = method, "site" = site, "atomic_model" = atomic_model, "condition" = condition, "threshold" = threshold))
+  return(model)
+}
 
 ##############################################################################################################
 #                     DOWNSCALING                                                                            #
 ##############################################################################################################
 #' @title Switch to selected downscale method.
-#' @description Internal function of \code{\link[downscaleR]{downscale.train}} that switches to the selected method.
+#' @description Internal function of \code{\link[downscaleR]{downscaleTrain}} that switches to the selected method.
 #' @param x The input grid. Class: matrix.
 #' @param y The observations dataset. Class: matrix.
 #' @param method Type of transer function. Options are: analogs, GLM and NN. 
@@ -304,7 +299,7 @@ downscale.train <- function(obj, method, condition = NULL, threshold = NULL, mod
 #' recommended when you want to save memory. Only operates for GLM.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. For this reason see the atomic functions for more details: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
 #' @return An object with the information of the selected model.
-#' @details The optional parameters of neural networks can be found in the library \pkg{deepnet} via \code{\link[deepnet]{nn.train}}This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.train}}.
+#' @details The optional parameters of neural networks can be found in the library \pkg{deepnet} via \code{\link[deepnet]{nn.train}}This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscaleTrain}}.
 #' @author J. Bano-Medina
 #' @importFrom deepnet nn.train
 

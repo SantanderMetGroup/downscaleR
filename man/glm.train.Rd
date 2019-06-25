@@ -70,7 +70,7 @@ The GLM model as returned from \code{\link[stats]{glm}} plus a list with informa
 Donwscaling with generalized linear models (GLM) with the base function \code{\link[stats]{glm}}.
 }
 \details{
-This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.train}} or \code{\link[downscaleR]{downscale.cv}}.
+This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscaleTrain}} or \code{\link[downscaleR]{downscaleCV}}.
 }
 \author{
 J. Bano-Medina

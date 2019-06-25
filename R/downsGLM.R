@@ -52,7 +52,7 @@
 #' 2) Except for fitting = "MP", for the rest of the fitting options, the parameter singlesite must be TRUE, unless 
 #' we want a gLASSO which in this case singlesite must be FALSE.
 #' @return The GLM model as returned from \code{\link[stats]{glm}} plus a list with information concerning the experiment.
-#' @details This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.train}} or \code{\link[downscaleR]{downscale.cv}}.
+#' @details This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscaleTrain}} or \code{\link[downscaleR]{downscaleCV}}.
 #' @author J. Bano-Medina
 #' @importFrom stats step formula
 #' @importFrom glmnet glmnet cv.glmnet
@@ -121,14 +121,14 @@ glm.train <- function(x, y, fitting = NULL, simulate = "no", model.verbose = "ye
   return(list("weights" = weights, "info" = list("fitting" = fitting, "simulate" = simulate, "family" = family)))}
 
 #' @title Donwscaling with a given generalized linear model (GLM).
-#' @description Donwscaling with a given generalized linear models (GLM) calculated in \code{\link[downscaleR]{downscale.predict}} via \code{\link[downscaleR]{glm.train}}.
+#' @description Donwscaling with a given generalized linear models (GLM) calculated in \code{\link[downscaleR]{downscalePredict}} via \code{\link[downscaleR]{glm.train}}.
 #' @param x The grid data. Class: matrix.
 #' @param weights Object as returned from \code{\link[downscaleR]{glm.train}}
 #' @param info A list containing information of the experiment: the fitting, the family of the generalized linear model and 
 #' if it is deterministic or stochastic.
 #' @return The predicted matrix.
 #' @details Predicts by using the base function \code{\link[stats]{predict}}. This function is internal and should not be used by the user.
-#' The user should use \code{\link[downscaleR]{downscale.predict}}.
+#' The user should use \code{\link[downscaleR]{downscalePredict}}.
 #' @author J. Bano-Medina
 glm.predict <- function(x, weights, info) {
   if (is.null(info$fitting) || info$fitting == "stepwise") {

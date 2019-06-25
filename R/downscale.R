@@ -41,9 +41,9 @@
 #' using the mean and sigma parameters globally computed for the whole spatial domain.
 #' @return The prediction structure.
 #' @seealso 
-#' downscale.train for training a downscaling model
-#' downscale.predict for prediction for a a test dataset with a trained model for 
-#' downscale.cv for automatic cross-validation 
+#' downscaleTrain for training a downscaling model
+#' downscalePredict for prediction for a a test dataset with a trained model for 
+#' downscaleCV for automatic cross-validation 
 #' \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
 #' @export 
 #' @family downscaling.functions
@@ -107,7 +107,7 @@ downscale <- function(y,
     sampling.strategy <- "kfold.chronological"
   }
   
-  if (!is.null(n.pcs)) {spatial.predictors <- list(n.eofs = c(rep(1,length(getVarNames(x))),n.pcs),which.combine = getVarNames(x))}
+  if (!is.null(n.pcs)) {spatial.predictors <- list(n = c(rep(1,length(getVarNames(x))),n.pcs),which.combine = getVarNames(x))}
   else {spatial.predictors <- NULL}
   
   if (method == "glm") {
@@ -128,17 +128,17 @@ downscale <- function(y,
     gridT <- prepareData(x,y,global.vars = getVarNames(x),spatial.predictors)
     gridt <- prepareNewData(newdata,gridT)
     if (method == "analogs") {
-      model <- downscale.train(gridT,method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun)
-      yp <- downscale.predict(gridt,model)
+      model <- downscaleTrain(gridT,method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun)
+      yp <- downscalePredict(gridt,model)
     }
     else if (method == "glm") {
       # Amounts
-      model.reg <- downscale.train(gridT, method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0, simulate = simulate)
-      yp.reg <- downscale.predict(gridt,model.reg)
+      model.reg <- downscaleTrain(gridT, method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0, simulate = simulate)
+      yp.reg <- downscalePredict(gridt,model.reg)
       # Ocurrence
       gridT <- prepareData(x,y.ocu,global.vars = getVarNames(x),spatial.predictors)
-      model.ocu <- downscale.train(gridT,method = "GLM", family = binomial(link = "logit"), simulate = simulate)
-      yp.ocu <- downscale.predict(gridt,model.ocu)
+      model.ocu <- downscaleTrain(gridT,method = "GLM", family = binomial(link = "logit"), simulate = simulate)
+      yp.ocu <- downscalePredict(gridt,model.ocu)
       # Complete serie
       if (simulate == "no") {
         yp.ocu <- binaryGrid(yp.ocu, ref.obs = y.ocu, ref.pred = yp.ocu)
@@ -150,21 +150,21 @@ downscale <- function(y,
       }
     }
     else if (method == "lm") {
-      model <- downscale.train(gridT,method = "GLM", family = "gaussian")
-      yp <- downscale.predict(gridt,model)
+      model <- downscaleTrain(gridT,method = "GLM", family = "gaussian")
+      yp <- downscalePredict(gridt,model)
     }
   }  
   else {# Leave-one-out and cross-validation 
     if (method == "analogs") {
-      yp <- downscale.cv(x,y,folds = folds, sampling.strategy = sampling.strategy, scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
+      yp <- downscaleCV(x,y,folds = folds, sampling.strategy = sampling.strategy, scaleGrid.args = list(type = "standardize"), prepareData.args = list("spatial.predictors" = spatial.predictors),
                          method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun)
     }
     else if (method == "glm") {
       # Ocurrence
-      yp.ocu <- downscale.cv(x,y.ocu,folds = folds, sampling.strategy = sampling.strategy, scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
+      yp.ocu <- downscaleCV(x,y.ocu,folds = folds, sampling.strategy = sampling.strategy, scaleGrid.args = list(type = "standardize"), prepareData.args = list("spatial.predictors" = spatial.predictors),
                              method = "GLM", family = binomial(link = "logit"), simulate = simulate)
       # Amounts
-      yp.reg <- downscale.cv(x,y,folds = folds, sampling.strategy = sampling.strategy, scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
+      yp.reg <- downscaleCV(x,y,folds = folds, sampling.strategy = sampling.strategy, scaleGrid.args = list(type = "standardize"), prepareData.args = list("spatial.predictors" = spatial.predictors),
                              method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0, simulate = simulate)
       # Complete serie
       yp <- y
@@ -174,7 +174,7 @@ downscale <- function(y,
       }
     }
     else if (method == "lm") {
-      yp <- downscale.cv(x,y,folds = folds, sampling.strategy = sampling.strategy, scale.list = list(type = "standardize"), spatial.predictors = spatial.predictors,
+      yp <- downscaleCV(x,y,folds = folds, sampling.strategy = sampling.strategy, scaleGrid.args = list(type = "standardize"), prepareData.args = list("spatial.predictors" = spatial.predictors),
                          method = "GLM", family = "gaussian")
     }
   }
