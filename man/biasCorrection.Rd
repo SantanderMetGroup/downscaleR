@@ -132,6 +132,8 @@ By default, It applies a gamma distribution to values under the threshold given 
 which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. 
 The user can specify a different threshold by modifying the parameter theta. It is applicable to precipitation data. 
 
+\strong{mva}
+Mean and Variance Adjustment.
 
 \strong{variance}
 

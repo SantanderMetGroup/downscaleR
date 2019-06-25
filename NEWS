@@ -36,3 +36,9 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
  * Adapt biasCorrection to grids with a single dimension (time) 
  * NA handling in precipitation frequency adjustment in biasCorrection
  * Code improvement
+ 
+## v3.0.6 (16 Apr 2019)
+* downscale.cv admits regular grids
+* New method for bias correction: mva (Mean and Variance Adjustment)
+* Other minor changes and documentation updates
+
