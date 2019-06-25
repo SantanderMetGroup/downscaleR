@@ -88,6 +88,7 @@ downscaleCV for automatic cross-validation
 \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
 
 Other downscaling.functions: \code{\link{downscaleCV}},
+  \code{\link{downscaleChunk}},
   \code{\link{downscalePredict}},
   \code{\link{downscaleTrain}}
 }

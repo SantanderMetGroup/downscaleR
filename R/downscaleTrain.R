@@ -18,6 +18,8 @@
 #' @title Calibration of downscaling methods
 #' @description Calibration of downscaling methods. Currently analogs, generalized linear models (GLM) and Neural Networks (NN) are available. 
 #' @param obj The object as returned by \code{\link[downscaleR]{prepareData}}.
+#' @param prepareData.args A list with the arguments of the \code{\link[downscaleR]{prepareData}} function. Please refer to \code{\link[downscaleR]{prepareData}} help for
+#' more details about this parameter.
 #' @param method Character string indicating the type of method/transfer function. Currently accepted values are \code{"analogs"}, \code{"GLM"} or \code{"NN"}.
 #' @param condition Inequality operator to be applied to the given \code{"threshold"}. Only the days that satisfy the condition will be used for training the model.
 #' \code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
