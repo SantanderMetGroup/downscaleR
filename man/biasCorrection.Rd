@@ -166,7 +166,7 @@ quantile mapping to alleviate the problems arising when the dry day frequency in
 }
 
 \examples{
-{
+\donttest{
 data("EOBS_Iberia_pr")
 data("CORDEX_Iberia_pr")
 y <- EOBS_Iberia_pr

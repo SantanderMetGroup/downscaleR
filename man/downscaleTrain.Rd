@@ -111,7 +111,9 @@ If there are still doubts about the optional parameters despite the description 
 \code{\link[downscaleR]{analogs.train}}, \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.
 }
 \examples{
+\donttest{
 # Loading data
+require(transformeR)
 data("VALUE_Iberia_tas")
 y <- VALUE_Iberia_tas
 data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
@@ -123,7 +125,7 @@ model.analogs <- downscaleTrain(data, method = "analogs", n.analogs = 1)
 model.regression <- downscaleTrain(data, method = "GLM",family = gaussian)
 model.nnets <- downscaleTrain(data, method = "NN", hidden = c(10,5), output = "linear")
 # Plotting the results for station 5
-plot(y$Data[,5],model.analogs$pred$Data[,5], xlab = "obs", ylab = "pred")
+plot(y$Data[,5],model.analogs$pred$Data[,5], xlab = "obs", ylab = "pred")}
 }
 \seealso{
 Other downscaling.functions: \code{\link{downscaleCV}},

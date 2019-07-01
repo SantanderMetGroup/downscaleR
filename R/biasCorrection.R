@@ -161,7 +161,7 @@
 #' }
 #' @author S. Herrera, M. Iturbide, J. Bedia
 #' @export
-#' @examples {
+#' @examples \donttest{
 #' data("EOBS_Iberia_pr")
 #' data("CORDEX_Iberia_pr")
 #' y <- EOBS_Iberia_pr

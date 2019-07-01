@@ -113,8 +113,9 @@
 #' @family downscaling.functions
 #' @importFrom transformeR gridArithmetics
 #' @export
-#' @examples
+#' @examples \donttest{
 #' # Loading data
+#' require(transformeR)
 #' data("VALUE_Iberia_tas")
 #' y <- VALUE_Iberia_tas
 #' data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
@@ -126,7 +127,7 @@
 #' model.regression <- downscaleTrain(data, method = "GLM",family = gaussian)
 #' model.nnets <- downscaleTrain(data, method = "NN", hidden = c(10,5), output = "linear")
 #' # Plotting the results for station 5
-#' plot(y$Data[,5],model.analogs$pred$Data[,5], xlab = "obs", ylab = "pred")
+#' plot(y$Data[,5],model.analogs$pred$Data[,5], xlab = "obs", ylab = "pred")}
 
 downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, model.verbose = TRUE, ...) {
   method <- match.arg(method, choices = c("analogs", "GLM", "NN"))
