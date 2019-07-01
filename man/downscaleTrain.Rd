@@ -25,9 +25,6 @@ recommended when you want to save memory. Only operates for GLM.}
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 Everything concerning these parameters is explained in the section \code{Details}. 
 However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.}
-
-\item{prepareData.args}{A list with the arguments of the \code{\link[downscaleR]{prepareData}} function. Please refer to \code{\link[downscaleR]{prepareData}} help for
-more details about this parameter.}
 }
 \value{
 A list of objects that contains the prediction on the train dataset and the model.

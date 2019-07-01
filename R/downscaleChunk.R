@@ -49,6 +49,12 @@ downscaleChunk <- function(x, y, newdata,
                            condition = NULL, threshold = NULL,
                            path = getwd()) {
   
+  if (!exists("global.vars",prepareData.args)) prepareData.args$global.vars <- NULL
+  if (!exists("combined.only",prepareData.args)) prepareData.args$combined.only <- TRUE
+  if (!exists("spatial.predictors",prepareData.args)) prepareData.args$spatial.predictors <- NULL
+  if (!exists("local.predictors",prepareData.args)) prepareData.args$local.predictors <- NULL
+  if (!exists("extended.predictors",prepareData.args)) prepareData.args$extended.predictors <- NULL
+  
   x <- getTemporalIntersection(x,y,which.return = "obs")
   y <- getTemporalIntersection(x,y,which.return = "prd")
   
@@ -57,7 +63,7 @@ downscaleChunk <- function(x, y, newdata,
   lapply(1:chunks,FUN = function(z){
     print(paste("Training chunk:",z,"out of",chunks))
     y_chunk <- subsetDimension(y,dimension = "lat", indices = z)
-    xyT <- prepareData(x = x, y = y_chunk, global.vars = global.vars, combined.only = combined.only, spatial.predictors = spatial.predictors, local.predictors = local.predictors, extended.predictors = extended.predictors)
+    xyT <- prepareData(x = x, y = y_chunk, global.vars = prepareData.args$global.vars, combined.only = prepareData.args$combined.only, spatial.predictors = prepareData.args$spatial.predictors, local.predictors = prepareData.args$local.predictors, extended.predictors = prepareData.args$extended.predictors)
     model <- downscaleTrain(xyT, method, condition, threshold, ...)
     
     p <- lapply(newdata, function(zz) {
