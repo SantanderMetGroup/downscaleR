@@ -22,7 +22,7 @@
 #' @param x The input grid. It should be an object as returned by \pkg{loadeR}.
 #' @param newdata It should be an object as returned by \pkg{loadeR} and consistent with x. Default is newdata = x.
 #' @param method Downscaling method. Options are c = ("analogs","glm","lm"). Glm can only be set when downscaling precipitation. 
-#' @param simulate Character. Options are \code{"no"}, \code{"yes"}.
+#' @param simulate Logic. Options are \code{"FALSE"}, \code{"TRUE"}.
 #' @param n.analogs Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.
 #' @param sel.fun Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n = 1}.
 #' Current values are \code{"mean"} (the default), \code{"wmean"},  \code{"max"},  \code{"min"} and  \code{"median"}.
@@ -71,12 +71,12 @@
 #' 
 #' ### GLM ###
 #' # None
-#' yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10,
+#' yp <- downscale(y,x,method = "glm", simulate = FALSE,  n.pcs = 10,
 #'                 wet.threshold = 1)
-#' yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10,
+#' yp <- downscale(y,x,method = "glm", simulate = TRUE, n.pcs = 10,
 #'                 wet.threshold = 1)
 #' # kfold
-#' yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
+#' yp <- downscale(y,x,method = "glm", simulate = FALSE, n.pcs = 10,
 #'                 cross.val = "kfold", folds = list(c(1985,1986,1987),
 #'                                                   c(1988,1989,1990),
 #'                                                   c(1991,1992,1993)))
@@ -85,7 +85,7 @@ downscale <- function(y,
                        x,
                        newdata = x,
                        method = c("analogs", "glm","lm"),
-                       simulate = c("no", "yes"),
+                       simulate = c(FALSE, TRUE),
                        n.analogs = 1,
                        sel.fun = c("mean","wmean","max","min","median"),
                        wet.threshold = .1,
@@ -111,7 +111,7 @@ downscale <- function(y,
   else {spatial.predictors <- NULL}
   
   if (method == "glm") {
-    if (simulate == "yes") {
+    if (isTRUE(simulate)) {
       y.ocu <- binaryGrid(y,threshold = 0.01)
       y <- binaryGrid(y,threshold = 0.01, partial = TRUE)}
     else{
@@ -140,12 +140,12 @@ downscale <- function(y,
       model.ocu <- downscaleTrain(gridT,method = "GLM", family = binomial(link = "logit"), simulate = simulate)
       yp.ocu <- downscalePredict(gridt,model.ocu)
       # Complete serie
-      if (simulate == "no") {
+      if (!isTRUE(simulate)) {
         yp.ocu <- binaryGrid(yp.ocu, ref.obs = y.ocu, ref.pred = yp.ocu)
       }
       yp <- y
       yp$Data <- yp.ocu$Data*yp.reg$Data
-      if (simulate == "yes") {
+      if (isTRUE(simulate)) {
         yp <- binaryGrid(yp,threshold = wet.threshold, partial = TRUE)
       }
     }
@@ -169,7 +169,7 @@ downscale <- function(y,
       # Complete serie
       yp <- y
       yp$Data <- yp.ocu[[2]]$Data*yp.reg$Data
-      if (simulate == "yes") {
+      if (isTRUE(simulate)) {
         yp <- binaryGrid(yp,threshold = wet.threshold, partial = TRUE)
       }
     }

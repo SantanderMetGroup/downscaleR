@@ -161,7 +161,7 @@ downscaleCV <- function(x, y, method,
     if (all(as.vector(y$Data) %in% c(0,1,NA,NaN), na.rm = TRUE)) {
       y.prob <- downscalePredict(xt, model)
       if (method == "GLM") {
-        if (model$model$atomic_model[[1]]$info$simulate == "yes") {
+        if (isTRUE(model$model$atomic_model[[1]]$info$simulate)) {
           y.bin  <- y.prob}
         else {
           y.bin  <- binaryGrid(y.prob, ref.obs = yT, ref.pred = model$pred)}}

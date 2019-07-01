@@ -6,9 +6,9 @@
 #' @param x The grid data. Class: matrix.
 #' @param y The observations data. Class: matrix.
 #' @param fitting A string indicating the types of objective functions and how to fit the linear model.
-#' @param simulate A string indicating wether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma 
-#' @param model.verbose String value. Indicates wether the information concerning the model infered is limited to the 
-#' essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+#' @param simulate A logic value indicating wether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma 
+#' @param model.verbose A logic value. Indicates wether the information concerning the model infered is limited to the 
+#' essential information (model.verbose = FALSE)  or a more detailed information (model.verbose = TRUE, DEFAULT). This is
 #' recommended when you want to save memory. Only operates for GLM.
 #' or binomial families.
 #' @param stepwise.arg A list contatining two parameters: steps and direction. When performing a stepwise search
@@ -56,7 +56,7 @@
 #' @author J. Bano-Medina
 #' @importFrom stats step formula
 #' @importFrom glmnet glmnet cv.glmnet
-glm.train <- function(x, y, fitting = NULL, simulate = "no", model.verbose = "yes",
+glm.train <- function(x, y, fitting = NULL, simulate = FALSE, model.verbose = TRUE,
                       stepwise.arg = NULL,
                       ...) {
   if (is.null(fitting)) {
@@ -104,7 +104,7 @@ glm.train <- function(x, y, fitting = NULL, simulate = "no", model.verbose = "ye
     weights <- glmnet(x,y,alpha = 0, family = "mgaussian", type.multinomial = "grouped", ...)
   }
   
-  if (model.verbose == "no") {
+  if (!isTRUE(model.verbose)) {
     weights$fitted.values <- NULL
     weights$effects <- NULL
     # weights$qr$qr <- NULL
@@ -138,7 +138,7 @@ glm.predict <- function(x, weights, info) {
   else if (info$fitting == "L1" || info$fitting == "L2" || info$fitting == "L1L2" || info$fitting == "gLASSO") {
     pred <- drop(predict(weights,x,type = "response"))
   }
-  if (info$simulate == "yes") {
+  if (isTRUE(info$simulate)) {
     if (info$family$family == "binomial") {
       rnd <- runif(length(pred), min = 0, max = 1)
       ind01 <- which(pred > rnd)

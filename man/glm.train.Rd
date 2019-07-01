@@ -4,8 +4,8 @@
 \alias{glm.train}
 \title{Donwscaling with generalized linear models (GLM).}
 \usage{
-glm.train(x, y, fitting = NULL, simulate = "no",
-  model.verbose = "yes", stepwise.arg = NULL, ...)
+glm.train(x, y, fitting = NULL, simulate = FALSE,
+  model.verbose = TRUE, stepwise.arg = NULL, ...)
 }
 \arguments{
 \item{x}{The grid data. Class: matrix.}
@@ -14,10 +14,10 @@ glm.train(x, y, fitting = NULL, simulate = "no",
 
 \item{fitting}{A string indicating the types of objective functions and how to fit the linear model.}
 
-\item{simulate}{A string indicating wether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma}
+\item{simulate}{A logic value indicating wether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma}
 
-\item{model.verbose}{String value. Indicates wether the information concerning the model infered is limited to the 
-essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+\item{model.verbose}{A logic value. Indicates wether the information concerning the model infered is limited to the 
+essential information (model.verbose = FALSE)  or a more detailed information (model.verbose = TRUE, DEFAULT). This is
 recommended when you want to save memory. Only operates for GLM.
 or binomial families.}
 

@@ -5,7 +5,7 @@
 \title{Calibration of downscaling methods}
 \usage{
 downscaleTrain(obj, method, condition = NULL, threshold = NULL,
-  model.verbose = "yes", ...)
+  model.verbose = TRUE, ...)
 }
 \arguments{
 \item{obj}{The object as returned by \code{\link[downscaleR]{prepareData}}.}
@@ -18,8 +18,8 @@ downscaleTrain(obj, method, condition = NULL, threshold = NULL,
 
 \item{threshold}{Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the argument \code{condition}. Then condition is set to \code{"GE"}.}
 
-\item{model.verbose}{String value. Indicates wether the information concerning the model infered is limited to the 
-essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+\item{model.verbose}{A logic value. Indicates wether the information concerning the model infered is limited to the 
+essential information (model.verbose = FALSE)  or a more detailed information (model.verbose = TRUE, DEFAULT). This is
 recommended when you want to save memory. Only operates for GLM.}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 

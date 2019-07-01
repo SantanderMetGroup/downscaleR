@@ -23,8 +23,8 @@
 #' \code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
 #' \code{"LT"} = lower than, \code{"LE"} = lower or equal than.
 #' @param threshold Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specificaction of the argument \code{condition}. Then condition is set to \code{"GE"}.
-#' @param model.verbose String value. Indicates wether the information concerning the model infered is limited to the 
-#' essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+#' @param model.verbose A logic value. Indicates wether the information concerning the model infered is limited to the 
+#' essential information (model.verbose = FALSE)  or a more detailed information (model.verbose = TRUE, DEFAULT). This is
 #' recommended when you want to save memory. Only operates for GLM.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 #' Everything concerning these parameters is explained in the section \code{Details}. 
@@ -128,7 +128,7 @@
 #' # Plotting the results for station 5
 #' plot(y$Data[,5],model.analogs$pred$Data[,5], xlab = "obs", ylab = "pred")
 
-downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, model.verbose = "yes", ...) {
+downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, model.verbose = TRUE, ...) {
   method <- match.arg(method, choices = c("analogs", "GLM", "NN"))
   if ( method == "GLM") {
     if (attr(obj, "nature") == "spatial+local") {
@@ -294,8 +294,8 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
 #' @param x The input grid. Class: matrix.
 #' @param y The observations dataset. Class: matrix.
 #' @param method Type of transer function. Options are: analogs, GLM and NN. 
-#' @param model.verbose String value. Indicates wether the information concerning the model infered is limited to the 
-#' essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+#' @param model.verbose Logic value. Indicates wether the information concerning the model infered is limited to the 
+#' essential information (model.verbose = FALSE)  or a more detailed information (model.verbose = TRUE, DEFAULT). This is
 #' recommended when you want to save memory. Only operates for GLM.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. For this reason see the atomic functions for more details: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
 #' @return An object with the information of the selected model.
@@ -303,7 +303,7 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
 #' @author J. Bano-Medina
 #' @importFrom deepnet nn.train
 
-downs.train <- function(x, y, method, model.verbose = "yes", ...) {
+downs.train <- function(x, y, method, model.verbose = TRUE, ...) {
   if (method == "NN") {
     arglist <- list(...)
     arglist[["x"]] <- x
