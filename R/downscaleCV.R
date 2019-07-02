@@ -180,4 +180,8 @@ downscaleCV <- function(x, y, method,
       attr(pred$Data, "dimensions") <- dimNames  
       return(pred)})
     if (length(pred) == 1) pred <- pred[[1]]
+    else{
+      pred <- makeMultiGrid(pred) %>% redim(drop = TRUE)
+      pred$Variable$varName <- c("prob","bin")
+    }
   return(pred)}
