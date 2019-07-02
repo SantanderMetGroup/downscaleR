@@ -168,7 +168,7 @@ downscale <- function(y,
                              method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0, simulate = simulate)
       # Complete serie
       yp <- y
-      yp$Data <- yp.ocu[[2]]$Data*yp.reg$Data
+      yp$Data <- gridArithmetics(subsetGrid(yp.ocu,var = "bin"),yp.reg,operator = "*")$Data
       if (isTRUE(simulate)) {
         yp <- binaryGrid(yp,threshold = wet.threshold, partial = TRUE)
       }

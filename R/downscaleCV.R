@@ -69,7 +69,7 @@
 #' downscaleTrain for training a downscaling model
 #' downscalePredict for prediction for a a test dataset with a trained model for 
 #' \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
-#' @importFrom transformeR dataSplit scaleGrid binaryGrid
+#' @importFrom transformeR dataSplit scaleGrid binaryGrid makeMultiGrid
 #' @family downscaling.functions
 #' @author J. Bano-Medina
 #' @export
