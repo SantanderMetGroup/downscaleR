@@ -42,8 +42,10 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 * New method for bias correction: mva (Mean and Variance Adjustment)
 * Other minor changes and documentation updates
 
-## v3.1.0 (01 Jul 2019)
-* New downscaleChunk function, to handle large experiments
+## v3.1.0 (09 Jul 2019)
+* New `downscaleChunk` function, to handle large experiments by chunks
 * downscale.cv renamed --> downscaleCV
 * downscale.train renamed --> downscaleTrain
 * downscale.predict renamed --> downscalePredict
+* Other minor changes and documentation updates
+
