@@ -44,7 +44,7 @@
 #' @param ... Optional parameters. These parameters are different depending on the method selected. 
 #' Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 #' Everything concerning these parameters is explained in the section \code{Details} of the function \code{\link[downscaleR]{downscaleTrain}}. However, if wanted, the atomic functions can be seen here: 
-#' \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
+#' \code{\link[downscaleR]{analogs.train}}, \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
 #' @details The function relies on \code{\link[downscaleR]{prepareData}}, \code{\link[downscaleR]{prepareNewData}}, \code{\link[downscaleR]{downscaleTrain}}, and \code{\link[downscaleR]{downscalePredict}}. 
 #' For more information please visit these functions. It is envisaged to allow for a flexible fine-tuning of the cross-validation scheme. It uses internally the \pkg{transformeR} 
 #' helper \code{\link[transformeR]{dataSplit}} for flexible data folding. 
