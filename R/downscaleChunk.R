@@ -87,5 +87,13 @@ downscaleChunk <- function(x, y, newdata,
     })
     p <- NULL
   })
-  NULL
+  
+  pred <- list()
+  for (i in 1:(length(newdata)+1)) {
+    lf <- list.files("./", pattern = paste0("dataset",i), full.names = TRUE)
+    chunk.list <- lapply(lf, function(x) get(load(x)))
+    pred[[i]] <- bindGrid(chunk.list, dimension = "lat")
+    file.remove(lf)
+  }
+  return(pred)
 }
