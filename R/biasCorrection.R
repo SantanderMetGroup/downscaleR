@@ -866,7 +866,7 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
             stop("method gpqm is only applied to precipitation data")
       } else {
             threshold <- pr.threshold
-            if (any(!is.na(o))) {
+            if (any(!is.na(o)) & any(!is.na(p))) {
                   params <-  adjustPrecipFreq(o, p, threshold)
                   p <- params$p
                   nP <- params$nP
