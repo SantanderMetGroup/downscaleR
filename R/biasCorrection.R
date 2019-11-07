@@ -51,7 +51,7 @@
 #' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 #' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 #' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
-#' percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.
+#' percentile (and 5th percentile for the left tail). Only for \code{"gpqm"} method.
 #' @param detrend logical. Detrend data prior to bias correction? Only for \code{"dqm"}. Default. TRUE.
 #' @param join.members Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
 #'  or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).
@@ -101,9 +101,11 @@
 #' Generalized Quantile Mapping (described in Gutjahr and Heinemann 2013) is also a parametric quantile mapping (see
 #' method 'pqm') but using two teorethical distributions, the gamma distribution and Generalized Pareto Distribution (GPD).
 #' By default, It applies a gamma distribution to values under the threshold given by the 95th percentile 
-#' (following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. the threshold above 
-#' which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. 
-#' The user can specify a different threshold by modifying the parameter theta. It is applicable to precipitation data. 
+#' (following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. The threshold above 
+#' which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. If precip=FALSE
+#' values below the 5th percentile of the observed and the predicted distributions are additionally fitted using GPD and 
+#' the rest of the values of the distributions are fitted using a normal distribution.
+#' The user can specify a different threshold(s) by modifying the parameter theta. 
 #' 
 #' \strong{mva}
 #' 
@@ -275,7 +277,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            wet.threshold = 1,
                            n.quantiles = NULL,
                            extrapolation = c("none", "constant"), 
-                           theta = .95,
+                           theta = c(.95,.05),
                            detrend=TRUE,
                            join.members = FALSE,
                            parallel = FALSE,
@@ -857,14 +859,48 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
 #' @importFrom evd fpot
 #' @importFrom MASS fitdistr
 #' @importFrom evd qgpd pgpd
-#' @importFrom stats quantile pgamma qgamma
+#' @importFrom stats quantile pgamma qgamma pnorm qnorm
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
 
 gpqm <- function(o, p, s, precip, pr.threshold, theta) { 
       if (precip == FALSE) {
-            stop("method gpqm is only applied to precipitation data")
+        # stop("method gpqm is only applied to precipitation data")
+        # For temperature, lower (values below theta.low) and upper (values above theta) tails of the distribution are fitted with GPD.
+        if (all(is.na(o)) | all(is.na(p))) {
+          s <- rep(NA, length(s))
+        } else{
+          theta.low <- theta[2]
+          theta <- theta[1]
+          ind <- which(!is.na(o))
+          indnormal <- ind[which((o[ind] < quantile(o[ind], theta)) & (o[ind] > quantile(o[ind], theta.low)))]
+          indparetoUp <- ind[which(o[ind] >= quantile(o[ind], theta))]
+          indparetoLow <- ind[which(o[ind] <= quantile(o[ind], theta.low))]
+          obsGQM <- fitdistr(o[indnormal],"normal")
+          obsGQM2Up <- fpot(o[indparetoUp], quantile(o[ind], theta), "gpd", std.err = FALSE)
+          obsGQM2Low <- fpot(-o[indparetoLow], -quantile(o[ind], theta.low), "gpd", std.err = FALSE)
+          indp <- which(!is.na(p))
+          indnormalp <- indp[which((p[indp] < quantile(p[indp],theta)) & (p[indp] > quantile(p[indp], theta.low)))]
+          indparetopUp <- indp[which(p[indp] >= quantile(p[indp], theta))]
+          indparetopLow <- indp[which(p[indp] <= quantile(p[indp], theta.low))]
+          prdGQM <- fitdistr(p[indnormalp], "normal")
+          prdGQM2Up <- fpot(p[indparetopUp], quantile(p[indp], theta), "gpd", std.err = FALSE)
+          prdGQM2Low <- fpot(-p[indparetopLow], -quantile(p[indp], theta.low), "gpd", std.err = FALSE)
+          inds <- which(!is.na(s))
+          indnormalsim <- inds[which((s[inds] < quantile(p[indp], theta)) & (s[inds] > quantile(p[indp], theta.low)))]
+          indparetosimUp <- inds[which(s[inds] >= quantile(p[indp], theta))]
+          indparetosimLow <- inds[which(s[inds] <= quantile(p[indp], theta.low))]
+          auxF <- pnorm(s[indnormalsim], prdGQM$estimate[1], prdGQM$estimate[2])
+          auxF2Up <- pgpd(s[indparetosimUp], loc = prdGQM2Up$threshold, scale = prdGQM2Up$estimate[1], shape = prdGQM2Up$estimate[2])
+          auxF2Low <- pgpd(-s[indparetosimLow], loc = prdGQM2Low$threshold, scale = prdGQM2Low$estimate[1], shape = prdGQM2Low$estimate[2])
+          s[indnormalsim] <- qnorm(auxF, obsGQM$estimate[1], obsGQM$estimate[2])
+          s[indparetosimUp[which(auxF2Up < 1)]] <- qgpd(auxF2Up[which(auxF2Up < 1)], loc = obsGQM2Up$threshold, scale = obsGQM2Up$estimate[1], shape = obsGQM2Up$estimate[2])
+          s[indparetosimUp[which(auxF2Up == 1)]] <- max(o[indparetoUp], na.rm = TRUE)
+          s[indparetosimLow[which(auxF2Low < 1)]] <- -qgpd(auxF2Low[which(auxF2Low < 1)], loc = obsGQM2Low$threshold, scale = obsGQM2Low$estimate[1], shape = obsGQM2Low$estimate[2])
+          s[indparetosimLow[which(auxF2Low == 1)]] <- min(o[indparetoLow], na.rm = TRUE)
+        }  
       } else {
+            theta <- theta[1]
             threshold <- pr.threshold
             if (any(!is.na(o)) & any(!is.na(p))) {
                   params <-  adjustPrecipFreq(o, p, threshold)
@@ -1343,7 +1379,7 @@ qdm <- function(o, p, s, precip, pr.threshold, n.quantiles, jitter.factor=0.01){
 #' By default, It applies a gamma distribution to values under the threshold given by the 95th percentile 
 #' (following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. the threshold above 
 #' which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. 
-#' The user can specify a different threshold by modifying the parameter theta. It is applicable to precipitation data. 
+#' The user can specify a different threshold by modifying the parameter theta. 
 #' 
 #' 
 #' \strong{variance}

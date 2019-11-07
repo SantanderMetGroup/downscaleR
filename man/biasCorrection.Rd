@@ -10,7 +10,7 @@ biasCorrection(y, x, newdata = NULL, precipitation = FALSE,
   window = NULL, scaling.type = c("additive", "multiplicative"),
   fitdistr.args = list(densfun = "normal"), wet.threshold = 1,
   n.quantiles = NULL, extrapolation = c("none", "constant"),
-  theta = 0.95, detrend = TRUE, join.members = FALSE,
+  theta = c(0.95, 0.05), detrend = TRUE, join.members = FALSE,
   parallel = FALSE, max.ncores = 16, ncores = NULL)
 }
 \arguments{
@@ -67,7 +67,7 @@ thus, this argument is ignored if other bias correction method is selected. Defa
 \item{theta}{numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
-percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.}
+percentile (and 5th percentile for the left tail). Only for \code{"gpqm"} method.}
 
 \item{detrend}{logical. Detrend data prior to bias correction? Only for \code{"dqm"}. Default. TRUE.}
 
@@ -130,9 +130,11 @@ is applicable to correct wind data (Tie et al. 2014).
 Generalized Quantile Mapping (described in Gutjahr and Heinemann 2013) is also a parametric quantile mapping (see
 method 'pqm') but using two teorethical distributions, the gamma distribution and Generalized Pareto Distribution (GPD).
 By default, It applies a gamma distribution to values under the threshold given by the 95th percentile 
-(following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. the threshold above 
-which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. 
-The user can specify a different threshold by modifying the parameter theta. It is applicable to precipitation data. 
+(following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. The threshold above 
+which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. If precip=FALSE
+values below the 5th percentile of the observed and the predicted distributions are additionally fitted using GPD and 
+the rest of the values of the distributions are fitted using a normal distribution.
+The user can specify a different threshold(s) by modifying the parameter theta. 
 
 \strong{mva}
 
