@@ -876,26 +876,29 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
           indnormal <- ind[which((o[ind] < quantile(o[ind], theta)) & (o[ind] > quantile(o[ind], theta.low)))]
           indparetoUp <- ind[which(o[ind] >= quantile(o[ind], theta))]
           indparetoLow <- ind[which(o[ind] <= quantile(o[ind], theta.low))]
-          obsGQM <- fitdistr(o[indnormal],"normal")
-          obsGQM2Up <- fpot(o[indparetoUp], quantile(o[ind], theta), "gpd", std.err = FALSE)
-          obsGQM2Low <- fpot(-o[indparetoLow], -quantile(o[ind], theta.low), "gpd", std.err = FALSE)
           indp <- which(!is.na(p))
           indnormalp <- indp[which((p[indp] < quantile(p[indp],theta)) & (p[indp] > quantile(p[indp], theta.low)))]
           indparetopUp <- indp[which(p[indp] >= quantile(p[indp], theta))]
           indparetopLow <- indp[which(p[indp] <= quantile(p[indp], theta.low))]
-          prdGQM <- fitdistr(p[indnormalp], "normal")
-          prdGQM2Up <- fpot(p[indparetopUp], quantile(p[indp], theta), "gpd", std.err = FALSE)
-          prdGQM2Low <- fpot(-p[indparetopLow], -quantile(p[indp], theta.low), "gpd", std.err = FALSE)
           inds <- which(!is.na(s))
           indnormalsim <- inds[which((s[inds] < quantile(p[indp], theta)) & (s[inds] > quantile(p[indp], theta.low)))]
           indparetosimUp <- inds[which(s[inds] >= quantile(p[indp], theta))]
           indparetosimLow <- inds[which(s[inds] <= quantile(p[indp], theta.low))]
+          # normal distribution
+          obsGQM <- fitdistr(o[indnormal],"normal")
+          prdGQM <- fitdistr(p[indnormalp], "normal")
           auxF <- pnorm(s[indnormalsim], prdGQM$estimate[1], prdGQM$estimate[2])
-          auxF2Up <- pgpd(s[indparetosimUp], loc = prdGQM2Up$threshold, scale = prdGQM2Up$estimate[1], shape = prdGQM2Up$estimate[2])
-          auxF2Low <- pgpd(-s[indparetosimLow], loc = prdGQM2Low$threshold, scale = prdGQM2Low$estimate[1], shape = prdGQM2Low$estimate[2])
           s[indnormalsim] <- qnorm(auxF, obsGQM$estimate[1], obsGQM$estimate[2])
+          # upper tail
+          obsGQM2Up <- fpot(o[indparetoUp], quantile(o[ind], theta), "gpd", std.err = FALSE)
+          prdGQM2Up <- fpot(p[indparetopUp], quantile(p[indp], theta), "gpd", std.err = FALSE)
+          auxF2Up <- pgpd(s[indparetosimUp], loc = prdGQM2Up$threshold, scale = prdGQM2Up$estimate[1], shape = prdGQM2Up$estimate[2])
           s[indparetosimUp[which(auxF2Up < 1)]] <- qgpd(auxF2Up[which(auxF2Up < 1)], loc = obsGQM2Up$threshold, scale = obsGQM2Up$estimate[1], shape = obsGQM2Up$estimate[2])
           s[indparetosimUp[which(auxF2Up == 1)]] <- max(o[indparetoUp], na.rm = TRUE)
+          # lower tail
+          obsGQM2Low <- fpot(-o[indparetoLow], -quantile(o[ind], theta.low), "gpd", std.err = FALSE)
+          prdGQM2Low <- fpot(-p[indparetopLow], -quantile(p[indp], theta.low), "gpd", std.err = FALSE)
+          auxF2Low <- pgpd(-s[indparetosimLow], loc = prdGQM2Low$threshold, scale = prdGQM2Low$estimate[1], shape = prdGQM2Low$estimate[2])
           s[indparetosimLow[which(auxF2Low < 1)]] <- -qgpd(auxF2Low[which(auxF2Low < 1)], loc = obsGQM2Low$threshold, scale = obsGQM2Low$estimate[1], shape = obsGQM2Low$estimate[2])
           s[indparetosimLow[which(auxF2Low == 1)]] <- min(o[indparetoLow], na.rm = TRUE)
         }  
@@ -916,22 +919,33 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
                   ind <- which(o > threshold & !is.na(o))
                   indgamma <- ind[which(o[ind] < quantile(o[ind], theta))]
                   indpareto <- ind[which(o[ind] >= quantile(o[ind], theta))]
-                  obsGQM <- fitdistr(o[indgamma],"gamma")
-                  obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
-                  ind <- which(p > 0 & !is.na(p))
-                  indgammap <- ind[which(p[ind] < quantile(p[ind],theta))]
-                  indparetop <- ind[which(p[ind] >= quantile(p[ind], theta))]
-                  prdGQM <- fitdistr(p[indgammap], "gamma")
-                  prdGQM2 <- fpot(p[indparetop], quantile(p[ind], theta), "gpd", std.err = FALSE)
+                  indp <- which(p > 0 & !is.na(p))
+                  indgammap <- indp[which(p[indp] < quantile(p[indp],theta))]
+                  indparetop <- indp[which(p[indp] >= quantile(p[indp], theta))]
                   rain <- which(s > Pth & !is.na(s))
                   noRain <- which(s <= Pth & !is.na(s))
-                  indgammasim <- rain[which(s[rain] < quantile(p[ind], theta))]
-                  indparetosim <- rain[which(s[rain] >= quantile(p[ind], theta))]
-                  auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
-                  auxF2 <- pgpd(s[indparetosim], loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
-                  s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
-                  s[indparetosim[which(auxF2 < 1)]] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
-                  s[indparetosim[which(auxF2 == 1)]] <- max(o[indpareto], na.rm = TRUE)
+                  indgammasim <- rain[which(s[rain] < quantile(p[indp], theta))]
+                  indparetosim <- rain[which(s[rain] >= quantile(p[indp], theta))]
+                  # gamma distribution
+                  if(length(indgamma)>1 & length(indgammap)>1 & length(indgammasim)>1){
+                    obsGQM <- fitdistr(o[indgamma],"gamma")
+                    prdGQM <- fitdistr(p[indgammap], "gamma")
+                    auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
+                    s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
+                  } else{
+                    s[indgammasim] <-0
+                  }
+                  # upper tail
+                  if(any(o[indpareto] > quantile(o[ind], theta)) & any(p[indparetop] > quantile(p[indp], theta))){
+                    obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
+                    prdGQM2 <- fpot(p[indparetop], quantile(p[indp], theta), "gpd", std.err = FALSE)
+                    auxF2 <- pgpd(s[indparetosim], loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
+                    s[indparetosim[which(auxF2 < 1)]] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
+                    s[indparetosim[which(auxF2 == 1)]] <- max(o[indpareto], na.rm = TRUE)
+                  } else {
+                    s[indparetosim] <- 0
+                  }
+                  # dry days
                   s[noRain] <- 0
             } else {
                   warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
