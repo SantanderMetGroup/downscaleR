@@ -893,14 +893,16 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
           obsGQM2Up <- fpot(o[indparetoUp], quantile(o[ind], theta), "gpd", std.err = FALSE)
           prdGQM2Up <- fpot(p[indparetopUp], quantile(p[indp], theta), "gpd", std.err = FALSE)
           auxF2Up <- pgpd(s[indparetosimUp], loc = prdGQM2Up$threshold, scale = prdGQM2Up$estimate[1], shape = prdGQM2Up$estimate[2])
-          s[indparetosimUp[which(auxF2Up < 1)]] <- qgpd(auxF2Up[which(auxF2Up < 1)], loc = obsGQM2Up$threshold, scale = obsGQM2Up$estimate[1], shape = obsGQM2Up$estimate[2])
+          s[indparetosimUp[which(auxF2Up < 1  & auxF2Up > 0)]] <- qgpd(auxF2Up[which(auxF2Up < 1 & auxF2Up > 0)], loc = obsGQM2Up$threshold, scale = obsGQM2Up$estimate[1], shape = obsGQM2Up$estimate[2])
           s[indparetosimUp[which(auxF2Up == 1)]] <- max(o[indparetoUp], na.rm = TRUE)
+          s[indparetosimUp[which(auxF2Up == 0)]] <- min(o[indparetoUp], na.rm = TRUE)
           # lower tail
           obsGQM2Low <- fpot(-o[indparetoLow], -quantile(o[ind], theta.low), "gpd", std.err = FALSE)
           prdGQM2Low <- fpot(-p[indparetopLow], -quantile(p[indp], theta.low), "gpd", std.err = FALSE)
           auxF2Low <- pgpd(-s[indparetosimLow], loc = prdGQM2Low$threshold, scale = prdGQM2Low$estimate[1], shape = prdGQM2Low$estimate[2])
-          s[indparetosimLow[which(auxF2Low < 1)]] <- -qgpd(auxF2Low[which(auxF2Low < 1)], loc = obsGQM2Low$threshold, scale = obsGQM2Low$estimate[1], shape = obsGQM2Low$estimate[2])
-          s[indparetosimLow[which(auxF2Low == 1)]] <- min(o[indparetoLow], na.rm = TRUE)
+          s[indparetosimLow[which(auxF2Low < 1 & auxF2Low > 0)]] <- -qgpd(auxF2Low[which(auxF2Low < 1 & auxF2Low > 0)], loc = obsGQM2Low$threshold, scale = obsGQM2Low$estimate[1], shape = obsGQM2Low$estimate[2])
+          s[indparetosimLow[which(auxF2Low == 1)]] <- max(o[indparetoLow], na.rm = TRUE)
+          s[indparetosimLow[which(auxF2Low == 0)]] <- min(o[indparetoLow], na.rm = TRUE)
         }  
       } else {
             theta <- theta[1]
