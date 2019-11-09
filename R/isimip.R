@@ -294,8 +294,7 @@ isimip <- function (y, x, newdata, threshold = 1, type = c("additive", "multipli
                         }
                   }
             }
-      }
-      if(any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))){
+      } else if(any(grepl(obs$Variable$varName,c("pr","tp","precipitation","precip")))){
             if (length(threshold)==1){
                   threshold<-array(data = threshold, dim = 3)
             }
@@ -623,8 +622,7 @@ isimip <- function (y, x, newdata, threshold = 1, type = c("additive", "multipli
                   }
             }
             attr(sim$Data, "threshold") <- threshold
-      }
-      if(((any(grepl(obs$Variable$varName,c("radiation","pressure","wind","win dspeed","humidity","specific humidity","radiacion","presion","viento","humedad","humedad especifica","rss","rsds","rls","rlds","ps","slp","wss","huss","hus")))) | (type == "multiplicative")) & !multiField){
+      } else if(((any(grepl(obs$Variable$varName,c("radiation","pressure","wind","win dspeed","humidity","specific humidity","radiacion","presion","viento","humedad","humedad especifica","rss","rsds","rls","rlds","ps","slp","wss","huss","hus")))) | (type == "multiplicative")) & !multiField){
             if (length(threshold)==1){
                   threshold<-array(data = threshold, dim = 3)
             }
@@ -949,8 +947,7 @@ isimip <- function (y, x, newdata, threshold = 1, type = c("additive", "multipli
                   }
             }
             attr(sim$Data, "threshold") <- threshold
-      }
-      if((any(grepl(obs$Variable$varName,c("maximum temperature","temperatura maxima","tasmax","tmax","minimum temperature","temperatura minima","tasmin","tmin"))))){
+      } else if((any(grepl(obs$Variable$varName,c("maximum temperature","temperatura maxima","tasmax","tmax","minimum temperature","temperatura minima","tasmin","tmin"))))){
             indTas <- which(!is.na(match(obs$Variable$varName,c("tas","temperatura media","mean temperature","tmean"))))
             if (length(indTas) == 0){
                   stop("Mean temperature is needed to correct the Maximum and Minimum Temperatures")
@@ -1042,12 +1039,12 @@ isimip <- function (y, x, newdata, threshold = 1, type = c("additive", "multipli
                         }
                   }
             }
-      }
+            
       #       case {'uas';'vas';'ua';'va';'eastward wind component';'northward wind component'},
       #       if isempty(Ws),error('Wind speed is necessary for the correction of the eastward and northward wind component');end
       #       wsC=isimip(Ws.O,Ws.P,Ws.F,'variable','windspeed','datesobs',datesObs,'datesfor',datesFor);
       #       indC=find(~isnan(Ws.F) & Ws.F>0);F(indC)=(F(indC).*wsC(indC))./Ws.F(indC);
-      if((any(grepl(obs$Variable$varName,c("uas","vas","ua","va","eastward wind component","northward wind component"))))) {
+      } else if((any(grepl(obs$Variable$varName,c("uas","vas","ua","va","eastward wind component","northward wind component"))))) {
             indTas <- which(!is.na(match(obs$Variable$varName,c("wind","windspeed","viento","wss"))))
             if (length(indTas) == 0){
                   stop("Wind speed is needed to correct eastward and northward wind components")
@@ -1104,12 +1101,12 @@ isimip <- function (y, x, newdata, threshold = 1, type = c("additive", "multipli
                         sim$Data[indTasForAux[indCalmWind,]] <- calmWind
                   }
             }
-      }
+      
       #       case {'prsn';'snowfall';'nieve'},
       #       if isempty(Pr),error('Precipitation is necessary for the correction of the snowfall');end
       #       prC=isimip(Pr.O,Pr.P,Pr.F,'variable','precipitation','datesobs',datesObs,'datesfor',datesFor,'threshold', threshold);
       #       indC=find(~isnan(Pr.F) & Pr.F>0);F(indC)=(F(indC).*prC(indC))./Pr.F(indC);
-      if((any(grepl(obs$Variable$varName,c("prsn","snowfall","nieve"))))) {
+      } else if((any(grepl(obs$Variable$varName,c("prsn","snowfall","nieve"))))) {
             indTas <- which(!is.na(match(obs$Variable$varName,c("pr","tp","precipitation","precip"))))
             if (length(indTas) == 0){
                   stop("Precipitation is needed to correct snow")
