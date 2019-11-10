@@ -942,8 +942,9 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
                     obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
                     prdGQM2 <- fpot(p[indparetop], quantile(p[indp], theta), "gpd", std.err = FALSE)
                     auxF2 <- pgpd(s[indparetosim], loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
-                    s[indparetosim[which(auxF2 < 1)]] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
+                    s[indparetosim[which(auxF2 < 1  & auxF2 > 0)]] <- qgpd(auxF2[which(auxF2 < 1  & auxF2 > 0)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
                     s[indparetosim[which(auxF2 == 1)]] <- max(o[indpareto], na.rm = TRUE)
+                    s[indparetosim[which(auxF2 == 0)]] <- min(o[indpareto], na.rm = TRUE)
                   } else {
                     s[indparetosim] <- 0
                   }
