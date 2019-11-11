@@ -930,10 +930,15 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
                   indparetosim <- rain[which(s[rain] >= quantile(p[indp], theta))]
                   # gamma distribution
                   if(length(indgamma)>1 & length(indgammap)>1 & length(indgammasim)>1){
-                    obsGQM <- fitdistr(o[indgamma],"gamma")
-                    prdGQM <- fitdistr(p[indgammap], "gamma")
-                    auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
-                    s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
+                    obsGQM <- tryCatch(fitdistr(o[indgamma],"gamma"), error = function(err){NULL})
+                    prdGQM <- tryCatch(fitdistr(p[indgammap], "gamma"), error = function(err){NULL})
+                    if (!is.null(prdGQM) & !is.null(obsGQM)) {
+                      auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
+                      s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
+                    } else {
+                      warning("Fitting error for location and selected 'densfun'.")
+                      s[indgammasim] <- NA
+                    }
                   } else{
                     s[indgammasim] <-0
                   }
@@ -950,6 +955,9 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
                   }
                   # dry days
                   s[noRain] <- 0
+                  # inf to NA
+                  s[is.infinite(s)] <- NA
+                  s[s>1e3] <- NA
             } else {
                   warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
             }  
