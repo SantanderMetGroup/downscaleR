@@ -79,9 +79,9 @@
 
 isimip <- function (y, x, newdata, threshold = 1, type = c("additive", "multiplicative")) {
       
-      obs <- y
-      pred <- x
-      sim <- newdata
+      obs <- redim(y, drop=TRUE)
+      pred <- redim(x, drop=TRUE)
+      sim <- redim(newdata, drop=TRUE)
       
       if (is.null(obs$Dates$start)){
             datesObs <- as.POSIXct(obs$Dates[[1]]$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")
@@ -131,7 +131,6 @@ isimip <- function (y, x, newdata, threshold = 1, type = c("additive", "multipli
             callObs <- as.call(c(list(as.name("["),quote(pred$Data)), indTimeObs1))
             monthlyPred[indTimeObs] <- apply(eval(callObs), FUN = mean, MARGIN = setdiff(1:length(dimPred),pred.time.index), na.rm = TRUE)
       }
-      
       if (is.null(sim$Dates$start)){
             datesFor <- as.POSIXct(sim$Dates[[1]]$start, tz="GMT", format="%Y-%m-%d %H:%M:%S")            
       }else{
