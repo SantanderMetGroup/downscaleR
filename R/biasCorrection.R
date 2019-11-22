@@ -42,7 +42,7 @@
 #' (\code{densfun}, \code{start}, \code{...}). Only used when applying the "pqm" method 
 #' (parametric quantile mapping). Please, read the \code{\link[MASS]{fitdistr}} help 
 #' document  carefully before setting the parameters in \code{fitdistr.args}.
-#' @param n.quantiles Integer indicating the number of quantiles to be considered when method = "eqm". Default is NULL, 
+#' @param n.quantiles Integer indicating the number of quantiles to be considered when method = "eqm", "dqm", "qdm". Default is NULL, 
 #' that considers all quantiles, i.e. \code{n.quantiles = length(x[i,j])} (being \code{i} and \code{j} the 
 #' coordinates in a single location).
 #' @param extrapolation Character indicating the extrapolation method to be applied to correct values in  
@@ -51,7 +51,8 @@
 #' @param theta numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 #' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 #' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
-#' percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.
+#' percentile (and 5th percentile for the left tail). Only for \code{"gpqm"} method.
+#' @param detrend logical. Detrend data prior to bias correction? Only for \code{"dqm"}. Default. TRUE.
 #' @param join.members Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
 #'  or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).
 #' @template templateParallelParams
@@ -59,9 +60,9 @@
 #' @details
 #' 
 #' The methods available are \code{"eqm"}, \code{"delta"}, 
-#' \code{"scaling"}, \code{"pqm"}, \code{"gpqm"}\code{"loci"}, 
-#' \code{"ptr"}  (the four latter used only for precipitation) and 
-#' \code{"variance"} (only for temperature).
+#' \code{"scaling"}, \code{"pqm"}, \code{"gpqm"}, \code{"loci"}, 
+#' \code{"ptr"}  (the four latter used only for precipitation), 
+#' \code{"variance"} (only for temperature), \code{"dqm"} and \code{"qdm"}.
 #' 
 #'  These are next briefly described: 
 #'  
@@ -100,11 +101,14 @@
 #' Generalized Quantile Mapping (described in Gutjahr and Heinemann 2013) is also a parametric quantile mapping (see
 #' method 'pqm') but using two teorethical distributions, the gamma distribution and Generalized Pareto Distribution (GPD).
 #' By default, It applies a gamma distribution to values under the threshold given by the 95th percentile 
-#' (following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. the threshold above 
-#' which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. 
-#' The user can specify a different threshold by modifying the parameter theta. It is applicable to precipitation data. 
+#' (following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. The threshold above 
+#' which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. If precip=FALSE
+#' values below the 5th percentile of the observed and the predicted distributions are additionally fitted using GPD and 
+#' the rest of the values of the distributions are fitted using a normal distribution.
+#' The user can specify a different threshold(s) by modifying the parameter theta. 
 #' 
 #' \strong{mva}
+#' 
 #' Mean and Variance Adjustment.
 #' 
 #' \strong{variance}
@@ -123,6 +127,23 @@
 #' time series in an exponential form. The power parameter is estimated on a monthly basis using a 90-day window centered on the interval. The power is defined by matching the coefficient
 #' of variation of corrected daily simulated precipitation with the coefficient of variation of observed daily precipitation. It is calculated by root-finding algorithm using Brent's method.
 #'
+#'\strong{dqm}
+#'
+#' Detrended quantile matching with delta-method extrapolation, described in Cannon et al. 2015.
+#' It consists on (i) removing the long-term mean (linear) trend; 
+#' (ii) eqm is applied to the detrended series;
+#'  (iii) the mean trend is then reapplied to the bias-adjusted series. 
+#' It preserves the mean change signal in a climate change context.
+#' It allows relative (multiplicative) and additive corrections.
+#'
+#'\strong{qdm}
+#'
+#' Quantile delta mapping, described in Cannon et al. 2015. 
+#' It consists on (i) detrending the individual quantiles; 
+#' (ii) QM is applied to the detrended series; 
+#' (iii) the projected trends are then reapplied to the bias-adjusted quantiles.
+#' It explicitly preserves the change signal in all quantiles. 
+#' It allows relative (multiplicative) and additive corrections. 
 #'
 #' @section Note on the bias correction of precipitation:
 #' 
@@ -158,6 +179,7 @@
 #' 
 #' \item M. R. Tye, D. B. Stephenson, G. J. Holland and R. W. Katz (2014) A Weibull Approach for Improving Climate Model Projections of Tropical Cyclone Wind-Speed Distributions, Journal of Climate, 27, 6119-6133
 #' 
+#' \item Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, https://doi.org/10.1175/JCLI-D-14-00754.1
 #' }
 #' @author S. Herrera, M. Iturbide, J. Bedia
 #' @export
@@ -246,7 +268,7 @@
 
 
 biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
-                           method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci"),
+                           method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci","dqm","qdm"),
                            cross.val = c("none", "loo", "kfold"),
                            folds = NULL,
                            window = NULL,
@@ -255,13 +277,14 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            wet.threshold = 1,
                            n.quantiles = NULL,
                            extrapolation = c("none", "constant"), 
-                           theta = .95,
+                           theta = c(.95,.05),
+                           detrend=TRUE,
                            join.members = FALSE,
                            parallel = FALSE,
                            max.ncores = 16,
                            ncores = NULL) {
       if (method == "gqm") stop("'gqm' is not a valid choice anymore. Use method = 'pqm' instead and set fitdistr.args = list(densfun = 'gamma')")
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "mva", "loci", "ptr", "variance"))
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "mva", "loci", "ptr", "variance","dqm","qdm"))
       cross.val <- match.arg(cross.val, choices = c("none", "loo", "kfold"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
@@ -283,6 +306,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                        extrapolation = extrapolation, 
                                        theta = theta,
                                        join.members = join.members,
+                                       detrend=detrend,
                                        parallel = parallel,
                                        max.ncores = max.ncores,
                                        ncores = ncores)
@@ -324,6 +348,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                    fitdistr.args = fitdistr.args,
                                    pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
                                    theta = theta, join.members = join.members,
+                                   detrend=detrend,
                                    parallel = parallel,
                                    max.ncores = max.ncores,
                                    ncores = ncores)
@@ -356,6 +381,7 @@ biasCorrectionXD <- function(y, x, newdata,
                              extrapolation, 
                              theta,
                              join.members,
+                             detrend,
                              parallel = FALSE,
                              max.ncores = 16,
                              ncores = NULL) {
@@ -445,6 +471,7 @@ biasCorrectionXD <- function(y, x, newdata,
                                                 n.quantiles = n.quantiles,
                                                 extrapolation = extrapolation,
                                                 theta = theta,
+                                                detrend=detrend,
                                                 parallel = parallel,
                                                 max.ncores = max.ncores,
                                                 ncores = ncores)  
@@ -505,6 +532,7 @@ biasCorrectionXD <- function(y, x, newdata,
 #' above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 #' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
 #' percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.
+#' @param detrend logical. Detrend data prior to bias correction? Only for \code{"dqm"}. Default. TRUE.
 #' @template templateParallelParams
 #' 
 #' 
@@ -521,6 +549,7 @@ biasCorrection1D <- function(o, p, s,
                              n.quantiles,
                              extrapolation, 
                              theta,
+                             detrend,
                              parallel = FALSE,
                              max.ncores = 16,
                              ncores = NULL) {
@@ -549,7 +578,12 @@ biasCorrection1D <- function(o, p, s,
             mapply_fun(loci, o, p, s, MoreArgs = list(precip, pr.threshold))
       } else if (method == "ptr") {
             mapply_fun(ptr, o, p, s, MoreArgs = list(precip))
+      } else if (method == "dqm") {
+            mapply_fun(dqm, o, p, s, MoreArgs = list(precip, pr.threshold, n.quantiles, detrend))
+      } else if (method == "qdm") {
+            mapply_fun(qdm, o, p, s, MoreArgs = list(precip, pr.threshold, n.quantiles))
       }
+      #INCLUIR AQUI METODOS NUEVOS
 }
 
 #' @title adjustPrecipFreq
@@ -825,16 +859,55 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
 #' @importFrom evd fpot
 #' @importFrom MASS fitdistr
 #' @importFrom evd qgpd pgpd
-#' @importFrom stats quantile pgamma qgamma
+#' @importFrom stats quantile pgamma qgamma pnorm qnorm
 #' @keywords internal
 #' @author S. Herrera and M. Iturbide
 
 gpqm <- function(o, p, s, precip, pr.threshold, theta) { 
       if (precip == FALSE) {
-            stop("method gpqm is only applied to precipitation data")
+        # stop("method gpqm is only applied to precipitation data")
+        # For temperature, lower (values below theta.low) and upper (values above theta) tails of the distribution are fitted with GPD.
+        if (all(is.na(o)) | all(is.na(p))) {
+          s <- rep(NA, length(s))
+        } else{
+          theta.low <- theta[2]
+          theta <- theta[1]
+          ind <- which(!is.na(o))
+          indnormal <- ind[which((o[ind] < quantile(o[ind], theta)) & (o[ind] > quantile(o[ind], theta.low)))]
+          indparetoUp <- ind[which(o[ind] >= quantile(o[ind], theta))]
+          indparetoLow <- ind[which(o[ind] <= quantile(o[ind], theta.low))]
+          indp <- which(!is.na(p))
+          indnormalp <- indp[which((p[indp] < quantile(p[indp],theta)) & (p[indp] > quantile(p[indp], theta.low)))]
+          indparetopUp <- indp[which(p[indp] >= quantile(p[indp], theta))]
+          indparetopLow <- indp[which(p[indp] <= quantile(p[indp], theta.low))]
+          inds <- which(!is.na(s))
+          indnormalsim <- inds[which((s[inds] < quantile(p[indp], theta)) & (s[inds] > quantile(p[indp], theta.low)))]
+          indparetosimUp <- inds[which(s[inds] >= quantile(p[indp], theta))]
+          indparetosimLow <- inds[which(s[inds] <= quantile(p[indp], theta.low))]
+          # normal distribution
+          obsGQM <- fitdistr(o[indnormal],"normal")
+          prdGQM <- fitdistr(p[indnormalp], "normal")
+          auxF <- pnorm(s[indnormalsim], prdGQM$estimate[1], prdGQM$estimate[2])
+          s[indnormalsim] <- qnorm(auxF, obsGQM$estimate[1], obsGQM$estimate[2])
+          # upper tail
+          obsGQM2Up <- fpot(o[indparetoUp], quantile(o[ind], theta), "gpd", std.err = FALSE)
+          prdGQM2Up <- fpot(p[indparetopUp], quantile(p[indp], theta), "gpd", std.err = FALSE)
+          auxF2Up <- pgpd(s[indparetosimUp], loc = prdGQM2Up$threshold, scale = prdGQM2Up$estimate[1], shape = prdGQM2Up$estimate[2])
+          s[indparetosimUp[which(auxF2Up < 1  & auxF2Up > 0)]] <- qgpd(auxF2Up[which(auxF2Up < 1 & auxF2Up > 0)], loc = obsGQM2Up$threshold, scale = obsGQM2Up$estimate[1], shape = obsGQM2Up$estimate[2])
+          s[indparetosimUp[which(auxF2Up == 1)]] <- max(o[indparetoUp], na.rm = TRUE)
+          s[indparetosimUp[which(auxF2Up == 0)]] <- min(o[indparetoUp], na.rm = TRUE)
+          # lower tail
+          obsGQM2Low <- fpot(-o[indparetoLow], -quantile(o[ind], theta.low), "gpd", std.err = FALSE)
+          prdGQM2Low <- fpot(-p[indparetopLow], -quantile(p[indp], theta.low), "gpd", std.err = FALSE)
+          auxF2Low <- pgpd(-s[indparetosimLow], loc = prdGQM2Low$threshold, scale = prdGQM2Low$estimate[1], shape = prdGQM2Low$estimate[2])
+          s[indparetosimLow[which(auxF2Low < 1 & auxF2Low > 0)]] <- -qgpd(auxF2Low[which(auxF2Low < 1 & auxF2Low > 0)], loc = obsGQM2Low$threshold, scale = obsGQM2Low$estimate[1], shape = obsGQM2Low$estimate[2])
+          s[indparetosimLow[which(auxF2Low == 1)]] <- max(o[indparetoLow], na.rm = TRUE)
+          s[indparetosimLow[which(auxF2Low == 0)]] <- min(o[indparetoLow], na.rm = TRUE)
+        }  
       } else {
+            theta <- theta[1]
             threshold <- pr.threshold
-            if (any(!is.na(o))) {
+            if (any(!is.na(o)) & any(!is.na(p))) {
                   params <-  adjustPrecipFreq(o, p, threshold)
                   p <- params$p
                   nP <- params$nP
@@ -848,23 +921,43 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
                   ind <- which(o > threshold & !is.na(o))
                   indgamma <- ind[which(o[ind] < quantile(o[ind], theta))]
                   indpareto <- ind[which(o[ind] >= quantile(o[ind], theta))]
-                  obsGQM <- fitdistr(o[indgamma],"gamma")
-                  obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
-                  ind <- which(p > 0 & !is.na(p))
-                  indgammap <- ind[which(p[ind] < quantile(p[ind],theta))]
-                  indparetop <- ind[which(p[ind] >= quantile(p[ind], theta))]
-                  prdGQM <- fitdistr(p[indgammap], "gamma")
-                  prdGQM2 <- fpot(p[indparetop], quantile(p[ind], theta), "gpd", std.err = FALSE)
+                  indp <- which(p > 0 & !is.na(p))
+                  indgammap <- indp[which(p[indp] < quantile(p[indp],theta))]
+                  indparetop <- indp[which(p[indp] >= quantile(p[indp], theta))]
                   rain <- which(s > Pth & !is.na(s))
                   noRain <- which(s <= Pth & !is.na(s))
-                  indgammasim <- rain[which(s[rain] < quantile(p[ind], theta))]
-                  indparetosim <- rain[which(s[rain] >= quantile(p[ind], theta))]
-                  auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
-                  auxF2 <- pgpd(s[indparetosim], loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
-                  s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
-                  s[indparetosim[which(auxF2 < 1)]] <- qgpd(auxF2[which(auxF2 < 1)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
-                  s[indparetosim[which(auxF2 == 1)]] <- max(o[indpareto], na.rm = TRUE)
+                  indgammasim <- rain[which(s[rain] < quantile(p[indp], theta))]
+                  indparetosim <- rain[which(s[rain] >= quantile(p[indp], theta))]
+                  # gamma distribution
+                  if(length(indgamma)>1 & length(indgammap)>1 & length(indgammasim)>1){
+                    obsGQM <- tryCatch(fitdistr(o[indgamma],"gamma"), error = function(err){NULL})
+                    prdGQM <- tryCatch(fitdistr(p[indgammap], "gamma"), error = function(err){NULL})
+                    if (!is.null(prdGQM) & !is.null(obsGQM)) {
+                      auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
+                      s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
+                    } else {
+                      warning("Fitting error for location and selected 'densfun'.")
+                      s[indgammasim] <- NA
+                    }
+                  } else{
+                    s[indgammasim] <-0
+                  }
+                  # upper tail
+                  if(any(o[indpareto] > quantile(o[ind], theta)) & any(p[indparetop] > quantile(p[indp], theta))){
+                    obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
+                    prdGQM2 <- fpot(p[indparetop], quantile(p[indp], theta), "gpd", std.err = FALSE)
+                    auxF2 <- pgpd(s[indparetosim], loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
+                    s[indparetosim[which(auxF2 < 1  & auxF2 > 0)]] <- qgpd(auxF2[which(auxF2 < 1  & auxF2 > 0)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
+                    s[indparetosim[which(auxF2 == 1)]] <- max(o[indpareto], na.rm = TRUE)
+                    s[indparetosim[which(auxF2 == 0)]] <- min(o[indpareto], na.rm = TRUE)
+                  } else {
+                    s[indparetosim] <- 0
+                  }
+                  # dry days
                   s[noRain] <- 0
+                  # inf to NA
+                  s[is.infinite(s)] <- NA
+                  s[s>1e3] <- NA
             } else {
                   warning("There is at least one location without rainfall above the threshold.\n In this (these) location(s) none bias correction has been applied.")
             }  
@@ -1047,6 +1140,162 @@ recoverMemberDim <- function(plain.grid, bc.grid, newdata) {
       do.call("bindGrid", c(aux.list, dimension = "member"))
 }
 
+#' @title Detrended quantile matching 
+#' @description Detrended quantile matching with delta-method extrapolation 
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
+#' @param precip Logical indicating if o, p, s is precipitation data.
+#' @param pr.threshold Integer. The minimum value that is considered as a non-zero precipitation. 
+#' @param detrend logical. Detrend data prior to bias correction? Default. TRUE.
+#' @param n.quantiles  Integer. Maximum number of quantiles to estimate. Default: same as data length.
+#' @details DQM method developed by A. Canon, from \url{https://github.com/pacificclimate/ClimDown}, \url{https://cran.r-project.org/web/packages/ClimDown/}.
+#'
+#'  See also Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
+#' @keywords internal
+#' @author A. Cannon (acannon@uvic.ca), A. Casanueva
+
+dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
+  
+    if (all(is.na(o)) | all(is.na(p)) | all(is.na(s))) {
+      return(yout=rep(NA, length(s)))
+    
+    } else{
+      
+      if(precip){
+        # For ratio data, treat exact zeros as left censored values less than pr.threshold
+        epsilon <- .Machine$double.eps
+        o[o < pr.threshold & !is.na(o)] <- runif(sum(o < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+        p[p < pr.threshold & !is.na(p)] <- runif(sum(p < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+        s[s < pr.threshold & !is.na(s)] <- runif(sum(s < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+      }
+      
+      o.mn <- mean(o, na.rm=T)
+      p.mn <- mean(p, na.rm=T)
+      if(precip){
+        s <- s/p.mn*o.mn
+      } else{
+        s <- s-p.mn+o.mn
+      }
+      
+      if(detrend){
+        s.mn <- lm.fit(cbind(1, seq_along(s)), s)$fitted
+      } else{
+        s.mn <- o.mn
+      }
+      if(is.null(n.quantiles)) n.quantiles <- max(length(o), length(p))
+      tau <- c(0, (1:n.quantiles)/(n.quantiles+1), 1)
+      if(precip & any(o < sqrt(.Machine$double.eps), na.rm=TRUE)){
+        x <- quantile(p/p.mn, tau, na.rm=T)
+        y <- quantile(o/o.mn, tau, na.rm=T)
+        yout <- approx(x, y, xout=s/s.mn, rule=2:1)$y # if rule = 1, NAs are returned outside the training interval; if rule= 2, the value at the closest data extreme is used. rule = 2:1, if the left and right side extrapolation should differ.
+        extrap <- is.na(yout)
+        yout[extrap] <- max(o/o.mn, na.rm=T)*((s/s.mn)[extrap]/max(p/p.mn, na.rm=T)) # extrapolation on the upper tail
+        yout <- yout*s.mn
+        #yout.h <- approx(x, y, xout=p/p.mn, rule=1)$y*o.mn
+      } else if(precip & !any(o < sqrt(.Machine$double.eps), na.rm=TRUE)){
+        x <- quantile(p/p.mn, tau, na.rm=T)
+        y <- quantile(o/o.mn, tau, na.rm=T)
+        yout <- approx(x, y, xout=s/s.mn, rule=1)$y
+        extrap.lower <- is.na(yout) & ((s/s.mn) < min(p/p.mn, na.rm=T))
+        extrap.upper <- is.na(yout) & ((s/s.mn) > max(p/p.mn, na.rm=T))
+        yout[extrap.lower] <- min(o/o.mn, na.rm=T)*((s/s.mn)[extrap.lower]/
+                                                 min(p/p.mn, na.rm=T))
+        yout[extrap.upper] <- max(o/o.mn, na.rm=T)*((s/s.mn)[extrap.upper]/
+                                                 max(p/p.mn, na.rm=T))
+        yout <- yout*s.mn
+        #yout.h <- approx(x, y, xout=p/p.mn, rule=1)$y*o.mn
+      } else{
+        x <- quantile(p-p.mn, tau, na.rm=T)
+        y <- quantile(o-o.mn, tau, na.rm=T)
+        yout <- approx(x, y, xout=s-s.mn, rule=1)$y
+        extrap.lower <- is.na(yout) & ((s-s.mn) < min(p-p.mn, na.rm=T))
+        extrap.upper <- is.na(yout) & ((s-s.mn) > max(p-p.mn, na.rm=T))
+        yout[extrap.lower] <- min(o-o.mn) + ((s-s.mn)[extrap.lower]-
+                                                   min(p-p.mn, na.rm=T))
+        yout[extrap.upper] <- max(o-o.mn) + ((s-s.mn)[extrap.upper]-
+                                                   max(p-p.mn, na.rm=T))
+        yout <- yout+s.mn
+        #yout.h <- approx(x, y, xout=p-p.mn, rule=1)$y+o.mn
+      }
+      if(precip){
+        yout[which(yout < sqrt(.Machine$double.eps))] <- 0
+        #yout.h[which(yout.h < sqrt(.Machine$double.eps))] <- 0
+      }
+    return(yout)
+    }
+}
+
+
+#' @title Quantile delta mapping
+#' @description Quantile delta mapping 
+#' @param o A vector (e.g. station data) containing the observed climate data for the training period
+#' @param p A vector containing the simulated climate by the model for the training period. 
+#' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
+#' @param precip Logical indicating if o, p, s is precipitation data.
+#' @param pr.threshold Integer. The minimum value that is considered as a non-zero precipitation. 
+#' \code{precip = FALSE}.
+#' @param jitter.factor Integer. Jittering to accomodate ties. Default: 0.01.
+#' @param n.quantiles  Integer. Maximum number of quantiles to estimate. Default: same as data length.
+#' @details QDM method developed by A. Canon, from \url{https://github.com/pacificclimate/ClimDown}, \url{https://cran.r-project.org/web/packages/ClimDown/}.
+#' 
+#' See also Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
+#' @keywords internal
+#' @author A. Cannon (acannon@uvic.ca), A. Casanueva
+
+qdm <- function(o, p, s, precip, pr.threshold, n.quantiles, jitter.factor=0.01){
+ 
+  # tau.s = F.s(x.s)
+  # delta = x.s {/,-} F.p^-1(tau.s)
+  # yout = F.o^-1(tau.s) {*,+} delta
+  
+  if (all(is.na(o)) | all(is.na(p)) | all(is.na(s))) {
+    return(yout=rep(NA, length(s)))
+  } else{
+  
+    # Apply a small amount of jitter to accomodate ties due to limited measurement precision
+    o <- jitter(o, jitter.factor)
+    p <- jitter(p, jitter.factor)
+    s <- jitter(s, jitter.factor)
+    
+    # For ratio data, treat exact zeros as left censored values less than pr.threshold
+    if(precip){
+      epsilon <- .Machine$double.eps
+      o[o < pr.threshold & !is.na(o)] <- runif(sum(o < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+      p[p < pr.threshold & !is.na(p)] <- runif(sum(p < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+      s[s < pr.threshold & !is.na(s)] <- runif(sum(s < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+    }
+    
+    # Calculate empirical quantiles using Weibull plotting position
+    n <- max(length(o), length(p), length(s))
+    if(is.null(n.quantiles)) n.quantiles <- n
+    tau <- seq(1/(n+1), n/(n+1), length=n.quantiles)
+    quant.o <- quantile(o, tau, type=6, na.rm=TRUE)
+    quant.p <- quantile(p, tau, type=6, na.rm=TRUE)
+    quant.s <- quantile(s, tau, type=6, na.rm=TRUE)
+    
+    # Apply QDM bias correction
+    tau.s <- approx(quant.s, tau, s, rule=2)$y    
+    if(precip){
+      delta <- s/approx(tau, quant.p, tau.s, rule=2)$y # if rule= 2, the value at the closest data extreme is used
+      yout <- approx(tau, quant.o, tau.s, rule=2)$y*delta
+    } else{
+      delta <- s - approx(tau, quant.p, tau.s, rule=2)$y
+      yout <- approx(tau, quant.o, tau.s, rule=2)$y + delta
+    }
+    #yout.h <- approx(quant.p, quant.o, p, rule=2)$y
+    
+    # For precip data, set values less than threshold to zero
+    if(precip){
+      #yout.h[yout.h < pr.threshold] <- 0
+      yout[yout < pr.threshold] <- 0
+    }
+    
+    return(yout)
+  }
+}
+
+
 
 #     biasCorrection.chunk.R Bias correction methods
 #
@@ -1155,7 +1404,7 @@ recoverMemberDim <- function(plain.grid, bc.grid, newdata) {
 #' By default, It applies a gamma distribution to values under the threshold given by the 95th percentile 
 #' (following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. the threshold above 
 #' which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. 
-#' The user can specify a different threshold by modifying the parameter theta. It is applicable to precipitation data. 
+#' The user can specify a different threshold by modifying the parameter theta. 
 #' 
 #' 
 #' \strong{variance}

@@ -5,13 +5,13 @@
 \title{Bias correction methods}
 \usage{
 biasCorrection(y, x, newdata = NULL, precipitation = FALSE,
-  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci"),
-  cross.val = c("none", "loo", "kfold"), folds = NULL, window = NULL,
-  scaling.type = c("additive", "multiplicative"),
+  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm",
+  "qdm"), cross.val = c("none", "loo", "kfold"), folds = NULL,
+  window = NULL, scaling.type = c("additive", "multiplicative"),
   fitdistr.args = list(densfun = "normal"), wet.threshold = 1,
   n.quantiles = NULL, extrapolation = c("none", "constant"),
-  theta = 0.95, join.members = FALSE, parallel = FALSE,
-  max.ncores = 16, ncores = NULL)
+  theta = c(0.95, 0.05), detrend = TRUE, join.members = FALSE,
+  parallel = FALSE, max.ncores = 16, ncores = NULL)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -56,7 +56,7 @@ document  carefully before setting the parameters in \code{fitdistr.args}.}
 \item{wet.threshold}{The minimum value that is considered as a non-zero precipitation. Ignored when 
 \code{precipitation = FALSE}. Default to 1 (assuming mm). See details on bias correction for precipitation.}
 
-\item{n.quantiles}{Integer indicating the number of quantiles to be considered when method = "eqm". Default is NULL, 
+\item{n.quantiles}{Integer indicating the number of quantiles to be considered when method = "eqm", "dqm", "qdm". Default is NULL, 
 that considers all quantiles, i.e. \code{n.quantiles = length(x[i,j])} (being \code{i} and \code{j} the 
 coordinates in a single location).}
 
@@ -67,7 +67,9 @@ thus, this argument is ignored if other bias correction method is selected. Defa
 \item{theta}{numeric indicating  upper threshold (and lower for the left tail of the distributions, if needed) 
 above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
-percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.}
+percentile (and 5th percentile for the left tail). Only for \code{"gpqm"} method.}
+
+\item{detrend}{logical. Detrend data prior to bias correction? Only for \code{"dqm"}. Default. TRUE.}
 
 \item{join.members}{Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
 or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).}
@@ -87,9 +89,9 @@ Implementation of several standard bias correction methods
 }
 \details{
 The methods available are \code{"eqm"}, \code{"delta"}, 
-\code{"scaling"}, \code{"pqm"}, \code{"gpqm"}\code{"loci"}, 
-\code{"ptr"}  (the four latter used only for precipitation) and 
-\code{"variance"} (only for temperature).
+\code{"scaling"}, \code{"pqm"}, \code{"gpqm"}, \code{"loci"}, 
+\code{"ptr"}  (the four latter used only for precipitation), 
+\code{"variance"} (only for temperature), \code{"dqm"} and \code{"qdm"}.
 
  These are next briefly described: 
  
@@ -128,11 +130,14 @@ is applicable to correct wind data (Tie et al. 2014).
 Generalized Quantile Mapping (described in Gutjahr and Heinemann 2013) is also a parametric quantile mapping (see
 method 'pqm') but using two teorethical distributions, the gamma distribution and Generalized Pareto Distribution (GPD).
 By default, It applies a gamma distribution to values under the threshold given by the 95th percentile 
-(following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. the threshold above 
-which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. 
-The user can specify a different threshold by modifying the parameter theta. It is applicable to precipitation data. 
+(following Yang et al. 2010) and a general Pareto distribution (GPD) to values above the threshold. The threshold above 
+which the GPD is fitted is the 95th percentile of the observed and the predicted wet-day distribution, respectively. If precip=FALSE
+values below the 5th percentile of the observed and the predicted distributions are additionally fitted using GPD and 
+the rest of the values of the distributions are fitted using a normal distribution.
+The user can specify a different threshold(s) by modifying the parameter theta. 
 
 \strong{mva}
+
 Mean and Variance Adjustment.
 
 \strong{variance}
@@ -150,6 +155,24 @@ The precipitation threshold is calculated such that the number of simulated days
 Power transformation of precipitation. This method is described in Leander and Buishand 2007 and is applicable only to precipitation. It adjusts the variance statistics of precipitation
 time series in an exponential form. The power parameter is estimated on a monthly basis using a 90-day window centered on the interval. The power is defined by matching the coefficient
 of variation of corrected daily simulated precipitation with the coefficient of variation of observed daily precipitation. It is calculated by root-finding algorithm using Brent's method.
+
+\strong{dqm}
+
+Detrended quantile matching with delta-method extrapolation, described in Cannon et al. 2015.
+It consists on (i) removing the long-term mean (linear) trend; 
+(ii) eqm is applied to the detrended series;
+ (iii) the mean trend is then reapplied to the bias-adjusted series. 
+It preserves the mean change signal in a climate change context.
+It allows relative (multiplicative) and additive corrections.
+
+\strong{qdm}
+
+Quantile delta mapping, described in Cannon et al. 2015. 
+It consists on (i) detrending the individual quantiles; 
+(ii) QM is applied to the detrended series; 
+(iii) the projected trends are then reapplied to the bias-adjusted quantiles.
+It explicitly preserves the change signal in all quantiles. 
+It allows relative (multiplicative) and additive corrections.
 }
 \section{Note on the bias correction of precipitation}{
 
@@ -260,6 +283,7 @@ eqm.join <- biasCorrection(y = y, x = x,
 
 \item M. R. Tye, D. B. Stephenson, G. J. Holland and R. W. Katz (2014) A Weibull Approach for Improving Climate Model Projections of Tropical Cyclone Wind-Speed Distributions, Journal of Climate, 27, 6119-6133
 
+\item Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, https://doi.org/10.1175/JCLI-D-14-00754.1
 }
 }
 \seealso{
