@@ -128,7 +128,7 @@ downscaleCV <- function(x, y, method,
   if (sampling.strategy == "kfold.chronological") {
     type <- "chronological"
     if (!is.numeric(folds)) {
-      folds.user <- unlist(folds) %>% unique()
+      folds.user <- unlist(folds) %>% unique() %>% sort()
       folds.data <- getYearsAsINDEX(y) %>% unique()
       if (any(folds.user != folds.data)) stop("In the parameters folds you have indicated years that do not belong to the dataset. Please revise the setup of this parameter.")
     }
