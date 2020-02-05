@@ -18,12 +18,13 @@ downscaleCV(x, y, method, sampling.strategy = "kfold.chronological",
 \item{method}{A string value. Type of transer function. Currently implemented options are \code{"analogs"}, \code{"GLM"} and \code{"NN"}.}
 
 \item{sampling.strategy}{Specifies a sampling strategy to define the training and test subsets. Possible values are 
-\code{"kfold.chronological"} (the default), \code{"kfold.random"} and \code{"leave-one-year-out"}.
+\code{"kfold.chronological"} (the default), \code{"kfold.random"}, \code{"leave-one-year-out"} and NULL.
 The \code{sampling.strategy} choices are next described:
 \itemize{
   \item \code{"kfold.random"} creates the number of folds indicated in the \code{folds} argument by randomly sampling the entries along the time dimension.
   \item \code{"kfold.chronological"} is similar to \code{"kfold.random"}, but the sampling is performed in ascending order along the time dimension.
-  \item \code{"leave-one-year-out"}. This schema performs a leave-one-year-out cross validation. It is equivalent to introduce in the argument \code{folds} a list of all years one by one.
+  \item \code{"leave-one-year-out"}. This scheme performs a leave-one-year-out cross validation. It is equivalent to introduce in the argument \code{folds} a list of all years one by one.
+  \item \code{NULL}. The folds are specified by the user in the function parameter \code{folds}.
 }
 The first two choices will be controlled by the argument \code{folds} (see below)}
 

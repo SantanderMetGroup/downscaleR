@@ -2,6 +2,7 @@
 
 See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/releases) for older version changes
 
+
 ## v3.0.0 (14 Jun 2018)
 
 * New user interface for flexible definition of predictors (`prepareData`) and prediction data (`prepareNewData`). 
@@ -48,4 +49,11 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 * downscale.train renamed --> downscaleTrain
 * downscale.predict renamed --> downscalePredict
 * Other minor changes and documentation updates
+
+## v3.1.1 (5 Feb 2020)
+
+* Bug fix in `downscaleCV'
+* Improve the internal code of `downscaleChunk'
+* Add qdm and dqm bias correction methods
+* Bug fix in `biasCorrection'
 
