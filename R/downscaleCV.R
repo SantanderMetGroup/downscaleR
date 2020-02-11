@@ -107,10 +107,10 @@
 #'                      prepareData.args = list("local.predictors" = list(vars = "hus@850", n = 4)))
 
 downscaleCV <- function(x, y, method,
-                         sampling.strategy = "kfold.chronological", folds = 4, 
-                         scaleGrid.args = NULL,
-                         prepareData.args = list("global.vars" = NULL, "combined.only" = TRUE, "spatial.predictors" = NULL, "local.predictors" = NULL, "extended.predictors" = NULL),
-                         condition = NULL, threshold = NULL, ...) {
+                        sampling.strategy = "kfold.chronological", folds = 4, 
+                        scaleGrid.args = NULL,
+                        prepareData.args = list("global.vars" = NULL, "combined.only" = TRUE, "spatial.predictors" = NULL, "local.predictors" = NULL, "extended.predictors" = NULL),
+                        condition = NULL, threshold = NULL, ...) {
   
   if (!exists("global.vars",prepareData.args)) prepareData.args$global.vars <- NULL
   if (!exists("combined.only",prepareData.args)) prepareData.args$combined.only <- TRUE
@@ -164,26 +164,21 @@ downscaleCV <- function(x, y, method,
       y.prob <- downscalePredict(xt, model)
       if (method == "GLM") {
         if (isTRUE(model$model$atomic_model[[1]]$info$simulate)) {
-          y.bin  <- y.prob}
+          y.bin  <- y.prob
+        }
         else {
-          y.bin  <- binaryGrid(y.prob, ref.obs = yT, ref.pred = model$pred)}}
+          y.bin  <- binaryGrid(y.prob, ref.obs = yT, ref.pred = model$pred)
+        }
+      }
       else{
         y.bin  <- binaryGrid(y.prob, ref.obs = yT, ref.pred = model$pred)}
-      out <- list(y.prob$Data, y.bin$Data)}
-    else{
-      out <- list(downscalePredict(xt, model)$Data)}
-    return(out)
-    })
-  
-    pred <- lapply(1:length(p[[1]]), function(i) {
-      pred <- y
-      dimNames <- getDim(pred)
-      pp <- lapply(1:length(data), function(z) p[[z]][[i]])  ; pred$Data   <- do.call(abind,list(pp,along=1)) %>% unname()
-      attr(pred$Data, "dimensions") <- dimNames  
-      return(pred)})
-    if (length(pred) == 1) pred <- pred[[1]]
-    else{
-      pred <- makeMultiGrid(pred) %>% redim(drop = TRUE)
-      pred$Variable$varName <- c("prob","bin")
+      out <- makeMultiGrid(list(y.prob,y.bin)) %>% redim(drop = TRUE)
+      out$Variable$varName <- c("prob","bin")
     }
-  return(pred)}
+    else {
+      out <- downscalePredict(xt, model)
+    }
+    return(out)
+  }) %>% bindGrid(dimension = "time")
+  return(p)
+}
