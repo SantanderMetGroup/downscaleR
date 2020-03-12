@@ -326,7 +326,7 @@ isimip <- function (y, x, newdata, threshold = 1, type = c("additive", "multipli
             auxPermObs[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))] <- length(dimObs)+1:length(setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions"))))
             auxPermObs[match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions"))] <- obs2perm
             auxObs <- aperm(array(monthlyObs, dim = c(dim(monthlyObs),dimPred[setdiff(1:length(dimPred),match(attr(obs$Data,"dimensions"),attr(pred$Data,"dimensions")))])),auxPermObs)
-            nP <- apply(as.array(auxObs<=threshold[1] & !is.na(auxObs))*as.array(monthlyPred<=0 & !is.na(monthlyPred)), FUN = sum, MARGIN = setdiff(1:length(dimPred),pred.time.index))# Interpretamos la formula como interseccion
+            nP <- apply(as.array(auxObs<=threshold[1] & !is.na(auxObs))+as.array(monthlyPred<=0 & !is.na(monthlyPred)), FUN = sum, MARGIN = setdiff(1:length(dimPred),pred.time.index))# Interpretamos la formula como unión en lugar de interseccion
             Ndry <- array(data = NA, dim = dimObs[setdiff(1:length(dimObs), obs.time.index)])
             epsM <- array(data = NA, dim = dimPred[setdiff(1:length(dimPred), pred.time.index)])
             indTimePrd <- rep(list(bquote()), length(setdiff(1:length(dimPred),pred.time.index)))
