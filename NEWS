@@ -57,3 +57,7 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 * Add qdm and dqm bias correction methods
 * Bug fix in `biasCorrection'
 
+## v3.1.2 (12 Mar 2020)
+
+* Bug fix in `isimip' (wet-day frequency correction)
+
