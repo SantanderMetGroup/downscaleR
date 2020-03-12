@@ -223,6 +223,7 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
       else{
         if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
         else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
+        if (anyNA(ind)) ind[which(is.na(ind))] <- FALSE
         if (method == "analogs") {
           atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
         else {
@@ -258,6 +259,7 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
       else{
         if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
         else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
+        if (anyNA(ind)) ind[which(is.na(ind))] <- FALSE
         if (method == "analogs") {
           atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
         else {
