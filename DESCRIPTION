@@ -28,7 +28,7 @@ Suggests:
 Type: Package
 Title: A climate4R package for statistical downscaling <http://meteo.unican.es/climate4r>
 Version: 3.1.2
-Date: 2019-07-09
+Date: 2020-03-12
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquín Bedia <bediaj@unican.es> [aut, cre]",
@@ -42,7 +42,8 @@ Authors@R: as.person(c(
     "Rodrigo Manzanas <rmanzanas@ifca.unican.es> [aut]",
     "Jorge B. Medina <bmedina@ifca.unican.es> [aut]",
     "Beata Szabo-Takacs <szabo.b@czechglobe.cz> [ctb]",
-    "Max Tuni <max@predictia.es> [ctb]"))
+    "Max Tuni <max@predictia.es> [ctb]",
+    "Ana Casanueva <ana.casanueva@unican.es> [ctb]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: http://www.meteo.unican.es/climate4r
 Encoding: UTF-8

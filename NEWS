@@ -60,4 +60,5 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 ## v3.1.2 (12 Mar 2020)
 
 * Bug fix in `isimip' (wet-day frequency correction)
+* Bug fix in downscaleTrain -- NaNs in single-site
 
