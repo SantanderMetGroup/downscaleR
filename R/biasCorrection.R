@@ -165,6 +165,7 @@
 #' 
 #' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim getWindowIndex
 #' @importFrom abind adrop
+#' @importFrom stats lm.fit approx
 #'
 #' @references
 #'
