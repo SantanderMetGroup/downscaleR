@@ -112,6 +112,7 @@
 #' @author J. Bano-Medina
 #' @family downscaling.functions
 #' @importFrom transformeR gridArithmetics
+#' @importFrom sticky sticky
 #' @export
 #' @examples \donttest{
 #' # Loading data
@@ -191,7 +192,7 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
   
   # Multi-site
   if (site == "multi") {
-    xx <- obj$x.global
+    xx <- sticky(obj$x.global)
     yy <- mat.y
     dates.y <- getRefDates(obj$y)
     if (method == "analogs") {
@@ -213,20 +214,20 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
     atomic_model <- vector("list",stations)
     for (i in 1:stations) {
       if (attr(obj,"nature") == "local") {
-        xx = obj$x.local[[i]]$member_1}
-      else {
-        xx = obj$x.global}
+        xx = sticky(obj$x.local[[i]]$member_1)
+      } else {
+        xx = sticky(obj$x.global)
+      }
       yy = mat.y[,i, drop = FALSE]
       if (all(is.na(yy))) {
         mat.p[,i] <- yy
-      }
-      else{
+      } else{
         if (is.null(condition)) {ind = eval(parse(text = "which(!is.na(yy))"))}
         else {ind = eval(parse(text = paste("yy", ineq, "threshold")))}
         if (anyNA(ind)) ind[which(is.na(ind))] <- FALSE
         if (method == "analogs") {
-          atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)}
-        else {
+          atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, dates = getRefDates(obj$y)[ind], ...)
+        } else {
           tryCatch({
             atomic_model[[i]] <- downs.train(xx[ind,, drop = FALSE], yy[ind,,drop = FALSE], method, model.verbose, ...)
           } , error = function(x) {
@@ -252,6 +253,8 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
       xx1 = obj$x.local[[i]]$member_1
       xx2 = obj$x.global
       xx <- cbind(xx1,xx2)
+      attr(xx,"predictorNames") <- c(attr(obj$x.local,"predictorNames"),attr(xx2,"predictorNames"))
+      xx %<>% sticky()
       yy = mat.y[,i, drop = FALSE]
       if (all(is.na(yy))) {
         mat.p[,i] <- yy
@@ -282,8 +285,6 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
     pred$Data <- mat.p
   }
   attr(pred$Data, "dimensions") <- dimNames
-  
-  # if (!is.null(threshold)) {pred <- gridArithmetics(pred,threshold,operator = "+")}
   
   model <- list("pred" = pred, "model" = list("method" = method, "site" = site, "atomic_model" = atomic_model, "condition" = condition, "threshold" = threshold))
   return(model)

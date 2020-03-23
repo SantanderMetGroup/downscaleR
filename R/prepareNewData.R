@@ -49,6 +49,7 @@ prepareNewData <- function(newdata, data.structure) {
     local.index.list <- attributes(data.structure$x.local)$"local.index.list"
     newdata.local.list <- predictor.nn.values(nn.indices.list = local.index.list,
                                               grid = newdata)
+    attr(newdata.local.list,"predictorNames") <- attributes(data.structure$x.local)$"predictorNames"
   }
   # Global predictors
   global.pred.vars <- attr(data.structure, "globalPred.vars")
@@ -76,7 +77,7 @@ prepareNewData <- function(newdata, data.structure) {
       })
     }
     names(newdata.global.list) <- paste("member", 1:length(newdata.global.list), sep = "_")
-    
+    attr(newdata.global.list,"predictorNames") <- attributes(data.structure$x.global)$"predictorNames"
   } else {
     ## PCA predictors   
     if (is.null(data.structure$pca$COMBINED)) { # The COMBINED PC is not being used
@@ -114,6 +115,7 @@ prepareNewData <- function(newdata, data.structure) {
       combined.std.mat <- NULL
     }
     names(newdata.global.list) <- paste("member", 1:length(newdata.global.list), sep = "_")
+    attr(newdata.global.list,"predictorNames") <- attributes(data.structure$x.global)$"predictorNames"
   }
   newdata.refdates <- list(start = getRefDates(newdata, "start"), end = getRefDates(newdata, "end"))
   attr(newdata.global.list,"nature") <- attr(data.structure,"nature")

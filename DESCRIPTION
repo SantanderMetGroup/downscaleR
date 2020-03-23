@@ -15,6 +15,7 @@ Imports:
     grDevices,
     graphics,
     stats,
+    sticky,
     magrittr,
     sp,
     gridGraphics,

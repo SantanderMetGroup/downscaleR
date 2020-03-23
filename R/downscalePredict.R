@@ -31,6 +31,7 @@
 #' @author J. Bano-Medina
 #' @family downscaling.functions
 #' @importFrom transformeR gridArithmetics
+#' @importFrom sticky sticky
 #' @export
 #' @examples 
 #' # Loading data
@@ -64,7 +65,9 @@ downscalePredict <- function(newdata, model) {
   p <- lapply(1:n, function(z) {
     # Multi-site
     if (model$model$site == "multi") {
-      xx <- newdata$x.global[[z]]
+      xx <- sticky(newdata$x.global[[z]])
+      attr(xx,"predictorNames") <- attr(newdata$x.global,"predictorNames")
+      xx %<>% sticky()
       if (model$model$method == "analogs") {model$model$atomic_model$dates$test <- getRefDates(newdata)}
       yp <- as.matrix(downs.predict(xx, model$model$method, model$model$atomic_model))}
     # Single-site
@@ -77,10 +80,12 @@ downscalePredict <- function(newdata, model) {
       yp <- array(data = NA, dim = c(n.obs,stations))
       for (i in 1:stations) {
         if (!is.null(newdata$x.local)) {
-          xx = newdata$x.local[[i]][[z]]}
-        else {
-          xx <- newdata$x.global[[z]]}
-        
+          xx <- sticky(newdata$x.local[[i]][[z]])
+        } else {
+          xx <- newdata$x.global[[z]]
+          attr(xx,"predictorNames") <- attr(newdata$x.global,"predictorNames")
+          xx %<>% sticky()
+        }
         if (is.null(model$model$atomic_model[[i]])) {
           yp[,i] <- rep(NaN,n.obs)  
         }
@@ -106,6 +111,8 @@ downscalePredict <- function(newdata, model) {
         xx1 = newdata$x.local[[i]][[z]]
         xx2 = newdata$x.global[[z]]
         xx <- cbind(xx1,xx2)
+        attr(xx,"predictorNames") <- c(attr(newdata$x.local,"predictorNames"),attr(newdata$x.global,"predictorNames"))
+        xx %<>% sticky()
         if (is.null(model$model$atomic_model[[i]])) {
           yp[,i] <- rep(NaN,n.obs)  
         }
@@ -145,7 +152,6 @@ downscalePredict <- function(newdata, model) {
   pred$Data <- p
   attr(pred$Data, "dimensions") <- dimNames
   pred$Dates <- newdata$Dates
-  # if (!is.null(model$model$threshold)) {pred <- gridArithmetics(pred,model$model$threshold,operator = "+")}  
 
   return(pred)
 }

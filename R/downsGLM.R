@@ -59,14 +59,15 @@
 glm.train <- function(x, y, fitting = NULL, simulate = FALSE, model.verbose = TRUE,
                       stepwise.arg = NULL,
                       ...) {
+  colnames(x) <- attr(x,"predictorNames")
   if (is.null(fitting)) {
-    df <- data.frame(cbind(y,x)); colnames(df) <- paste0('X',1:(dim(x)[2] + 1))
-    weights <- glm(X1~.,data = df, ...)
+    df <- data.frame(cbind(y,x))
+    weights <- glm(V1~.,data = df, ...)
   }
   else if (fitting == "stepwise") {
-    df <- data.frame(cbind(y,x)); colnames(df) <- paste0('X',1:(dim(x)[2] + 1))
-    fullmod <- glm(X1~.,data = df,...)
-    nothing <- glm(X1~1.,data = df,...)
+    df <- data.frame(cbind(y,x))
+    fullmod <- glm(V1~.,data = df,...)
+    nothing <- glm(V1~1.,data = df,...)
     if (is.null(stepwise.arg)) {
       weights <- step(nothing, scope = list(lower = formula(nothing),upper = formula(fullmod)),
                       direction = "forward")
@@ -131,8 +132,9 @@ glm.train <- function(x, y, fitting = NULL, simulate = FALSE, model.verbose = TR
 #' The user should use \code{\link[downscaleR]{downscalePredict}}.
 #' @author J. Bano-Medina
 glm.predict <- function(x, weights, info) {
+  colnames(x) <- attr(x,"predictorNames")
   if (is.null(info$fitting) || info$fitting == "stepwise") {
-    df <- data.frame(x); colnames(df) <- paste0('X',2:(dim(x)[2] + 1))
+    df <- data.frame(x)
     pred <- predict(weights, newdata = df, type = 'response')
   }
   else if (info$fitting == "L1" || info$fitting == "L2" || info$fitting == "L1L2" || info$fitting == "gLASSO") {
