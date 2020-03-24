@@ -80,7 +80,9 @@ downscalePredict <- function(newdata, model) {
       yp <- array(data = NA, dim = c(n.obs,stations))
       for (i in 1:stations) {
         if (!is.null(newdata$x.local)) {
-          xx <- sticky(newdata$x.local[[i]][[z]])
+          xx <- newdata$x.local[[i]][[z]]
+          attr(xx,"predictorNames") <- attr(newdata$x.local,"predictorNames")
+          xx %<>% sticky()
         } else {
           xx <- newdata$x.global[[z]]
           attr(xx,"predictorNames") <- attr(newdata$x.global,"predictorNames")

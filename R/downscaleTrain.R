@@ -214,7 +214,9 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
     atomic_model <- vector("list",stations)
     for (i in 1:stations) {
       if (attr(obj,"nature") == "local") {
-        xx = sticky(obj$x.local[[i]]$member_1)
+        xx = obj$x.local[[i]]$member_1
+        attr(xx,"predictorNames") <- attr(obj$x.local,"predictorNames")
+        xx %<>% sticky()                                  
       } else {
         xx = sticky(obj$x.global)
       }
