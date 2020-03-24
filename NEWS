@@ -62,3 +62,6 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 * Bug fix in `isimip' (wet-day frequency correction)
 * Bug fix in downscaleTrain -- NaNs in single-site
 
+## v3.1.3 (24 Mar 2020)
+
+* New dependency: 'library sticky' for attributes containing variable information

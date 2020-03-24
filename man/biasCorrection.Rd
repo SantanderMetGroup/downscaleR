@@ -4,14 +4,27 @@
 \alias{biasCorrection}
 \title{Bias correction methods}
 \usage{
-biasCorrection(y, x, newdata = NULL, precipitation = FALSE,
-  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm",
-  "qdm"), cross.val = c("none", "loo", "kfold"), folds = NULL,
-  window = NULL, scaling.type = c("additive", "multiplicative"),
-  fitdistr.args = list(densfun = "normal"), wet.threshold = 1,
-  n.quantiles = NULL, extrapolation = c("none", "constant"),
-  theta = c(0.95, 0.05), detrend = TRUE, join.members = FALSE,
-  parallel = FALSE, max.ncores = 16, ncores = NULL)
+biasCorrection(
+  y,
+  x,
+  newdata = NULL,
+  precipitation = FALSE,
+  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm", "qdm"),
+  cross.val = c("none", "loo", "kfold"),
+  folds = NULL,
+  window = NULL,
+  scaling.type = c("additive", "multiplicative"),
+  fitdistr.args = list(densfun = "normal"),
+  wet.threshold = 1,
+  n.quantiles = NULL,
+  extrapolation = c("none", "constant"),
+  theta = c(0.95, 0.05),
+  detrend = TRUE,
+  join.members = FALSE,
+  parallel = FALSE,
+  max.ncores = 16,
+  ncores = NULL
+)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -290,8 +303,9 @@ eqm.join <- biasCorrection(y = y, x = x,
 \code{\link{isimip}} for a trend-preserving method of model calibration and \code{\link{quickDiagnostics}} 
 for an outlook of the results.
 
-Other downscaling: \code{\link{glimpr}},
-  \code{\link{isimip}}
+Other downscaling: 
+\code{\link{glimpr}()},
+\code{\link{isimip}()}
 }
 \author{
 S. Herrera, M. Iturbide, J. Bedia

@@ -4,11 +4,19 @@
 \alias{downscaleCV}
 \title{Downscale climate data and reconstruct the temporal serie by splitting the data following a user-defined scheme}
 \usage{
-downscaleCV(x, y, method, sampling.strategy = "kfold.chronological",
-  folds = 4, scaleGrid.args = NULL,
-  prepareData.args = list(global.vars = NULL, combined.only = TRUE,
-  spatial.predictors = NULL, local.predictors = NULL, extended.predictors =
-  NULL), condition = NULL, threshold = NULL, ...)
+downscaleCV(
+  x,
+  y,
+  method,
+  sampling.strategy = "kfold.chronological",
+  folds = 4,
+  scaleGrid.args = NULL,
+  prepareData.args = list(global.vars = NULL, combined.only = TRUE, spatial.predictors
+    = NULL, local.predictors = NULL, extended.predictors = NULL),
+  condition = NULL,
+  threshold = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{The input grid (admits both single and multigrid, see \code{\link[transformeR]{makeMultiGrid}}). It should be an object as returned by \pkg{loadeR}.}
@@ -113,9 +121,11 @@ downscaleTrain for training a downscaling model
 downscalePredict for prediction for a a test dataset with a trained model for 
 \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
 
-Other downscaling.functions: \code{\link{downscaleChunk}},
-  \code{\link{downscalePredict}},
-  \code{\link{downscaleTrain}}, \code{\link{downscale}}
+Other downscaling.functions: 
+\code{\link{downscaleChunk}()},
+\code{\link{downscalePredict}()},
+\code{\link{downscaleTrain}()},
+\code{\link{downscale}()}
 }
 \author{
 J. Bano-Medina

@@ -4,8 +4,14 @@
 \alias{downscaleTrain}
 \title{Calibration of downscaling methods}
 \usage{
-downscaleTrain(obj, method, condition = NULL, threshold = NULL,
-  model.verbose = TRUE, ...)
+downscaleTrain(
+  obj,
+  method,
+  condition = NULL,
+  threshold = NULL,
+  model.verbose = TRUE,
+  ...
+)
 }
 \arguments{
 \item{obj}{The object as returned by \code{\link[downscaleR]{prepareData}}.}
@@ -128,9 +134,11 @@ model.nnets <- downscaleTrain(data, method = "NN", hidden = c(10,5), output = "l
 plot(y$Data[,5],model.analogs$pred$Data[,5], xlab = "obs", ylab = "pred")}
 }
 \seealso{
-Other downscaling.functions: \code{\link{downscaleCV}},
-  \code{\link{downscaleChunk}},
-  \code{\link{downscalePredict}}, \code{\link{downscale}}
+Other downscaling.functions: 
+\code{\link{downscaleCV}()},
+\code{\link{downscaleChunk}()},
+\code{\link{downscalePredict}()},
+\code{\link{downscale}()}
 }
 \author{
 J. Bano-Medina
