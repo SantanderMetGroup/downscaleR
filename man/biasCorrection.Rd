@@ -177,7 +177,7 @@ It allows relative (multiplicative) and additive corrections.
 
 
 In the case of precipitation a frequency adaptation is performed in all versions of quantile mapping 
-following Themeßl et al. (2012), but sampling from the observed Gamma distribution instead of using 
+following Themeßl et al. (2012; https://doi.org/10.1007/s10584-011-0224-4), but sampling from the observed Gamma distribution instead of using 
 linear interpolation. This is a preprocess to alleviate the problems arising when the dry day 
 frequency in the raw model output is larger than in the observations. The opposite situation is 
 automatically adjusted by quantile methods.
