@@ -4,27 +4,14 @@
 \alias{biasCorrection}
 \title{Bias correction methods}
 \usage{
-biasCorrection(
-  y,
-  x,
-  newdata = NULL,
-  precipitation = FALSE,
-  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm", "qdm"),
-  cross.val = c("none", "loo", "kfold"),
-  folds = NULL,
-  window = NULL,
-  scaling.type = c("additive", "multiplicative"),
-  fitdistr.args = list(densfun = "normal"),
-  wet.threshold = 1,
-  n.quantiles = NULL,
-  extrapolation = c("none", "constant"),
-  theta = c(0.95, 0.05),
-  detrend = TRUE,
-  join.members = FALSE,
-  parallel = FALSE,
-  max.ncores = 16,
-  ncores = NULL
-)
+biasCorrection(y, x, newdata = NULL, precipitation = FALSE,
+  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm",
+  "qdm"), cross.val = c("none", "loo", "kfold"), folds = NULL,
+  window = NULL, scaling.type = c("additive", "multiplicative"),
+  fitdistr.args = list(densfun = "normal"), wet.threshold = 1,
+  n.quantiles = NULL, extrapolation = c("none", "constant"),
+  theta = c(0.95, 0.05), detrend = TRUE, join.members = FALSE,
+  parallel = FALSE, max.ncores = 16, ncores = NULL)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -38,9 +25,8 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 If \code{x} is a multimember grid (the member dimension is > 1), the function assumes that the order of 
 the members is the same in \code{newdata}.}
 
-\item{precipitation}{Logical for precipitation data (default to FALSE). If TRUE Adjusts precipitation 
-frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
-precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+\item{precipitation}{Logical for precipitation data (default to FALSE). If TRUE adjusts precipitation 
+frequency in 'x' (prediction) to the observed frequency in 'y' (see Details). To adjust the frequency, 
 parameter \code{wet.threshold} is used (see below).}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
@@ -190,9 +176,11 @@ It allows relative (multiplicative) and additive corrections.
 \section{Note on the bias correction of precipitation}{
 
 
-In the case of precipitation a frequency adaptation has been implemented in all versions of 
-quantile mapping to alleviate the problems arising when the dry day frequency in the raw model output is larger
- than in the observations (Wilcke et al. 2013). 
+In the case of precipitation a frequency adaptation is performed in all versions of quantile mapping 
+following Themeßl et al. (2012), but sampling from the observed Gamma distribution instead of using 
+linear interpolation. This is a preprocess to alleviate the problems arising when the dry day 
+frequency in the raw model output is larger than in the observations. The opposite situation is 
+automatically adjusted by quantile methods.
  
  The precipitation subroutines are switched-on when the variable name of the grid 
  (i.e., the value returned by \code{gridData$Variable$varName}) is one of the following: 
@@ -303,9 +291,8 @@ eqm.join <- biasCorrection(y = y, x = x,
 \code{\link{isimip}} for a trend-preserving method of model calibration and \code{\link{quickDiagnostics}} 
 for an outlook of the results.
 
-Other downscaling: 
-\code{\link{glimpr}()},
-\code{\link{isimip}()}
+Other downscaling: \code{\link{glimpr}},
+  \code{\link{isimip}}
 }
 \author{
 S. Herrera, M. Iturbide, J. Bedia

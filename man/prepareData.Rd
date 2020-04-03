@@ -4,15 +4,9 @@
 \alias{prepareData}
 \title{Configuration of data for downscaling}
 \usage{
-prepareData(
-  x,
-  y,
-  global.vars = NULL,
-  combined.only = TRUE,
-  spatial.predictors = NULL,
-  local.predictors = NULL,
-  extended.predictors = NULL
-)
+prepareData(x, y, global.vars = NULL, combined.only = TRUE,
+  spatial.predictors = NULL, local.predictors = NULL,
+  extended.predictors = NULL)
 }
 \arguments{
 \item{x}{A grid (usually a multigrid) of predictor fields}
@@ -94,10 +88,9 @@ spatial.predictors = list(v.exp = 0.95, which.combine =getVarNames(x)))
 \seealso{
 \href{https://github.com/SantanderMetGroup/downscaleR/wiki/preparing-predictor-data}{downscaleR Wiki} for preparing predictors for downscaling and seasonal forecasting.
 
-Other downscaling.helpers: 
-\code{\link{predictor.nn.indices}()},
-\code{\link{predictor.nn.values}()},
-\code{\link{prepareNewData}()}
+Other downscaling.helpers: \code{\link{predictor.nn.indices}},
+  \code{\link{predictor.nn.values}},
+  \code{\link{prepareNewData}}
 }
 \author{
 J. Bedia, D. San-Martín and J.M. Gutiérrez

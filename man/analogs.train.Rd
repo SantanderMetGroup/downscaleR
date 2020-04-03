@@ -4,16 +4,8 @@
 \alias{analogs.train}
 \title{Analogs}
 \usage{
-analogs.train(
-  x,
-  y,
-  dates,
-  n.analogs = 4,
-  sel.fun = "mean",
-  window = 7,
-  n.random = NULL,
-  pool = 0
-)
+analogs.train(x, y, dates, n.analogs = 4, sel.fun = "mean",
+  window = 7, n.random = NULL, pool = 0)
 }
 \arguments{
 \item{x}{The grid data. Class: matrix.}

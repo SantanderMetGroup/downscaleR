@@ -4,14 +4,9 @@
 \alias{glimpr}
 \title{GLM downscaling}
 \usage{
-glimpr(
-  y = y,
-  modelPars = modelPars,
-  simulate = c("none", "loocv", "kfold"),
-  return.models = FALSE,
-  wet.threshold = wet.threshold,
-  n.pcs = n.pcs
-)
+glimpr(y = y, modelPars = modelPars, simulate = c("none", "loocv",
+  "kfold"), return.models = FALSE, wet.threshold = wet.threshold,
+  n.pcs = n.pcs)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -28,9 +23,8 @@ glimpr(
 Implementation of GLM's to downscale precipitation data
 }
 \seealso{
-Other downscaling: 
-\code{\link{biasCorrection}()},
-\code{\link{isimip}()}
+Other downscaling: \code{\link{biasCorrection}},
+  \code{\link{isimip}}
 }
 \author{
 J Bedia, M Iturbide

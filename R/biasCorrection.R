@@ -21,9 +21,8 @@
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 #'  \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.
-#' @param precipitation Logical for precipitation data (default to FALSE). If TRUE Adjusts precipitation 
-#' frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
-#' precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+#' @param precipitation Logical for precipitation data (default to FALSE). If TRUE adjusts precipitation 
+#' frequency in 'x' (prediction) to the observed frequency in 'y' (see Details). To adjust the frequency, 
 #' parameter \code{wet.threshold} is used (see below).
 #' @param cross.val Logical (default to FALSE). Should cross-validation be performed? methods available are 
 #' leave-one-out ("loo") and k-fold ("kfold") on an annual basis. The default option ("none") does not 
@@ -147,9 +146,11 @@
 #'
 #' @section Note on the bias correction of precipitation:
 #' 
-#' In the case of precipitation a frequency adaptation has been implemented in all versions of 
-#' quantile mapping to alleviate the problems arising when the dry day frequency in the raw model output is larger
-#'  than in the observations (Wilcke et al. 2013). 
+#' In the case of precipitation a frequency adaptation is performed in all versions of quantile mapping 
+#' following Themeßl et al. (2012), but sampling from the observed Gamma distribution instead of using 
+#' linear interpolation. This is a preprocess to alleviate the problems arising when the dry day 
+#' frequency in the raw model output is larger than in the observations. The opposite situation is 
+#' automatically adjusted by quantile methods.
 #'  
 #'  The precipitation subroutines are switched-on when the variable name of the grid 
 #'  (i.e., the value returned by \code{gridData$Variable$varName}) is one of the following: 

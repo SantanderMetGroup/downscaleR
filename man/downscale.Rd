@@ -4,19 +4,10 @@
 \alias{downscale}
 \title{Perfect-prog downscaling}
 \usage{
-downscale(
-  y,
-  x,
-  newdata = x,
-  method = c("analogs", "glm", "lm"),
-  simulate = c(FALSE, TRUE),
-  n.analogs = 1,
-  sel.fun = c("mean", "wmean", "max", "min", "median"),
-  wet.threshold = 0.1,
-  n.pcs = NULL,
-  cross.val = c("none", "loocv", "kfold"),
-  folds = NULL
-)
+downscale(y, x, newdata = x, method = c("analogs", "glm", "lm"),
+  simulate = c(FALSE, TRUE), n.analogs = 1, sel.fun = c("mean",
+  "wmean", "max", "min", "median"), wet.threshold = 0.1, n.pcs = NULL,
+  cross.val = c("none", "loocv", "kfold"), folds = NULL)
 }
 \arguments{
 \item{y}{The observations dataset. It should be an object as returned by \pkg{loadeR}.}
@@ -96,10 +87,9 @@ downscalePredict for prediction for a a test dataset with a trained model for
 downscaleCV for automatic cross-validation 
 \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
 
-Other downscaling.functions: 
-\code{\link{downscaleCV}()},
-\code{\link{downscaleChunk}()},
-\code{\link{downscalePredict}()},
-\code{\link{downscaleTrain}()}
+Other downscaling.functions: \code{\link{downscaleCV}},
+  \code{\link{downscaleChunk}},
+  \code{\link{downscalePredict}},
+  \code{\link{downscaleTrain}}
 }
 \concept{downscaling.functions}

@@ -31,10 +31,9 @@ newdata <- prepareNewData(x,data)
 \seealso{
 \href{https://github.com/SantanderMetGroup/downscaleR/wiki/preparing-predictor-data}{downscaleR Wiki} for preparing predictors for downscaling and seasonal forecasting.
 
-Other downscaling.helpers: 
-\code{\link{predictor.nn.indices}()},
-\code{\link{predictor.nn.values}()},
-\code{\link{prepareData}()}
+Other downscaling.helpers: \code{\link{predictor.nn.indices}},
+  \code{\link{predictor.nn.values}},
+  \code{\link{prepareData}}
 }
 \author{
 J Bedia
