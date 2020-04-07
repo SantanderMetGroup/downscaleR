@@ -5,8 +5,8 @@
 \title{Bias correction methods on 1D data}
 \usage{
 biasCorrection1D(o, p, s, method, scaling.type, fitdistr.args, precip,
-  pr.threshold, n.quantiles, extrapolation, theta, parallel = FALSE,
-  max.ncores = 16, ncores = NULL)
+  pr.threshold, n.quantiles, extrapolation, theta, detrend,
+  parallel = FALSE, max.ncores = 16, ncores = NULL)
 }
 \arguments{
 \item{o}{A vector (e.g. station data) containing the observed climate data for the training period}
@@ -46,6 +46,8 @@ thus, this argument is ignored if other bias correction method is selected.}
 above which precipitation (temperature) values are fitted to a Generalized Pareto Distribution (GPD). 
 Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
 percentile (5th percentile for the left tail). Only for \code{"gpqm"} method.}
+
+\item{detrend}{logical. Detrend data prior to bias correction? Only for \code{"dqm"}. Default. TRUE.}
 
 \item{parallel}{Logical. Should parallel execution be used?}
 

@@ -1,7 +1,7 @@
 ##############################################################################################################
 #                     GENERAL DOWNSCALING                                                                    #
 ##############################################################################################################
-##     downscale.predict.R Downscale climate data for a given statistical model.
+##     downscalePredict.R Downscale climate data for a given statistical model.
 ##
 ##     Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
 ##
@@ -19,17 +19,19 @@
 ##     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #' @title Downscale climate data for a given statistical model.
-#' @description Downscale data to local scales by statistical models previously obtained by \code{\link[downscaleR]{downscale.train}}.
+#' @description Downscale data to local scales by statistical models previously obtained by \code{\link[downscaleR]{downscaleTrain}}.
 #' @param newdata The grid data. It should be an object as returned by  \code{\link[downscaleR]{prepareNewData}}.
-#' @param model An object containing the statistical model as returned from  \code{\link[downscaleR]{downscale.train}}.
+#' @param model An object containing the statistical model as returned from  \code{\link[downscaleR]{downscaleTrain}}.
 #' @return A regular/irregular grid object.
 #' @seealso 
-#' downscale.train for training a downscaling model
+#' downscaleTrain for training a downscaling model
 #' prepareNewData for predictor preparation with new (test) data
 #' downscale.cv for automatic cross-validation 
 #' \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
 #' @author J. Bano-Medina
 #' @family downscaling.functions
+#' @importFrom transformeR gridArithmetics
+#' @importFrom sticky sticky
 #' @export
 #' @examples 
 #' # Loading data
@@ -41,29 +43,31 @@
 #' 
 #' # Example1: Basic example (without cross-validation)
 #' data <- prepareData(x = x, y = y, spatial.predictors = list(v.exp = 0.95))
-#' model.analogs <- downscale.train(data, method = "analogs", n.analogs = 1)
+#' model.analogs <- downscaleTrain(data, method = "analogs", n.analogs = 1)
 #' newdata <- prepareNewData(x,data)
-#' pred <- downscale.predict(newdata, model.analogs)
+#' pred <- downscalePredict(newdata, model.analogs)
 #' # This produces the same result as model.analogs$pred
 #' 
 #' # Example2:  Splitting data in train and test (simple cross-validation)
 #' xT <- subsetGrid(x, years = 1983:1999)  # training predictors
 #' yT <- subsetGrid(y, years = 1983:1999)   # training predictands
 #' data <- prepareData(xT,yT)       # preparing the data
-#' model.analogs <- downscale.train(data, method = "analogs", n.analogs = 1)
+#' model.analogs <- downscaleTrain(data, method = "analogs", n.analogs = 1)
 #' xt <- subsetGrid(x, years = 2000)       # test predictors
 #' yt <- subsetGrid(y, years = 2000)       # test predictors
 #' newdata <- prepareNewData(xt,data)     # preparing the new predictors
-#' pred  <- downscale.predict(newdata, model.analogs)  # predicting
+#' pred  <- downscalePredict(newdata, model.analogs)  # predicting
 #' # Plotting the results for station 5
 #' plot(yt$Data[,5],pred$Data[,5])
 
-downscale.predict <- function(newdata, model) {
+downscalePredict <- function(newdata, model) {
   n <- length(newdata$x.global) # number of members
   p <- lapply(1:n, function(z) {
     # Multi-site
     if (model$model$site == "multi") {
-      xx <- newdata$x.global[[z]]
+      xx <- sticky(newdata$x.global[[z]])
+      attr(xx,"predictorNames") <- attr(newdata$x.global,"predictorNames")
+      xx %<>% sticky()
       if (model$model$method == "analogs") {model$model$atomic_model$dates$test <- getRefDates(newdata)}
       yp <- as.matrix(downs.predict(xx, model$model$method, model$model$atomic_model))}
     # Single-site
@@ -76,10 +80,14 @@ downscale.predict <- function(newdata, model) {
       yp <- array(data = NA, dim = c(n.obs,stations))
       for (i in 1:stations) {
         if (!is.null(newdata$x.local)) {
-          xx = newdata$x.local[[i]][[z]]}
-        else {
-          xx <- newdata$x.global[[z]]}
-        
+          xx <- newdata$x.local[[i]][[z]]
+          attr(xx,"predictorNames") <- attr(newdata$x.local,"predictorNames")
+          xx %<>% sticky()
+        } else {
+          xx <- newdata$x.global[[z]]
+          attr(xx,"predictorNames") <- attr(newdata$x.global,"predictorNames")
+          xx %<>% sticky()
+        }
         if (is.null(model$model$atomic_model[[i]])) {
           yp[,i] <- rep(NaN,n.obs)  
         }
@@ -105,6 +113,8 @@ downscale.predict <- function(newdata, model) {
         xx1 = newdata$x.local[[i]][[z]]
         xx2 = newdata$x.global[[z]]
         xx <- cbind(xx1,xx2)
+        attr(xx,"predictorNames") <- c(attr(newdata$x.local,"predictorNames"),attr(newdata$x.global,"predictorNames"))
+        xx %<>% sticky()
         if (is.null(model$model$atomic_model[[i]])) {
           yp[,i] <- rep(NaN,n.obs)  
         }
@@ -144,6 +154,7 @@ downscale.predict <- function(newdata, model) {
   pred$Data <- p
   attr(pred$Data, "dimensions") <- dimNames
   pred$Dates <- newdata$Dates
+
   return(pred)
 }
 
@@ -151,12 +162,12 @@ downscale.predict <- function(newdata, model) {
 #                     DOWNSCALING                                                                            #
 ##############################################################################################################
 #' @title Switch to selected downscale method.
-#' @description Internal function of \code{\link[downscaleR]{downscale.predict}} that switches to the corresponding method.
+#' @description Internal function of \code{\link[downscaleR]{downscalePredict}} that switches to the corresponding method.
 #' @param x The grid data. Class: matrix.
 #' @param method The method of the given model.
 #' @param atomic_model An object containing the statistical model of the selected method.
 #' @return A matrix with the predictions.
-#' @details This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.predict}}.
+#' @details This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscalePredict}}.
 #' @importFrom deepnet nn.predict
 #' @author J. Bano-Medina
 downs.predict <- function(x, method, atomic_model){

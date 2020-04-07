@@ -112,6 +112,10 @@ prepareData <- function(x, y, global.vars = NULL, combined.only = TRUE, spatial.
                                   grid = x,
                                   fun = local.predictors$fun)
         attr(nn, "local.index.list") <- pred.nn.ind
+        if (is.null(local.predictors$fun)) {
+          pred.names <- sapply(local.predictors$vars, FUN = function(z) rep(z,local.predictors$n)) %>% as.vector()
+          attr(nn,"predictorNames") <- paste0(pred.names,"_",rep(1:local.predictors$n,length(local.predictors$n)))
+        }
     }
     all.predictor.vars %<>% unique()
     # GLOBAL PREDICTOR SUBSETTING
@@ -144,8 +148,12 @@ prepareData <- function(x, y, global.vars = NULL, combined.only = TRUE, spatial.
             }
         } else {
             aux <- lapply(1:length(full.pca), function(i) full.pca[[i]][[1]]$PCs)
+            predictorNames <- sapply(names(full.pca), FUN = function(z) paste0(rep(z,ncol(full.pca[[z]][[1]]$PCs)),"_",attr(full.pca[[1]][[1]]$PCs,"dimnames")[[2]])) %>% as.vector()
             do.call("cbind", aux)
         }
+        if (!is.null(spatial.predictors$which.combine)) predictorNames <- paste0("PC_",1:ncol(x))
+        if (is.null(spatial.predictors$which.combine))  predictorNames <- sapply(names(full.pca), FUN = function(z) paste0(rep(z,ncol(full.pca[[z]][[1]]$PCs)),"_",attr(full.pca[[1]][[1]]$PCs,"dimnames")[[2]])) %>% as.vector()
+        attr(x,"predictorNames") <- predictorNames
     # RAW predictors    
     } 
     else {
@@ -157,9 +165,11 @@ prepareData <- function(x, y, global.vars = NULL, combined.only = TRUE, spatial.
                   subsetGrid(x, var = varnames[i]) %>% redim(drop = TRUE) %>% extract2("Data") %>% array3Dto2Dmat()
             })
         )
+        nnvars <- getVarNames(x)
         x <- do.call("cbind", aux.list)
+        pred.names <- sapply(1:length(aux.list), FUN = function(z) paste0(nnvars[z],"_",1:ncol(aux.list[[z]]))) %>% as.vector()
+        attr(x,"predictorNames") <- pred.names
         aux.list <- NULL
-        
         if (!is.null(extended.predictors$n)) {
           inp.n <- ncol(x) + 1
           hid.n <- extended.predictors$n
@@ -181,6 +191,7 @@ prepareData <- function(x, y, global.vars = NULL, combined.only = TRUE, spatial.
           x.bias <- cbind(x,array(data = 1,dim = c(nrow(x), 1))) 
           h <- x.bias %*% w
           x <- 1/(1 + exp(-h))
+          attr(x,"predictorNames") <- paste0("H_",1:ncol(h))
         }
     }
     predictor.list <- list("y" = y, "x.global" = x, "x.local" = nn, "pca" = full.pca)

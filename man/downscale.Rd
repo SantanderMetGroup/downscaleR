@@ -5,7 +5,7 @@
 \title{Perfect-prog downscaling}
 \usage{
 downscale(y, x, newdata = x, method = c("analogs", "glm", "lm"),
-  simulate = c("no", "yes"), n.analogs = 1, sel.fun = c("mean",
+  simulate = c(FALSE, TRUE), n.analogs = 1, sel.fun = c("mean",
   "wmean", "max", "min", "median"), wet.threshold = 0.1, n.pcs = NULL,
   cross.val = c("none", "loocv", "kfold"), folds = NULL)
 }
@@ -18,7 +18,7 @@ downscale(y, x, newdata = x, method = c("analogs", "glm", "lm"),
 
 \item{method}{Downscaling method. Options are c = ("analogs","glm","lm"). Glm can only be set when downscaling precipitation.}
 
-\item{simulate}{Character. Options are \code{"no"}, \code{"yes"}.}
+\item{simulate}{Logic. Options are \code{"FALSE"}, \code{"TRUE"}.}
 
 \item{n.analogs}{Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.}
 
@@ -71,24 +71,25 @@ yp <- downscale(y,x,method = "analogs", n.pcs = 15,
 
 ### GLM ###
 # None
-yp <- downscale(y,x,method = "glm", simulate = "no",  n.pcs = 10,
+yp <- downscale(y,x,method = "glm", simulate = FALSE,  n.pcs = 10,
                 wet.threshold = 1)
-yp <- downscale(y,x,method = "glm", simulate = "yes", n.pcs = 10,
+yp <- downscale(y,x,method = "glm", simulate = TRUE, n.pcs = 10,
                 wet.threshold = 1)
 # kfold
-yp <- downscale(y,x,method = "glm", simulate = "no", n.pcs = 10,
+yp <- downscale(y,x,method = "glm", simulate = FALSE, n.pcs = 10,
                 cross.val = "kfold", folds = list(c(1985,1986,1987),
                                                   c(1988,1989,1990),
                                                   c(1991,1992,1993)))
 }
 \seealso{
-downscale.train for training a downscaling model
-downscale.predict for prediction for a a test dataset with a trained model for 
-downscale.cv for automatic cross-validation 
+downscaleTrain for training a downscaling model
+downscalePredict for prediction for a a test dataset with a trained model for 
+downscaleCV for automatic cross-validation 
 \href{https://github.com/SantanderMetGroup/downscaleR/wiki/training-downscaling-models}{downscaleR Wiki} for downscaling seasonal forecasting and climate projections.
 
-Other downscaling.functions: \code{\link{downscale.cv}},
-  \code{\link{downscale.predict}},
-  \code{\link{downscale.train}}
+Other downscaling.functions: \code{\link{downscaleCV}},
+  \code{\link{downscaleChunk}},
+  \code{\link{downscalePredict}},
+  \code{\link{downscaleTrain}}
 }
 \concept{downscaling.functions}

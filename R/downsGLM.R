@@ -6,9 +6,9 @@
 #' @param x The grid data. Class: matrix.
 #' @param y The observations data. Class: matrix.
 #' @param fitting A string indicating the types of objective functions and how to fit the linear model.
-#' @param simulate A string indicating wether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma 
-#' @param model.verbose String value. Indicates wether the information concerning the model infered is limited to the 
-#' essential information (model.verbose = "no")  or a more detailed information (model.verbose = "yes", DEFAULT). This is
+#' @param simulate A logic value indicating wether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma 
+#' @param model.verbose A logic value. Indicates wether the information concerning the model infered is limited to the 
+#' essential information (model.verbose = FALSE)  or a more detailed information (model.verbose = TRUE, DEFAULT). This is
 #' recommended when you want to save memory. Only operates for GLM.
 #' or binomial families.
 #' @param stepwise.arg A list contatining two parameters: steps and direction. When performing a stepwise search
@@ -52,21 +52,22 @@
 #' 2) Except for fitting = "MP", for the rest of the fitting options, the parameter singlesite must be TRUE, unless 
 #' we want a gLASSO which in this case singlesite must be FALSE.
 #' @return The GLM model as returned from \code{\link[stats]{glm}} plus a list with information concerning the experiment.
-#' @details This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscale.train}} or \code{\link[downscaleR]{downscale.cv}}.
+#' @details This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscaleTrain}} or \code{\link[downscaleR]{downscaleCV}}.
 #' @author J. Bano-Medina
 #' @importFrom stats step formula
 #' @importFrom glmnet glmnet cv.glmnet
-glm.train <- function(x, y, fitting = NULL, simulate = "no", model.verbose = "yes",
+glm.train <- function(x, y, fitting = NULL, simulate = FALSE, model.verbose = TRUE,
                       stepwise.arg = NULL,
                       ...) {
+  colnames(x) <- attr(x,"predictorNames")
   if (is.null(fitting)) {
-    df <- data.frame(cbind(y,x)); colnames(df) <- paste0('X',1:(dim(x)[2] + 1))
-    weights <- glm(X1~.,data = df, ...)
+    df <- data.frame(cbind(y,x))
+    weights <- glm(V1~.,data = df, ...)
   }
   else if (fitting == "stepwise") {
-    df <- data.frame(cbind(y,x)); colnames(df) <- paste0('X',1:(dim(x)[2] + 1))
-    fullmod <- glm(X1~.,data = df,...)
-    nothing <- glm(X1~1.,data = df,...)
+    df <- data.frame(cbind(y,x))
+    fullmod <- glm(V1~.,data = df,...)
+    nothing <- glm(V1~1.,data = df,...)
     if (is.null(stepwise.arg)) {
       weights <- step(nothing, scope = list(lower = formula(nothing),upper = formula(fullmod)),
                       direction = "forward")
@@ -104,7 +105,7 @@ glm.train <- function(x, y, fitting = NULL, simulate = "no", model.verbose = "ye
     weights <- glmnet(x,y,alpha = 0, family = "mgaussian", type.multinomial = "grouped", ...)
   }
   
-  if (model.verbose == "no") {
+  if (!isTRUE(model.verbose)) {
     weights$fitted.values <- NULL
     weights$effects <- NULL
     # weights$qr$qr <- NULL
@@ -121,24 +122,25 @@ glm.train <- function(x, y, fitting = NULL, simulate = "no", model.verbose = "ye
   return(list("weights" = weights, "info" = list("fitting" = fitting, "simulate" = simulate, "family" = family)))}
 
 #' @title Donwscaling with a given generalized linear model (GLM).
-#' @description Donwscaling with a given generalized linear models (GLM) calculated in \code{\link[downscaleR]{downscale.predict}} via \code{\link[downscaleR]{glm.train}}.
+#' @description Donwscaling with a given generalized linear models (GLM) calculated in \code{\link[downscaleR]{downscalePredict}} via \code{\link[downscaleR]{glm.train}}.
 #' @param x The grid data. Class: matrix.
 #' @param weights Object as returned from \code{\link[downscaleR]{glm.train}}
 #' @param info A list containing information of the experiment: the fitting, the family of the generalized linear model and 
 #' if it is deterministic or stochastic.
 #' @return The predicted matrix.
 #' @details Predicts by using the base function \code{\link[stats]{predict}}. This function is internal and should not be used by the user.
-#' The user should use \code{\link[downscaleR]{downscale.predict}}.
+#' The user should use \code{\link[downscaleR]{downscalePredict}}.
 #' @author J. Bano-Medina
 glm.predict <- function(x, weights, info) {
+  colnames(x) <- attr(x,"predictorNames")
   if (is.null(info$fitting) || info$fitting == "stepwise") {
-    df <- data.frame(x); colnames(df) <- paste0('X',2:(dim(x)[2] + 1))
+    df <- data.frame(x)
     pred <- predict(weights, newdata = df, type = 'response')
   }
   else if (info$fitting == "L1" || info$fitting == "L2" || info$fitting == "L1L2" || info$fitting == "gLASSO") {
     pred <- drop(predict(weights,x,type = "response"))
   }
-  if (info$simulate == "yes") {
+  if (isTRUE(info$simulate)) {
     if (info$family$family == "binomial") {
       rnd <- runif(length(pred), min = 0, max = 1)
       ind01 <- which(pred > rnd)
