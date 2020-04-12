@@ -4,14 +4,28 @@
 \alias{biasCorrection}
 \title{Bias correction methods}
 \usage{
-biasCorrection(y, x, newdata = NULL, precipitation = FALSE,
-  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm",
-  "qdm"), cross.val = c("none", "loo", "kfold"), folds = NULL,
-  window = NULL, scaling.type = c("additive", "multiplicative"),
-  fitdistr.args = list(densfun = "normal"), wet.threshold = 1,
-  n.quantiles = NULL, extrapolation = c("none", "constant"),
-  theta = c(0.95, 0.05), detrend = TRUE, join.members = FALSE,
-  parallel = FALSE, max.ncores = 16, ncores = NULL)
+biasCorrection(
+  y,
+  x,
+  newdata = NULL,
+  precipitation = FALSE,
+  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm", "qdm", "isimip3"),
+  cross.val = c("none", "loo", "kfold"),
+  folds = NULL,
+  window = NULL,
+  scaling.type = c("additive", "multiplicative"),
+  fitdistr.args = list(densfun = "normal"),
+  wet.threshold = 1,
+  n.quantiles = NULL,
+  extrapolation = c("none", "constant"),
+  theta = c(0.95, 0.05),
+  detrend = TRUE,
+  isimip3.args = NULL,
+  join.members = FALSE,
+  parallel = FALSE,
+  max.ncores = 16,
+  ncores = NULL
+)
 }
 \arguments{
 \item{y}{A grid or station data containing the observed climate data for the training period}
@@ -69,6 +83,8 @@ Values below this threshold are fitted to a gamma (normal) distribution. By defa
 percentile (and 5th percentile for the left tail). Only for \code{"gpqm"} method.}
 
 \item{detrend}{logical. Detrend data prior to bias correction? Only for \code{"dqm"}. Default. TRUE.}
+
+\item{isimip3.args}{Named list of arguments passed to function \code{\link{isimip3}}.}
 
 \item{join.members}{Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
 or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).}
@@ -171,7 +187,9 @@ It consists on (i) detrending the individual quantiles;
 (ii) QM is applied to the detrended series; 
 (iii) the projected trends are then reapplied to the bias-adjusted quantiles.
 It explicitly preserves the change signal in all quantiles. 
-It allows relative (multiplicative) and additive corrections.
+It allows relative (multiplicative) and additive corrections. 
+
+\strong{isimip3}
 }
 \section{Note on the bias correction of precipitation}{
 
@@ -291,8 +309,9 @@ eqm.join <- biasCorrection(y = y, x = x,
 \code{\link{isimip}} for a trend-preserving method of model calibration and \code{\link{quickDiagnostics}} 
 for an outlook of the results.
 
-Other downscaling: \code{\link{glimpr}},
-  \code{\link{isimip}}
+Other downscaling: 
+\code{\link{glimpr}()},
+\code{\link{isimip}()}
 }
 \author{
 S. Herrera, M. Iturbide, J. Bedia

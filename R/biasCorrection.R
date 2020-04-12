@@ -52,6 +52,7 @@
 #' Values below this threshold are fitted to a gamma (normal) distribution. By default, 'theta' is the 95th 
 #' percentile (and 5th percentile for the left tail). Only for \code{"gpqm"} method.
 #' @param detrend logical. Detrend data prior to bias correction? Only for \code{"dqm"}. Default. TRUE.
+#' @param isimip3.args Named list of arguments passed to function \code{\link{isimip3}}. 
 #' @param join.members Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
 #'  or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).
 #' @template templateParallelParams
@@ -143,6 +144,10 @@
 #' (iii) the projected trends are then reapplied to the bias-adjusted quantiles.
 #' It explicitly preserves the change signal in all quantiles. 
 #' It allows relative (multiplicative) and additive corrections. 
+#' 
+#' \strong{isimip3}
+#' 
+#' 
 #'
 #' @section Note on the bias correction of precipitation:
 #' 
@@ -167,6 +172,7 @@
 #' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim getWindowIndex
 #' @importFrom abind adrop
 #' @importFrom stats lm.fit approx
+#' @importFrom reticulate source_python
 #'
 #' @references
 #'
@@ -270,7 +276,7 @@
 
 
 biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
-                           method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci","dqm","qdm"),
+                           method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci","dqm","qdm", "isimip3"),
                            cross.val = c("none", "loo", "kfold"),
                            folds = NULL,
                            window = NULL,
@@ -280,13 +286,14 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            n.quantiles = NULL,
                            extrapolation = c("none", "constant"), 
                            theta = c(.95,.05),
-                           detrend=TRUE,
+                           detrend = TRUE,
+                           isimip3.args = NULL,
                            join.members = FALSE,
                            parallel = FALSE,
                            max.ncores = 16,
                            ncores = NULL) {
       if (method == "gqm") stop("'gqm' is not a valid choice anymore. Use method = 'pqm' instead and set fitdistr.args = list(densfun = 'gamma')")
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "mva", "loci", "ptr", "variance","dqm","qdm"))
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "mva", "loci", "ptr", "variance","dqm","qdm","isimip3"))
       cross.val <- match.arg(cross.val, choices = c("none", "loo", "kfold"))
       scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
       extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
@@ -308,7 +315,8 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                        extrapolation = extrapolation, 
                                        theta = theta,
                                        join.members = join.members,
-                                       detrend=detrend,
+                                       detrend = detrend,
+                                       isimip3.args = isimip3.args,
                                        parallel = parallel,
                                        max.ncores = max.ncores,
                                        ncores = ncores)
@@ -350,7 +358,8 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                    fitdistr.args = fitdistr.args,
                                    pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
                                    theta = theta, join.members = join.members,
-                                   detrend=detrend,
+                                   detrend = detrend,
+                                   isimip3.args = isimip3.args,
                                    parallel = parallel,
                                    max.ncores = max.ncores,
                                    ncores = ncores)
@@ -384,9 +393,18 @@ biasCorrectionXD <- function(y, x, newdata,
                              theta,
                              join.members,
                              detrend,
+                             isimip3.args,
                              parallel = FALSE,
                              max.ncores = 16,
                              ncores = NULL) {
+      if (method == "isimip3") {
+            window <- NULL
+            lf <- list.files(file.path(find.package("downscaleR")), pattern = ".py", recursive = T, full.names = TRUE)
+            lapply(lf, source_python)
+            # warning("Only parameter isimip3.args is considered")
+            if (is.null(isimip3.args)) isimi3.args <- list()
+            isimip3.args[["dates"]] <- list(obs_hist = y[["Dates"]][["start"]], sim_hist = x[["Dates"]][["start"]], sim_fut = newdata[["Dates"]][["start"]])
+      }
       station <- FALSE
       if ("loc" %in% getDim(y)) station <- TRUE
       xy <- y$xyCoords
@@ -473,7 +491,8 @@ biasCorrectionXD <- function(y, x, newdata,
                                                 n.quantiles = n.quantiles,
                                                 extrapolation = extrapolation,
                                                 theta = theta,
-                                                detrend=detrend,
+                                                detrend = detrend,
+                                                isimip3.args = isimip3.args,
                                                 parallel = parallel,
                                                 max.ncores = max.ncores,
                                                 ncores = ncores)  
@@ -552,6 +571,7 @@ biasCorrection1D <- function(o, p, s,
                              extrapolation, 
                              theta,
                              detrend,
+                             isimip3.args,
                              parallel = FALSE,
                              max.ncores = 16,
                              ncores = NULL) {
@@ -584,6 +604,8 @@ biasCorrection1D <- function(o, p, s,
             mapply_fun(dqm, o, p, s, MoreArgs = list(precip, pr.threshold, n.quantiles, detrend))
       } else if (method == "qdm") {
             mapply_fun(qdm, o, p, s, MoreArgs = list(precip, pr.threshold, n.quantiles))
+      } else if (method == "isimip3") {
+            mapply_fun(isimip3, o, p, s, MoreArgs = isimip3.args) #this method is in a separate file
       }
       #INCLUIR AQUI METODOS NUEVOS
 }

@@ -4,9 +4,24 @@
 \alias{biasCorrection1D}
 \title{Bias correction methods on 1D data}
 \usage{
-biasCorrection1D(o, p, s, method, scaling.type, fitdistr.args, precip,
-  pr.threshold, n.quantiles, extrapolation, theta, detrend,
-  parallel = FALSE, max.ncores = 16, ncores = NULL)
+biasCorrection1D(
+  o,
+  p,
+  s,
+  method,
+  scaling.type,
+  fitdistr.args,
+  precip,
+  pr.threshold,
+  n.quantiles,
+  extrapolation,
+  theta,
+  detrend,
+  isimip3.args,
+  parallel = FALSE,
+  max.ncores = 16,
+  ncores = NULL
+)
 }
 \arguments{
 \item{o}{A vector (e.g. station data) containing the observed climate data for the training period}
