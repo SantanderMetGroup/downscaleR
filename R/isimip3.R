@@ -36,6 +36,7 @@
 #' @keywords internal
 #' @importFrom stats approxfun ecdf quantile
 #' @importFrom lubridate year
+#' @importFrom reticulate dict
 #' @author S. Herrera and M. Iturbide
 
 isimip3 <- function(o, p, s, 
