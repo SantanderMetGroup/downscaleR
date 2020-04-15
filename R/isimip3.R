@@ -35,7 +35,7 @@
 #' @param invalid_value_warnings : boolean, optional. Raise user warnings when invalid values are replaced bafore bias adjustment.
 #' @keywords internal
 #' @importFrom stats approxfun ecdf quantile
-#' @impoFrom lubridate year
+#' @importFrom lubridate year
 #' @author S. Herrera and M. Iturbide
 
 isimip3 <- function(o, p, s, 
