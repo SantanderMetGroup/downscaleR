@@ -36,24 +36,24 @@
 #' @keywords internal
 #' @importFrom stats approxfun ecdf quantile
 #' @importFrom lubridate year
-#' @importFrom reticulate dict
+#' @importFrom reticulate dict source_python
 #' @author S. Herrera and M. Iturbide
 
 isimip3 <- function(o, p, s, 
-                     dates, 
-                     lower_bound= c(NULL), 
-                     lower_threshold= c(NULL), 
-                     upper_bound= c(NULL), 
-                     upper_threshold= c(NULL), 
-                     randomization_seed= NULL, 
-                     detrend= array(data = FALSE, dim = 1), 
-                     rotation_matrices= c(NULL), 
-                     n_quantiles=50, 
-                     distribution= c("normal"), 
-                     trend_preservation = array(data = "additive", dim=1), 
-                     adjust_p_values = array(data = FALSE, dim=1), 
-                     if_all_invalid_use = c(NULL), 
-                     invalid_value_warnings=FALSE){
+                    dates, 
+                    lower_bound = c(NULL), 
+                    lower_threshold = c(NULL), 
+                    upper_bound = c(NULL), 
+                    upper_threshold = c(NULL), 
+                    randomization_seed = c(NULL), 
+                    detrend= array(data = FALSE, dim = 1), 
+                    rotation_matrices = c(NULL), 
+                    n_quantiles = 50, 
+                    distribution = c("normal"), 
+                    trend_preservation = array(data = "additive", dim = 1), 
+                    adjust_p_values = array(data = FALSE, dim = 1), 
+                    if_all_invalid_use = c(NULL), 
+                    invalid_value_warnings = FALSE) {
   meses.o <- months(as.Date(dates$obs_hist))
   meses.p <- months(as.Date(dates$sim_hist))
   meses.s <- months(as.Date(dates$sim_fut))
@@ -62,6 +62,10 @@ isimip3 <- function(o, p, s,
   years.p <- year(as.Date(dates$sim_hist))
   years.s <- year(as.Date(dates$sim_fut))
   
+  ## source python routines
+  lf <- list.files(file.path(find.package("downscaleR")), pattern = "\\.py$", recursive = TRUE, full.names = TRUE)
+  sapply(lf, source_python, .GlobalEnv)
+      
   ## Loop in months:
   auxMonths <- lapply(1:length(meses.name), function(m) {
     indMonth.o <- which(meses.o == meses.name[m])
