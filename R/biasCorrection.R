@@ -399,8 +399,6 @@ biasCorrectionXD <- function(y, x, newdata,
                              ncores = NULL) {
       if (method == "isimip3") {
             window <- NULL
-            lf <- list.files(file.path(find.package("downscaleR")), pattern = ".py", recursive = T, full.names = TRUE)
-            lapply(lf, source_python)
             # warning("Only parameter isimip3.args is considered")
             if (is.null(isimip3.args)) isimi3.args <- list()
             isimip3.args[["dates"]] <- list(obs_hist = y[["Dates"]][["start"]], sim_hist = x[["Dates"]][["start"]], sim_fut = newdata[["Dates"]][["start"]])

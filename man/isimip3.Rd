@@ -13,7 +13,7 @@ isimip3(
   lower_threshold = c(NULL),
   upper_bound = c(NULL),
   upper_threshold = c(NULL),
-  randomization_seed = NULL,
+  randomization_seed = c(NULL),
   detrend = array(data = FALSE, dim = 1),
   rotation_matrices = c(NULL),
   n_quantiles = 50,
