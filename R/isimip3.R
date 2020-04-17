@@ -39,53 +39,57 @@
 #' @importFrom reticulate dict source_python
 #' @author S. Herrera and M. Iturbide
 
-isimip3 <- function(o, p, s, 
-                    dates, 
-                    lower_bound = c(NULL), 
-                    lower_threshold = c(NULL), 
-                    upper_bound = c(NULL), 
-                    upper_threshold = c(NULL), 
-                    randomization_seed = c(NULL), 
-                    detrend= array(data = FALSE, dim = 1), 
-                    rotation_matrices = c(NULL), 
-                    n_quantiles = 50, 
-                    distribution = c("normal"), 
-                    trend_preservation = array(data = "additive", dim = 1), 
-                    adjust_p_values = array(data = FALSE, dim = 1), 
-                    if_all_invalid_use = c(NULL), 
+isimip3 <- function(o, p, s,
+                    dates,
+                    lower_bound = c(NULL),
+                    lower_threshold = c(NULL),
+                    upper_bound = c(NULL),
+                    upper_threshold = c(NULL),
+                    randomization_seed = c(NULL),
+                    detrend= array(data = FALSE, dim = 1),
+                    rotation_matrices = c(NULL),
+                    n_quantiles = 50,
+                    distribution = c("normal"),
+                    trend_preservation = array(data = "additive", dim = 1),
+                    adjust_p_values = array(data = FALSE, dim = 1),
+                    if_all_invalid_use = c(NULL),
                     invalid_value_warnings = FALSE) {
-  meses.o <- months(as.Date(dates$obs_hist))
-  meses.p <- months(as.Date(dates$sim_hist))
-  meses.s <- months(as.Date(dates$sim_fut))
-  meses.name <- unique(meses.s)
-  years.o <- year(as.Date(dates$obs_hist))
-  years.p <- year(as.Date(dates$sim_hist))
-  years.s <- year(as.Date(dates$sim_fut))
-  
-  ## source python routines
-  lf <- list.files(file.path(find.package("downscaleR")), pattern = "\\.py$", recursive = TRUE, full.names = TRUE)
-  sapply(lf, source_python, .GlobalEnv)
-      
-  ## Loop in months:
-  auxMonths <- lapply(1:length(meses.name), function(m) {
-    indMonth.o <- which(meses.o == meses.name[m])
-    indMonth.p <- which(meses.p == meses.name[m])
-    indMonth.s <- which(meses.s == meses.name[m])
-    data <- dict(obs_hist = matrix(o[indMonth.o], ncol = length(indMonth.o), nrow = 1),
-                 sim_hist = matrix(p[indMonth.p], ncol = length(indMonth.p), nrow = 1), 
-                 sim_fut = matrix(s[indMonth.s], ncol = length(indMonth.s), nrow = 1))
-    years <- dict(obs_hist = matrix(years.o[indMonth.o], ncol = length(indMonth.o), nrow = 1),
-                 sim_hist = matrix(years.p[indMonth.p], ncol = length(indMonth.p), nrow = 1), 
-                 sim_fut = matrix(years.s[indMonth.s], ncol = length(indMonth.s), nrow = 1))
-    l <- adjust_bias_one_month(data, years, lower_bound = lower_bound, lower_threshold= lower_threshold, upper_bound= upper_bound, upper_threshold= upper_threshold,
-                               randomization_seed = randomization_seed, detrend=detrend, rotation_matrices= rotation_matrices, n_quantiles=as.integer(n_quantiles), distribution= distribution,
-                               trend_preservation =trend_preservation, adjust_p_values=adjust_p_values, if_all_invalid_use= if_all_invalid_use, invalid_value_warnings=invalid_value_warnings)
-  })
-  smap <- s
-  for (m in c(1:length(meses.name))) {
-    indMonth.s <- which(meses.s == meses.name[m])
-    smap[indMonth.s] <- auxMonths[[m]][[1]]
-  }
-  return(smap)
+      smap <- s
+      if (any(!is.na(o)) & any(!is.na(p)) & any(!is.na(s))){
+            meses.o <- months(as.Date(dates$obs_hist))
+            meses.p <- months(as.Date(dates$sim_hist))
+            meses.s <- months(as.Date(dates$sim_fut))
+            meses.name <- unique(meses.s)
+            years.o <- year(as.Date(dates$obs_hist))
+            years.p <- year(as.Date(dates$sim_hist))
+            years.s <- year(as.Date(dates$sim_fut))
+            
+            ## source python routines
+            lf <- list.files(file.path(find.package("downscaleR")), pattern = "\\.py$", recursive = TRUE, full.names = TRUE)
+            sapply(lf, source_python, .GlobalEnv)
+            
+            ## Loop in months:
+            auxMonths <- lapply(1:length(meses.name), function(m) {
+                  indMonth.o <- which(meses.o == meses.name[m])
+                  indMonth.p <- which(meses.p == meses.name[m])
+                  indMonth.s <- which(meses.s == meses.name[m])
+                  data <- dict(obs_hist = matrix(o[indMonth.o], ncol = length(indMonth.o), nrow = 1),
+                               sim_hist = matrix(p[indMonth.p], ncol = length(indMonth.p), nrow = 1),
+                               sim_fut = matrix(s[indMonth.s], ncol = length(indMonth.s), nrow = 1))
+                  years <- dict(obs_hist = matrix(years.o[indMonth.o], ncol = length(indMonth.o), nrow = 1),
+                                sim_hist = matrix(years.p[indMonth.p], ncol = length(indMonth.p), nrow = 1),
+                                sim_fut = matrix(years.s[indMonth.s], ncol = length(indMonth.s), nrow = 1))
+                  l <- adjust_bias_one_month(data, years, lower_bound = lower_bound, lower_threshold= lower_threshold, upper_bound= upper_bound, upper_threshold= upper_threshold,
+                                             randomization_seed = randomization_seed, detrend=detrend, rotation_matrices= rotation_matrices, n_quantiles=as.integer(n_quantiles), distribution= distribution,
+                                             trend_preservation =trend_preservation, adjust_p_values=adjust_p_values, if_all_invalid_use= if_all_invalid_use, invalid_value_warnings=invalid_value_warnings)
+            })
+            for (m in c(1:length(meses.name))) {
+                  indMonth.s <- which(meses.s == meses.name[m])
+                  smap[indMonth.s] <- auxMonths[[m]][[1]]
+            }
+      }else{
+            print("No valid values have been found, so the raw un-corrected data is returned.") 
+      }
+      return(smap)
 }
-#end
+#end  
