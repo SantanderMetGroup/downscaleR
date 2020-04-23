@@ -20,7 +20,8 @@
 #'
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-#'  \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.
+#'  \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"}, \code{"ptr"}, 
+#'  \code{"dqm"}, \code{"qdm"}, \code{"ismip"}, \code{"isimip3"}. See details.
 #' @param precipitation Logical for precipitation data (default to FALSE). If TRUE adjusts precipitation 
 #' frequency in 'x' (prediction) to the observed frequency in 'y' (see Details). To adjust the frequency, 
 #' parameter \code{wet.threshold} is used (see below).
@@ -144,6 +145,8 @@
 #' (iii) the projected trends are then reapplied to the bias-adjusted quantiles.
 #' It explicitly preserves the change signal in all quantiles. 
 #' It allows relative (multiplicative) and additive corrections. 
+#' 
+#' \strong{isimip}
 #' 
 #' \strong{isimip3}
 #' 
@@ -292,87 +295,95 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            parallel = FALSE,
                            max.ncores = 16,
                            ncores = NULL) {
+      
       if (method == "gqm") stop("'gqm' is not a valid choice anymore. Use method = 'pqm' instead and set fitdistr.args = list(densfun = 'gamma')")
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "mva", "loci", "ptr", "variance","dqm","qdm","isimip3"))
-      cross.val <- match.arg(cross.val, choices = c("none", "loo", "kfold"))
-      scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
-      extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
-      stopifnot(is.logical(join.members))
-      nwdatamssg <- TRUE
-      if (is.null(newdata)) {
-            newdata <- x 
-            nwdatamssg <- FALSE
-      }
-      if (cross.val == "none") {
-            output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
-                                       precipitation = precipitation,
-                                       method = method,
-                                       window = window,
-                                       scaling.type = scaling.type,
-                                       fitdistr.args = fitdistr.args,
-                                       pr.threshold = wet.threshold, 
-                                       n.quantiles = n.quantiles, 
-                                       extrapolation = extrapolation, 
-                                       theta = theta,
-                                       join.members = join.members,
-                                       detrend = detrend,
-                                       isimip3.args = isimip3.args,
-                                       parallel = parallel,
-                                       max.ncores = max.ncores,
-                                       ncores = ncores)
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "mva", "loci", "ptr", "variance","dqm","qdm", "isimip","isimip3"))
+      ####temporal solution for applying the isimip method###########
+      if (method == "isimip") {
+            message("cross-validation and window options are not implemented for the isimip method yet.")
+            output <- do.call("isimip", list(y = y, x = x, newdada = newdata, threshold = wet.threshold, type = scaling.type))
       } else {
-            if (nwdatamssg) {
-                  message("'newdata' will be ignored for cross-validation")
+            ##################################################
+            cross.val <- match.arg(cross.val, choices = c("none", "loo", "kfold"))
+            scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
+            extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
+            stopifnot(is.logical(join.members))
+            nwdatamssg <- TRUE
+            if (is.null(newdata)) {
+                  newdata <- x 
+                  nwdatamssg <- FALSE
             }
-            if (cross.val == "loo") {
-                  years <- as.list(unique(getYearsAsINDEX(x)))
-            } else if (cross.val == "kfold" & !is.null(folds)) {
-                  years <- folds
-            } else if (cross.val == "kfold" & is.null(folds)) {
-                  stop("Fold specification is missing, with no default")
+            if (cross.val == "none") {
+                  output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
+                                             precipitation = precipitation,
+                                             method = method,
+                                             window = window,
+                                             scaling.type = scaling.type,
+                                             fitdistr.args = fitdistr.args,
+                                             pr.threshold = wet.threshold, 
+                                             n.quantiles = n.quantiles, 
+                                             extrapolation = extrapolation, 
+                                             theta = theta,
+                                             join.members = join.members,
+                                             detrend = detrend,
+                                             isimip3.args = isimip3.args,
+                                             parallel = parallel,
+                                             max.ncores = max.ncores,
+                                             ncores = ncores)
+            } else {
+                  if (nwdatamssg) {
+                        message("'newdata' will be ignored for cross-validation")
+                  }
+                  if (cross.val == "loo") {
+                        years <- as.list(unique(getYearsAsINDEX(x)))
+                  } else if (cross.val == "kfold" & !is.null(folds)) {
+                        years <- folds
+                  } else if (cross.val == "kfold" & is.null(folds)) {
+                        stop("Fold specification is missing, with no default")
+                  }
+                  output.list <- lapply(1:length(years), function(i) {
+                        target.year <- years[[i]]
+                        rest.years <- setdiff(unlist(years), target.year)
+                        station <- FALSE
+                        if ("loc" %in% getDim(y)) station <- TRUE
+                        yy <- redim(y, member = FALSE)
+                        yy <- if (method == "delta") {
+                              subsetGrid(yy, years = target.year, drop = FALSE)
+                        } else {
+                              subsetGrid(yy, years = rest.years, drop = FALSE)
+                        }
+                        if (isTRUE(station)) {
+                              yy$Data <- adrop(yy$Data, drop = 3)
+                              attr(yy$Data, "dimensions") <- c(setdiff(getDim(yy), c("lat", "lon")), "loc")
+                        } else {
+                              yy <- redim(yy, drop = TRUE)
+                        }
+                        newdata2 <- subsetGrid(x, years = target.year, drop = F)
+                        xx <- subsetGrid(x, years = rest.years, drop = F)
+                        message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
+                        biasCorrectionXD(y = yy, x = xx, newdata = newdata2, precipitation = precipitation,
+                                         method = method,
+                                         window = window,
+                                         scaling.type = scaling.type,
+                                         fitdistr.args = fitdistr.args,
+                                         pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
+                                         theta = theta, join.members = join.members,
+                                         detrend = detrend,
+                                         isimip3.args = isimip3.args,
+                                         parallel = parallel,
+                                         max.ncores = max.ncores,
+                                         ncores = ncores)
+                  })
+                  al <- which(getDim(x) == "time")
+                  Data <- sapply(output.list, function(n) unname(n$Data), simplify = FALSE)
+                  bindata <- unname(do.call("abind", c(Data, along = al)))
+                  output <- output.list[[1]]
+                  dimNames <- attr(output$Data, "dimensions")
+                  output$Data <- bindata
+                  attr(output$Data, "dimensions") <- dimNames
+                  output$Dates <- x$Dates
+                  output$Data[which(is.infinite(output$Data))] <- NA
             }
-            output.list <- lapply(1:length(years), function(i) {
-                  target.year <- years[[i]]
-                  rest.years <- setdiff(unlist(years), target.year)
-                  station <- FALSE
-                  if ("loc" %in% getDim(y)) station <- TRUE
-                  yy <- redim(y, member = FALSE)
-                  yy <- if (method == "delta") {
-                        subsetGrid(yy, years = target.year, drop = FALSE)
-                  } else {
-                        subsetGrid(yy, years = rest.years, drop = FALSE)
-                  }
-                  if (isTRUE(station)) {
-                        yy$Data <- adrop(yy$Data, drop = 3)
-                        attr(yy$Data, "dimensions") <- c(setdiff(getDim(yy), c("lat", "lon")), "loc")
-                  } else {
-                        yy <- redim(yy, drop = TRUE)
-                  }
-                  newdata2 <- subsetGrid(x, years = target.year, drop = F)
-                  xx <- subsetGrid(x, years = rest.years, drop = F)
-                  message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
-                  biasCorrectionXD(y = yy, x = xx, newdata = newdata2, precipitation = precipitation,
-                                   method = method,
-                                   window = window,
-                                   scaling.type = scaling.type,
-                                   fitdistr.args = fitdistr.args,
-                                   pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
-                                   theta = theta, join.members = join.members,
-                                   detrend = detrend,
-                                   isimip3.args = isimip3.args,
-                                   parallel = parallel,
-                                   max.ncores = max.ncores,
-                                   ncores = ncores)
-            })
-            al <- which(getDim(x) == "time")
-            Data <- sapply(output.list, function(n) unname(n$Data), simplify = FALSE)
-            bindata <- unname(do.call("abind", c(Data, along = al)))
-            output <- output.list[[1]]
-            dimNames <- attr(output$Data, "dimensions")
-            output$Data <- bindata
-            attr(output$Data, "dimensions") <- dimNames
-            output$Dates <- x$Dates
-            output$Data[which(is.infinite(output$Data))] <- NA
       }
       return(output)
 }
@@ -400,7 +411,7 @@ biasCorrectionXD <- function(y, x, newdata,
       if (method == "isimip3") {
             window <- NULL
             # warning("Only parameter isimip3.args is considered")
-            if (is.null(isimip3.args)) isimi3.args <- list()
+            if (is.null(isimip3.args)) isimip3.args <- list()
             isimip3.args[["dates"]] <- list(obs_hist = y[["Dates"]][["start"]], sim_hist = x[["Dates"]][["start"]], sim_fut = newdata[["Dates"]][["start"]])
       }
       station <- FALSE
@@ -586,7 +597,7 @@ biasCorrection1D <- function(o, p, s,
             )
       } else if (method == "pqm") {
             suppressWarnings(
-            mapply_fun(pqm, o, p, s, MoreArgs = list(fitdistr.args, precip, pr.threshold))
+                  mapply_fun(pqm, o, p, s, MoreArgs = list(fitdistr.args, precip, pr.threshold))
             )
       } else if (method == "gpqm") {
             mapply_fun(gpqm, o, p, s, MoreArgs = list(precip, pr.threshold, theta))
@@ -712,8 +723,8 @@ scaling <- function(o, p, s, scaling.type){
 
 pqm <- function(o, p, s, fitdistr.args, precip, pr.threshold){
       dfdistr <- cbind("df" = c( "beta", "cauchy", "chi-squared", "exponential", "f", "gamma", "geometric", "log-normal", "lognormal", "logistic", "negative binomial", "normal", "Poisson", "t", "weibull"),
-                        "p" = c("pbeta", "pcauchy", "pchisq", "pexp", "pf", "pgamma", "pegeom", "plnorm", "plnorm", "plogis", "pnbinom", "pnorm", "ppois", "pt", "pweibull"),
-                        "q" = c("qbeta", "qcauchy", "qchisq", "qexp", "qf", "qgamma", "qegeom", "qlnorm", "qlnorm", "qlogis", "qnbinom", "qnorm", "qpois", "qt", "qweibull"))
+                       "p" = c("pbeta", "pcauchy", "pchisq", "pexp", "pf", "pgamma", "pegeom", "plnorm", "plnorm", "plogis", "pnbinom", "pnorm", "ppois", "pt", "pweibull"),
+                       "q" = c("qbeta", "qcauchy", "qchisq", "qexp", "qf", "qgamma", "qegeom", "qlnorm", "qlnorm", "qlogis", "qnbinom", "qnorm", "qpois", "qt", "qweibull"))
       fitdistr.args <- fitdistr.args[which(names(fitdistr.args) != "x")]
       statsfunp <- unname(dfdistr[which(dfdistr[,"df"] == fitdistr.args$densfun), "p"])
       statsfunq <- unname(dfdistr[which(dfdistr[,"df"] == fitdistr.args$densfun), "q"])
@@ -887,45 +898,45 @@ eqm <- function(o, p, s, precip, pr.threshold, n.quantiles, extrapolation){
 
 gpqm <- function(o, p, s, precip, pr.threshold, theta) { 
       if (precip == FALSE) {
-        # stop("method gpqm is only applied to precipitation data")
-        # For temperature, lower (values below theta.low) and upper (values above theta) tails of the distribution are fitted with GPD.
-        if (all(is.na(o)) | all(is.na(p))) {
-          s <- rep(NA, length(s))
-        } else{
-          theta.low <- theta[2]
-          theta <- theta[1]
-          ind <- which(!is.na(o))
-          indnormal <- ind[which((o[ind] < quantile(o[ind], theta)) & (o[ind] > quantile(o[ind], theta.low)))]
-          indparetoUp <- ind[which(o[ind] >= quantile(o[ind], theta))]
-          indparetoLow <- ind[which(o[ind] <= quantile(o[ind], theta.low))]
-          indp <- which(!is.na(p))
-          indnormalp <- indp[which((p[indp] < quantile(p[indp],theta)) & (p[indp] > quantile(p[indp], theta.low)))]
-          indparetopUp <- indp[which(p[indp] >= quantile(p[indp], theta))]
-          indparetopLow <- indp[which(p[indp] <= quantile(p[indp], theta.low))]
-          inds <- which(!is.na(s))
-          indnormalsim <- inds[which((s[inds] < quantile(p[indp], theta)) & (s[inds] > quantile(p[indp], theta.low)))]
-          indparetosimUp <- inds[which(s[inds] >= quantile(p[indp], theta))]
-          indparetosimLow <- inds[which(s[inds] <= quantile(p[indp], theta.low))]
-          # normal distribution
-          obsGQM <- fitdistr(o[indnormal],"normal")
-          prdGQM <- fitdistr(p[indnormalp], "normal")
-          auxF <- pnorm(s[indnormalsim], prdGQM$estimate[1], prdGQM$estimate[2])
-          s[indnormalsim] <- qnorm(auxF, obsGQM$estimate[1], obsGQM$estimate[2])
-          # upper tail
-          obsGQM2Up <- fpot(o[indparetoUp], quantile(o[ind], theta), "gpd", std.err = FALSE)
-          prdGQM2Up <- fpot(p[indparetopUp], quantile(p[indp], theta), "gpd", std.err = FALSE)
-          auxF2Up <- pgpd(s[indparetosimUp], loc = prdGQM2Up$threshold, scale = prdGQM2Up$estimate[1], shape = prdGQM2Up$estimate[2])
-          s[indparetosimUp[which(auxF2Up < 1  & auxF2Up > 0)]] <- qgpd(auxF2Up[which(auxF2Up < 1 & auxF2Up > 0)], loc = obsGQM2Up$threshold, scale = obsGQM2Up$estimate[1], shape = obsGQM2Up$estimate[2])
-          s[indparetosimUp[which(auxF2Up == 1)]] <- max(o[indparetoUp], na.rm = TRUE)
-          s[indparetosimUp[which(auxF2Up == 0)]] <- min(o[indparetoUp], na.rm = TRUE)
-          # lower tail
-          obsGQM2Low <- fpot(-o[indparetoLow], -quantile(o[ind], theta.low), "gpd", std.err = FALSE)
-          prdGQM2Low <- fpot(-p[indparetopLow], -quantile(p[indp], theta.low), "gpd", std.err = FALSE)
-          auxF2Low <- pgpd(-s[indparetosimLow], loc = prdGQM2Low$threshold, scale = prdGQM2Low$estimate[1], shape = prdGQM2Low$estimate[2])
-          s[indparetosimLow[which(auxF2Low < 1 & auxF2Low > 0)]] <- -qgpd(auxF2Low[which(auxF2Low < 1 & auxF2Low > 0)], loc = obsGQM2Low$threshold, scale = obsGQM2Low$estimate[1], shape = obsGQM2Low$estimate[2])
-          s[indparetosimLow[which(auxF2Low == 1)]] <- max(o[indparetoLow], na.rm = TRUE)
-          s[indparetosimLow[which(auxF2Low == 0)]] <- min(o[indparetoLow], na.rm = TRUE)
-        }  
+            # stop("method gpqm is only applied to precipitation data")
+            # For temperature, lower (values below theta.low) and upper (values above theta) tails of the distribution are fitted with GPD.
+            if (all(is.na(o)) | all(is.na(p))) {
+                  s <- rep(NA, length(s))
+            } else{
+                  theta.low <- theta[2]
+                  theta <- theta[1]
+                  ind <- which(!is.na(o))
+                  indnormal <- ind[which((o[ind] < quantile(o[ind], theta)) & (o[ind] > quantile(o[ind], theta.low)))]
+                  indparetoUp <- ind[which(o[ind] >= quantile(o[ind], theta))]
+                  indparetoLow <- ind[which(o[ind] <= quantile(o[ind], theta.low))]
+                  indp <- which(!is.na(p))
+                  indnormalp <- indp[which((p[indp] < quantile(p[indp],theta)) & (p[indp] > quantile(p[indp], theta.low)))]
+                  indparetopUp <- indp[which(p[indp] >= quantile(p[indp], theta))]
+                  indparetopLow <- indp[which(p[indp] <= quantile(p[indp], theta.low))]
+                  inds <- which(!is.na(s))
+                  indnormalsim <- inds[which((s[inds] < quantile(p[indp], theta)) & (s[inds] > quantile(p[indp], theta.low)))]
+                  indparetosimUp <- inds[which(s[inds] >= quantile(p[indp], theta))]
+                  indparetosimLow <- inds[which(s[inds] <= quantile(p[indp], theta.low))]
+                  # normal distribution
+                  obsGQM <- fitdistr(o[indnormal],"normal")
+                  prdGQM <- fitdistr(p[indnormalp], "normal")
+                  auxF <- pnorm(s[indnormalsim], prdGQM$estimate[1], prdGQM$estimate[2])
+                  s[indnormalsim] <- qnorm(auxF, obsGQM$estimate[1], obsGQM$estimate[2])
+                  # upper tail
+                  obsGQM2Up <- fpot(o[indparetoUp], quantile(o[ind], theta), "gpd", std.err = FALSE)
+                  prdGQM2Up <- fpot(p[indparetopUp], quantile(p[indp], theta), "gpd", std.err = FALSE)
+                  auxF2Up <- pgpd(s[indparetosimUp], loc = prdGQM2Up$threshold, scale = prdGQM2Up$estimate[1], shape = prdGQM2Up$estimate[2])
+                  s[indparetosimUp[which(auxF2Up < 1  & auxF2Up > 0)]] <- qgpd(auxF2Up[which(auxF2Up < 1 & auxF2Up > 0)], loc = obsGQM2Up$threshold, scale = obsGQM2Up$estimate[1], shape = obsGQM2Up$estimate[2])
+                  s[indparetosimUp[which(auxF2Up == 1)]] <- max(o[indparetoUp], na.rm = TRUE)
+                  s[indparetosimUp[which(auxF2Up == 0)]] <- min(o[indparetoUp], na.rm = TRUE)
+                  # lower tail
+                  obsGQM2Low <- fpot(-o[indparetoLow], -quantile(o[ind], theta.low), "gpd", std.err = FALSE)
+                  prdGQM2Low <- fpot(-p[indparetopLow], -quantile(p[indp], theta.low), "gpd", std.err = FALSE)
+                  auxF2Low <- pgpd(-s[indparetosimLow], loc = prdGQM2Low$threshold, scale = prdGQM2Low$estimate[1], shape = prdGQM2Low$estimate[2])
+                  s[indparetosimLow[which(auxF2Low < 1 & auxF2Low > 0)]] <- -qgpd(auxF2Low[which(auxF2Low < 1 & auxF2Low > 0)], loc = obsGQM2Low$threshold, scale = obsGQM2Low$estimate[1], shape = obsGQM2Low$estimate[2])
+                  s[indparetosimLow[which(auxF2Low == 1)]] <- max(o[indparetoLow], na.rm = TRUE)
+                  s[indparetosimLow[which(auxF2Low == 0)]] <- min(o[indparetoLow], na.rm = TRUE)
+            }  
       } else {
             theta <- theta[1]
             threshold <- pr.threshold
@@ -952,28 +963,28 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
                   indparetosim <- rain[which(s[rain] >= quantile(p[indp], theta))]
                   # gamma distribution
                   if(length(indgamma)>1 & length(indgammap)>1 & length(indgammasim)>1){
-                    obsGQM <- tryCatch(fitdistr(o[indgamma],"gamma"), error = function(err){NULL})
-                    prdGQM <- tryCatch(fitdistr(p[indgammap], "gamma"), error = function(err){NULL})
-                    if (!is.null(prdGQM) & !is.null(obsGQM)) {
-                      auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
-                      s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
-                    } else {
-                      warning("Fitting error for location and selected 'densfun'.")
-                      s[indgammasim] <- NA
-                    }
+                        obsGQM <- tryCatch(fitdistr(o[indgamma],"gamma"), error = function(err){NULL})
+                        prdGQM <- tryCatch(fitdistr(p[indgammap], "gamma"), error = function(err){NULL})
+                        if (!is.null(prdGQM) & !is.null(obsGQM)) {
+                              auxF <- pgamma(s[indgammasim], prdGQM$estimate[1], rate = prdGQM$estimate[2])
+                              s[indgammasim] <- qgamma(auxF, obsGQM$estimate[1], rate = obsGQM$estimate[2])
+                        } else {
+                              warning("Fitting error for location and selected 'densfun'.")
+                              s[indgammasim] <- NA
+                        }
                   } else{
-                    s[indgammasim] <-0
+                        s[indgammasim] <-0
                   }
                   # upper tail
                   if(any(o[indpareto] > quantile(o[ind], theta)) & any(p[indparetop] > quantile(p[indp], theta))){
-                    obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
-                    prdGQM2 <- fpot(p[indparetop], quantile(p[indp], theta), "gpd", std.err = FALSE)
-                    auxF2 <- pgpd(s[indparetosim], loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
-                    s[indparetosim[which(auxF2 < 1  & auxF2 > 0)]] <- qgpd(auxF2[which(auxF2 < 1  & auxF2 > 0)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
-                    s[indparetosim[which(auxF2 == 1)]] <- max(o[indpareto], na.rm = TRUE)
-                    s[indparetosim[which(auxF2 == 0)]] <- min(o[indpareto], na.rm = TRUE)
+                        obsGQM2 <- fpot(o[indpareto], quantile(o[ind], theta), "gpd", std.err = FALSE)
+                        prdGQM2 <- fpot(p[indparetop], quantile(p[indp], theta), "gpd", std.err = FALSE)
+                        auxF2 <- pgpd(s[indparetosim], loc = 0, scale = prdGQM2$estimate[1], shape = prdGQM2$estimate[2])
+                        s[indparetosim[which(auxF2 < 1  & auxF2 > 0)]] <- qgpd(auxF2[which(auxF2 < 1  & auxF2 > 0)], loc = 0, scale = obsGQM2$estimate[1], shape = obsGQM2$estimate[2])
+                        s[indparetosim[which(auxF2 == 1)]] <- max(o[indpareto], na.rm = TRUE)
+                        s[indparetosim[which(auxF2 == 0)]] <- min(o[indpareto], na.rm = TRUE)
                   } else {
-                    s[indparetosim] <- 0
+                        s[indparetosim] <- 0
                   }
                   # dry days
                   s[noRain] <- 0
@@ -1178,74 +1189,74 @@ recoverMemberDim <- function(plain.grid, bc.grid, newdata) {
 #' @author A. Cannon (acannon@uvic.ca), A. Casanueva
 
 dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
-  
-    if (all(is.na(o)) | all(is.na(p)) | all(is.na(s))) {
-      return(yout=rep(NA, length(s)))
-    
-    } else{
       
-      if(precip){
-        # For ratio data, treat exact zeros as left censored values less than pr.threshold
-        epsilon <- .Machine$double.eps
-        o[o < pr.threshold & !is.na(o)] <- runif(sum(o < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
-        p[p < pr.threshold & !is.na(p)] <- runif(sum(p < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
-        s[s < pr.threshold & !is.na(s)] <- runif(sum(s < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
-      }
-      
-      o.mn <- mean(o, na.rm=T)
-      p.mn <- mean(p, na.rm=T)
-      if(precip){
-        s <- s/p.mn*o.mn
+      if (all(is.na(o)) | all(is.na(p)) | all(is.na(s))) {
+            return(yout=rep(NA, length(s)))
+            
       } else{
-        s <- s-p.mn+o.mn
+            
+            if(precip){
+                  # For ratio data, treat exact zeros as left censored values less than pr.threshold
+                  epsilon <- .Machine$double.eps
+                  o[o < pr.threshold & !is.na(o)] <- runif(sum(o < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+                  p[p < pr.threshold & !is.na(p)] <- runif(sum(p < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+                  s[s < pr.threshold & !is.na(s)] <- runif(sum(s < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+            }
+            
+            o.mn <- mean(o, na.rm=T)
+            p.mn <- mean(p, na.rm=T)
+            if(precip){
+                  s <- s/p.mn*o.mn
+            } else{
+                  s <- s-p.mn+o.mn
+            }
+            
+            if(detrend){
+                  s.mn <- lm.fit(cbind(1, seq_along(s)), s)$fitted
+            } else{
+                  s.mn <- o.mn
+            }
+            if(is.null(n.quantiles)) n.quantiles <- max(length(o), length(p))
+            tau <- c(0, (1:n.quantiles)/(n.quantiles+1), 1)
+            if(precip & any(o < sqrt(.Machine$double.eps), na.rm=TRUE)){
+                  x <- quantile(p/p.mn, tau, na.rm=T)
+                  y <- quantile(o/o.mn, tau, na.rm=T)
+                  yout <- approx(x, y, xout=s/s.mn, rule=2:1)$y # if rule = 1, NAs are returned outside the training interval; if rule= 2, the value at the closest data extreme is used. rule = 2:1, if the left and right side extrapolation should differ.
+                  extrap <- is.na(yout)
+                  yout[extrap] <- max(o/o.mn, na.rm=T)*((s/s.mn)[extrap]/max(p/p.mn, na.rm=T)) # extrapolation on the upper tail
+                  yout <- yout*s.mn
+                  #yout.h <- approx(x, y, xout=p/p.mn, rule=1)$y*o.mn
+            } else if(precip & !any(o < sqrt(.Machine$double.eps), na.rm=TRUE)){
+                  x <- quantile(p/p.mn, tau, na.rm=T)
+                  y <- quantile(o/o.mn, tau, na.rm=T)
+                  yout <- approx(x, y, xout=s/s.mn, rule=1)$y
+                  extrap.lower <- is.na(yout) & ((s/s.mn) < min(p/p.mn, na.rm=T))
+                  extrap.upper <- is.na(yout) & ((s/s.mn) > max(p/p.mn, na.rm=T))
+                  yout[extrap.lower] <- min(o/o.mn, na.rm=T)*((s/s.mn)[extrap.lower]/
+                                                                    min(p/p.mn, na.rm=T))
+                  yout[extrap.upper] <- max(o/o.mn, na.rm=T)*((s/s.mn)[extrap.upper]/
+                                                                    max(p/p.mn, na.rm=T))
+                  yout <- yout*s.mn
+                  #yout.h <- approx(x, y, xout=p/p.mn, rule=1)$y*o.mn
+            } else{
+                  x <- quantile(p-p.mn, tau, na.rm=T)
+                  y <- quantile(o-o.mn, tau, na.rm=T)
+                  yout <- approx(x, y, xout=s-s.mn, rule=1)$y
+                  extrap.lower <- is.na(yout) & ((s-s.mn) < min(p-p.mn, na.rm=T))
+                  extrap.upper <- is.na(yout) & ((s-s.mn) > max(p-p.mn, na.rm=T))
+                  yout[extrap.lower] <- min(o-o.mn) + ((s-s.mn)[extrap.lower]-
+                                                             min(p-p.mn, na.rm=T))
+                  yout[extrap.upper] <- max(o-o.mn) + ((s-s.mn)[extrap.upper]-
+                                                             max(p-p.mn, na.rm=T))
+                  yout <- yout+s.mn
+                  #yout.h <- approx(x, y, xout=p-p.mn, rule=1)$y+o.mn
+            }
+            if(precip){
+                  yout[which(yout < sqrt(.Machine$double.eps))] <- 0
+                  #yout.h[which(yout.h < sqrt(.Machine$double.eps))] <- 0
+            }
+            return(yout)
       }
-      
-      if(detrend){
-        s.mn <- lm.fit(cbind(1, seq_along(s)), s)$fitted
-      } else{
-        s.mn <- o.mn
-      }
-      if(is.null(n.quantiles)) n.quantiles <- max(length(o), length(p))
-      tau <- c(0, (1:n.quantiles)/(n.quantiles+1), 1)
-      if(precip & any(o < sqrt(.Machine$double.eps), na.rm=TRUE)){
-        x <- quantile(p/p.mn, tau, na.rm=T)
-        y <- quantile(o/o.mn, tau, na.rm=T)
-        yout <- approx(x, y, xout=s/s.mn, rule=2:1)$y # if rule = 1, NAs are returned outside the training interval; if rule= 2, the value at the closest data extreme is used. rule = 2:1, if the left and right side extrapolation should differ.
-        extrap <- is.na(yout)
-        yout[extrap] <- max(o/o.mn, na.rm=T)*((s/s.mn)[extrap]/max(p/p.mn, na.rm=T)) # extrapolation on the upper tail
-        yout <- yout*s.mn
-        #yout.h <- approx(x, y, xout=p/p.mn, rule=1)$y*o.mn
-      } else if(precip & !any(o < sqrt(.Machine$double.eps), na.rm=TRUE)){
-        x <- quantile(p/p.mn, tau, na.rm=T)
-        y <- quantile(o/o.mn, tau, na.rm=T)
-        yout <- approx(x, y, xout=s/s.mn, rule=1)$y
-        extrap.lower <- is.na(yout) & ((s/s.mn) < min(p/p.mn, na.rm=T))
-        extrap.upper <- is.na(yout) & ((s/s.mn) > max(p/p.mn, na.rm=T))
-        yout[extrap.lower] <- min(o/o.mn, na.rm=T)*((s/s.mn)[extrap.lower]/
-                                                 min(p/p.mn, na.rm=T))
-        yout[extrap.upper] <- max(o/o.mn, na.rm=T)*((s/s.mn)[extrap.upper]/
-                                                 max(p/p.mn, na.rm=T))
-        yout <- yout*s.mn
-        #yout.h <- approx(x, y, xout=p/p.mn, rule=1)$y*o.mn
-      } else{
-        x <- quantile(p-p.mn, tau, na.rm=T)
-        y <- quantile(o-o.mn, tau, na.rm=T)
-        yout <- approx(x, y, xout=s-s.mn, rule=1)$y
-        extrap.lower <- is.na(yout) & ((s-s.mn) < min(p-p.mn, na.rm=T))
-        extrap.upper <- is.na(yout) & ((s-s.mn) > max(p-p.mn, na.rm=T))
-        yout[extrap.lower] <- min(o-o.mn) + ((s-s.mn)[extrap.lower]-
-                                                   min(p-p.mn, na.rm=T))
-        yout[extrap.upper] <- max(o-o.mn) + ((s-s.mn)[extrap.upper]-
-                                                   max(p-p.mn, na.rm=T))
-        yout <- yout+s.mn
-        #yout.h <- approx(x, y, xout=p-p.mn, rule=1)$y+o.mn
-      }
-      if(precip){
-        yout[which(yout < sqrt(.Machine$double.eps))] <- 0
-        #yout.h[which(yout.h < sqrt(.Machine$double.eps))] <- 0
-      }
-    return(yout)
-    }
 }
 
 
@@ -1266,55 +1277,55 @@ dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
 #' @author A. Cannon (acannon@uvic.ca), A. Casanueva
 
 qdm <- function(o, p, s, precip, pr.threshold, n.quantiles, jitter.factor=0.01){
- 
-  # tau.s = F.s(x.s)
-  # delta = x.s {/,-} F.p^-1(tau.s)
-  # yout = F.o^-1(tau.s) {*,+} delta
-  
-  if (all(is.na(o)) | all(is.na(p)) | all(is.na(s))) {
-    return(yout=rep(NA, length(s)))
-  } else{
-  
-    # Apply a small amount of jitter to accomodate ties due to limited measurement precision
-    o <- jitter(o, jitter.factor)
-    p <- jitter(p, jitter.factor)
-    s <- jitter(s, jitter.factor)
-    
-    # For ratio data, treat exact zeros as left censored values less than pr.threshold
-    if(precip){
-      epsilon <- .Machine$double.eps
-      o[o < pr.threshold & !is.na(o)] <- runif(sum(o < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
-      p[p < pr.threshold & !is.na(p)] <- runif(sum(p < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
-      s[s < pr.threshold & !is.na(s)] <- runif(sum(s < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
-    }
-    
-    # Calculate empirical quantiles using Weibull plotting position
-    n <- max(length(o), length(p), length(s))
-    if(is.null(n.quantiles)) n.quantiles <- n
-    tau <- seq(1/(n+1), n/(n+1), length=n.quantiles)
-    quant.o <- quantile(o, tau, type=6, na.rm=TRUE)
-    quant.p <- quantile(p, tau, type=6, na.rm=TRUE)
-    quant.s <- quantile(s, tau, type=6, na.rm=TRUE)
-    
-    # Apply QDM bias correction
-    tau.s <- approx(quant.s, tau, s, rule=2)$y    
-    if(precip){
-      delta <- s/approx(tau, quant.p, tau.s, rule=2)$y # if rule= 2, the value at the closest data extreme is used
-      yout <- approx(tau, quant.o, tau.s, rule=2)$y*delta
-    } else{
-      delta <- s - approx(tau, quant.p, tau.s, rule=2)$y
-      yout <- approx(tau, quant.o, tau.s, rule=2)$y + delta
-    }
-    #yout.h <- approx(quant.p, quant.o, p, rule=2)$y
-    
-    # For precip data, set values less than threshold to zero
-    if(precip){
-      #yout.h[yout.h < pr.threshold] <- 0
-      yout[yout < pr.threshold] <- 0
-    }
-    
-    return(yout)
-  }
+      
+      # tau.s = F.s(x.s)
+      # delta = x.s {/,-} F.p^-1(tau.s)
+      # yout = F.o^-1(tau.s) {*,+} delta
+      
+      if (all(is.na(o)) | all(is.na(p)) | all(is.na(s))) {
+            return(yout=rep(NA, length(s)))
+      } else{
+            
+            # Apply a small amount of jitter to accomodate ties due to limited measurement precision
+            o <- jitter(o, jitter.factor)
+            p <- jitter(p, jitter.factor)
+            s <- jitter(s, jitter.factor)
+            
+            # For ratio data, treat exact zeros as left censored values less than pr.threshold
+            if(precip){
+                  epsilon <- .Machine$double.eps
+                  o[o < pr.threshold & !is.na(o)] <- runif(sum(o < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+                  p[p < pr.threshold & !is.na(p)] <- runif(sum(p < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+                  s[s < pr.threshold & !is.na(s)] <- runif(sum(s < pr.threshold, na.rm=TRUE), min=epsilon, max=pr.threshold)
+            }
+            
+            # Calculate empirical quantiles using Weibull plotting position
+            n <- max(length(o), length(p), length(s))
+            if(is.null(n.quantiles)) n.quantiles <- n
+            tau <- seq(1/(n+1), n/(n+1), length=n.quantiles)
+            quant.o <- quantile(o, tau, type=6, na.rm=TRUE)
+            quant.p <- quantile(p, tau, type=6, na.rm=TRUE)
+            quant.s <- quantile(s, tau, type=6, na.rm=TRUE)
+            
+            # Apply QDM bias correction
+            tau.s <- approx(quant.s, tau, s, rule=2)$y    
+            if(precip){
+                  delta <- s/approx(tau, quant.p, tau.s, rule=2)$y # if rule= 2, the value at the closest data extreme is used
+                  yout <- approx(tau, quant.o, tau.s, rule=2)$y*delta
+            } else{
+                  delta <- s - approx(tau, quant.p, tau.s, rule=2)$y
+                  yout <- approx(tau, quant.o, tau.s, rule=2)$y + delta
+            }
+            #yout.h <- approx(quant.p, quant.o, p, rule=2)$y
+            
+            # For precip data, set values less than threshold to zero
+            if(precip){
+                  #yout.h[yout.h < pr.threshold] <- 0
+                  yout[yout < pr.threshold] <- 0
+            }
+            
+            return(yout)
+      }
 }
 
 
