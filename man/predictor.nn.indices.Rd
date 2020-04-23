@@ -26,8 +26,10 @@ length as the number of local predictor variables chosen
 Calculate spatial index position of nearest neighbors
 }
 \seealso{
-Other downscaling.helpers: \code{\link{predictor.nn.values}},
-  \code{\link{prepareData}}, \code{\link{prepareNewData}}
+Other downscaling.helpers: 
+\code{\link{predictor.nn.values}()},
+\code{\link{prepareData}()},
+\code{\link{prepareNewData}()}
 }
 \author{
 J Bedia
