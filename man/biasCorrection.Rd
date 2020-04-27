@@ -44,7 +44,8 @@ frequency in 'x' (prediction) to the observed frequency in 'y' (see Details). To
 parameter \code{wet.threshold} is used (see below).}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-\code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.}
+\code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"}, \code{"ptr"}, 
+\code{"dqm"}, \code{"qdm"}, \code{"isimip3"}. See details.}
 
 \item{cross.val}{Logical (default to FALSE). Should cross-validation be performed? methods available are 
 leave-one-out ("loo") and k-fold ("kfold") on an annual basis. The default option ("none") does not 
@@ -188,6 +189,7 @@ It consists on (i) detrending the individual quantiles;
 (iii) the projected trends are then reapplied to the bias-adjusted quantiles.
 It explicitly preserves the change signal in all quantiles. 
 It allows relative (multiplicative) and additive corrections. 
+
 
 \strong{isimip3}
 }

@@ -21,7 +21,7 @@
 #' @template templateObsPredSim
 #' @param method method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
 #'  \code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"}, \code{"ptr"}, 
-#'  \code{"dqm"}, \code{"qdm"}, \code{"ismip"}, \code{"isimip3"}. See details.
+#'  \code{"dqm"}, \code{"qdm"}, \code{"isimip3"}. See details.
 #' @param precipitation Logical for precipitation data (default to FALSE). If TRUE adjusts precipitation 
 #' frequency in 'x' (prediction) to the observed frequency in 'y' (see Details). To adjust the frequency, 
 #' parameter \code{wet.threshold} is used (see below).
@@ -146,7 +146,6 @@
 #' It explicitly preserves the change signal in all quantiles. 
 #' It allows relative (multiplicative) and additive corrections. 
 #' 
-#' \strong{isimip}
 #' 
 #' \strong{isimip3}
 #' 
@@ -297,22 +296,24 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            ncores = NULL) {
       
       if (method == "gqm") stop("'gqm' is not a valid choice anymore. Use method = 'pqm' instead and set fitdistr.args = list(densfun = 'gamma')")
-      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "mva", "loci", "ptr", "variance","dqm","qdm", "isimip","isimip3"))
-      ####temporal solution for applying the isimip method###########
-      if (method == "isimip") {
-            message("cross-validation and window options are not implemented for the isimip method yet.")
-            output <- do.call("isimip", list(y = y, x = x, newdada = newdata, threshold = wet.threshold, type = scaling.type))
-      } else {
-            ##################################################
-            cross.val <- match.arg(cross.val, choices = c("none", "loo", "kfold"))
-            scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
-            extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
-            stopifnot(is.logical(join.members))
-            nwdatamssg <- TRUE
-            if (is.null(newdata)) {
-                  newdata <- x 
-                  nwdatamssg <- FALSE
-            }
+      method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "mva", "loci", "ptr", "variance","dqm","qdm", "isimip3"))
+      cross.val <- match.arg(cross.val, choices = c("none", "loo", "kfold"))
+      scaling.type <- match.arg(scaling.type, choices = c("additive", "multiplicative"))
+      extrapolation <- match.arg(extrapolation, choices = c("none", "constant"))
+      stopifnot(is.logical(join.members))
+      nwdatamssg <- TRUE
+      if (is.null(newdata)) {
+            newdata <- x 
+            nwdatamssg <- FALSE
+      }
+      # ####temporal solution for applying the isimip method###########
+      # if (method == "isimip") {
+      #       warning("cross-validation, window and joining member options are not implemented for the isimip method yet.")
+      #       suppressMessages(x <- interpGrid(x, getGrid(y)))
+      #       suppressMessages(newdata <- interpGrid(newdata, getGrid(y)))
+      #       output <- do.call("isimip", list(y = y, x = x, newdata = newdata, threshold = wet.threshold, type = scaling.type))
+      # } else {
+      # ##################################################
             if (cross.val == "none") {
                   output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
                                              precipitation = precipitation,
@@ -384,7 +385,6 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                   output$Dates <- x$Dates
                   output$Data[which(is.infinite(output$Data))] <- NA
             }
-      }
       return(output)
 }
 
