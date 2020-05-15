@@ -10,13 +10,8 @@ downscaleChunk(
   newdata,
   method,
   ...,
-<<<<<<< HEAD
   prepareData.args = list(global.vars = NULL, combined.only = TRUE, spatial.predictors
     = NULL, local.predictors = NULL, extended.predictors = NULL),
-=======
-  prepareData.args = list(global.vars = NULL, combined.only = TRUE, spatial.predictors =
-    NULL, local.predictors = NULL, extended.predictors = NULL),
->>>>>>> devel
   condition = NULL,
   threshold = NULL,
   path = getwd()
