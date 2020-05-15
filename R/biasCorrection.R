@@ -171,7 +171,7 @@
 #' @return A calibrated grid of the same spatio-temporal extent than the input \code{"y"}
 #' @family downscaling
 #' 
-#' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim getWindowIndex
+#' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim getWindowIndex fillGridDates
 #' @importFrom abind adrop
 #' @importFrom stats lm.fit approx
 #' @importFrom reticulate source_python
@@ -220,9 +220,6 @@
 #'                             cross.val = "kfold",
 #'                             folds = list(1983:1989, 1990:1996, 1997:2002))
 #' 
-#' quickDiagnostics(y, x, eqm1, location = c(-2, 43))
-#' quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
-#' quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
 #' 
 #' #parametric
 #' pqm1.gamm <- biasCorrection(y = y, x = x,
@@ -234,7 +231,6 @@
 #'                        method = "pqm",
 #'                        precipitation = TRUE,
 #'                        fitdistr.args = list(densfun = "weibull"))
-#' quickDiagnostics(y, x, pqm1.wei, location = c(-2, 43))
 #' 
 #' data("EOBS_Iberia_tas")
 #' data("CORDEX_Iberia_tas")
@@ -243,7 +239,6 @@
 #' pqm1.norm <- biasCorrection(y = y, x = x,
 #'            method = "pqm",
 #'            fitdistr.args = list(densfun = "normal"))
-#' quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
 #' 
 #' # correction of future climate change data
 #' data("CORDEX_Iberia_tas.rcp85")
@@ -254,12 +249,10 @@
 #'                           extrapolation = "constant",
 #'                           window = c(30, 15),
 #'                           wet.threshold = 0.1)
-#' quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
 #' pqm1.norm <- biasCorrection(y = y, x = x,
 #'                        newdata = newdata,
 #'                        method = "pqm",
 #'                        fitdistr.args = list(densfun = "normal"))
-#' quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
 #' 
 #' # Correction of multimember datasets considering the joint
 #' # distribution of all members
@@ -294,7 +287,6 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            parallel = FALSE,
                            max.ncores = 16,
                            ncores = NULL) {
-      
       if (method == "gqm") stop("'gqm' is not a valid choice anymore. Use method = 'pqm' instead and set fitdistr.args = list(densfun = 'gamma')")
       method <- match.arg(method, choices = c("delta", "scaling", "eqm", "pqm", "gpqm", "mva", "loci", "ptr", "variance","dqm","qdm", "isimip3"))
       cross.val <- match.arg(cross.val, choices = c("none", "loo", "kfold"))
@@ -314,6 +306,9 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
       #       output <- do.call("isimip", list(y = y, x = x, newdata = newdata, threshold = wet.threshold, type = scaling.type))
       # } else {
       # ##################################################
+      y <- fillGridDates(y)
+      x <- fillGridDates(x)
+      newdata <- fillGridDates(newdata)
             if (cross.val == "none") {
                   output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
                                              precipitation = precipitation,

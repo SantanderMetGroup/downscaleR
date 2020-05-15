@@ -237,9 +237,6 @@ eqm1folds <- biasCorrection(y = y, x = x,
                             cross.val = "kfold",
                             folds = list(1983:1989, 1990:1996, 1997:2002))
 
-quickDiagnostics(y, x, eqm1, location = c(-2, 43))
-quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
-quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
 
 #parametric
 pqm1.gamm <- biasCorrection(y = y, x = x,
@@ -251,7 +248,6 @@ pqm1.wei <- biasCorrection(y = y, x = x,
                        method = "pqm",
                        precipitation = TRUE,
                        fitdistr.args = list(densfun = "weibull"))
-quickDiagnostics(y, x, pqm1.wei, location = c(-2, 43))
 
 data("EOBS_Iberia_tas")
 data("CORDEX_Iberia_tas")
@@ -260,7 +256,6 @@ x <- CORDEX_Iberia_tas
 pqm1.norm <- biasCorrection(y = y, x = x,
            method = "pqm",
            fitdistr.args = list(densfun = "normal"))
-quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
 
 # correction of future climate change data
 data("CORDEX_Iberia_tas.rcp85")
@@ -271,12 +266,10 @@ eqm1win <- biasCorrection(y = y, x = x,
                           extrapolation = "constant",
                           window = c(30, 15),
                           wet.threshold = 0.1)
-quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
 pqm1.norm <- biasCorrection(y = y, x = x,
                        newdata = newdata,
                        method = "pqm",
                        fitdistr.args = list(densfun = "normal"))
-quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
 
 # Correction of multimember datasets considering the joint
 # distribution of all members
