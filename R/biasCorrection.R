@@ -171,7 +171,7 @@
 #' @return A calibrated grid of the same spatio-temporal extent than the input \code{"y"}
 #' @family downscaling
 #' 
-#' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim getWindowIndex fillGridDates
+#' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim getWindowIndex fillGridDates getSeason
 #' @importFrom abind adrop
 #' @importFrom stats lm.fit approx
 #' @importFrom reticulate source_python
@@ -306,6 +306,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
       #       output <- do.call("isimip", list(y = y, x = x, newdata = newdata, threshold = wet.threshold, type = scaling.type))
       # } else {
       # ##################################################
+      seas <- getSeason(y)
       y <- fillGridDates(y)
       x <- fillGridDates(x)
       newdata <- fillGridDates(newdata)
@@ -380,6 +381,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                   output$Dates <- x$Dates
                   output$Data[which(is.infinite(output$Data))] <- NA
             }
+      output <- subsetGrid(output, season = seas)
       return(output)
 }
 
