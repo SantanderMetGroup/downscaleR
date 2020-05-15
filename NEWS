@@ -65,3 +65,9 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 ## v3.1.3 (24 Mar 2020)
 
 * New dependency: 'library sticky' for attributes containing variable information
+
+## v3.2.0 (23 Apr 2020)
+
+* New ISIMIP3 routine for bias correction
+* Internal python routines
+* Other documentation updates (CITATION, etc.)

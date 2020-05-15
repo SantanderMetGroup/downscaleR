@@ -9,7 +9,11 @@ biasCorrection(
   x,
   newdata = NULL,
   precipitation = FALSE,
+<<<<<<< HEAD
   method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm", "qdm", "isimip3"),
+=======
+  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm", "qdm"),
+>>>>>>> devel
   cross.val = c("none", "loo", "kfold"),
   folds = NULL,
   window = NULL,
@@ -20,7 +24,10 @@ biasCorrection(
   extrapolation = c("none", "constant"),
   theta = c(0.95, 0.05),
   detrend = TRUE,
+<<<<<<< HEAD
   isimip3.args = NULL,
+=======
+>>>>>>> devel
   join.members = FALSE,
   parallel = FALSE,
   max.ncores = 16,
