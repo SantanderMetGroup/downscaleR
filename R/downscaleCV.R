@@ -74,8 +74,9 @@
 #' @family downscaling.functions
 #' @author J. Bano-Medina
 #' @export
-#' @examples 
+#' @examples \donttest{
 #' require(transformeR)
+#' require(climate4R.datasets)
 #' data(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' x <- subsetGrid(x, years = 1985:1995)
@@ -105,6 +106,7 @@
 #'                      scaleGrid.args = list(type = "standardize"),
 #'                      method = "GLM", condition = "GT", threshold = 0,
 #'                      prepareData.args = list("local.predictors" = list(vars = "hus@850", n = 4)))
+#' }
 
 downscaleCV <- function(x, y, method,
                         sampling.strategy = "kfold.chronological", folds = 4, 

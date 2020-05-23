@@ -18,6 +18,9 @@ A named list with the components required by the downscaling method in order to 
 Prepare the prediction data according to the definition of the experiment
 }
 \examples{
+\donttest{
+require(transformeR)
+require(climate4R.datasets)
 # Loading data
 data("VALUE_Iberia_tas")
 y <- VALUE_Iberia_tas 
@@ -27,6 +30,7 @@ x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
 data <- prepareData(x = x, y = y, spatial.predictors = list(v.exp = 0.95))
 # Projecting a new dataset to the calculated EOFs
 newdata <- prepareNewData(x,data)
+}
 }
 \seealso{
 \href{https://github.com/SantanderMetGroup/downscaleR/wiki/preparing-predictor-data}{downscaleR Wiki} for preparing predictors for downscaling and seasonal forecasting.

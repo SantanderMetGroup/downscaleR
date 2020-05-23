@@ -45,7 +45,8 @@ Two diagnostic plots with observed, simulated and (possibly) downscaled time ser
 Plots daily/annual series and the annual correlation map of different grid objects
 }
 \examples{
-{
+\donttest{
+require(climate4R.datasets)
 data("VALUE_Iberia_pr")
 data("NCEP_Iberia_pr")
 y <- VALUE_Iberia_pr
