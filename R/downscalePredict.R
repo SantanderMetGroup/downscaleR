@@ -33,9 +33,10 @@
 #' @importFrom transformeR gridArithmetics
 #' @importFrom sticky sticky
 #' @export
-#' @examples 
+#' @examples \donttest{
 #' # Loading data
-#' library(downscaleR)
+#' require(transformeR)
+#' require(climate4R.datasets)
 #' data("VALUE_Iberia_tas")
 #' y <- VALUE_Iberia_tas
 #' data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
@@ -59,6 +60,7 @@
 #' pred  <- downscalePredict(newdata, model.analogs)  # predicting
 #' # Plotting the results for station 5
 #' plot(yt$Data[,5],pred$Data[,5])
+#' }
 
 downscalePredict <- function(newdata, model) {
   n <- length(newdata$x.global) # number of members

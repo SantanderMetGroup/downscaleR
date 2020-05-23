@@ -85,7 +85,9 @@ According to the concept of cross-validation, a particular year should not appea
  will raise an error, as 1989 appears in more than one fold.
 }
 \examples{
+\donttest{
 require(transformeR)
+require(climate4R.datasets)
 data(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 x <- subsetGrid(x, years = 1985:1995)
@@ -115,6 +117,7 @@ pred <- downscaleCV(x,y,folds = 3, sampling.strategy = "kfold.chronological",
                      scaleGrid.args = list(type = "standardize"),
                      method = "GLM", condition = "GT", threshold = 0,
                      prepareData.args = list("local.predictors" = list(vars = "hus@850", n = 4)))
+}
 }
 \seealso{
 downscaleTrain for training a downscaling model

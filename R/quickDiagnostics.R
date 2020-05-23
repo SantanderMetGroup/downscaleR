@@ -17,7 +17,8 @@
 #' @return Two diagnostic plots with observed, simulated and (possibly) downscaled time series, and a QQ-plot by percentlies.
 #' @author M. Iturbide 
 #' @export
-#' @examples {
+#' @examples \donttest{
+#' require(climate4R.datasets)
 #' data("VALUE_Iberia_pr")
 #' data("NCEP_Iberia_pr")
 #' y <- VALUE_Iberia_pr
@@ -83,7 +84,8 @@ quickDiagnostics <- function(obs,
 #' @importFrom stats sd cor
 #' @importFrom grDevices rgb
 #' @keywords internal
-#' @importFrom transformeR subsetGrid getCoordinates getYearsAsINDEX draw.world.lines aggregateGrid climatology plotClimatology interpGrid getGrid
+#' @importFrom transformeR subsetGrid getCoordinates getYearsAsINDEX aggregateGrid climatology interpGrid getGrid
+#' @importFrom visualizeR spatialPlot
 #' @importFrom sp SpatialPoints
 
 interannualOutlook <- function(obs, raw, downscaled = NULL, location = c(-42.5, -3), na.tolerance = .3, ylim = NULL, main = NULL){
@@ -189,11 +191,11 @@ interannualOutlook <- function(obs, raw, downscaled = NULL, location = c(-42.5, 
              }
        }
        plcor <- 
-             plotClimatology(corgrid, backdrop.theme = "countries", cuts = seq(-1,1,0.25),
-                                key.space = "bottom", scales=list(draw = TRUE),
-                             auto.key = T,par.settings=list(fontsize=list(text= 8)),
-                       sp.layout = list(list(SpatialPoints(matrix(location,ncol = 2)), 
-                                             first = FALSE, pch = 2, cex = 1.8, col = "black")))
+          visualizeR::spatialPlot(corgrid, backdrop.theme = "countries", cuts = seq(-1,1,0.25),
+                                  key.space = "bottom", scales = list(draw = TRUE),
+                                  auto.key = TRUE, par.settings = list(fontsize = list(text = 8)),
+                                  sp.layout = list(list(SpatialPoints(matrix(location, ncol = 2)), 
+                                                        first = FALSE, pch = 2, cex = 1.8, col = "black")))
        grid.arrange(pl, plcor, nrow = 1, ncol = 2, widths = c(1.4,1))
 }
 #end

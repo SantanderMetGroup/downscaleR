@@ -71,3 +71,6 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 * New ISIMIP3 routine for bias correction
 * Internal python routines
 * Other documentation updates (CITATION, etc.)
+
+## v3.3.0 (23 May 2020)
+ * Update examples and other minor updates to include the new datasets from climate4R.datasets

@@ -18,8 +18,10 @@ A regular/irregular grid object.
 Downscale data to local scales by statistical models previously obtained by \code{\link[downscaleR]{downscaleTrain}}.
 }
 \examples{
+\donttest{
 # Loading data
-library(downscaleR)
+require(transformeR)
+require(climate4R.datasets)
 data("VALUE_Iberia_tas")
 y <- VALUE_Iberia_tas
 data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
@@ -43,6 +45,7 @@ newdata <- prepareNewData(xt,data)     # preparing the new predictors
 pred  <- downscalePredict(newdata, model.analogs)  # predicting
 # Plotting the results for station 5
 plot(yt$Data[,5],pred$Data[,5])
+}
 }
 \seealso{
 downscaleTrain for training a downscaling model

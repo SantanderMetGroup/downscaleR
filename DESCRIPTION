@@ -1,7 +1,7 @@
 Package: downscaleR
 Depends:
-    R(>= 3.1.0),
-    transformeR(>= 1.5.0)
+    R(>= 3.5.0),
+    transformeR(>= 2.0.0)
 Imports:
     reticulate,
     lubridate,
@@ -21,17 +21,18 @@ Imports:
     magrittr,
     sp,
     gridGraphics,
-    gridExtra
+    gridExtra,
+    visualizeR
 Suggests:
+    climate4R.datasets,
     loadeR,
     loadeR.ECOMS,
-    visualizeR,
     knitr,
     rmarkdown
 Type: Package
 Title: A climate4R package for statistical downscaling <http://meteo.unican.es/climate4r>
-Version: 3.2.0
-Date: 2020-04-23
+Version: 3.3.0
+Date: 2020-05-23
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquín Bedia <bediaj@unican.es> [aut, cre]",
@@ -46,7 +47,7 @@ Authors@R: as.person(c(
     "Jorge B. Medina <bmedina@ifca.unican.es> [aut]",
     "Beata Szabo-Takacs <szabo.b@czechglobe.cz> [ctb]",
     "Max Tuni <max@predictia.es> [ctb]",
-    "Ana Casanueva <ana.casanueva@unican.es> [ctb]"))
+    "Ana Casanueva <ana.casanueva@unican.es> [aut]"))
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: http://www.meteo.unican.es/climate4r
 Encoding: UTF-8

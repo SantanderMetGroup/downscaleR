@@ -48,38 +48,44 @@
 #' @export 
 #' @family downscaling.functions
 #' @importFrom transformeR scaleGrid
-#' @examples
+#' @examples \donttest{
+#' require(transformeR)
+#' require(climate4R.datasets)
+#' data("NCEP_Iberia_hus850")
+#' data("NCEP_Iberia_ta850")
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' newdata <- subsetGrid(x, years = 1994:1995)
 #' x <- subsetGrid(x, years = 1985:1993)
 #' # Loading predictands
+#' data("VALUE_Iberia_pr")
 #' y <- VALUE_Iberia_pr
 #' y <- getTemporalIntersection(obs = y,prd = x, "obs" )
 #' x <- getTemporalIntersection(obs = y,prd = x, "prd" )
 #' ### Analogs ###
 #' # None
-#' yp <- downscale(y,x,method = "analogs")
-#' yp <- downscale(y,x,newdata,method = "analogs")
+#' yp <- downscale(y, x, method = "analogs")
+#' yp <- downscale(y, x, newdata, method = "analogs")
 #' # kfold
-#' yp <- downscale(y,x,method = "analogs", n.pcs = 15,
-#'                 cross.val = "kfold", folds = list(c(1985,1986,1987),
-#'                                                   c(1988,1989,1990),
-#'                                                   c(1991,1992,1993)))
+#' yp <- downscale(y, x, method = "analogs", n.pcs = 15,
+#'                 cross.val = "kfold", folds = list(c(1985, 1986, 1987),
+#'                                                   c(1988, 1989, 1990),
+#'                                                   c(1991, 1992, 1993)))
 #' # Leave-one-year-out
-#' yp <- downscale(y,x,method = "analogs", n.pcs = 15,
+#' yp <- downscale(y, x, method = "analogs", n.pcs = 15,
 #'                 cross.val = "loocv")
 #' 
 #' ### GLM ###
 #' # None
-#' yp <- downscale(y,x,method = "glm", simulate = FALSE,  n.pcs = 10,
+#' yp <- downscale(y, x, method = "glm", simulate = FALSE, n.pcs = 10,
 #'                 wet.threshold = 1)
-#' yp <- downscale(y,x,method = "glm", simulate = TRUE, n.pcs = 10,
+#' yp <- downscale(y, x, method = "glm", simulate = TRUE, n.pcs = 10,
 #'                 wet.threshold = 1)
 #' # kfold
-#' yp <- downscale(y,x,method = "glm", simulate = FALSE, n.pcs = 10,
-#'                 cross.val = "kfold", folds = list(c(1985,1986,1987),
-#'                                                   c(1988,1989,1990),
-#'                                                   c(1991,1992,1993)))
+#' yp <- downscale(y, x, method = "glm", simulate = FALSE, n.pcs = 10,
+#'                 cross.val = "kfold", folds = list(c(1985, 1986, 1987),
+#'                                                   c(1988, 1989, 1990),
+#'                                                   c(1991, 1992, 1993)))
+#' }
 
 downscale <- function(y,
                        x,
