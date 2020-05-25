@@ -29,6 +29,7 @@
 #' \code{"GT"} = greater than the value of \code{threshold}, \code{"GE"} = greater or equal,
 #' \code{"LT"} = lower than, \code{"LE"} = lower or equal than. We only train with the days that satisfy the condition.
 #' @param threshold Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specification of the parameter \code{condition}. Then condition is set to \code{"GE"}.
+#' @param predict A logic value. Should the prediction on the training set should be returned? Default is TRUE.
 #' @param ... Optional parameters. These parameters are different depending on the method selected. 
 #' Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 #' Everything concerning these parameters is explained in the section \code{Details} of the function \code{\link[downscaleR]{downscaleTrain}}. However, if wanted, the atomic functions can be seen here: 
@@ -46,7 +47,7 @@
 downscaleChunk <- function(x, y, newdata,
                            method, ...,
                            prepareData.args = list("global.vars" = NULL, "combined.only" = TRUE, "spatial.predictors" = NULL, "local.predictors" = NULL, "extended.predictors" = NULL),
-                           condition = NULL, threshold = NULL,
+                           condition = NULL, threshold = NULL, predict = TRUE,
                            path = getwd()) {
   
   if (!exists("global.vars",prepareData.args)) prepareData.args$global.vars <- NULL
@@ -64,7 +65,7 @@ downscaleChunk <- function(x, y, newdata,
     print(paste("Training chunk:",z,"out of",chunks))
     y_chunk <- subsetDimension(y,dimension = "lat", indices = z)
     xyT <- prepareData(x = x, y = y_chunk, global.vars = prepareData.args$global.vars, combined.only = prepareData.args$combined.only, spatial.predictors = prepareData.args$spatial.predictors, local.predictors = prepareData.args$local.predictors, extended.predictors = prepareData.args$extended.predictors)
-    model <- downscaleTrain(xyT, method, condition, threshold, ...)
+    model <- downscaleTrain(xyT, method, condition, threshold, predict, ...)
     
     p <- lapply(newdata, function(zz) {
       xyt <- prepareNewData(zz,xyT)
@@ -74,14 +75,14 @@ downscaleChunk <- function(x, y, newdata,
     if (z < 10) {zn <- paste0("00",z)}
     else if (z < 100 & z >= 10) {zn <- paste0("0",z)}
     else{zn <- z}
-    lapply(1:(length(p)+1), function(zzz) {
-    # lapply(2:(length(p)+1), function(zzz) {
-    # lapply(1:1, function(zzz) {
-      if (zzz == 1) {
+    ini <- ifelse(isTRUE(predict),length(p)+1,length(p))
+    lapply(1:ini, function(zzz) {
+      if (ini == (length(p)+1) & zzz == 1) {
         grid <- model$pred
-      }
-      else{
+      } else if (ini == (length(p)+1) & zzz != 1) {
         grid <- p[[zzz-1]] 
+      } else if (ini == (length(p))) {
+        grid <- p[[zzz]]
       }
       save(grid, file = paste0(path,"/dataset",zzz,"_chunk",zn,".rda"))
     })
@@ -89,11 +90,12 @@ downscaleChunk <- function(x, y, newdata,
   })
   
   pred <- list()
-  for (i in 1:(length(newdata)+1)) {
+  for (i in 1:ini) {
     lf <- list.files("./", pattern = paste0("dataset",i), full.names = TRUE)
     chunk.list <- lapply(lf, function(x) get(load(x)))
     pred[[i]] <- bindGrid(chunk.list, dimension = "lat")
     file.remove(lf)
   }
+  if (ini == 1) pred <- pred[[1]]
   return(pred)
 }

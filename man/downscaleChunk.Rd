@@ -14,6 +14,7 @@ downscaleChunk(
     = NULL, local.predictors = NULL, extended.predictors = NULL),
   condition = NULL,
   threshold = NULL,
+  predict = TRUE,
   path = getwd()
 )
 }
@@ -40,6 +41,8 @@ more details about this parameter.}
 \code{"LT"} = lower than, \code{"LE"} = lower or equal than. We only train with the days that satisfy the condition.}
 
 \item{threshold}{Numeric value. Threshold used as reference for the condition. Default is NULL. If a threshold value is supplied with no specification of the parameter \code{condition}. Then condition is set to \code{"GE"}.}
+
+\item{predict}{A logic value. Should the prediction on the training set should be returned? Default is TRUE.}
 
 \item{path}{A string indicating the path where to save the prediction.}
 }
