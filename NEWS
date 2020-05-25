@@ -65,4 +65,15 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 ## v3.1.3 (24 Mar 2020)
 
 * New dependency: 'library sticky' for attributes containing variable information
+
+## v3.2.0 (23 Apr 2020)
+
+* New ISIMIP3 routine for bias correction
+* Internal python routines
+* Other documentation updates (CITATION, etc.)
+
+## v3.3.0 (23 May 2020)
+ * Update examples and other minor updates to include the new datasets from climate4R.datasets
+
+## v3.3.1 (ongoing)
 * New parameter in downscaleTrain: 'predict', to return the prediction in the train set 

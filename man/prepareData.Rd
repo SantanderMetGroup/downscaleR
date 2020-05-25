@@ -73,7 +73,10 @@ Configuration of data for flexible downscaling experiment definition
  \code{subset.vars}.
 }
 \examples{
+\donttest{
+require(transformeR)
 # Loading data
+require(climate4R.datasets)
 data("VALUE_Iberia_tas")
 y <- VALUE_Iberia_tas 
 data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
@@ -90,6 +93,7 @@ data <- prepareData(x = x, y = y,local.predictors = list(n=4, vars = getVarNames
 # Using joined PCs and local predictors: the 4 closest gridboxes
 data <- prepareData(x = x, y = y,local.predictors = list(n=4, vars = getVarNames(x)),
 spatial.predictors = list(v.exp = 0.95, which.combine =getVarNames(x)))
+}
 }
 \seealso{
 \href{https://github.com/SantanderMetGroup/downscaleR/wiki/preparing-predictor-data}{downscaleR Wiki} for preparing predictors for downscaling and seasonal forecasting.

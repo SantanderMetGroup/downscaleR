@@ -123,6 +123,7 @@ If there are still doubts about the optional parameters despite the description 
 \donttest{
 # Loading data
 require(transformeR)
+require(climate4R.datasets)
 data("VALUE_Iberia_tas")
 y <- VALUE_Iberia_tas
 data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")

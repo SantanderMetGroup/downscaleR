@@ -9,7 +9,7 @@ biasCorrection(
   x,
   newdata = NULL,
   precipitation = FALSE,
-  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm", "qdm"),
+  method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm", "qdm", "isimip3"),
   cross.val = c("none", "loo", "kfold"),
   folds = NULL,
   window = NULL,
@@ -20,6 +20,7 @@ biasCorrection(
   extrapolation = c("none", "constant"),
   theta = c(0.95, 0.05),
   detrend = TRUE,
+  isimip3.args = NULL,
   join.members = FALSE,
   parallel = FALSE,
   max.ncores = 16,
@@ -38,13 +39,13 @@ the same variable as \code{obs}, in the case of model calibration (bias correcti
 If \code{x} is a multimember grid (the member dimension is > 1), the function assumes that the order of 
 the members is the same in \code{newdata}.}
 
-\item{precipitation}{Logical for precipitation data (default to FALSE). If TRUE Adjusts precipitation 
-frequency in 'x' (prediction) to the observed frequency in 'y'. This is a preprocess to bias correct 
-precipitation data following Themeßl et al. (2012). To adjust the frequency, 
+\item{precipitation}{Logical for precipitation data (default to FALSE). If TRUE adjusts precipitation 
+frequency in 'x' (prediction) to the observed frequency in 'y' (see Details). To adjust the frequency, 
 parameter \code{wet.threshold} is used (see below).}
 
 \item{method}{method applied. Current accepted values are \code{"eqm"}, \code{"delta"},
-\code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"} and \code{"ptr"}. See details.}
+\code{"scaling"}, \code{"pqm"} and \code{"gpqm"} \code{"variance"},\code{"loci"}, \code{"ptr"}, 
+\code{"dqm"}, \code{"qdm"}, \code{"isimip3"}. See details.}
 
 \item{cross.val}{Logical (default to FALSE). Should cross-validation be performed? methods available are 
 leave-one-out ("loo") and k-fold ("kfold") on an annual basis. The default option ("none") does not 
@@ -83,6 +84,8 @@ Values below this threshold are fitted to a gamma (normal) distribution. By defa
 percentile (and 5th percentile for the left tail). Only for \code{"gpqm"} method.}
 
 \item{detrend}{logical. Detrend data prior to bias correction? Only for \code{"dqm"}. Default. TRUE.}
+
+\item{isimip3.args}{Named list of arguments passed to function \code{\link{isimip3}}.}
 
 \item{join.members}{Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
 or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).}
@@ -185,14 +188,19 @@ It consists on (i) detrending the individual quantiles;
 (ii) QM is applied to the detrended series; 
 (iii) the projected trends are then reapplied to the bias-adjusted quantiles.
 It explicitly preserves the change signal in all quantiles. 
-It allows relative (multiplicative) and additive corrections.
+It allows relative (multiplicative) and additive corrections. 
+
+
+\strong{isimip3}
 }
 \section{Note on the bias correction of precipitation}{
 
 
-In the case of precipitation a frequency adaptation has been implemented in all versions of 
-quantile mapping to alleviate the problems arising when the dry day frequency in the raw model output is larger
- than in the observations (Wilcke et al. 2013). 
+In the case of precipitation a frequency adaptation is performed in all versions of quantile mapping 
+following Themeßl et al. (2012; https://doi.org/10.1007/s10584-011-0224-4), but sampling from the observed Gamma distribution instead of using 
+linear interpolation. This is a preprocess to alleviate the problems arising when the dry day 
+frequency in the raw model output is larger than in the observations. The opposite situation is 
+automatically adjusted by quantile methods.
  
  The precipitation subroutines are switched-on when the variable name of the grid 
  (i.e., the value returned by \code{gridData$Variable$varName}) is one of the following: 
@@ -203,6 +211,7 @@ quantile mapping to alleviate the problems arising when the dry day frequency in
 
 \examples{
 \donttest{
+require(climate4R.datasets)
 data("EOBS_Iberia_pr")
 data("CORDEX_Iberia_pr")
 y <- EOBS_Iberia_pr
@@ -229,21 +238,16 @@ eqm1folds <- biasCorrection(y = y, x = x,
                             cross.val = "kfold",
                             folds = list(1983:1989, 1990:1996, 1997:2002))
 
-quickDiagnostics(y, x, eqm1, location = c(-2, 43))
-quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
-quickDiagnostics(y, x, eqm1folds, location = c(-2, 43))
 
 #parametric
 pqm1.gamm <- biasCorrection(y = y, x = x,
                        method = "pqm",
                        precipitation = TRUE,
                        fitdistr.args = list(densfun = "gamma"))
-quickDiagnostics(y, x, pqm1.gamm, location = c(-2, 43))
 pqm1.wei <- biasCorrection(y = y, x = x,
                        method = "pqm",
                        precipitation = TRUE,
                        fitdistr.args = list(densfun = "weibull"))
-quickDiagnostics(y, x, pqm1.wei, location = c(-2, 43))
 
 data("EOBS_Iberia_tas")
 data("CORDEX_Iberia_tas")
@@ -252,7 +256,6 @@ x <- CORDEX_Iberia_tas
 pqm1.norm <- biasCorrection(y = y, x = x,
            method = "pqm",
            fitdistr.args = list(densfun = "normal"))
-quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
 
 # correction of future climate change data
 data("CORDEX_Iberia_tas.rcp85")
@@ -263,12 +266,10 @@ eqm1win <- biasCorrection(y = y, x = x,
                           extrapolation = "constant",
                           window = c(30, 15),
                           wet.threshold = 0.1)
-quickDiagnostics(y, x, eqm1win, location = c(-2, 43))
 pqm1.norm <- biasCorrection(y = y, x = x,
                        newdata = newdata,
                        method = "pqm",
                        fitdistr.args = list(densfun = "normal"))
-quickDiagnostics(y, x, pqm1.norm, location = c(-2, 43))
 
 # Correction of multimember datasets considering the joint
 # distribution of all members
@@ -300,8 +301,7 @@ eqm.join <- biasCorrection(y = y, x = x,
 }
 }
 \seealso{
-\code{\link{isimip}} for a trend-preserving method of model calibration and \code{\link{quickDiagnostics}} 
-for an outlook of the results.
+\code{\link{isimip}} for a trend-preserving method of model calibration.
 
 Other downscaling: 
 \code{\link{glimpr}()},

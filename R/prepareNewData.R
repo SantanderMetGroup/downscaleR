@@ -26,7 +26,9 @@
 #' @family downscaling.helpers
 #' @importFrom transformeR getVarNames subsetGrid redim getShape getCoordinates grid2PCs getRefDates array3Dto2Dmat grid2PCs
 #' @importFrom magrittr %>% extract2 
-#' @examples
+#' @examples \donttest{
+#' require(transformeR)
+#' require(climate4R.datasets)
 #' # Loading data
 #' data("VALUE_Iberia_tas")
 #' y <- VALUE_Iberia_tas 
@@ -36,6 +38,7 @@
 #' data <- prepareData(x = x, y = y, spatial.predictors = list(v.exp = 0.95))
 #' # Projecting a new dataset to the calculated EOFs
 #' newdata <- prepareNewData(x,data)
+#' }
 
 prepareNewData <- function(newdata, data.structure) {
   x.varnames <- attr(data.structure, "predictor.vars")

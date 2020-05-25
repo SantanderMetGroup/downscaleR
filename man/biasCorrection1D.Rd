@@ -17,6 +17,7 @@ biasCorrection1D(
   extrapolation,
   theta,
   detrend,
+  isimip3.args,
   parallel = FALSE,
   max.ncores = 16,
   ncores = NULL
