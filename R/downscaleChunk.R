@@ -88,7 +88,7 @@ downscaleChunk <- function(x, y, newdata,
     })
     p <- NULL
   })
-  
+  ini <- ifelse(isTRUE(predict),length(newdata)+1,length(newdata))
   pred <- list()
   for (i in 1:ini) {
     lf <- list.files("./", pattern = paste0("dataset",i), full.names = TRUE)
