@@ -111,17 +111,4 @@ get2DmatCoordinates <- function(grid) {
 }
 
 
-#' @title Obtain a grob object from ordinary plot
-#' @description Obtain a grob object from ordinary plot
-#' @return A grob object
-#' @keywords internal
-#' @importFrom gridGraphics grid.echo 
-#' @importFrom grid grid.grab
-#' @author M. Iturbide
 
-
-grabGrob <- function(){
-      grid.echo()
-      grid.grab()
-}
-# End

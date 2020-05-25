@@ -14,15 +14,9 @@ Imports:
     MASS,
     evd,
     parallel,
-    grDevices,
-    graphics,
     stats,
     sticky,
-    magrittr,
-    sp,
-    gridGraphics,
-    gridExtra,
-    visualizeR
+    magrittr
 Suggests:
     climate4R.datasets,
     loadeR,

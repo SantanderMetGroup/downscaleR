@@ -166,8 +166,7 @@
 #'  non-standard variables.
 #'     
 #' 
-#' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration and \code{\link{quickDiagnostics}} 
-#' for an outlook of the results.
+#' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration.
 #' @return A calibrated grid of the same spatio-temporal extent than the input \code{"y"}
 #' @family downscaling
 #' 
@@ -227,7 +226,6 @@
 #'                        method = "pqm",
 #'                        precipitation = TRUE,
 #'                        fitdistr.args = list(densfun = "gamma"))
-#' quickDiagnostics(y, x, pqm1.gamm, location = c(-2, 43))
 #' pqm1.wei <- biasCorrection(y = y, x = x,
 #'                        method = "pqm",
 #'                        precipitation = TRUE,
@@ -391,7 +389,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
 
 
 #' @keywords internal
-#' @importFrom transformeR redim subsetGrid getDim getWindowIndex
+#' @importFrom transformeR redim subsetGrid getDim getWindowIndex interpGrid getGrid
 
 biasCorrectionXD <- function(y, x, newdata, 
                              precipitation, 
@@ -1471,8 +1469,7 @@ qdm <- function(o, p, s, precip, pr.threshold, n.quantiles, jitter.factor=0.01){
 #'  non-standard variables.
 #'     
 #' 
-#' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration and \code{\link{quickDiagnostics}} 
-#' for an outlook of the results.
+#' @seealso \code{\link{isimip}} for a trend-preserving method of model calibration.
 #' @return Calibrated grids for each latitudinal chunk (with the same spatio-temporal extent than the chunked input \code{"y"}). 
 #' This objects are saved in the specified \code{output.path}. The object obatained in the workspace 
 #' is a charecter string of the listed files.

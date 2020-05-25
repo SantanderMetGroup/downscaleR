@@ -244,7 +244,6 @@ pqm1.gamm <- biasCorrection(y = y, x = x,
                        method = "pqm",
                        precipitation = TRUE,
                        fitdistr.args = list(densfun = "gamma"))
-quickDiagnostics(y, x, pqm1.gamm, location = c(-2, 43))
 pqm1.wei <- biasCorrection(y = y, x = x,
                        method = "pqm",
                        precipitation = TRUE,
@@ -302,8 +301,7 @@ eqm.join <- biasCorrection(y = y, x = x,
 }
 }
 \seealso{
-\code{\link{isimip}} for a trend-preserving method of model calibration and \code{\link{quickDiagnostics}} 
-for an outlook of the results.
+\code{\link{isimip}} for a trend-preserving method of model calibration.
 
 Other downscaling: 
 \code{\link{glimpr}()},
