@@ -21,6 +21,7 @@ Suggests:
     climate4R.datasets,
     loadeR,
     loadeR.ECOMS,
+    visualizeR,
     knitr,
     rmarkdown
 Type: Package
