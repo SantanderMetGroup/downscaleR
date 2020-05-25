@@ -10,6 +10,7 @@ downscaleTrain(
   condition = NULL,
   threshold = NULL,
   model.verbose = TRUE,
+  predict = TRUE,
   ...
 )
 }
@@ -27,6 +28,8 @@ downscaleTrain(
 \item{model.verbose}{A logic value. Indicates wether the information concerning the model infered is limited to the 
 essential information (model.verbose = FALSE)  or a more detailed information (model.verbose = TRUE, DEFAULT). This is
 recommended when you want to save memory. Only operates for GLM.}
+
+\item{predict}{A logic value. Should the prediction on the training set should be returned? Default is TRUE.}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 Everything concerning these parameters is explained in the section \code{Details}. 
