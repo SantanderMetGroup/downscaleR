@@ -35,7 +35,6 @@
 #' @param invalid_value_warnings : boolean, optional. Raise user warnings when invalid values are replaced bafore bias adjustment.
 #' @keywords internal
 #' @importFrom stats approxfun ecdf quantile
-#' @importFrom lubridate year
 #' @importFrom reticulate dict source_python
 #' @author S. Herrera and M. Iturbide
 
@@ -55,15 +54,14 @@ isimip3 <- function(o, p, s,
                     if_all_invalid_use = c(NULL),
                     invalid_value_warnings = FALSE) {
       smap <- s
-      if (any(!is.na(o)) & any(!is.na(p)) & any(!is.na(s))){
-            meses.o <- months(as.Date(dates$obs_hist))
-            meses.p <- months(as.Date(dates$sim_hist))
-            meses.s <- months(as.Date(dates$sim_fut))
+      if (any(!is.na(o)) & any(!is.na(p)) & any(!is.na(s))) {
+            meses.o <- as.numeric(substr(dates$obs_hist, 6, 7))
+            meses.p <- as.numeric(substr(dates$sim_hist, 6, 7))
+            meses.s <- as.numeric(substr(dates$sim_fut, 6, 7))
             meses.name <- unique(meses.s)
-            years.o <- year(as.Date(dates$obs_hist))
-            years.p <- year(as.Date(dates$sim_hist))
-            years.s <- year(as.Date(dates$sim_fut))
-            
+            years.o <- as.numeric(substr(dates$obs_hist, 1, 4))
+            years.p <- as.numeric(substr(dates$sim_hist, 1, 4))
+            years.s <- as.numeric(substr(dates$sim_fut, 1, 4))
             ## source python routines
             lf <- list.files(file.path(find.package("downscaleR")), pattern = "\\.py$", recursive = TRUE, full.names = TRUE)
             sapply(lf, source_python, .GlobalEnv)
