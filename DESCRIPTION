@@ -1,10 +1,9 @@
 Package: downscaleR
 Depends:
     R(>= 3.5.0),
-    transformeR(>= 2.0.0)
+    transformeR(>= 2.0.1)
 Imports:
     reticulate,
-    lubridate,
     deepnet,
     glmnet,
     abind,
@@ -26,8 +25,8 @@ Suggests:
     rmarkdown
 Type: Package
 Title: A climate4R package for statistical downscaling <http://meteo.unican.es/climate4r>
-Version: 3.3.0
-Date: 2020-05-23
+Version: 3.3.1
+Date: 2020-06-04
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquín Bedia <bediaj@unican.es> [aut, cre]",
@@ -46,7 +45,7 @@ Authors@R: as.person(c(
 BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: http://www.meteo.unican.es/climate4r
 Encoding: UTF-8
-Description: Tools for climate data calibration (bias correction, qauntile mapping etc.) and perfect-prog downscaling, as part of climate4R bundle (<http://meteo.unican.es/climate4R>). Focused on daily data, downscaleR is conceived for dealing also with seasonal forecast ensemble predictions.
+Description: Tools for climate data calibration (bias correction, quantile mapping etc.) and perfect-prog downscaling, as part of the climate4R framework (<http://meteo.unican.es/climate4R>). 
 License: GPL (>= 3)
 LazyData: true
 RoxygenNote: 7.1.0

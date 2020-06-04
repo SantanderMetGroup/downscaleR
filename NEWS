@@ -75,5 +75,9 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 ## v3.3.0 (23 May 2020)
  * Update examples and other minor updates to include the new datasets from climate4R.datasets
 
-## v3.3.1 (ongoing)
-* New parameter in downscaleTrain: 'predict', to return the prediction in the train set 
+## v3.3.1 (04 Jun 2020)
+
+ * New parameter in downscaleTrain: 'predict', to return the prediction in the train set 
+ * Internal flag to force non-overlapping nearest-neighbour application within `biasCorrection` (recommended for chunking, depends on transformeR >= 2.0.1)
+ * Avoid dependency from lubridate
+ * Other minor changes and documentation updates
