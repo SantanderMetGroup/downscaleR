@@ -416,8 +416,8 @@ biasCorrectionXD <- function(y, x, newdata,
       station <- FALSE
       if ("loc" %in% getDim(y)) station <- TRUE
       xy <- y$xyCoords
-      suppressWarnings(suppressMessages(pred <- interpGrid(x, getGrid(y))))
-      suppressWarnings(suppressMessages(sim <- interpGrid(newdata, getGrid(y))))
+      suppressWarnings(suppressMessages(pred <- interpGrid(x, getGrid(y), force.non.overlapping = TRUE)))
+      suppressWarnings(suppressMessages(sim <- interpGrid(newdata, getGrid(y), force.non.overlapping = TRUE)))
       delta.method <- method == "delta"
       precip <- precipitation
       message("[", Sys.time(), "] Argument precipitation is set as ", precip, ", please ensure that this matches your data.")
