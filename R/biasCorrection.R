@@ -390,6 +390,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
 
 #' @keywords internal
 #' @importFrom transformeR redim subsetGrid getDim getWindowIndex interpGrid getGrid
+#' @importFrom abind adrop
 
 biasCorrectionXD <- function(y, x, newdata, 
                              precipitation, 
@@ -411,7 +412,9 @@ biasCorrectionXD <- function(y, x, newdata,
             window <- NULL
             # warning("Only parameter isimip3.args is considered")
             if (is.null(isimip3.args)) isimip3.args <- list()
-            isimip3.args[["dates"]] <- list(obs_hist = y[["Dates"]][["start"]], sim_hist = x[["Dates"]][["start"]], sim_fut = newdata[["Dates"]][["start"]])
+            isimip3.args[["dates"]] <- list(obs_hist = y[["Dates"]][["start"]],
+                                            sim_hist = x[["Dates"]][["start"]],
+                                            sim_fut = newdata[["Dates"]][["start"]])
       }
       station <- FALSE
       if ("loc" %in% getDim(y)) station <- TRUE
@@ -490,6 +493,7 @@ biasCorrectionXD <- function(y, x, newdata,
                         o <- lapply(seq_len(ncol(data[[1]])), function(i) data[[1]][,i,1])
                         p <- lapply(seq_len(ncol(data[[2]])), function(i) data[[2]][,i,1])
                         s <- lapply(seq_len(ncol(data[[3]])), function(i) data[[3]][,i,1])
+                        data <- NULL
                         mat <- biasCorrection1D(o, p, s,
                                                 method = method,
                                                 scaling.type = scaling.type,
@@ -509,9 +513,12 @@ biasCorrectionXD <- function(y, x, newdata,
                   })
                   unname(do.call("abind", list(memarr, along = 0)))
             })
+            yw <- pw <- sw <- NULL
             winarr[,,outind,,] <- unname(do.call("abind", list(runarr, along = 0))) 
+            runarr <- NULL
       }
       bc$Data <- unname(do.call("abind", list(winarr, along = 3)))
+      winarr <- NULL
       attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
       if (station) bc <- redim(bc, loc = TRUE)
       bc$Dates <- sim$Dates
@@ -526,6 +533,7 @@ biasCorrectionXD <- function(y, x, newdata,
             bc$InitializationDates <- sim$InitializationDates
             bc$Members <- sim$Members
       }
+      pred <- newdata <- sim <- y <- NULL
       attr(bc$Variable, "correction") <- method
       bc <- redim(bc, drop = TRUE)
       message("[", Sys.time(), "] Done.")
@@ -1183,9 +1191,9 @@ recoverMemberDim <- function(plain.grid, bc.grid, newdata) {
 #' @param n.quantiles  Integer. Maximum number of quantiles to estimate. Default: same as data length.
 #' @details DQM method developed by A. Canon, from \url{https://github.com/pacificclimate/ClimDown}, \url{https://cran.r-project.org/web/packages/ClimDown/}.
 #'
-#'  See also Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
+#' @references Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
 #' @keywords internal
-#' @author A. Cannon (acannon@uvic.ca), A. Casanueva
+#' @author A. Cannon (acannon@@uvic.ca), A. Casanueva
 
 dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
       
@@ -1271,9 +1279,9 @@ dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
 #' @param n.quantiles  Integer. Maximum number of quantiles to estimate. Default: same as data length.
 #' @details QDM method developed by A. Canon, from \url{https://github.com/pacificclimate/ClimDown}, \url{https://cran.r-project.org/web/packages/ClimDown/}.
 #' 
-#' See also Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
+#' @references Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
 #' @keywords internal
-#' @author A. Cannon (acannon@uvic.ca), A. Casanueva
+#' @author A. Cannon (acannon@@uvic.ca), A. Casanueva
 
 qdm <- function(o, p, s, precip, pr.threshold, n.quantiles, jitter.factor=0.01){
       
@@ -1331,7 +1339,7 @@ qdm <- function(o, p, s, precip, pr.threshold, n.quantiles, jitter.factor=0.01){
 
 #     biasCorrection.chunk.R Bias correction methods
 #
-#     Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
+#     Copyright (C) 2020 Santander Meteorology Group (http://www.meteo.unican.es)
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
