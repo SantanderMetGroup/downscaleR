@@ -27,8 +27,9 @@ Quantile delta mapping
 }
 \details{
 QDM method developed by A. Canon, from \url{https://github.com/pacificclimate/ClimDown}, \url{https://cran.r-project.org/web/packages/ClimDown/}.
-
-See also Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
+}
+\references{
+Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
 }
 \author{
 A. Cannon (acannon@uvic.ca), A. Casanueva

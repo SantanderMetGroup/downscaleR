@@ -81,3 +81,8 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
  * Internal flag to force non-overlapping nearest-neighbour application within `biasCorrection` (recommended for chunking, depends on transformeR >= 2.0.1)
  * Avoid dependency from lubridate
  * Other minor changes and documentation updates
+
+## v3.3.2 (in devel)
+
+ * Minor internal changes in biasCorrection for improved memory usage
+ * Other minor changes and documentation updates
