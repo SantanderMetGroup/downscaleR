@@ -373,14 +373,15 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                          max.ncores = max.ncores,
                                          ncores = ncores)
                   })
-                  al <- which(getDim(x) == "time")
-                  Data <- sapply(output.list, function(n) unname(n$Data), simplify = FALSE)
-                  bindata <- unname(do.call("abind", c(Data, along = al)))
-                  output <- output.list[[1]]
-                  dimNames <- attr(output$Data, "dimensions")
-                  output$Data <- bindata
-                  attr(output$Data, "dimensions") <- dimNames
-                  output$Dates <- x$Dates
+                  output <- redim(bindGrid(output.list, dimension = "time"), drop = TRUE)
+                  # al <- which(getDim(x) == "time")
+                  # Data <- sapply(output.list, function(n) unname(n$Data), simplify = FALSE)
+                  # bindata <- unname(do.call("abind", c(Data, along = al)))
+                  # output <- output.list[[1]]
+                  # dimNames <- attr(output$Data, "dimensions")
+                  # output$Data <- bindata
+                  # attr(output$Data, "dimensions") <- dimNames
+                  # output$Dates <- x$Dates
                   output$Data[which(is.infinite(output$Data))] <- NA
             }
       output <- subsetGrid(output, season = seas)
