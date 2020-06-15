@@ -12,6 +12,7 @@ biasCorrection(
   method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci", "dqm", "qdm", "isimip3"),
   cross.val = c("none", "loo", "kfold"),
   folds = NULL,
+  consecutive = TRUE,
   window = NULL,
   scaling.type = c("additive", "multiplicative"),
   fitdistr.args = list(densfun = "normal"),
@@ -51,8 +52,11 @@ parameter \code{wet.threshold} is used (see below).}
 leave-one-out ("loo") and k-fold ("kfold") on an annual basis. The default option ("none") does not 
 perform cross-validation.}
 
-\item{folds}{Only requiered if \code{cross.val = "kfold"}. A list of vectors, each containing the years 
-to be grouped in the corresponding fold.}
+\item{folds}{Only requiered if \code{cross.val = "kfold"}. Integer indicating the number of folds (see 
+argument \code{consecutive}) or a list of vectors, each containing the years to be grouped in the corresponding fold.}
+
+\item{consecutive}{Default is TRUE. Create folds containing consecutive years? Only used if cross.val = "kfold" and
+folds is an integer. If FALSE, each years will be sampled randomly to create the folds.}
 
 \item{window}{vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
 target days (days that are being corrected). The window is centered on the target day/s 

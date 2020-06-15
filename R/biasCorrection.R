@@ -28,8 +28,10 @@
 #' @param cross.val Logical (default to FALSE). Should cross-validation be performed? methods available are 
 #' leave-one-out ("loo") and k-fold ("kfold") on an annual basis. The default option ("none") does not 
 #' perform cross-validation.
-#' @param folds Only requiered if \code{cross.val = "kfold"}. A list of vectors, each containing the years 
-#' to be grouped in the corresponding fold.
+#' @param folds Only requiered if \code{cross.val = "kfold"}. Integer indicating the number of folds (see 
+#' argument \code{consecutive}) or a list of vectors, each containing the years to be grouped in the corresponding fold.
+#' @param consecutive Default is TRUE. Create folds containing consecutive years? Only used if cross.val = "kfold" and
+#' folds is an integer. If FALSE, each years will be sampled randomly to create the folds.
 #' @param wet.threshold The minimum value that is considered as a non-zero precipitation. Ignored when 
 #' \code{precipitation = FALSE}. Default to 1 (assuming mm). See details on bias correction for precipitation.
 #' @param window vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
@@ -273,6 +275,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci","dqm","qdm", "isimip3"),
                            cross.val = c("none", "loo", "kfold"),
                            folds = NULL,
+                           consecutive = TRUE,
                            window = NULL,
                            scaling.type = c("additive", "multiplicative"),
                            fitdistr.args = list(densfun = "normal"),
@@ -336,6 +339,16 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                   if (cross.val == "loo") {
                         years <- as.list(unique(getYearsAsINDEX(x)))
                   } else if (cross.val == "kfold" & !is.null(folds)) {
+                        if (!is.list(folds)) {
+                              avy <- unique(getYearsAsINDEX(y))
+                              ind <- rep(1:folds, length(avy)/folds, length.out = length(avy))
+                              ind <- if (consecutive) {
+                                    sort(ind) 
+                              } else {
+                                    sample(ind, length(ind))
+                              }
+                              folds <- split(avy, f = ind)
+                        }
                         years <- folds
                   } else if (cross.val == "kfold" & is.null(folds)) {
                         stop("Fold specification is missing, with no default")
