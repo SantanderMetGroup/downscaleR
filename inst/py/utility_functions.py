@@ -141,7 +141,7 @@ def assert_consistency_of_distribution_and_bounds(
     ----------
     distribution : str
         Kind of distribution used for parametric quantile mapping:
-        ['normal', 'weibull', 'gamma', 'beta', 'rice'].
+        [None, 'normal', 'weibull', 'gamma', 'beta', 'rice'].
     lower_bound : float, optional
         Lower bound of values in time series.
     lower_threshold : float, optional
@@ -156,18 +156,19 @@ def assert_consistency_of_distribution_and_bounds(
         upper_bound before bias adjustment.
 
     """
-    lower = lower_bound is not None and lower_threshold is not None
-    upper = upper_bound is not None and upper_threshold is not None
-
-    msg = distribution+' distribution '
-    if distribution == 'normal':
-        assert not lower and not upper, msg+'can not have bounds'
-    elif distribution in ['weibull', 'gamma', 'rice']:
-        assert lower and not upper, msg+'must only have lower bound'
-    elif distribution == 'beta':
-        assert lower and upper, msg+'must have lower and upper bound'
-    else:
-        raise AssertionError(msg+'not supported')
+    if distribution is not None:
+        lower = lower_bound is not None and lower_threshold is not None
+        upper = upper_bound is not None and upper_threshold is not None
+    
+        msg = distribution+' distribution '
+        if distribution == 'normal':
+            assert not lower and not upper, msg+'can not have bounds'
+        elif distribution in ['weibull', 'gamma', 'rice']:
+            assert lower and not upper, msg+'must only have lower bound'
+        elif distribution == 'beta':
+            assert lower and upper, msg+'must have lower and upper bound'
+        else:
+            raise AssertionError(msg+'not supported')
 
 
 
@@ -270,7 +271,7 @@ def add_basd_attributes(cube, options, prefix='', index=None):
 
     """
     a = cube.attributes
-    a[prefix+'version'] = 'ISIMIP3BASD v2.1'
+    a[prefix+'version'] = 'ISIMIP3BASD v2.4.1'
     for key, value in options.__dict__.items():
         if index is not None and key != 'months' and isinstance(value, str):
             v = value.split(',')[index] if ',' in value else value
@@ -622,7 +623,17 @@ def map_quantiles_non_parametric_trend_preserving(
         Result of quantile mapping or climate change signal transfer.
 
     """
-    n = n_quantiles + 1
+    # make sure there are enough input data for quantile delta mapping
+    # reduce n_quantiles if necessary
+    assert n_quantiles > 0, 'n_quantiles <= 0'
+    n = min([n_quantiles + 1, x_obs_hist.size, x_sim_hist.size, x_sim_fut.size])
+    if n < 2:
+        msg = 'not enough input data: returning x_obs_hist'
+        warnings.warn(msg)
+        return x_obs_hist
+    elif n < n_quantiles + 1:
+        msg = 'due to little input data: reducing n_quantiles to %i'%(n-1)
+        warnings.warn(msg)
     p_zeroone = np.linspace(0., 1., n)
 
     # compute quantiles of input data
@@ -709,6 +720,40 @@ def map_quantiles_non_parametric_with_constant_extrapolation(x, q_sim, q_obs):
 
 
 
+def map_quantiles_non_parametric_brute_force(x, y):
+    """
+    Quantile-map x to y using the empirical CDFs of x and y.
+
+    Parameters
+    ----------
+    x : array
+        Simulated time series.
+    y : array
+        Observed time series.
+    
+    Returns
+    -------
+    z : array
+        Result of quantile mapping.
+
+    """
+    if x.size == 0:
+        msg = 'found no values in x: returning x'
+        warnings.warn(msg)
+        return x
+
+    if np.unique(y).size < 2:
+        msg = 'found fewer then 2 different values in y: returning x'
+        warnings.warn(msg)
+        return x
+
+    p_x = (sps.rankdata(x) - 1.) / x.size  # percent points of x
+    p_y = np.linspace(0., 1., y.size)  # percent points of sorted y
+    z = np.interp(p_x, p_y, np.sort(y))  # quantile mapping
+    return z
+
+
+
 def ccs_transfer_sim2obs(
         x_obs_hist, x_sim_hist, x_sim_fut,
         lower_bound=0., upper_bound=1.):
@@ -748,17 +793,24 @@ def ccs_transfer_sim2obs(
         assert np.all(x <= upper_bound), 'found '+x_name+' > upper_bound'
 
     # compute x_obs_fut
-    i_decrease = x_sim_fut < x_sim_hist
-    i_increase = x_sim_fut > x_sim_hist
-    x_obs_fut = x_obs_hist.copy()  # for where x_sim_fut == x_sim_hist
-    x_obs_fut[i_decrease] = lower_bound + \
-                            (x_obs_hist[i_decrease] - lower_bound) * \
-                            (x_sim_fut[i_decrease] - lower_bound) / \
-                            (x_sim_hist[i_decrease] - lower_bound)
-    x_obs_fut[i_increase] = upper_bound - \
-                            (upper_bound - x_obs_hist[i_increase]) * \
-                            (upper_bound - x_sim_fut[i_increase]) / \
-                            (upper_bound - x_sim_hist[i_increase])
+    i_neg_bias = x_sim_hist < x_obs_hist
+    i_zero_bias = x_sim_hist == x_obs_hist
+    i_pos_bias = x_sim_hist > x_obs_hist
+    i_additive = np.logical_or(
+        np.logical_and(i_neg_bias, x_sim_fut < x_sim_hist),
+        np.logical_and(i_pos_bias, x_sim_fut > x_sim_hist))
+    x_obs_fut = np.empty_like(x_obs_hist)
+    x_obs_fut[i_neg_bias] = upper_bound - \
+                            (upper_bound - x_obs_hist[i_neg_bias]) * \
+                            (upper_bound - x_sim_fut[i_neg_bias]) / \
+                            (upper_bound - x_sim_hist[i_neg_bias])
+    x_obs_fut[i_zero_bias] = x_sim_fut[i_zero_bias]
+    x_obs_fut[i_pos_bias] = lower_bound + \
+                            (x_obs_hist[i_pos_bias] - lower_bound) * \
+                            (x_sim_fut[i_pos_bias] - lower_bound) / \
+                            (x_sim_hist[i_pos_bias] - lower_bound)
+    x_obs_fut[i_additive] = x_obs_hist[i_additive] + \
+                            x_sim_fut[i_additive] - x_sim_hist[i_additive]
 
     # make sure x_obs_fut is within bounds
     x_obs_fut = np.maximum(lower_bound, np.minimum(upper_bound, x_obs_fut))
@@ -998,6 +1050,7 @@ def fit(spsdotwhat, x, fwords):
     except:
         shape_loc_scale = (np.nan,)
 
+
     # try method of moment estimation
     if check_shape_loc_scale(spsdotwhat, shape_loc_scale):
         msg = 'maximum likelihood estimation'
@@ -1024,9 +1077,18 @@ def fit(spsdotwhat, x, fwords):
         msg += ' failed: returning None'
         warnings.warn(msg)
         return None
+    elif msg != '':
+        msg += ' succeeded'
+
+    # do rough goodness of fit test to filter out worst fits using KS test
+    ks_stat = sps.kstest(x, spsdotwhat.name, args=shape_loc_scale)[0]
+    if ks_stat > .5:
+        if msg == '': msg = 'maximum likelihood estimation succeeded'
+        msg += ' but fit is not good: returning None'
+        warnings.warn(msg)
+        return None
     else:
-        if len(msg):
-            msg += ' succeeded'
+        if msg != '':
             warnings.warn(msg)
         return shape_loc_scale
 
@@ -1212,10 +1274,110 @@ def only_missing_values_in_at_least_one_time_series(data):
 
 
 
-def sample_invalid_values(a, seed=None, if_all_invalid_use=None, warn=False):
+def average_respecting_bounds(x,
+        lower_bound=None, lower_threshold=None,
+        upper_bound=None, upper_threshold=None):
+    """
+    Average values in x after values <= lower_threshold have been set to
+    lower_bound and values >= upper_threshold have been set to upper_bound.
+
+    Parameters
+    ----------
+    x : array
+        Time series to be (de-)randomized.
+    lower_bound : float, optional
+        Lower bound of values in time series.
+    lower_threshold : float, optional
+        Lower threshold of values in time series.
+    upper_bound : float, optional
+        Upper bound of values in time series.
+    upper_threshold : float, optional
+        Upper threshold of values in time series.
+
+    Returns
+    -------
+    a : float
+        Average.
+
+    """
+    y = x.copy()
+    if lower_bound is not None and lower_threshold is not None:
+        y[y <= lower_threshold] = lower_bound
+    if upper_bound is not None and upper_threshold is not None:
+        y[y >= upper_threshold] = upper_bound
+    return np.mean(y)
+
+
+
+def average_valid_values(a, if_all_invalid_use=np.nan,
+        lower_bound=None, lower_threshold=None,
+        upper_bound=None, upper_threshold=None):
+    """
+    Returns the average over all valid values in a, where missing/inf/nan values
+    are considered invalid, unless there are only invalid values in a, in which
+    case if_all_invalid_use is returned. Prior to averaging, values beyond
+    threshold are set to the respective bound.
+
+    Parameters
+    ----------
+    a : array or masked array
+        If this is an array then infs and nans in a are replaced.
+        If this is a masked array then infs, nans, and missing values in a.data
+        are replaced using a.mask to indicate missing values.
+    if_all_invalid_use : float, optional
+        Used as replacement of invalid values if no valid values can be found.
+    lower_bound : float, optional
+        Lower bound of values in time series.
+    lower_threshold : float, optional
+        Lower threshold of values in time series.
+    upper_bound : float, optional
+        Upper bound of values in time series.
+    upper_threshold : float, optional
+        Upper threshold of values in time series.
+
+    Returns
+    -------
+    average : float or array of floats
+        Result of averaging. The result is scalar if a is one-dimensional.
+        Otherwise the result is an array containing averages for every location.
+
+    """
+    # assert that a is a masked array
+    if isinstance(a, np.ma.MaskedArray):
+        d = a.data
+        m = a.mask
+        if not isinstance(m, np.ndarray):
+            m = np.empty(a.shape, dtype=bool)
+            m[:] = a.mask
+    else:
+        d = a
+        m = np.zeros(a.shape, dtype=bool)
+
+    # look for missing values, infs and nans
+    l_invalid = np.logical_or(np.logical_or(m, np.isinf(d)), np.isnan(d))
+
+    # compute mean value of all valid values per location
+    average1d = lambda x,l : \
+        if_all_invalid_use if np.all(l) else average_respecting_bounds(
+        x[np.logical_not(l)], lower_bound, lower_threshold,
+        upper_bound, upper_threshold)
+    space_shape = a.shape[1:]
+    if len(space_shape):
+        average = np.empty(space_shape, dtype=float)
+        for i in np.ndindex(space_shape): 
+            j = (slice(None, None),) + i
+            average[i] = average1d(d[j], l_invalid[j])
+    else:
+        average = average1d(d, l_invalid)
+
+    return average
+
+
+
+def sample_invalid_values(a, seed=None, if_all_invalid_use=np.nan, warn=False):
     """
     Replaces missing/inf/nan values in a by if_all_invalid_use or by sampling
-    from all other values.
+    from all other values from the same location.
 
     Parameters
     ----------
@@ -1226,7 +1388,7 @@ def sample_invalid_values(a, seed=None, if_all_invalid_use=None, warn=False):
     seed : int, optional
         Used to seed the random number generator before replacing invalid
         values.
-    if_all_invalid_use : float, optional
+    if_all_invalid_use : float or array of floats, optional
         Used as replacement of invalid values if no valid values can be found.
     warn : boolean, optional
         Warn user about replacements being made.
@@ -1239,29 +1401,27 @@ def sample_invalid_values(a, seed=None, if_all_invalid_use=None, warn=False):
         Boolean array indicating indices of replacement.
 
     """
-    # assert that a is a 1d masked array
+    ## # make sure types and shapes of a and if_all_invalid_use fit
+    ## space_shape = a.shape[1:]
+    ## if len(space_shape):
+    ##     msg = 'expected if_all_invalid_use to be an array'
+    ##     assert isinstance(if_all_invalid_use, np.ndarray), msg
+    ##     msg = 'shapes of a and if_all_invalid_use do not fit'
+    ##     assert if_all_invalid_use.shape == space_shape, msg
+    ## else:
+    ##     msg = 'expected if_all_invalid_use to be scalar'
+    ##     assert np.isscalar(if_all_invalid_use), msg
+
+    # assert that a is a masked array
     if isinstance(a, np.ma.MaskedArray):
         d = a.data
         m = a.mask
+        if not isinstance(m, np.ndarray):
+            m = np.empty(a.shape, dtype=bool)
+            m[:] = a.mask
     else:
         d = a
         m = np.zeros(a.shape, dtype=bool)
-    
-    # handle simple cases of no or only missing values
-    if not isinstance(m, np.ndarray):
-        if m:
-            msg = 'found only missing value(s) in a'
-            if if_all_invalid_use is None:
-                raise ValueError(msg)
-            else:
-                msg += ': setting them all to %f'%if_all_invalid_use
-                if warn: warnings.warn(msg)
-                l_invalid = np.ones(m.shape, dtype=bool)
-                d_replaced = np.empty_like(d)
-                d_replaced[:] = if_all_invalid_use
-                return d_replaced, l_invalid
-        else:
-            return d, None
     
     # look for missing values
     l_invalid = m
@@ -1291,21 +1451,65 @@ def sample_invalid_values(a, seed=None, if_all_invalid_use=None, warn=False):
     if not n_invalid:
         return d, None
     
-    # are there any valid values in a?
-    if np.all(l_invalid):
-        msg = 'found no valid value(s) in a'
-        if if_all_invalid_use is None:
+    # otherwise replace invalid values location by location
+    if len(space_shape):
+        d_replaced = np.empty_like(d)
+        for i in np.ndindex(space_shape): 
+            j = (slice(None, None),) + i
+            d_replaced[j] = sample_invalid_values_core(
+                d[j], seed, if_all_invalid_use[i], warn, l_invalid[j])
+    else:
+        d_replaced = sample_invalid_values_core(
+            d, seed, if_all_invalid_use, warn, l_invalid)
+
+    return d_replaced, l_invalid
+
+
+
+def sample_invalid_values_core(d, seed, if_all_invalid_use, warn, l_invalid):
+    """
+    Replaces missing/inf/nan values in d by if_all_invalid_use or by sampling
+    from all other values.
+
+    Parameters
+    ----------
+    d : array
+        Containing values to be replaced.
+    seed : int
+        Used to seed the random number generator before sampling.
+    if_all_invalid_use : float
+        Used as replacement of invalid values if no valid values can be found.
+    warn : boolean
+        Warn user about replacements being made.
+    l_invalid : array
+        Indicating which values in a are invalid and hence to be replaced.
+
+    Returns
+    -------
+    d_replaced : array
+        Result of invalid data replacement.
+
+    """
+    # return d if all values in d are valid
+    n_invalid = np.sum(l_invalid)
+    if not n_invalid:
+        return d
+
+    # no sampling possible if there are no valid values in d
+    n_valid = d.size - n_invalid
+    if not n_valid:
+        msg = 'found no valid value(s)'
+        if np.isnan(if_all_invalid_use):
             raise ValueError(msg)
         else:
             msg += ': setting them all to %f'%if_all_invalid_use
             if warn: warnings.warn(msg)
             d_replaced = np.empty_like(d)
             d_replaced[:] = if_all_invalid_use
-            return d_replaced, l_invalid
+            return d_replaced
 
     # replace invalid values by sampling from valid values
     # shuffle sampled values to mimic trend in valid values
-    n_valid = a.size - n_invalid
     msg = 'replacing %i invalid value(s)'%n_invalid + \
     ' by sampling from %i valid value(s)'%n_valid
     if warn: warnings.warn(msg)
@@ -1324,8 +1528,7 @@ def sample_invalid_values(a, seed=None, if_all_invalid_use=None, warn=False):
         i_sampled = np.where(l_invalid)[0]
         r_sampled = np.argsort(np.argsort(r_valid_interp1d(i_sampled)))
         d_replaced[l_invalid] = np.sort(d_sampled)[r_sampled]
-
-    return d_replaced, l_invalid
+    return d_replaced
 
 
 
