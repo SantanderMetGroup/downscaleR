@@ -85,6 +85,8 @@ isimip3 <- function(o, p, s,
                   indMonth.s <- which(meses.s == meses.name[m])
                   smap[indMonth.s] <- auxMonths[[m]][[1]]
             }
+      } else if (!any(!is.na(o)) | !any(!is.na(p))){
+           smap[] <- NA
       }
       # else{
       #       print("No valid values have been found, so the raw un-corrected data is returned.") 
@@ -92,3 +94,4 @@ isimip3 <- function(o, p, s,
       return(smap)
 }
 #end  
+
