@@ -58,6 +58,8 @@
 #' @param isimip3.args Named list of arguments passed to function \code{\link{isimip3}}. 
 #' @param join.members Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
 #'  or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).
+#' @param return.raw If TRUE, the nearest raw data to the observational reference is returned as the "var" dimension.
+#' (Default to FALSE).  
 #' @template templateParallelParams
 #'  
 #' @details
@@ -163,7 +165,7 @@
 #'  
 #'  The precipitation subroutines are switched-on when the variable name of the grid 
 #'  (i.e., the value returned by \code{gridData$Variable$varName}) is one of the following: 
-#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (\code{\link[loadeR]{C4R.vocabulary}}), \code{"precipitation"} or \code{"precip"}.
+#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (\code{\link[loadeR.UDG]{C4R.vocabulary}}), \code{"precipitation"} or \code{"precip"}.
 #'  Thus, caution must be taken to ensure that the correct bias correction is being undertaken when dealing with
 #'  non-standard variables.
 #'     
@@ -286,6 +288,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            detrend = TRUE,
                            isimip3.args = NULL,
                            join.members = FALSE,
+                           return.raw = FALSE,
                            parallel = FALSE,
                            max.ncores = 16,
                            ncores = NULL) {
@@ -329,6 +332,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                              join.members = join.members,
                                              detrend = detrend,
                                              isimip3.args = isimip3.args,
+                                             return.raw = return.raw,
                                              parallel = parallel,
                                              max.ncores = max.ncores,
                                              ncores = ncores)
@@ -382,6 +386,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                          theta = theta, join.members = join.members,
                                          detrend = detrend,
                                          isimip3.args = isimip3.args,
+                                         return.raw = return.raw,
                                          parallel = parallel,
                                          max.ncores = max.ncores,
                                          ncores = ncores)
@@ -419,6 +424,7 @@ biasCorrectionXD <- function(y, x, newdata,
                              join.members,
                              detrend,
                              isimip3.args,
+                             return.raw = FALSE,
                              parallel = FALSE,
                              max.ncores = 16,
                              ncores = NULL) {
@@ -546,6 +552,10 @@ biasCorrectionXD <- function(y, x, newdata,
       } else {
             bc$InitializationDates <- sim$InitializationDates
             bc$Members <- sim$Members
+      }
+      if (return.raw) {
+            sim[["Variable"]][["varName"]] <- paste0(bc[["Variable"]][["varName"]], "_raw")
+            bc <- makeMultiGrid(bc, sim)
       }
       pred <- newdata <- sim <- y <- NULL
       attr(bc$Variable, "correction") <- method
