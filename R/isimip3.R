@@ -96,7 +96,7 @@ isimip3 <- function(o, p, s,
                                 sim_fut = matrix(years.s[indMonth.s], ncol = length(indMonth.s), nrow = 1))
                   l <- adjust_bias_one_month(data, years, long_term_mean, lower_bound = lower_bound, lower_threshold= lower_threshold, upper_bound= upper_bound, upper_threshold= upper_threshold,
                                              randomization_seed = randomization_seed, detrend=detrend, rotation_matrices= rotation_matrices, n_quantiles=as.integer(n_quantiles), distribution= distribution,
-                                             trend_preservation =trend_preservation, adjust_p_values=adjust_p_values, if_all_invalid_use= if_all_invalid_use, invalid_value_warnings=invalid_value_warnings)
+                                             trend_preservation =trend_preservation, adjust_p_values=adjust_p_values, invalid_value_warnings=invalid_value_warnings)
             })
             for (m in c(1:length(meses.name))) {
                   indMonth.s <- which(meses.s == meses.name[m])
