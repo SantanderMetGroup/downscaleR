@@ -13,6 +13,9 @@
 #' @param s A vector containing the simulated climate for the variable used in \code{p}, but considering the test period.
 #' @param dates List containing the dates corresponding to Observations (obs_hist), training period (sim_hist) and test period (sim_fut). 
 #'        Every array represents the years of the time steps of the time series data. Used for detrending.
+#' @param long_term_mean : dict of lists with keys 'obs_hist', 'sim_hist', 'sim_fut'
+#'        Every value in every list represents the average of all valid values in
+#'        the complete time series for one climate variable.
 #' @param lower_bound : list of floats, optional. Lower bounds of values in x_obs_hist, x_sim_hist, and x_sim_fut.
 #' @param lower_threshold : list of floats, optional. Lower thresholds of values in x_obs_hist, x_sim_hist, and x_sim_fut. 
 #'        All values below this threshold are replaced by random numbers between lower_bound and lower_threshold before bias adjustment.
@@ -39,7 +42,8 @@
 #' @author S. Herrera and M. Iturbide
 
 isimip3 <- function(o, p, s,
-                    dates,
+                    dates, 
+                    long_term_mean = NULL,
                     lower_bound = c(NULL),
                     lower_threshold = c(NULL),
                     upper_bound = c(NULL),
@@ -53,8 +57,24 @@ isimip3 <- function(o, p, s,
                     adjust_p_values = array(data = FALSE, dim = 1),
                     if_all_invalid_use = c(NULL),
                     invalid_value_warnings = FALSE) {
+      
       smap <- s
       if (any(!is.na(o)) & any(!is.na(p)) & any(!is.na(s))) {
+            ## source python routines
+            lf <- list.files(file.path(find.package("downscaleR")), pattern = "\\.py$", recursive = TRUE, full.names = TRUE)
+            sapply(lf, source_python, .GlobalEnv)
+            if (is.null(long_term_mean)) {
+                  lt.o <- average_valid_values(array(o), if_all_invalid_use = if_all_invalid_use,
+                                               lower_bound=lower_bound, lower_threshold = lower_threshold,
+                                               upper_bound=upper_bound, upper_threshold = upper_threshold)
+                  lt.p <- average_valid_values(array(p), if_all_invalid_use = if_all_invalid_use,
+                                               lower_bound=lower_bound, lower_threshold = lower_threshold,
+                                               upper_bound=upper_bound, upper_threshold = upper_threshold)
+                  lt.s <- average_valid_values(array(s), if_all_invalid_use = if_all_invalid_use,
+                                               lower_bound=lower_bound, lower_threshold = lower_threshold,
+                                               upper_bound=upper_bound, upper_threshold = upper_threshold)
+                  long_term_mean <- list(obs_hist = lt.o, sim_hist = lt.p, sim_fut = lt.s)
+            }
             meses.o <- as.numeric(substr(dates$obs_hist, 6, 7))
             meses.p <- as.numeric(substr(dates$sim_hist, 6, 7))
             meses.s <- as.numeric(substr(dates$sim_fut, 6, 7))
@@ -62,9 +82,6 @@ isimip3 <- function(o, p, s,
             years.o <- as.numeric(substr(dates$obs_hist, 1, 4))
             years.p <- as.numeric(substr(dates$sim_hist, 1, 4))
             years.s <- as.numeric(substr(dates$sim_fut, 1, 4))
-            ## source python routines
-            lf <- list.files(file.path(find.package("downscaleR")), pattern = "\\.py$", recursive = TRUE, full.names = TRUE)
-            sapply(lf, source_python, .GlobalEnv)
             
             ## Loop in months:
             auxMonths <- lapply(1:length(meses.name), function(m) {
@@ -77,7 +94,7 @@ isimip3 <- function(o, p, s,
                   years <- dict(obs_hist = matrix(years.o[indMonth.o], ncol = length(indMonth.o), nrow = 1),
                                 sim_hist = matrix(years.p[indMonth.p], ncol = length(indMonth.p), nrow = 1),
                                 sim_fut = matrix(years.s[indMonth.s], ncol = length(indMonth.s), nrow = 1))
-                  l <- adjust_bias_one_month(data, years, lower_bound = lower_bound, lower_threshold= lower_threshold, upper_bound= upper_bound, upper_threshold= upper_threshold,
+                  l <- adjust_bias_one_month(data, years, long_term_mean, lower_bound = lower_bound, lower_threshold= lower_threshold, upper_bound= upper_bound, upper_threshold= upper_threshold,
                                              randomization_seed = randomization_seed, detrend=detrend, rotation_matrices= rotation_matrices, n_quantiles=as.integer(n_quantiles), distribution= distribution,
                                              trend_preservation =trend_preservation, adjust_p_values=adjust_p_values, if_all_invalid_use= if_all_invalid_use, invalid_value_warnings=invalid_value_warnings)
             })
@@ -85,13 +102,10 @@ isimip3 <- function(o, p, s,
                   indMonth.s <- which(meses.s == meses.name[m])
                   smap[indMonth.s] <- auxMonths[[m]][[1]]
             }
-      } else if (!any(!is.na(o)) | !any(!is.na(p))){
-           smap[] <- NA
       }
       # else{
       #       print("No valid values have been found, so the raw un-corrected data is returned.") 
       # }
       return(smap)
 }
-#end  
-
+#end
