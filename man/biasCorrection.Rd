@@ -24,6 +24,7 @@ biasCorrection(
   isimip3.args = NULL,
   join.members = FALSE,
   return.raw = FALSE,
+  interpGrid.args = list(),
   parallel = FALSE,
   max.ncores = 16,
   ncores = NULL
@@ -97,6 +98,9 @@ or joined before performing the correction (\code{TRUE}). It applies to multimem
 
 \item{return.raw}{If TRUE, the nearest raw data to the observational reference is returned as the "var" dimension.
 (Default to FALSE).}
+
+\item{interpGrid.args}{Optional list fo the arguments passed to interpGrid. Configures the type of interpolation 
+(Default "nearest") performed before bias adjustment.}
 
 \item{parallel}{Logical. Should parallel execution be used?}
 

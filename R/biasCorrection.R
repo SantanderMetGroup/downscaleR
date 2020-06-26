@@ -60,6 +60,8 @@
 #'  or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).
 #' @param return.raw If TRUE, the nearest raw data to the observational reference is returned as the "var" dimension.
 #' (Default to FALSE).  
+#' @param interpGrid.args Optional list fo the arguments passed to interpGrid. Configures the type of interpolation 
+#' (Default "nearest") performed before bias adjustment.
 #' @template templateParallelParams
 #'  
 #' @details
@@ -289,6 +291,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            isimip3.args = NULL,
                            join.members = FALSE,
                            return.raw = FALSE,
+                           interpGrid.args = list(),
                            parallel = FALSE,
                            max.ncores = 16,
                            ncores = NULL) {
@@ -333,6 +336,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                              detrend = detrend,
                                              isimip3.args = isimip3.args,
                                              return.raw = return.raw,
+                                             interpGrid.args = interpGrid.args,
                                              parallel = parallel,
                                              max.ncores = max.ncores,
                                              ncores = ncores)
@@ -387,6 +391,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                          detrend = detrend,
                                          isimip3.args = isimip3.args,
                                          return.raw = return.raw,
+                                         interpGrid.args = interpGrid.args,
                                          parallel = parallel,
                                          max.ncores = max.ncores,
                                          ncores = ncores)
@@ -425,6 +430,7 @@ biasCorrectionXD <- function(y, x, newdata,
                              detrend,
                              isimip3.args,
                              return.raw = FALSE,
+                             interpGrid.args = list(),
                              parallel = FALSE,
                              max.ncores = 16,
                              ncores = NULL) {
@@ -439,8 +445,13 @@ biasCorrectionXD <- function(y, x, newdata,
       station <- FALSE
       if ("loc" %in% getDim(y)) station <- TRUE
       xy <- y$xyCoords
-      suppressWarnings(suppressMessages(pred <- interpGrid(x, getGrid(y), force.non.overlapping = TRUE)))
-      suppressWarnings(suppressMessages(sim <- interpGrid(newdata, getGrid(y), force.non.overlapping = TRUE)))
+      # suppressWarnings(suppressMessages(pred <- interpGrid(x, getGrid(y), force.non.overlapping = TRUE)))
+      # suppressWarnings(suppressMessages(sim <- interpGrid(newdata, getGrid(y), force.non.overlapping = TRUE)))
+      interpGrid.args[["new.coordinates"]] <- getGrid(y)
+      interpGrid.args[["grid"]] <- x
+      suppressWarnings(suppressMessages(pred <- do.call("interpGrid", interpGrid.args)))
+      interpGrid.args[["grid"]] <- newdata
+      suppressWarnings(suppressMessages(sim <- do.call("interpGrid", interpGrid.args)))
       delta.method <- method == "delta"
       precip <- precipitation
       message("[", Sys.time(), "] Argument precipitation is set as ", precip, ", please ensure that this matches your data.")
