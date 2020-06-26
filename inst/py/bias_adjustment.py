@@ -495,7 +495,7 @@ def adjust_bias_one_month(
     x = {}
     for key, data_list in data.items():
         x[key] = sample_invalid_values(data_list, randomization_seed,
-            invalid_value_warnings)[0]
+            long_term_mean[key], invalid_value_warnings)[0]
 ##     for key, data_list in data.items():
 ##         x[key] = [sample_invalid_values(d, randomization_seed,
 ##             long_term_mean[key][i], invalid_value_warnings)[0]
