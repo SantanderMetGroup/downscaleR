@@ -1451,16 +1451,16 @@ def sample_invalid_values(a, seed=None, if_all_invalid_use=np.nan, warn=False):
     if not n_invalid:
         return d, None
     
-    # otherwise replace invalid values location by location
-    if len(space_shape):
-        d_replaced = np.empty_like(d)
-        for i in np.ndindex(space_shape): 
-            j = (slice(None, None),) + i
-            d_replaced[j] = sample_invalid_values_core(
-                d[j], seed, if_all_invalid_use[i], warn, l_invalid[j])
-    else:
-        d_replaced = sample_invalid_values_core(
-            d, seed, if_all_invalid_use, warn, l_invalid)
+    ## # otherwise replace invalid values location by location
+    ## if len(space_shape):
+    ##     d_replaced = np.empty_like(d)
+    ##     for i in np.ndindex(space_shape): 
+    ##         j = (slice(None, None),) + i
+    ##         d_replaced[j] = sample_invalid_values_core(
+    ##             d[j], seed, if_all_invalid_use[i], warn, l_invalid[j])
+    ## else:
+    d_replaced = sample_invalid_values_core(
+        d, seed, if_all_invalid_use, warn, l_invalid)
 
     return d_replaced, l_invalid
 
