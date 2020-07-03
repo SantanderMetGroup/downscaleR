@@ -567,6 +567,9 @@ biasCorrectionXD <- function(y, x, newdata,
       if (return.raw) {
             sim[["Variable"]][["varName"]] <- paste0(bc[["Variable"]][["varName"]], "_raw")
             bc <- makeMultiGrid(bc, sim)
+            if (station){
+                bc <- redim(bc, loc = TRUE)
+            }
       }
       pred <- newdata <- sim <- y <- NULL
       attr(bc$Variable, "correction") <- method
