@@ -520,7 +520,8 @@ def subtract_or_add_trend(x, years, trend=None):
     if np.any(trend):
         y = np.empty_like(x)
         for i, year in enumerate(unique_years):
-            is_year = years == year
+            ## is_year = years == year
+            is_year = np.reshape(years == year, y.shape)
             y[is_year] = x[is_year] - trend[i]
     else:
         y = x.copy()
