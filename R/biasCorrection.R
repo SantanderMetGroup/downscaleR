@@ -340,6 +340,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                              parallel = parallel,
                                              max.ncores = max.ncores,
                                              ncores = ncores)
+                  output$Data[which(is.infinite(output$Data))] <- NA
             } else {
                   if (nwdatamssg) {
                         message("'newdata' will be ignored for cross-validation")
