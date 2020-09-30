@@ -9,6 +9,7 @@ isimip3(
   p,
   s,
   dates,
+  long_term_mean = NULL,
   lower_bound = c(NULL),
   lower_threshold = c(NULL),
   upper_bound = c(NULL),
@@ -33,6 +34,10 @@ isimip3(
 
 \item{dates}{List containing the dates corresponding to Observations (obs_hist), training period (sim_hist) and test period (sim_fut). 
 Every array represents the years of the time steps of the time series data. Used for detrending.}
+
+\item{long_term_mean}{: dict of lists with keys 'obs_hist', 'sim_hist', 'sim_fut'
+Every value in every list represents the average of all valid values in
+the complete time series for one climate variable.}
 
 \item{lower_bound}{: list of floats, optional. Lower bounds of values in x_obs_hist, x_sim_hist, and x_sim_fut.}
 

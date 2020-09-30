@@ -127,7 +127,7 @@ import warnings
 import numpy as np
 import dask.array as da
 import scipy.stats as sps
-## import utility_functions as uf
+# import utility_functions as uf
 import multiprocessing as mp
 from optparse import OptionParser
 from functools import partial
@@ -175,7 +175,7 @@ def initializer(l, m, y, d):
 
 def map_quantiles_parametric_trend_preserving(
         x_obs_hist, x_sim_hist, x_sim_fut, 
-        distribution='normal', trend_preservation='additive',
+        distribution=None, trend_preservation='additive',
         adjust_p_values=False,
         lower_bound=None, lower_threshold=None,
         upper_bound=None, upper_threshold=None,
@@ -198,7 +198,7 @@ def map_quantiles_parametric_trend_preserving(
         application time period.
     distribution : str, optional
         Kind of distribution used for parametric quantile mapping:
-        ['normal', 'weibull', 'gamma', 'beta', 'rice'].
+        [None, 'normal', 'weibull', 'gamma', 'beta', 'rice'].
     trend_preservation : str, optional
         Kind of trend preservation used for non-parametric quantile mapping:
         ['additive', 'multiplicative', 'mixed', 'bounded'].
@@ -236,49 +236,63 @@ def map_quantiles_parametric_trend_preserving(
     lower = lower_bound is not None and lower_threshold is not None
     upper = upper_bound is not None and upper_threshold is not None
 
-    # determine extreme value probabilities of future obs
-    if lower:
-        p_lower_obs_hist = np.mean(x_obs_hist < lower_threshold)
-        p_lower_sim_hist = np.mean(x_sim_hist < lower_threshold)
-        p_lower_sim_fut = np.mean(x_sim_fut < lower_threshold)
-        p_lower_target = ccs_transfer_sim2obs(
-            p_lower_obs_hist, p_lower_sim_hist, p_lower_sim_fut)
-    if upper:
-        p_upper_obs_hist = np.mean(x_obs_hist > upper_threshold)
-        p_upper_sim_hist = np.mean(x_sim_hist > upper_threshold)
-        p_upper_sim_fut = np.mean(x_sim_fut > upper_threshold)
-        p_upper_target = ccs_transfer_sim2obs(
-            p_upper_obs_hist, p_upper_sim_hist, p_upper_sim_fut)
-    if lower and upper:
-        p_lower_or_upper_target = p_lower_target + p_upper_target
-        if p_lower_or_upper_target > 1 + 1e-10:
-            msg = 'sum of p_lower_target and p_upper_target exceeds one'
-            warnings.warn(msg)
-            p_lower_target /= p_lower_or_upper_target
-            p_upper_target /= p_lower_or_upper_target
-
     # use augmented quantile delta mapping to transfer the simulated
-    # climate change signal to the historical observation
-    x_target = map_quantiles_non_parametric_trend_preserving(
-        x_obs_hist, x_sim_hist, x_sim_fut,
+    # climate change signal to the historical observation within thresholds
+    i_obs_hist = np.ones(x_obs_hist.shape, dtype=bool)
+    i_sim_hist = np.ones(x_sim_hist.shape, dtype=bool)
+    i_sim_fut = np.ones(x_sim_fut.shape, dtype=bool)
+    if lower:
+        i_obs_hist = np.logical_and(i_obs_hist, x_obs_hist > lower_threshold)
+        i_sim_hist = np.logical_and(i_sim_hist, x_sim_hist > lower_threshold)
+        i_sim_fut = np.logical_and(i_sim_fut, x_sim_fut > lower_threshold)
+    if upper:
+        i_obs_hist = np.logical_and(i_obs_hist, x_obs_hist < upper_threshold)
+        i_sim_hist = np.logical_and(i_sim_hist, x_sim_hist < upper_threshold)
+        i_sim_fut = np.logical_and(i_sim_fut, x_sim_fut < upper_threshold)
+    x_target = x_obs_hist.copy()
+    x_target[i_obs_hist] = \
+        map_quantiles_non_parametric_trend_preserving(
+        x_obs_hist[i_obs_hist], x_sim_hist[i_sim_hist], x_sim_fut[i_sim_fut],
         trend_preservation, n_quantiles,
         max_change_factor, max_adjustment_factor,
         True, lower_bound, upper_bound)
+
+    # determine extreme value probabilities of future obs
+    if lower and upper:
+        p_within = lambda x : np.mean(np.logical_and(
+            x > lower_threshold, x < upper_threshold))
+        p_within_target = ccs_transfer_sim2obs(
+            p_within(x_obs_hist), p_within(x_sim_hist), p_within(x_sim_fut))
+        arb = lambda x : average_respecting_bounds(x,
+            lower_bound, lower_threshold, upper_bound, upper_threshold)
+        m_target = ccs_transfer_sim2obs(
+            arb(x_obs_hist), arb(x_sim_hist), arb(x_sim_fut),
+            lower_bound, upper_bound)
+        x_target_within = x_target[np.logical_and(
+            x_target > lower_threshold, x_target < upper_threshold)]
+        m_within_target = np.mean(x_target_within) \
+            if x_target_within.size else m_target
+        p_upper_target = max(0., min(1. - p_within_target, 
+            ((m_target - lower_bound) - p_within_target * \
+            (m_within_target - lower_bound)) / (upper_bound - lower_bound)))
+        p_lower_target = max(0., min(1., 1. - p_within_target - p_upper_target))
+    elif lower:
+        p_lower = lambda x : np.mean(x <= lower_threshold)
+        p_lower_target = ccs_transfer_sim2obs(
+            p_lower(x_obs_hist), p_lower(x_sim_hist), p_lower(x_sim_fut))
+    elif upper:
+        p_upper = lambda x : np.mean(x >= upper_threshold)
+        p_upper_target = ccs_transfer_sim2obs(
+            p_upper(x_obs_hist), p_upper(x_sim_hist), p_upper(x_sim_fut))
 
     # do a parametric quantile mapping of the values within thresholds
     x_source = x_sim_fut
     y = x_source.copy()
 
     # determine indices of values to be mapped
-    i_fit_obs_hist = np.ones(x_obs_hist.shape, dtype=bool)
-    i_fit_sim_hist = np.ones(x_sim_hist.shape, dtype=bool)
-    i_fit_source = np.ones(x_source.shape, dtype=bool)
-    i_fit_target = np.ones(x_target.shape, dtype=bool)
+    i_source = np.ones(x_source.shape, dtype=bool)
+    i_target = np.ones(x_target.shape, dtype=bool)
     if lower:
-        i_fit_obs_hist = np.logical_and(i_fit_obs_hist,
-                                        x_obs_hist > lower_threshold)
-        i_fit_sim_hist = np.logical_and(i_fit_sim_hist,
-                                        x_sim_hist > lower_threshold)
         # make sure that lower_threshold_source < x_source 
         # because otherwise sps.beta.ppf does not work
         lower_threshold_source = \
@@ -286,14 +300,10 @@ def map_quantiles_parametric_trend_preserving(
             if p_lower_target > 0 else lower_bound if not upper else \
             lower_bound - 1e-10 * (upper_bound - lower_bound)
         i_lower = x_source <= lower_threshold_source
-        i_fit_source = np.logical_and(i_fit_source, np.logical_not(i_lower))
-        i_fit_target = np.logical_and(i_fit_target, x_target > lower_threshold)
+        i_source = np.logical_and(i_source, np.logical_not(i_lower))
+        i_target = np.logical_and(i_target, x_target > lower_threshold)
         y[i_lower] = lower_bound
     if upper:
-        i_fit_obs_hist = np.logical_and(i_fit_obs_hist,
-                                        x_obs_hist < upper_threshold)
-        i_fit_sim_hist = np.logical_and(i_fit_sim_hist,
-                                        x_sim_hist < upper_threshold)
         # make sure that x_source < upper_threshold_source
         # because otherwise sps.beta.ppf does not work
         upper_threshold_source = \
@@ -301,70 +311,86 @@ def map_quantiles_parametric_trend_preserving(
             if p_upper_target > 0 else upper_bound if not lower else \
             upper_bound + 1e-10 * (upper_bound - lower_bound)
         i_upper = x_source >= upper_threshold_source
-        i_fit_source = np.logical_and(i_fit_source, np.logical_not(i_upper))
-        i_fit_target = np.logical_and(i_fit_target, x_target < upper_threshold)
+        i_source = np.logical_and(i_source, np.logical_not(i_upper))
+        i_target = np.logical_and(i_target, x_target < upper_threshold)
         y[i_upper] = upper_bound
 
     # map quantiles
-    while np.any(i_fit_source):
-        x_source_fit = x_source[i_fit_source]
-        x_target_fit = x_target[i_fit_target]
+    while np.any(i_source):
+        # break here if target distributions cannot be determined
+        if not np.any(i_target):
+            msg = 'unable to do any quantile mapping' \
+                + ': leaving %i value(s) unadjusted'%np.sum(i_source)
+            warnings.warn(msg)
+            break
+
+        # use the within-threshold values of x_sim_fut for the source
+        # distribution fitting
+        x_source_fit = x_source[i_sim_fut]
+        x_target_fit = x_target[i_target]
+
+        # determine distribution parameters
         spsdotwhat = sps.norm if distribution == 'normal' else \
                      sps.weibull_min if distribution == 'weibull' else \
                      sps.gamma if distribution == 'gamma' else \
                      sps.beta if distribution == 'beta' else \
                      sps.rice if distribution == 'rice' else \
                      None
-
-        # fix location and scale parameters for fitting
-        floc = lower_threshold if lower else None
-        floc_source = lower_threshold_source if lower else None
-        fscale = upper_threshold - lower_threshold if lower and upper else None
-        fscale_source = upper_threshold_source - lower_threshold_source \
-                        if lower and upper else None
-
-        # because sps.rice.fit and sps.weibull_min.fit cannot handle fscale=None
-        if distribution in ['rice', 'weibull']:
-            fwords = {'floc': floc}
-            fwords_source = {'floc': floc_source}
+        if spsdotwhat is None:
+            # prepare non-parametric quantile mapping
+            x_source_map = x_source[i_source]
+            shape_loc_scale_source = None
+            shape_loc_scale_target = None
         else:
-            fwords = {'floc': floc, 'fscale': fscale}
-            fwords_source = {'floc': floc_source, 'fscale': fscale_source}
-
-        # fit distributions to x_source and x_target
-        shape_loc_scale_source = fit(spsdotwhat, x_source_fit, fwords_source)
-        shape_loc_scale_target = fit(spsdotwhat, x_target_fit, fwords)
-
-        # do non-parametric or no quantile mapping if fitting failed
-        if shape_loc_scale_source is None or shape_loc_scale_target is None:
-            if x_target_fit.size:
-                msg = 'unable to do parametric quantile mapping' \
-                    + ': doing non-parametric quantile mapping instead'
-                warnings.warn(msg)
-                p_zeroone = np.linspace(0., 1., n_quantiles + 1)
-                q_source_fit = percentile1d(x_source_fit, p_zeroone)
-                q_target_fit = percentile1d(x_target_fit, p_zeroone)
-                y[i_fit_source] = \
-                    map_quantiles_non_parametric_with_constant_extrapolation(
-                    x_source_fit, q_source_fit, q_target_fit)
-                break
+            # prepare parametric quantile mapping
+            if lower or upper:
+                # map the values in x_source to be quantile-mapped such that
+                # their empirical distribution matches the empirical
+                # distribution of the within-threshold values of x_sim_fut
+                x_source_map = map_quantiles_non_parametric_brute_force(
+                    x_source[i_source], x_source_fit)
             else:
-                msg = 'unable to do any quantile mapping' \
-                    + ': leaving %i value(s) unadjusted'%x_source_fit.size
-                warnings.warn(msg)
-                y[i_fit_source] = x_source_fit
-                break
+                x_source_map = x_source
+
+            # fix location and scale parameters for fitting
+            floc = lower_threshold if lower else None
+            fscale = upper_threshold - lower_threshold \
+                if lower and upper else None
+    
+            # because sps.rice.fit and sps.weibull_min.fit cannot handle
+            # fscale=None
+            if distribution in ['rice', 'weibull']:
+                fwords = {'floc': floc}
+            else:
+                fwords = {'floc': floc, 'fscale': fscale}
+    
+            # fit distributions to x_source and x_target
+            shape_loc_scale_source = fit(spsdotwhat, x_source_fit, fwords)
+            shape_loc_scale_target = fit(spsdotwhat, x_target_fit, fwords)
+
+        # do non-parametric quantile mapping if fitting failed
+        if shape_loc_scale_source is None or shape_loc_scale_target is None:
+            msg = 'unable to do parametric quantile mapping' \
+                + ': doing non-parametric quantile mapping instead'
+            if spsdotwhat is not None: warnings.warn(msg)
+            p_zeroone = np.linspace(0., 1., n_quantiles + 1)
+            q_source_fit = percentile1d(x_source_map, p_zeroone)
+            q_target_fit = percentile1d(x_target_fit, p_zeroone)
+            y[i_source] = \
+                map_quantiles_non_parametric_with_constant_extrapolation(
+                x_source_map, q_source_fit, q_target_fit)
+            break
 
         # compute source p-values
         limit_p_values = lambda p : np.maximum(p_value_eps,
                                     np.minimum(1-p_value_eps, p))
         p_source = limit_p_values(spsdotwhat.cdf(
-                   x_source_fit, *shape_loc_scale_source))
+                   x_source_map, *shape_loc_scale_source))
 
         # compute target p-values
         if adjust_p_values:
-            x_obs_hist_fit = x_obs_hist[i_fit_obs_hist]
-            x_sim_hist_fit = x_sim_hist[i_fit_sim_hist]
+            x_obs_hist_fit = x_obs_hist[i_obs_hist]
+            x_sim_hist_fit = x_sim_hist[i_sim_hist]
             shape_loc_scale_obs_hist = fit(spsdotwhat,
                                        x_obs_hist_fit, fwords)
             shape_loc_scale_sim_hist = fit(spsdotwhat,
@@ -385,7 +411,7 @@ def map_quantiles_parametric_trend_preserving(
             p_target = p_source
 
         # map quantiles
-        y[i_fit_source] = spsdotwhat.ppf(p_target, *shape_loc_scale_target)
+        y[i_source] = spsdotwhat.ppf(p_target, *shape_loc_scale_target)
         break
 
     return y
@@ -393,13 +419,13 @@ def map_quantiles_parametric_trend_preserving(
 
 
 def adjust_bias_one_month(
-        data, years,
+        data, years, long_term_mean,
         lower_bound=[None], lower_threshold=[None],
         upper_bound=[None], upper_threshold=[None],
         randomization_seed=None, detrend=[False], rotation_matrices=[],
-        n_quantiles=50, distribution=['normal'],
+        n_quantiles=50, distribution=[None],
         trend_preservation=['additive'], adjust_p_values=[False],
-        if_all_invalid_use=[None], invalid_value_warnings=False, **kwargs):
+        invalid_value_warnings=False, **kwargs):
     """
     1. Replaces invalid values in time series.
     2. Detrends time series if desired.
@@ -416,16 +442,19 @@ def adjust_bias_one_month(
     years : dict of arrays with keys 'obs_hist', 'sim_hist', 'sim_fut'
         Every array represents the years of the time steps of the time series
         data. Used for detrending.
+    long_term_mean : dict of lists with keys 'obs_hist', 'sim_hist', 'sim_fut'
+        Every value in every list represents the average of all valid values in
+        the complete time series for one climate variable.
     lower_bound : list of floats, optional
-        Lower bounds of values in x_obs_hist, x_sim_hist, and x_sim_fut.
+        Lower bounds of values in data.
     lower_threshold : list of floats, optional
-        Lower thresholds of values in x_obs_hist, x_sim_hist, and x_sim_fut.
+        Lower thresholds of values in data.
         All values below this threshold are replaced by random numbers between
         lower_bound and lower_threshold before bias adjustment.
     upper_bound : list of floats, optional
-        Upper bounds of values in x_obs_hist, x_sim_hist, and x_sim_fut.
+        Upper bounds of values in data.
     upper_threshold : list of floats, optional
-        Upper thresholds of values in x_obs_hist, x_sim_hist, and x_sim_fut.
+        Upper thresholds of values in data.
         All values above this threshold are replaced by random numbers between
         upper_threshold and upper_bound before bias adjustment.
     randomization_seed : int, optional
@@ -442,15 +471,12 @@ def adjust_bias_one_month(
         mapping.
     distribution : list of strs, optional
         Kind of distribution used for parametric quantile mapping:
-        ['normal', 'weibull', 'gamma', 'beta', 'rice'].
+        [None, 'normal', 'weibull', 'gamma', 'beta', 'rice'].
     trend_preservation : list of strs, optional
         Kind of trend preservation used for non-parametric quantile mapping:
         ['additive', 'multiplicative', 'mixed', 'bounded'].
     adjust_p_values : list of booleans, optional
         Adjust p-values for a perfect match in the reference period.
-    if_all_invalid_use : list of floats, optional
-        Used to replace invalid values if there are no valid values. An error
-        is raised if there are no valid values and this parameter is None.
     invalid_value_warnings : boolean, optional
         Raise user warnings when invalid values are replaced bafore bias
         adjustment.
@@ -468,28 +494,29 @@ def adjust_bias_one_month(
     # remove invalid values from masked arrays and store resulting numpy arrays
     x = {}
     for key, data_list in data.items():
-        x[key] = sample_invalid_values(data_list, randomization_seed, if_all_invalid_use, invalid_value_warnings)[0]
+        x[key] = sample_invalid_values(data_list, randomization_seed,
+            long_term_mean[key], invalid_value_warnings)[0]
 ##     for key, data_list in data.items():
 ##         x[key] = [sample_invalid_values(d, randomization_seed,
-##             if_all_invalid_use[i], invalid_value_warnings)[0]
+##             long_term_mean[key][i], invalid_value_warnings)[0]
 ##             for i, d in enumerate(data_list)]
 
     n_variables = len(detrend)
     trend_sim_fut = [None] * n_variables
     for key, y in years.items():
-        # subtract trend
-        if detrend[0]:
-            x[key], t = subtract_or_add_trend(x[key], y)
-            if key == 'sim_fut': trend_sim_fut[0] = t
-        else:
-            x[key] = x[key].copy()
-##         for i in range(n_variables):
-##             # subtract trend
-##             if detrend[i]:
-##                 x[key][i], t = subtract_or_add_trend(x[key][i], y)
-##                 if key == 'sim_fut': trend_sim_fut[i] = t
-##             else:
-##                 x[key][i] = x[key][i].copy()
+        ## for i in range(n_variables):
+            ## # subtract trend
+            ## if detrend[i]:
+            ##     x[key][i], t = subtract_or_add_trend(x[key][i], y)
+            ##     if key == 'sim_fut': trend_sim_fut[i] = t
+            ## else:
+            ##     x[key][i] = x[key][i].copy()
+            # subtract trend
+            if detrend[0]:
+                x[key], t = subtract_or_add_trend(x[key], y)
+                if key == 'sim_fut': trend_sim_fut[0] = t
+            else:
+                x[key] = x[key].copy()
         
             # randomize censored values
             # use low powers to ensure successful transformations of values
@@ -505,22 +532,23 @@ def adjust_bias_one_month(
         x['sim_fut'] = adjust_copula_mbcn(x, rotation_matrices, n_quantiles)
 
     x_sim_fut_ba = []
-    # adjust distribution and de-randomize censored values
-    y = map_quantiles_parametric_trend_preserving(
-        x['obs_hist'][0], x['sim_hist'][0], x['sim_fut'][0],
-        distribution[0], trend_preservation[0],
-        adjust_p_values[0],
-        lower_bound, lower_threshold,
-        upper_bound, upper_threshold,
-        n_quantiles, **kwargs)
+    for i in range(n_variables):
+        # adjust distribution and de-randomize censored values
+        y = map_quantiles_parametric_trend_preserving(
+            x['obs_hist'][0], x['sim_hist'][0], x['sim_fut'][0],
+            distribution[0], trend_preservation[0],
+            adjust_p_values[0],
+            lower_bound, lower_threshold,
+            upper_bound, upper_threshold,
+            n_quantiles, **kwargs)
     
-    # add trend
-    if detrend[0]:
-        y = subtract_or_add_trend(y, years['sim_fut'], trend_sim_fut[0])
+        # add trend
+        if detrend[0]:
+            y = subtract_or_add_trend(y, years['sim_fut'], trend_sim_fut[0])
     
-    # make sure there are no invalid values
-    assert_no_infs_or_nans(x['sim_fut'][0], y)
-    x_sim_fut_ba.append(y)
+        # make sure there are no invalid values
+        assert_no_infs_or_nans(x['sim_fut'][0], y)
+        x_sim_fut_ba.append(y)
 
     return x_sim_fut_ba
 
@@ -530,7 +558,9 @@ def adjust_bias_one_month(
 ##         i_loc, sim_fut_ba_path, space_shape,
 ##         months=[1,2,3,4,5,6,7,8,9,10,11,12],
 ##         halfwin_upper_bound_climatology=[0],
-##         fill_value=1.e20, **kwargs):
+##         lower_bound=[None], lower_threshold=[None],
+##         upper_bound=[None], upper_threshold=[None],
+##         if_all_invalid_use=[np.nan], fill_value=1.e20, **kwargs):
 ##     """
 ##     Adjusts biases in climate data representing one grid cell calendar month by
 ##     calendar month and stores result in one numpy array per variable.
@@ -554,6 +584,16 @@ def adjust_bias_one_month(
 ##         window length is set to halfwin_upper_bound_climatology * 2 + 1 time
 ##         steps. If halfwin_upper_bound_climatology == 0 then no rescaling is
 ##         done.
+##     lower_bound : list of floats, optional
+##         Lower bounds of values in data.
+##     lower_threshold : list of floats, optional
+##         Lower thresholds of values in data.
+##     upper_bound : list of floats, optional
+##         Upper bounds of values in data.
+##     upper_threshold : list of floats, optional
+##         Upper thresholds of values in data.
+##     if_all_invalid_use : list of floats, optional
+##         Used to replace invalid values if there are no valid values.
 ##     fill_value : float, optional
 ##         Value used to fill output array if there are only missing values in at
 ##         least one dataset.
@@ -632,6 +672,14 @@ def adjust_bias_one_month(
 ##             ubc_sim_fut_ba[i] = ccs_transfer_sim2obs_upper_bound_climatology(
 ##                 ubc['obs_hist'], ubc['sim_hist'], ubc['sim_fut'])
 ## 
+##     # compute mean value over all time steps for invalid value sampling
+##     long_term_mean = {}
+##     for key, data_list in data.items():
+##         long_term_mean[key] = [average_valid_values(d, if_all_invalid_use[i],
+##             lower_bound[i], lower_threshold[i],
+##             upper_bound[i], upper_threshold[i])
+##             for i, d in enumerate(data_list)]
+## 
 ##     # do bias adjustment calendar month by calendar month
 ##     data_this_month = {
 ##     'obs_hist': None_list.copy(),
@@ -651,8 +699,9 @@ def adjust_bias_one_month(
 ## 
 ##         # adjust biases and store result as list of masked arrays
 ##         sim_fut_ba_this_month = [np.ma.array(d, fill_value=fill_value)
-##             for d in adjust_bias_one_month(
-##             data_this_month, years_this_month, **kwargs)]
+##             for d in adjust_bias_one_month(data_this_month, years_this_month,
+##             long_term_mean, lower_bound, lower_threshold,
+##             upper_bound, upper_threshold, **kwargs)]
 ## 
 ##         # put bias-adjusted data into sim_fut_ba
 ##         m = month_numbers['sim_fut'] == month
@@ -883,10 +932,11 @@ def adjust_bias_one_month(
 ##         help=('seed used during randomization to generate reproducible results '
 ##               '(default: not specified)'))
 ##     parser.add_option('--distribution', action='store',
-##         type='string', dest='distribution', default='normal',
+##         type='string', dest='distribution', default='',
 ##         help=('comma-separated list of distribution families used for '
-##               'parametric quantile mapping (default: normal, alternatives: '
-##               'gamma, weibull, beta, rice)'))
+##               'parametric quantile mapping (default: not specified, which '
+##               'invokes non-parametric quantile mapping, alternatives: '
+##               'normal, gamma, weibull, beta, rice)'))
 ##     parser.add_option('-t', '--trend-preservation', action='store',
 ##         type='string', dest='trend_preservation', default='additive',
 ##         help=('comma-separated list of kinds of trend preservation (default: '
@@ -964,7 +1014,7 @@ def adjust_bias_one_month(
 ##     distribution = split(options.distribution, n_variables)
 ##     trend_preservation = split(options.trend_preservation, n_variables)
 ##     if_all_invalid_use = split(
-##         options.if_all_invalid_use, n_variables, float)
+##         options.if_all_invalid_use, n_variables, float, np.nan)
 ##     adjust_p_values = split(
 ##         options.adjust_p_values, n_variables, bool, False)
 ##     detrend = split(options.detrend, n_variables, bool, False)

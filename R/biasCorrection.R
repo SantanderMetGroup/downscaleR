@@ -28,8 +28,10 @@
 #' @param cross.val Logical (default to FALSE). Should cross-validation be performed? methods available are 
 #' leave-one-out ("loo") and k-fold ("kfold") on an annual basis. The default option ("none") does not 
 #' perform cross-validation.
-#' @param folds Only requiered if \code{cross.val = "kfold"}. A list of vectors, each containing the years 
-#' to be grouped in the corresponding fold.
+#' @param folds Only requiered if \code{cross.val = "kfold"}. Integer indicating the number of folds (see 
+#' argument \code{consecutive}) or a list of vectors, each containing the years to be grouped in the corresponding fold.
+#' @param consecutive Default is TRUE. Create folds containing consecutive years? Only used if cross.val = "kfold" and
+#' folds is an integer. If FALSE, each years will be sampled randomly to create the folds.
 #' @param wet.threshold The minimum value that is considered as a non-zero precipitation. Ignored when 
 #' \code{precipitation = FALSE}. Default to 1 (assuming mm). See details on bias correction for precipitation.
 #' @param window vector of length = 2 (or 1) specifying the time window width used to calibrate and the 
@@ -56,6 +58,10 @@
 #' @param isimip3.args Named list of arguments passed to function \code{\link{isimip3}}. 
 #' @param join.members Logical indicating whether members should be corrected independently (\code{FALSE}, the default),
 #'  or joined before performing the correction (\code{TRUE}). It applies to multimember grids only (otherwise ignored).
+#' @param return.raw If TRUE, the nearest raw data to the observational reference is returned as the "var" dimension.
+#' (Default to FALSE).  
+#' @param interpGrid.args Optional list fo the arguments passed to interpGrid. Configures the type of interpolation 
+#' (Default "nearest") performed before bias adjustment.
 #' @template templateParallelParams
 #'  
 #' @details
@@ -161,7 +167,7 @@
 #'  
 #'  The precipitation subroutines are switched-on when the variable name of the grid 
 #'  (i.e., the value returned by \code{gridData$Variable$varName}) is one of the following: 
-#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (\code{\link[loadeR]{C4R.vocabulary}}), \code{"precipitation"} or \code{"precip"}.
+#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (\code{\link[loadeR.UDG]{C4R.vocabulary}}), \code{"precipitation"} or \code{"precip"}.
 #'  Thus, caution must be taken to ensure that the correct bias correction is being undertaken when dealing with
 #'  non-standard variables.
 #'     
@@ -273,6 +279,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            method = c("delta", "scaling", "eqm", "pqm", "gpqm", "loci","dqm","qdm", "isimip3"),
                            cross.val = c("none", "loo", "kfold"),
                            folds = NULL,
+                           consecutive = TRUE,
                            window = NULL,
                            scaling.type = c("additive", "multiplicative"),
                            fitdistr.args = list(densfun = "normal"),
@@ -283,6 +290,8 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                            detrend = TRUE,
                            isimip3.args = NULL,
                            join.members = FALSE,
+                           return.raw = FALSE,
+                           interpGrid.args = list(),
                            parallel = FALSE,
                            max.ncores = 16,
                            ncores = NULL) {
@@ -326,9 +335,12 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                              join.members = join.members,
                                              detrend = detrend,
                                              isimip3.args = isimip3.args,
+                                             return.raw = return.raw,
+                                             interpGrid.args = interpGrid.args,
                                              parallel = parallel,
                                              max.ncores = max.ncores,
                                              ncores = ncores)
+                  output$Data[which(is.infinite(output$Data))] <- NA
             } else {
                   if (nwdatamssg) {
                         message("'newdata' will be ignored for cross-validation")
@@ -336,6 +348,16 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                   if (cross.val == "loo") {
                         years <- as.list(unique(getYearsAsINDEX(x)))
                   } else if (cross.val == "kfold" & !is.null(folds)) {
+                        if (!is.list(folds)) {
+                              avy <- unique(getYearsAsINDEX(y))
+                              ind <- rep(1:folds, length(avy)/folds, length.out = length(avy))
+                              ind <- if (consecutive) {
+                                    sort(ind) 
+                              } else {
+                                    sample(ind, length(ind))
+                              }
+                              folds <- split(avy, f = ind)
+                        }
                         years <- folds
                   } else if (cross.val == "kfold" & is.null(folds)) {
                         stop("Fold specification is missing, with no default")
@@ -369,18 +391,21 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
                                          theta = theta, join.members = join.members,
                                          detrend = detrend,
                                          isimip3.args = isimip3.args,
+                                         return.raw = return.raw,
+                                         interpGrid.args = interpGrid.args,
                                          parallel = parallel,
                                          max.ncores = max.ncores,
                                          ncores = ncores)
                   })
-                  al <- which(getDim(x) == "time")
-                  Data <- sapply(output.list, function(n) unname(n$Data), simplify = FALSE)
-                  bindata <- unname(do.call("abind", c(Data, along = al)))
-                  output <- output.list[[1]]
-                  dimNames <- attr(output$Data, "dimensions")
-                  output$Data <- bindata
-                  attr(output$Data, "dimensions") <- dimNames
-                  output$Dates <- x$Dates
+                  output <- redim(bindGrid(output.list, dimension = "time"), drop = TRUE)
+                  # al <- which(getDim(x) == "time")
+                  # Data <- sapply(output.list, function(n) unname(n$Data), simplify = FALSE)
+                  # bindata <- unname(do.call("abind", c(Data, along = al)))
+                  # output <- output.list[[1]]
+                  # dimNames <- attr(output$Data, "dimensions")
+                  # output$Data <- bindata
+                  # attr(output$Data, "dimensions") <- dimNames
+                  # output$Dates <- x$Dates
                   output$Data[which(is.infinite(output$Data))] <- NA
             }
       output <- subsetGrid(output, season = seas)
@@ -390,6 +415,7 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
 
 #' @keywords internal
 #' @importFrom transformeR redim subsetGrid getDim getWindowIndex interpGrid getGrid
+#' @importFrom abind adrop
 
 biasCorrectionXD <- function(y, x, newdata, 
                              precipitation, 
@@ -404,6 +430,8 @@ biasCorrectionXD <- function(y, x, newdata,
                              join.members,
                              detrend,
                              isimip3.args,
+                             return.raw = FALSE,
+                             interpGrid.args = list(),
                              parallel = FALSE,
                              max.ncores = 16,
                              ncores = NULL) {
@@ -411,13 +439,20 @@ biasCorrectionXD <- function(y, x, newdata,
             window <- NULL
             # warning("Only parameter isimip3.args is considered")
             if (is.null(isimip3.args)) isimip3.args <- list()
-            isimip3.args[["dates"]] <- list(obs_hist = y[["Dates"]][["start"]], sim_hist = x[["Dates"]][["start"]], sim_fut = newdata[["Dates"]][["start"]])
+            isimip3.args[["dates"]] <- list(obs_hist = y[["Dates"]][["start"]],
+                                            sim_hist = x[["Dates"]][["start"]],
+                                            sim_fut = newdata[["Dates"]][["start"]])
       }
       station <- FALSE
       if ("loc" %in% getDim(y)) station <- TRUE
       xy <- y$xyCoords
-      suppressWarnings(suppressMessages(pred <- interpGrid(x, getGrid(y))))
-      suppressWarnings(suppressMessages(sim <- interpGrid(newdata, getGrid(y))))
+      # suppressWarnings(suppressMessages(pred <- interpGrid(x, getGrid(y), force.non.overlapping = TRUE)))
+      # suppressWarnings(suppressMessages(sim <- interpGrid(newdata, getGrid(y), force.non.overlapping = TRUE)))
+      interpGrid.args[["new.coordinates"]] <- getGrid(y)
+      interpGrid.args[["grid"]] <- x
+      suppressWarnings(suppressMessages(pred <- do.call("interpGrid", interpGrid.args)))
+      interpGrid.args[["grid"]] <- newdata
+      suppressWarnings(suppressMessages(sim <- do.call("interpGrid", interpGrid.args)))
       delta.method <- method == "delta"
       precip <- precipitation
       message("[", Sys.time(), "] Argument precipitation is set as ", precip, ", please ensure that this matches your data.")
@@ -490,6 +525,7 @@ biasCorrectionXD <- function(y, x, newdata,
                         o <- lapply(seq_len(ncol(data[[1]])), function(i) data[[1]][,i,1])
                         p <- lapply(seq_len(ncol(data[[2]])), function(i) data[[2]][,i,1])
                         s <- lapply(seq_len(ncol(data[[3]])), function(i) data[[3]][,i,1])
+                        data <- NULL
                         mat <- biasCorrection1D(o, p, s,
                                                 method = method,
                                                 scaling.type = scaling.type,
@@ -509,9 +545,12 @@ biasCorrectionXD <- function(y, x, newdata,
                   })
                   unname(do.call("abind", list(memarr, along = 0)))
             })
+            yw <- pw <- sw <- NULL
             winarr[,,outind,,] <- unname(do.call("abind", list(runarr, along = 0))) 
+            runarr <- NULL
       }
       bc$Data <- unname(do.call("abind", list(winarr, along = 3)))
+      winarr <- NULL
       attr(bc$Data, "dimensions") <- attr(sim$Data, "dimensions")
       if (station) bc <- redim(bc, loc = TRUE)
       bc$Dates <- sim$Dates
@@ -526,6 +565,14 @@ biasCorrectionXD <- function(y, x, newdata,
             bc$InitializationDates <- sim$InitializationDates
             bc$Members <- sim$Members
       }
+      if (return.raw) {
+            sim[["Variable"]][["varName"]] <- paste0(bc[["Variable"]][["varName"]], "_raw")
+            bc <- makeMultiGrid(bc, sim)
+            if (station){
+                bc <- redim(bc, loc = TRUE)
+            }
+      }
+      pred <- newdata <- sim <- y <- NULL
       attr(bc$Variable, "correction") <- method
       bc <- redim(bc, drop = TRUE)
       message("[", Sys.time(), "] Done.")
@@ -1183,9 +1230,9 @@ recoverMemberDim <- function(plain.grid, bc.grid, newdata) {
 #' @param n.quantiles  Integer. Maximum number of quantiles to estimate. Default: same as data length.
 #' @details DQM method developed by A. Canon, from \url{https://github.com/pacificclimate/ClimDown}, \url{https://cran.r-project.org/web/packages/ClimDown/}.
 #'
-#'  See also Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
+#' @references Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
 #' @keywords internal
-#' @author A. Cannon (acannon@uvic.ca), A. Casanueva
+#' @author A. Cannon (acannon@@uvic.ca), A. Casanueva
 
 dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
       
@@ -1271,9 +1318,9 @@ dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
 #' @param n.quantiles  Integer. Maximum number of quantiles to estimate. Default: same as data length.
 #' @details QDM method developed by A. Canon, from \url{https://github.com/pacificclimate/ClimDown}, \url{https://cran.r-project.org/web/packages/ClimDown/}.
 #' 
-#' See also Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
+#' @references Cannon, A.J., S.R. Sobie, and T.Q. Murdock (2015) Bias Correction of GCM Precipitation by Quantile Mapping: How Well Do Methods Preserve Changes in Quantiles and Extremes?. J. Climate, 28, 6938–6959, \url{https://doi.org/10.1175/JCLI-D-14-00754.1}
 #' @keywords internal
-#' @author A. Cannon (acannon@uvic.ca), A. Casanueva
+#' @author A. Cannon (acannon@@uvic.ca), A. Casanueva
 
 qdm <- function(o, p, s, precip, pr.threshold, n.quantiles, jitter.factor=0.01){
       
@@ -1331,7 +1378,7 @@ qdm <- function(o, p, s, precip, pr.threshold, n.quantiles, jitter.factor=0.01){
 
 #     biasCorrection.chunk.R Bias correction methods
 #
-#     Copyright (C) 2017 Santander Meteorology Group (http://www.meteo.unican.es)
+#     Copyright (C) 2020 Santander Meteorology Group (http://www.meteo.unican.es)
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
