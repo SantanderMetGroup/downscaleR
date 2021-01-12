@@ -60,6 +60,7 @@ isimip3 <- function(o, p, s,
       
       smap <- s
       if (any(!is.na(o)) & any(!is.na(p)) & any(!is.na(s))) {
+            o[is.na(o)]<-NaN;  p[is.na(p)]<-NaN;  s[is.na(s)]<-NaN
             ## source python routines
             lf <- list.files(file.path(find.package("downscaleR")), pattern = "\\.py$", recursive = TRUE, full.names = TRUE)
             sapply(lf, source_python, .GlobalEnv)
@@ -75,7 +76,6 @@ isimip3 <- function(o, p, s,
                                                upper_bound=upper_bound, upper_threshold = upper_threshold)
                   long_term_mean <- list(obs_hist = lt.o, sim_hist = lt.p, sim_fut = lt.s)
             }
-            browser()
             meses.o <- as.numeric(substr(dates$obs_hist, 6, 7))
             meses.p <- as.numeric(substr(dates$sim_hist, 6, 7))
             meses.s <- as.numeric(substr(dates$sim_fut, 6, 7))
