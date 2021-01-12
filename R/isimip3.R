@@ -60,8 +60,7 @@ isimip3 <- function(o, p, s,
       
       smap <- s
       if (any(!is.na(o)) & any(!is.na(p)) & any(!is.na(s))) {
-            o[is.na(o)]<-NaN;  p[is.na(p)]<-NaN;  s[is.na(s)]<-NaN
-            ## source python routines
+             ## source python routines
             lf <- list.files(file.path(find.package("downscaleR")), pattern = "\\.py$", recursive = TRUE, full.names = TRUE)
             sapply(lf, source_python, .GlobalEnv)
             if (is.null(long_term_mean)) {
