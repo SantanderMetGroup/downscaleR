@@ -4,7 +4,7 @@
 \alias{downs.predict}
 \title{Switch to selected downscale method.}
 \usage{
-downs.predict(x, method, atomic_model)
+downs.predict(x, method, atomic_model, simulate)
 }
 \arguments{
 \item{x}{The grid data. Class: matrix.}
@@ -12,6 +12,8 @@ downs.predict(x, method, atomic_model)
 \item{method}{The method of the given model.}
 
 \item{atomic_model}{An object containing the statistical model of the selected method.}
+
+\item{simulate}{A logic value indicating whether we want to simulate or not based on the GLM distributional parameters.}
 }
 \value{
 A matrix with the predictions.

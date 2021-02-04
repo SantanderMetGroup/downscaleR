@@ -27,6 +27,7 @@
 #' essential information (model.verbose = FALSE)  or a more detailed information (model.verbose = TRUE, DEFAULT). This is
 #' recommended when you want to save memory. Only operates for GLM.
 #' @param predict A logic value. Should the prediction on the training set should be returned? Default is TRUE.
+#' @param simulate A logic value indicating whether we want to simulate or not based on the GLM distributional parameters when prediting on the train set. Only relevant when perdicting with a GLM. Default to FALSE. 
 #' @param ... Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 #' Everything concerning these parameters is explained in the section \code{Details}. 
 #' However, if wanted, the atomic functions can be seen here: \code{\link[downscaleR]{glm.train}} and \code{\link[deepnet]{nn.train}}.  
@@ -132,7 +133,7 @@
 #' # Plotting the results for station 5
 #' plot(y$Data[,5],model.analogs$pred$Data[,5], xlab = "obs", ylab = "pred")}
 
-downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, model.verbose = TRUE, predict = TRUE, ...) {
+downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, model.verbose = TRUE, predict = TRUE, simulate = FALSE, ...) {
   method <- match.arg(method, choices = c("analogs", "GLM", "NN"))
   if ( method == "GLM") {
     if (attr(obj, "nature") == "spatial+local") {
@@ -210,7 +211,7 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
       }
       atomic_model <- downs.train(xx, yy, method, model.verbose, ...)
     }
-    if (isTRUE(predict)) mat.p <- as.matrix(downs.predict(obj$x.global, method, atomic_model))
+    if (isTRUE(predict)) mat.p <- as.matrix(downs.predict(obj$x.global, method, atomic_model, simulate))
   }
   # Single-site
   else if (site == "single") {
@@ -247,7 +248,7 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
           if (is.null(atomic_model[[i]])) {
             mat.p[,i] <- rep(NA, 1, nrow(mat.p))
           } else {
-            mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])
+            mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]], simulate)
           }
         }
       }
@@ -283,7 +284,7 @@ downscaleTrain <- function(obj, method, condition = NULL, threshold = NULL, mode
           })
         }
         if (method == "analogs") {atomic_model[[i]]$dates$test <- getRefDates(obj$y)}
-        if (isTRUE(predict)) mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]])}
+        if (isTRUE(predict)) mat.p[,i] <- downs.predict(xx, method, atomic_model[[i]], simulate)}
     }
   }
   if (isTRUE(predict)) {

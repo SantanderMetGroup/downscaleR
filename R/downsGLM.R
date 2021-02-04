@@ -6,7 +6,6 @@
 #' @param x The grid data. Class: matrix.
 #' @param y The observations data. Class: matrix.
 #' @param fitting A string indicating the types of objective functions and how to fit the linear model.
-#' @param simulate A logic value indicating wether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma 
 #' @param model.verbose A logic value. Indicates wether the information concerning the model infered is limited to the 
 #' essential information (model.verbose = FALSE)  or a more detailed information (model.verbose = TRUE, DEFAULT). This is
 #' recommended when you want to save memory. Only operates for GLM.
@@ -56,7 +55,7 @@
 #' @author J. Bano-Medina
 #' @importFrom stats step formula
 #' @importFrom glmnet glmnet cv.glmnet
-glm.train <- function(x, y, fitting = NULL, simulate = FALSE, model.verbose = TRUE,
+glm.train <- function(x, y, fitting = NULL, model.verbose = TRUE,
                       stepwise.arg = NULL,
                       ...) {
   colnames(x) <- attr(x,"predictorNames")
@@ -125,7 +124,7 @@ glm.train <- function(x, y, fitting = NULL, simulate = FALSE, model.verbose = TR
   arglist <- list(...) 
   if (is.null(arglist$family)) {family = "gaussian"}
   else {family <- arglist$family}
-  return(list("weights" = weights, "info" = list("fitting" = fitting, "simulate" = simulate, "family" = family)))}
+  return(list("weights" = weights, "info" = list("fitting" = fitting, "family" = family)))}
 
 #' @title Donwscaling with a given generalized linear model (GLM).
 #' @description Donwscaling with a given generalized linear models (GLM) calculated in \code{\link[downscaleR]{downscalePredict}} via \code{\link[downscaleR]{glm.train}}.
@@ -133,11 +132,12 @@ glm.train <- function(x, y, fitting = NULL, simulate = FALSE, model.verbose = TR
 #' @param weights Object as returned from \code{\link[downscaleR]{glm.train}}
 #' @param info A list containing information of the experiment: the fitting, the family of the generalized linear model and 
 #' if it is deterministic or stochastic.
+#' @param simulate A logic value indicating whether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma 
 #' @return The predicted matrix.
 #' @details Predicts by using the base function \code{\link[stats]{predict}}. This function is internal and should not be used by the user.
 #' The user should use \code{\link[downscaleR]{downscalePredict}}.
 #' @author J. Bano-Medina
-glm.predict <- function(x, weights, info) {
+glm.predict <- function(x, weights, info, simulate) {
   colnames(x) <- attr(x,"predictorNames")
   if (is.null(info$fitting) || info$fitting == "stepwise") {
     df <- data.frame(x)
@@ -146,7 +146,7 @@ glm.predict <- function(x, weights, info) {
   else if (info$fitting == "L1" || info$fitting == "L2" || info$fitting == "L1L2" || info$fitting == "gLASSO") {
     pred <- drop(predict(weights,x,type = "response"))
   }
-  if (isTRUE(info$simulate)) {
+  if (isTRUE(simulate)) {
     if (info$family$family == "binomial") {
       rnd <- runif(length(pred), min = 0, max = 1)
       ind01 <- which(pred > rnd)

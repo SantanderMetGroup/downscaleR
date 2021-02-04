@@ -23,6 +23,7 @@
 #' @param newdata New datasets where to apply the model infered. It should be a list of objects as returned by \pkg{loadeR},
 #' containing the new dataset/s.
 #' @param method A string value. Type of transer function. Currently implemented options are \code{"analogs"}, \code{"GLM"} and \code{"NN"}.
+#' @param simulate A logic value indicating whether we want to simulate or not based on the GLM distributional parameters. Only relevant when perdicting with a GLM. Default to FALSE. 
 #' @param prepareData.args A list with the arguments of the \code{\link[downscaleR]{prepareData}} function. Please refer to \code{\link[downscaleR]{prepareData}} help for
 #' more details about this parameter.
 #' @param condition Inequality operator to be applied considering the given threshold.
@@ -44,7 +45,7 @@
 #' @author J. Bano-Medina
 #' @export
 
-downscaleChunk <- function(x, y, newdata,
+downscaleChunk <- function(x, y, newdata, simulate = FALSE,
                            method, ...,
                            prepareData.args = list("global.vars" = NULL, "combined.only" = TRUE, "spatial.predictors" = NULL, "local.predictors" = NULL, "extended.predictors" = NULL),
                            condition = NULL, threshold = NULL, predict = TRUE,
@@ -67,10 +68,12 @@ downscaleChunk <- function(x, y, newdata,
     xyT <- prepareData(x = x, y = y_chunk, global.vars = prepareData.args$global.vars, combined.only = prepareData.args$combined.only, spatial.predictors = prepareData.args$spatial.predictors, local.predictors = prepareData.args$local.predictors, extended.predictors = prepareData.args$extended.predictors)
     model <- downscaleTrain(xyT, method = method, condition = condition, threshold = threshold, predict = predict, model.verbose = FALSE, ...)
     
-    p <- lapply(newdata, function(zz) {
-      xyt <- prepareNewData(zz,xyT)
-      downscalePredict(newdata = xyt,model)
-    })
+    p <- lapply(simulate, function(sim) {
+      lapply(newdata, function(zz) {
+        xyt <- prepareNewData(zz,xyT)
+        downscalePredict(newdata = xyt,model, simulate = sim)
+      })
+    }) %>% unlist(recursive = FALSE)
     
     if (z < 10) {zn <- paste0("00",z)}
     else if (z < 100 & z >= 10) {zn <- paste0("0",z)}
