@@ -115,6 +115,12 @@ glm.train <- function(x, y, fitting = NULL, simulate = FALSE, model.verbose = TR
     weights$y <- NULL
     weights$model <- NULL
     weights$data <- NULL
+    
+    weights$residuals <- NULL
+    weights$R <- NULL
+    weights$rank <- NULL
+    weights$qr <- NULL
+    weights$weights <- NULL
   }
   arglist <- list(...) 
   if (is.null(arglist$family)) {family = "gaussian"}

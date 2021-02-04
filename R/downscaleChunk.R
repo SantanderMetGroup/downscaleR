@@ -65,7 +65,7 @@ downscaleChunk <- function(x, y, newdata,
     print(paste("Training chunk:",z,"out of",chunks))
     y_chunk <- subsetDimension(y,dimension = "lat", indices = z)
     xyT <- prepareData(x = x, y = y_chunk, global.vars = prepareData.args$global.vars, combined.only = prepareData.args$combined.only, spatial.predictors = prepareData.args$spatial.predictors, local.predictors = prepareData.args$local.predictors, extended.predictors = prepareData.args$extended.predictors)
-    model <- downscaleTrain(xyT, method, condition, threshold, predict, ...)
+    model <- downscaleTrain(xyT, method = method, condition = condition, threshold = threshold, predict = predict, model.verbose = FALSE, ...)
     
     p <- lapply(newdata, function(zz) {
       xyt <- prepareNewData(zz,xyT)
