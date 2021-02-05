@@ -107,18 +107,14 @@ glm.train <- function(x, y, fitting = NULL, model.verbose = TRUE,
   if (!isTRUE(model.verbose)) {
     weights$fitted.values <- NULL
     weights$effects <- NULL
-    # weights$qr$qr <- NULL
     weights$fitted.values <- NULL
     weights$linear.predictors <- NULL
     weights$prior.weights <- NULL
     weights$y <- NULL
     weights$model <- NULL
     weights$data <- NULL
-    
     weights$residuals <- NULL
     weights$R <- NULL
-    weights$rank <- NULL
-    weights$qr <- NULL
     weights$weights <- NULL
   }
   arglist <- list(...) 

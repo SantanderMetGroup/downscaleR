@@ -82,6 +82,7 @@
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' x <- subsetGrid(x, years = 1985:1995)
 #' # Loading predictands
+#' data("VALUE_Iberia_pr")
 #' y <- VALUE_Iberia_pr
 #' y <- getTemporalIntersection(obs = y, prd = x, "obs")
 #' x <- getTemporalIntersection(obs = y, prd = x, "prd")
