@@ -173,7 +173,8 @@ downscaleCV <- function(x, y, method,
         }
       }
       else{
-        y.bin  <- binaryGrid(y.prob, ref.obs = yT, ref.pred = model$pred)}
+        y.bin  <- binaryGrid(y.prob, ref.obs = yT, ref.pred = model$pred)
+      }
       out <- makeMultiGrid(list(y.prob,y.bin)) %>% redim(drop = TRUE)
       out$Variable$varName <- c("prob","bin")
     }
