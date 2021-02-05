@@ -8,6 +8,7 @@ downscaleChunk(
   x,
   y,
   newdata,
+  simulate = FALSE,
   method,
   ...,
   prepareData.args = list(global.vars = NULL, combined.only = TRUE, spatial.predictors
@@ -25,6 +26,8 @@ downscaleChunk(
 
 \item{newdata}{New datasets where to apply the model infered. It should be a list of objects as returned by \pkg{loadeR},
 containing the new dataset/s.}
+
+\item{simulate}{A logic value indicating whether we want to simulate or not based on the GLM distributional parameters. Only relevant when perdicting with a GLM. Default to FALSE.}
 
 \item{method}{A string value. Type of transer function. Currently implemented options are \code{"analogs"}, \code{"GLM"} and \code{"NN"}.}
 

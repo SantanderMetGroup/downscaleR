@@ -22,7 +22,7 @@
 #' @param x The input grid. It should be an object as returned by \pkg{loadeR}.
 #' @param newdata It should be an object as returned by \pkg{loadeR} and consistent with x. Default is newdata = x.
 #' @param method Downscaling method. Options are c = ("analogs","glm","lm"). Glm can only be set when downscaling precipitation. 
-#' @param simulate Logic. Options are \code{"FALSE"}, \code{"TRUE"}.
+#' @param simulate A logic value indicating whether we want to simulate or not based on the GLM distributional parameters. Only relevant when perdicting with a GLM. Default to FALSE. 
 #' @param n.analogs Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.
 #' @param sel.fun Applies only when \code{method="analogs"} (otherwise ignored). Criterion for the construction of analogs when several neigbours are chosen. Ignored when \code{n = 1}.
 #' Current values are \code{"mean"} (the default), \code{"wmean"},  \code{"max"},  \code{"min"} and  \code{"median"}.
@@ -135,16 +135,16 @@ downscale <- function(y,
     gridt <- prepareNewData(newdata,gridT)
     if (method == "analogs") {
       model <- downscaleTrain(gridT,method = "analogs", n.analogs = n.analogs, sel.fun = sel.fun)
-      yp <- downscalePredict(gridt,model)
+      yp <- downscalePredict(gridt,model, simulate = FALSE)
     }
     else if (method == "glm") {
       # Amounts
       model.reg <- downscaleTrain(gridT, method = "GLM", family = Gamma(link = "log"), condition = "GT", threshold = 0, simulate = simulate)
-      yp.reg <- downscalePredict(gridt,model.reg)
+      yp.reg <- downscalePredict(gridt,model.reg,simulate = simulate)
       # Ocurrence
       gridT <- prepareData(x,y.ocu,global.vars = getVarNames(x),spatial.predictors)
       model.ocu <- downscaleTrain(gridT,method = "GLM", family = binomial(link = "logit"), simulate = simulate)
-      yp.ocu <- downscalePredict(gridt,model.ocu)
+      yp.ocu <- downscalePredict(gridt,model.ocu,simulate = simulate)
       # Complete serie
       if (!isTRUE(simulate)) {
         yp.ocu <- binaryGrid(yp.ocu, ref.obs = y.ocu, ref.pred = yp.ocu)
@@ -157,7 +157,7 @@ downscale <- function(y,
     }
     else if (method == "lm") {
       model <- downscaleTrain(gridT,method = "GLM", family = "gaussian")
-      yp <- downscalePredict(gridt,model)
+      yp <- downscalePredict(gridt,model,simulate = simulate)
     }
   }  
   else {# Leave-one-out and cross-validation 

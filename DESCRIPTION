@@ -48,5 +48,5 @@ Encoding: UTF-8
 Description: Tools for climate data calibration (bias correction, quantile mapping etc.) and perfect-prog downscaling, as part of the climate4R framework (<http://meteo.unican.es/climate4R>). 
 License: GPL (>= 3)
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 VignetteBuilder: knitr
