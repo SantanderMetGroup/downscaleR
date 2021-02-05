@@ -96,9 +96,9 @@ downscaleChunk <- function(x, y, newdata, simulate = FALSE,
   for (i in 1:ini) {
     lf <- list.files("./", pattern = paste0("dataset",i), full.names = TRUE)
     chunk.list <- lapply(lf, function(x) get(load(x)))
-    pred[[i]] <- bindGrid(chunk.list, dimension = "lat")
+    pred[[i]] <- bindGrid(chunk.list, dimension = "lat") %>% redim(drop = TRUE)
     file.remove(lf)
   }
-  if (ini == 1) pred <- pred[[1]]
+  if (ini == 1) pred <- pred[[1]] %>% redim(drop = TRUE)
   return(pred)
 }
