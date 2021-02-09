@@ -82,7 +82,7 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
  * Avoid dependency from lubridate
  * Other minor changes and documentation updates
 
-## v3.3.2 (05 Feb 2021)
+## v3.3.2 (09 Feb 2021)
 
  * Minor internal changes in biasCorrection for improved memory usage
  * Other minor changes and documentation updates
