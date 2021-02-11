@@ -11,6 +11,7 @@ downscaleCV(
   sampling.strategy = "kfold.chronological",
   folds = 4,
   scaleGrid.args = NULL,
+  simulate = FALSE,
   prepareData.args = list(global.vars = NULL, combined.only = TRUE, spatial.predictors
     = NULL, local.predictors = NULL, extended.predictors = NULL),
   condition = NULL,
@@ -42,6 +43,8 @@ In case it is an integer value (the default, which is 4), it sets the number of 
 Alternatively, this argument can be passed as a list, each element of the list being a vector of years to be included in each fold (See examples).}
 
 \item{scaleGrid.args}{A list of the parameters related to scale grids. This parameter calls the function \code{\link[transformeR]{scaleGrid}}. See the function definition for details on the parameters accepted.}
+
+\item{simulate}{A logic value indicating whether we want to simulate or not based on the GLM distributional parameters. Only relevant when perdicting with a GLM. Default to FALSE.}
 
 \item{prepareData.args}{A list with the arguments of the \code{\link[downscaleR]{prepareData}} function. Please refer to \code{\link[downscaleR]{prepareData}} help for
 more details about this parameter.}
@@ -92,6 +95,7 @@ data(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 x <- subsetGrid(x, years = 1985:1995)
 # Loading predictands
+data("VALUE_Iberia_pr")
 y <- VALUE_Iberia_pr
 y <- getTemporalIntersection(obs = y, prd = x, "obs")
 x <- getTemporalIntersection(obs = y, prd = x, "prd")

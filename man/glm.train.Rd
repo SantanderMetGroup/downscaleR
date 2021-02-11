@@ -4,15 +4,7 @@
 \alias{glm.train}
 \title{Donwscaling with generalized linear models (GLM).}
 \usage{
-glm.train(
-  x,
-  y,
-  fitting = NULL,
-  simulate = FALSE,
-  model.verbose = TRUE,
-  stepwise.arg = NULL,
-  ...
-)
+glm.train(x, y, fitting = NULL, model.verbose = TRUE, stepwise.arg = NULL, ...)
 }
 \arguments{
 \item{x}{The grid data. Class: matrix.}
@@ -20,8 +12,6 @@ glm.train(
 \item{y}{The observations data. Class: matrix.}
 
 \item{fitting}{A string indicating the types of objective functions and how to fit the linear model.}
-
-\item{simulate}{A logic value indicating wether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma}
 
 \item{model.verbose}{A logic value. Indicates wether the information concerning the model infered is limited to the 
 essential information (model.verbose = FALSE)  or a more detailed information (model.verbose = TRUE, DEFAULT). This is

@@ -4,7 +4,7 @@
 \alias{glm.predict}
 \title{Donwscaling with a given generalized linear model (GLM).}
 \usage{
-glm.predict(x, weights, info)
+glm.predict(x, weights, info, simulate)
 }
 \arguments{
 \item{x}{The grid data. Class: matrix.}
@@ -13,6 +13,8 @@ glm.predict(x, weights, info)
 
 \item{info}{A list containing information of the experiment: the fitting, the family of the generalized linear model and 
 if it is deterministic or stochastic.}
+
+\item{simulate}{A logic value indicating whether we want a stochastic or a deterministic GLM. Stochastic GLMs only accept gamma}
 }
 \value{
 The predicted matrix.

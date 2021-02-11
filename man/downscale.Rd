@@ -27,7 +27,7 @@ downscale(
 
 \item{method}{Downscaling method. Options are c = ("analogs","glm","lm"). Glm can only be set when downscaling precipitation.}
 
-\item{simulate}{Logic. Options are \code{"FALSE"}, \code{"TRUE"}.}
+\item{simulate}{A logic value indicating whether we want to simulate or not based on the GLM distributional parameters. Only relevant when perdicting with a GLM. Default to FALSE.}
 
 \item{n.analogs}{Applies only when \code{method="analogs"} (otherwise ignored). Integer indicating the number of closest neigbours to retain for analog construction. Default to 1.}
 
