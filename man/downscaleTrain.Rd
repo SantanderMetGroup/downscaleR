@@ -11,6 +11,7 @@ downscaleTrain(
   threshold = NULL,
   model.verbose = TRUE,
   predict = TRUE,
+  simulate = FALSE,
   ...
 )
 }
@@ -30,6 +31,8 @@ essential information (model.verbose = FALSE)  or a more detailed information (m
 recommended when you want to save memory. Only operates for GLM.}
 
 \item{predict}{A logic value. Should the prediction on the training set should be returned? Default is TRUE.}
+
+\item{simulate}{A logic value indicating whether we want to simulate or not based on the GLM distributional parameters when prediting on the train set. Only relevant when perdicting with a GLM. Default to FALSE.}
 
 \item{...}{Optional parameters. These parameters are different depending on the method selected. Every parameter has a default value set in the atomic functions in case that no selection is wanted. 
 Everything concerning these parameters is explained in the section \code{Details}. 

@@ -4,12 +4,14 @@
 \alias{downscalePredict}
 \title{Downscale climate data for a given statistical model.}
 \usage{
-downscalePredict(newdata, model)
+downscalePredict(newdata, model, simulate = FALSE)
 }
 \arguments{
 \item{newdata}{The grid data. It should be an object as returned by  \code{\link[downscaleR]{prepareNewData}}.}
 
 \item{model}{An object containing the statistical model as returned from  \code{\link[downscaleR]{downscaleTrain}}.}
+
+\item{simulate}{A logic value indicating whether we want to simulate or not based on the GLM distributional parameters. Only relevant when perdicting with a GLM. Default to FALSE.}
 }
 \value{
 A regular/irregular grid object.

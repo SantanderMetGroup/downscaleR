@@ -723,7 +723,7 @@ adjustPrecipFreq <- function(obs, pred, threshold){
 #' @author S. Herrera and M. Iturbide
 
 delta <- function(o, p, s){
-      corrected <- o + (mean(s) - mean(p))
+      corrected <- o + (mean(s, na.rm = TRUE) - mean(p, na.rm = TRUE))
       return(corrected)
 }
 
@@ -740,9 +740,9 @@ delta <- function(o, p, s){
 
 scaling <- function(o, p, s, scaling.type){
       if (scaling.type == "additive") {
-            s - mean(p) + mean(o, na.rm = TRUE)
+            s - mean(p, na.rm = TRUE) + mean(o, na.rm = TRUE)
       } else if (scaling.type == "multiplicative") {
-            (s/mean(p)) * mean(o, na.rm = TRUE)
+            (s/mean(p, na.rm = TRUE)) * mean(o, na.rm = TRUE)
       }
 }
 

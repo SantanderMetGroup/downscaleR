@@ -21,6 +21,7 @@
 #' @param x The input grid (admits both single and multigrid, see \code{\link[transformeR]{makeMultiGrid}}). It should be an object as returned by \pkg{loadeR}.
 #' @param y The observations dataset. It should be an object as returned by \pkg{loadeR}.
 #' @param method A string value. Type of transer function. Currently implemented options are \code{"analogs"}, \code{"GLM"} and \code{"NN"}.
+#' @param simulate A logic value indicating whether we want to simulate or not based on the GLM distributional parameters. Only relevant when perdicting with a GLM. Default to FALSE. 
 #' @param sampling.strategy Specifies a sampling strategy to define the training and test subsets. Possible values are 
 #' \code{"kfold.chronological"} (the default), \code{"kfold.random"}, \code{"leave-one-year-out"} and NULL.
 #' The \code{sampling.strategy} choices are next described:
@@ -81,6 +82,7 @@
 #' x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_ta850)
 #' x <- subsetGrid(x, years = 1985:1995)
 #' # Loading predictands
+#' data("VALUE_Iberia_pr")
 #' y <- VALUE_Iberia_pr
 #' y <- getTemporalIntersection(obs = y, prd = x, "obs")
 #' x <- getTemporalIntersection(obs = y, prd = x, "prd")
@@ -110,7 +112,7 @@
 
 downscaleCV <- function(x, y, method,
                         sampling.strategy = "kfold.chronological", folds = 4, 
-                        scaleGrid.args = NULL,
+                        scaleGrid.args = NULL, simulate = FALSE,
                         prepareData.args = list("global.vars" = NULL, "combined.only" = TRUE, "spatial.predictors" = NULL, "local.predictors" = NULL, "extended.predictors" = NULL),
                         condition = NULL, threshold = NULL, ...) {
   
@@ -163,9 +165,9 @@ downscaleCV <- function(x, y, method,
     xt <- prepareNewData(newdata = xt, data.structure = xT)
     model <- downscaleTrain(xT, method, condition, threshold, ...)
     if (all(as.vector(y$Data) %in% c(0,1,NA,NaN), na.rm = TRUE)) {
-      y.prob <- downscalePredict(xt, model)
+      y.prob <- downscalePredict(xt, model, simulate)
       if (method == "GLM") {
-        if (isTRUE(model$model$atomic_model[[1]]$info$simulate)) {
+        if (isTRUE(simulate)) {
           y.bin  <- y.prob
         }
         else {
@@ -173,12 +175,13 @@ downscaleCV <- function(x, y, method,
         }
       }
       else{
-        y.bin  <- binaryGrid(y.prob, ref.obs = yT, ref.pred = model$pred)}
+        y.bin  <- binaryGrid(y.prob, ref.obs = yT, ref.pred = model$pred)
+      }
       out <- makeMultiGrid(list(y.prob,y.bin)) %>% redim(drop = TRUE)
       out$Variable$varName <- c("prob","bin")
     }
     else {
-      out <- downscalePredict(xt, model)
+      out <- downscalePredict(xt, model, simulate)
     }
     return(out)
   }) %>% bindGrid(dimension = "time")

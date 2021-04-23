@@ -82,7 +82,10 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
  * Avoid dependency from lubridate
  * Other minor changes and documentation updates
 
-## v3.3.2 (in devel)
+## v3.3.2 (09 Feb 2021)
 
  * Minor internal changes in biasCorrection for improved memory usage
  * Other minor changes and documentation updates
+ * New optional parameter in functions downscalePredict, downscaleTrain, donwscaleCV and downscale called `simulate` that permits to simulate from the distributional parameters infered from the GLMs
+ 
+## v3.3.3 (in devel)

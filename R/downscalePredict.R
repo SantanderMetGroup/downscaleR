@@ -22,6 +22,7 @@
 #' @description Downscale data to local scales by statistical models previously obtained by \code{\link[downscaleR]{downscaleTrain}}.
 #' @param newdata The grid data. It should be an object as returned by  \code{\link[downscaleR]{prepareNewData}}.
 #' @param model An object containing the statistical model as returned from  \code{\link[downscaleR]{downscaleTrain}}.
+#' @param simulate A logic value indicating whether we want to simulate or not based on the GLM distributional parameters. Only relevant when perdicting with a GLM. Default to FALSE. 
 #' @return A regular/irregular grid object.
 #' @seealso 
 #' downscaleTrain for training a downscaling model
@@ -62,7 +63,7 @@
 #' plot(yt$Data[,5],pred$Data[,5])
 #' }
 
-downscalePredict <- function(newdata, model) {
+downscalePredict <- function(newdata, model, simulate = FALSE) {
   n <- length(newdata$x.global) # number of members
   p <- lapply(1:n, function(z) {
     # Multi-site
@@ -71,7 +72,7 @@ downscalePredict <- function(newdata, model) {
       attr(xx,"predictorNames") <- attr(newdata$x.global,"predictorNames")
       xx %<>% sticky()
       if (model$model$method == "analogs") {model$model$atomic_model$dates$test <- getRefDates(newdata)}
-      yp <- as.matrix(downs.predict(xx, model$model$method, model$model$atomic_model))}
+      yp <- as.matrix(downs.predict(xx, model$model$method, model$model$atomic_model, simulate))}
     # Single-site
     else if (model$model$site == "single") {
       stations <- length(model$model$atomic_model)
@@ -98,7 +99,7 @@ downscalePredict <- function(newdata, model) {
           if (is.null(model$model$atomic_model[[i]])) {
             yp[,i] = rep(NA, 1, n.obs)
           } else {
-            yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]])
+            yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]], simulate)
           }
         }
       }
@@ -125,7 +126,7 @@ downscalePredict <- function(newdata, model) {
           if (is.null(model$model$atomic_model[[i]])) {
             yp[,i] = rep(NA, 1, n.obs)
           } else {
-            yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]])
+            yp[,i] <- downs.predict(xx, model$model$method, model$model$atomic_model[[i]], simulate)
           }
         }
       }
@@ -168,13 +169,14 @@ downscalePredict <- function(newdata, model) {
 #' @param x The grid data. Class: matrix.
 #' @param method The method of the given model.
 #' @param atomic_model An object containing the statistical model of the selected method.
+#' @param simulate A logic value indicating whether we want to simulate or not based on the GLM distributional parameters. 
 #' @return A matrix with the predictions.
 #' @details This function is internal and should not be used by the user. The user should use \code{\link[downscaleR]{downscalePredict}}.
 #' @importFrom deepnet nn.predict
 #' @author J. Bano-Medina
-downs.predict <- function(x, method, atomic_model){
+downs.predict <- function(x, method, atomic_model, simulate){
   switch(method,
          analogs = pred <- analogs.test(x, atomic_model$dataset_x, atomic_model$dataset_y, atomic_model$dates, atomic_model$info),
-         GLM     = pred <- glm.predict(x, atomic_model$weights, atomic_model$info),
+         GLM     = pred <- glm.predict(x, atomic_model$weights, atomic_model$info, simulate),
          NN      = pred <- nn.predict(atomic_model, x)) 
   return(pred)}

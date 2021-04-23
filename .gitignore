@@ -11,3 +11,4 @@ downscaleR.Rproj
 R/lmdown.R
 vignettes/bias_correction_figs
 .cache
+.DS_Store
