@@ -1055,7 +1055,7 @@ gpqm <- function(o, p, s, precip, pr.threshold, theta) {
 #' @author M. Iturbide
 
 mva <- function(o, p, s){
-      corrected <- (s - mean(p, na.rm = TRUE)) + sd(o, na.rm = TRUE)/sd(p, na.rm = TRUE) + mean(o, na.rm = TRUE)
+      corrected <- (s - mean(p, na.rm = TRUE)) * sd(o, na.rm = TRUE)/sd(p, na.rm = TRUE) + mean(o, na.rm = TRUE)
       return(corrected)
 }
 
