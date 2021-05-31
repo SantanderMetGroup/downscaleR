@@ -22,7 +22,8 @@ isimip3(
   trend_preservation = array(data = "additive", dim = 1),
   adjust_p_values = array(data = FALSE, dim = 1),
   if_all_invalid_use = c(NULL),
-  invalid_value_warnings = FALSE
+  invalid_value_warnings = FALSE,
+  halfwin_upper_bound_climatology = 0
 )
 }
 \arguments{
@@ -71,6 +72,10 @@ space, where n is the number of variables.}
 if there are no valid values and this parameter is None.}
 
 \item{invalid_value_warnings}{: boolean, optional. Raise user warnings when invalid values are replaced bafore bias adjustment.}
+
+\item{halfwin_upper_bound_climatology}{: Determines the lengths of running windows used in the calculations of climatologies of upper bounds that are used to scale values 
+of obs_hist, sim_hist, and sim_fut to the interval [0,1] before bias adjustment. The window length is set to: 
+halfwin_upper_bound_climatology * 2 + 1 time steps. If halfwin_upper_bound_climatology == 0 then no rescaling is done.}
 }
 \description{
 Implementation of ISIMIP v3 method for bias correction:
