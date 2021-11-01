@@ -176,7 +176,7 @@
 #' @return A calibrated grid of the same spatio-temporal extent than the input \code{"y"}
 #' @family downscaling
 #' 
-#' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim getWindowIndex fillGridDates getSeason intersectGrid
+#' @importFrom transformeR redim subsetGrid getYearsAsINDEX getDim getWindowIndex fillGrid getSeason intersectGrid
 #' @importFrom abind adrop
 #' @importFrom stats lm.fit approx
 #' @importFrom reticulate source_python
@@ -315,9 +315,9 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
       # } else {
       # ##################################################
       seas <- getSeason(y)
-      y <- fillGridDates(y)
-      x <- fillGridDates(x)
-      newdata <- fillGridDates(newdata)
+      y <- fillGrid(y, lonLim = NULL, latLim = NULL)
+      x <- fillGrid(x, lonLim = NULL, latLim = NULL)
+      newdata <- fillGrid(newdata, lonLim = NULL, latLim = NULL)
       yx <- intersectGrid(y, x, type = "temporal", which.return = 1:2)
       y <- yx[[1]]
       x <- yx[[2]]

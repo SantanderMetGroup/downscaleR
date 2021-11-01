@@ -83,4 +83,8 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
  * New optional parameter in functions downscalePredict, downscaleTrain, donwscaleCV and downscale called `simulate` that permits to simulate from the distributional parameters infered from the GLMs
  
 ## v3.3.3 (05 Jul 2021)
-* ;inor bug fixes, documentation updates and enhancements
+* Minor bug fixes, documentation updates and enhancements
+
+## V3.3.4 (in devel)
+* Import fillGrid instead of fillGridDates
+
