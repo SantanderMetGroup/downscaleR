@@ -51,23 +51,19 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 * Other minor changes and documentation updates
 
 ## v3.1.1 (5 Feb 2020)
-
 * Bug fix in `downscaleCV'
 * Improve the internal code of `downscaleChunk'
 * Add qdm and dqm bias correction methods
 * Bug fix in `biasCorrection'
 
 ## v3.1.2 (12 Mar 2020)
-
 * Bug fix in `isimip' (wet-day frequency correction)
 * Bug fix in downscaleTrain -- NaNs in single-site
 
 ## v3.1.3 (24 Mar 2020)
-
 * New dependency: 'library sticky' for attributes containing variable information
 
 ## v3.2.0 (23 Apr 2020)
-
 * New ISIMIP3 routine for bias correction
 * Internal python routines
 * Other documentation updates (CITATION, etc.)
@@ -76,16 +72,19 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
  * Update examples and other minor updates to include the new datasets from climate4R.datasets
 
 ## v3.3.1 (04 Jun 2020)
-
  * New parameter in downscaleTrain: 'predict', to return the prediction in the train set 
  * Internal flag to force non-overlapping nearest-neighbour application within `biasCorrection` (recommended for chunking, depends on transformeR >= 2.0.1)
  * Avoid dependency from lubridate
  * Other minor changes and documentation updates
 
 ## v3.3.2 (09 Feb 2021)
-
  * Minor internal changes in biasCorrection for improved memory usage
  * Other minor changes and documentation updates
  * New optional parameter in functions downscalePredict, downscaleTrain, donwscaleCV and downscale called `simulate` that permits to simulate from the distributional parameters infered from the GLMs
  
-## v3.3.3 (in devel)
+## v3.3.3 (05 Jul 2021)
+* Minor bug fixes, documentation updates and enhancements
+
+## V3.3.4 (in devel)
+* Import fillGrid instead of fillGridDates
+
