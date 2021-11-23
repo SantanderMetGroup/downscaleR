@@ -1258,7 +1258,9 @@ dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
             }
             
             if(detrend){
-                  s.mn <- lm.fit(cbind(1, seq_along(s)), s)$fitted
+                  s.mn <- rep(NA, length(s))
+                  ind.noNA <- which(!is.na(s))
+                  s.mn[ind.noNA] <- lm.fit(cbind(1, seq_along(ind.noNA)), s[ind.noNA])$fitted
             } else{
                   s.mn <- o.mn
             }
@@ -1268,7 +1270,7 @@ dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
                   x <- quantile(p/p.mn, tau, na.rm=T)
                   y <- quantile(o/o.mn, tau, na.rm=T)
                   yout <- approx(x, y, xout=s/s.mn, rule=2:1)$y # if rule = 1, NAs are returned outside the training interval; if rule= 2, the value at the closest data extreme is used. rule = 2:1, if the left and right side extrapolation should differ.
-                  extrap <- is.na(yout)
+                  extrap <- !is.na(s) & is.na(yout)
                   yout[extrap] <- max(o/o.mn, na.rm=T)*((s/s.mn)[extrap]/max(p/p.mn, na.rm=T)) # extrapolation on the upper tail
                   yout <- yout*s.mn
                   #yout.h <- approx(x, y, xout=p/p.mn, rule=1)$y*o.mn
@@ -1276,8 +1278,8 @@ dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
                   x <- quantile(p/p.mn, tau, na.rm=T)
                   y <- quantile(o/o.mn, tau, na.rm=T)
                   yout <- approx(x, y, xout=s/s.mn, rule=1)$y
-                  extrap.lower <- is.na(yout) & ((s/s.mn) < min(p/p.mn, na.rm=T))
-                  extrap.upper <- is.na(yout) & ((s/s.mn) > max(p/p.mn, na.rm=T))
+                  extrap.lower <- !is.na(s) & is.na(yout) & ((s/s.mn) < min(p/p.mn, na.rm=T))
+                  extrap.upper <- !is.na(s) & is.na(yout) & ((s/s.mn) > max(p/p.mn, na.rm=T))
                   yout[extrap.lower] <- min(o/o.mn, na.rm=T)*((s/s.mn)[extrap.lower]/
                                                                     min(p/p.mn, na.rm=T))
                   yout[extrap.upper] <- max(o/o.mn, na.rm=T)*((s/s.mn)[extrap.upper]/
@@ -1288,8 +1290,8 @@ dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
                   x <- quantile(p-p.mn, tau, na.rm=T)
                   y <- quantile(o-o.mn, tau, na.rm=T)
                   yout <- approx(x, y, xout=s-s.mn, rule=1)$y
-                  extrap.lower <- is.na(yout) & ((s-s.mn) < min(p-p.mn, na.rm=T))
-                  extrap.upper <- is.na(yout) & ((s-s.mn) > max(p-p.mn, na.rm=T))
+                  extrap.lower <- !is.na(s) & is.na(yout) & ((s-s.mn) < min(p-p.mn, na.rm=T))
+                  extrap.upper <- !is.na(s) & is.na(yout) & ((s-s.mn) > max(p-p.mn, na.rm=T))
                   yout[extrap.lower] <- min(o-o.mn) + ((s-s.mn)[extrap.lower]-
                                                              min(p-p.mn, na.rm=T))
                   yout[extrap.upper] <- max(o-o.mn) + ((s-s.mn)[extrap.upper]-
