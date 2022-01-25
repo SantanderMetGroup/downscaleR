@@ -321,93 +321,93 @@ biasCorrection <- function(y, x, newdata = NULL, precipitation = FALSE,
       yx <- intersectGrid(y, x, type = "temporal", which.return = 1:2)
       y <- yx[[1]]
       x <- yx[[2]]
-            if (cross.val == "none") {
-                  output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
-                                             precipitation = precipitation,
-                                             method = method,
-                                             window = window,
-                                             scaling.type = scaling.type,
-                                             fitdistr.args = fitdistr.args,
-                                             pr.threshold = wet.threshold, 
-                                             n.quantiles = n.quantiles, 
-                                             extrapolation = extrapolation, 
-                                             theta = theta,
-                                             join.members = join.members,
-                                             detrend = detrend,
-                                             isimip3.args = isimip3.args,
-                                             return.raw = return.raw,
-                                             interpGrid.args = interpGrid.args,
-                                             parallel = parallel,
-                                             max.ncores = max.ncores,
-                                             ncores = ncores)
-                  output$Data[which(is.infinite(output$Data))] <- NA
-            } else {
-                  if (nwdatamssg) {
-                        message("'newdata' will be ignored for cross-validation")
-                  }
-                  if (cross.val == "loo") {
-                        years <- as.list(unique(getYearsAsINDEX(x)))
-                  } else if (cross.val == "kfold" & !is.null(folds)) {
-                        if (!is.list(folds)) {
-                              avy <- unique(getYearsAsINDEX(y))
-                              ind <- rep(1:folds, length(avy)/folds, length.out = length(avy))
-                              ind <- if (consecutive) {
-                                    sort(ind) 
-                              } else {
-                                    sample(ind, length(ind))
-                              }
-                              folds <- split(avy, f = ind)
-                        }
-                        years <- folds
-                  } else if (cross.val == "kfold" & is.null(folds)) {
-                        stop("Fold specification is missing, with no default")
-                  }
-                  output.list <- lapply(1:length(years), function(i) {
-                        target.year <- years[[i]]
-                        rest.years <- setdiff(unlist(years), target.year)
-                        station <- FALSE
-                        if ("loc" %in% getDim(y)) station <- TRUE
-                        yy <- redim(y, member = FALSE)
-                        yy <- if (method == "delta") {
-                              subsetGrid(yy, years = target.year, drop = FALSE)
-                        } else {
-                              subsetGrid(yy, years = rest.years, drop = FALSE)
-                        }
-                        if (isTRUE(station)) {
-                              yy$Data <- adrop(yy$Data, drop = 3)
-                              attr(yy$Data, "dimensions") <- c(setdiff(getDim(yy), c("lat", "lon")), "loc")
-                        } else {
-                              yy <- redim(yy, drop = TRUE)
-                        }
-                        newdata2 <- subsetGrid(x, years = target.year, drop = F)
-                        xx <- subsetGrid(x, years = rest.years, drop = F)
-                        message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
-                        biasCorrectionXD(y = yy, x = xx, newdata = newdata2, precipitation = precipitation,
-                                         method = method,
-                                         window = window,
-                                         scaling.type = scaling.type,
-                                         fitdistr.args = fitdistr.args,
-                                         pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
-                                         theta = theta, join.members = join.members,
-                                         detrend = detrend,
-                                         isimip3.args = isimip3.args,
-                                         return.raw = return.raw,
-                                         interpGrid.args = interpGrid.args,
-                                         parallel = parallel,
-                                         max.ncores = max.ncores,
-                                         ncores = ncores)
-                  })
-                  output <- redim(bindGrid(output.list, dimension = "time"), drop = TRUE)
-                  # al <- which(getDim(x) == "time")
-                  # Data <- sapply(output.list, function(n) unname(n$Data), simplify = FALSE)
-                  # bindata <- unname(do.call("abind", c(Data, along = al)))
-                  # output <- output.list[[1]]
-                  # dimNames <- attr(output$Data, "dimensions")
-                  # output$Data <- bindata
-                  # attr(output$Data, "dimensions") <- dimNames
-                  # output$Dates <- x$Dates
-                  output$Data[which(is.infinite(output$Data))] <- NA
+      if (cross.val == "none") {
+            output <- biasCorrectionXD(y = y, x = x, newdata = newdata, 
+                                       precipitation = precipitation,
+                                       method = method,
+                                       window = window,
+                                       scaling.type = scaling.type,
+                                       fitdistr.args = fitdistr.args,
+                                       pr.threshold = wet.threshold, 
+                                       n.quantiles = n.quantiles, 
+                                       extrapolation = extrapolation, 
+                                       theta = theta,
+                                       join.members = join.members,
+                                       detrend = detrend,
+                                       isimip3.args = isimip3.args,
+                                       return.raw = return.raw,
+                                       interpGrid.args = interpGrid.args,
+                                       parallel = parallel,
+                                       max.ncores = max.ncores,
+                                       ncores = ncores)
+            output$Data[which(is.infinite(output$Data))] <- NA
+      } else {
+            if (nwdatamssg) {
+                  message("'newdata' will be ignored for cross-validation")
             }
+            if (cross.val == "loo") {
+                  years <- as.list(unique(getYearsAsINDEX(x)))
+            } else if (cross.val == "kfold" & !is.null(folds)) {
+                  if (!is.list(folds)) {
+                        avy <- unique(getYearsAsINDEX(y))
+                        ind <- rep(1:folds, length(avy)/folds, length.out = length(avy))
+                        ind <- if (consecutive) {
+                              sort(ind) 
+                        } else {
+                              sample(ind, length(ind))
+                        }
+                        folds <- split(avy, f = ind)
+                  }
+                  years <- folds
+            } else if (cross.val == "kfold" & is.null(folds)) {
+                  stop("Fold specification is missing, with no default")
+            }
+            output.list <- lapply(1:length(years), function(i) {
+                  target.year <- years[[i]]
+                  rest.years <- setdiff(unlist(years), target.year)
+                  station <- FALSE
+                  if ("loc" %in% getDim(y)) station <- TRUE
+                  yy <- redim(y, member = FALSE)
+                  yy <- if (method == "delta") {
+                        subsetGrid(yy, years = target.year, drop = FALSE)
+                  } else {
+                        subsetGrid(yy, years = rest.years, drop = FALSE)
+                  }
+                  if (isTRUE(station)) {
+                        yy$Data <- adrop(yy$Data, drop = 3)
+                        attr(yy$Data, "dimensions") <- c(setdiff(getDim(yy), c("lat", "lon")), "loc")
+                  } else {
+                        yy <- redim(yy, drop = TRUE)
+                  }
+                  newdata2 <- subsetGrid(x, years = target.year, drop = F)
+                  xx <- subsetGrid(x, years = rest.years, drop = F)
+                  message("Validation ", i, ", ", length(unique(years)) - i, " remaining")
+                  biasCorrectionXD(y = yy, x = xx, newdata = newdata2, precipitation = precipitation,
+                                   method = method,
+                                   window = window,
+                                   scaling.type = scaling.type,
+                                   fitdistr.args = fitdistr.args,
+                                   pr.threshold = wet.threshold, n.quantiles = n.quantiles, extrapolation = extrapolation, 
+                                   theta = theta, join.members = join.members,
+                                   detrend = detrend,
+                                   isimip3.args = isimip3.args,
+                                   return.raw = return.raw,
+                                   interpGrid.args = interpGrid.args,
+                                   parallel = parallel,
+                                   max.ncores = max.ncores,
+                                   ncores = ncores)
+            })
+            output <- redim(bindGrid(output.list, dimension = "time"), drop = TRUE)
+            # al <- which(getDim(x) == "time")
+            # Data <- sapply(output.list, function(n) unname(n$Data), simplify = FALSE)
+            # bindata <- unname(do.call("abind", c(Data, along = al)))
+            # output <- output.list[[1]]
+            # dimNames <- attr(output$Data, "dimensions")
+            # output$Data <- bindata
+            # attr(output$Data, "dimensions") <- dimNames
+            # output$Dates <- x$Dates
+            output$Data[which(is.infinite(output$Data))] <- NA
+      }
       output <- subsetGrid(output, season = seas)
       return(output)
 }
@@ -495,59 +495,64 @@ biasCorrectionXD <- function(y, x, newdata,
       for (j in 1:length(win)) {
             yind <- win[[j]]$obsWindow
             outind <- win[[j]]$step
-            if (delta.method) {
-                  yind <- win[[j]]$deltaind
-                  outind <- win[[j]]$deltaind
-            } 
-            yw <- y$Data[yind,,, drop = FALSE]
-            pw <- pred$Data[,,win[[j]]$window,,, drop = FALSE]
-            sw <- sim$Data[,,win[[j]]$step,,, drop = FALSE]
-            runarr <- lapply(1:n.run, function(l){
-                  memarr <- lapply(1:n.mem, function(m){
-                        #join members message
-                        if (j == 1 & m == 1) {
-                              if (!isTRUE(join.members)) {
-                                    message("[", Sys.time(), "] Bias-correcting ", n.mem, " members separately...")
-                              } else {
-                                    message("[", Sys.time(), "] Bias-correcting ", attr(pred, "orig.mem.shape"), " members considering their joint distribution...")
+            if (length(outind) != 0) {
+                  if (delta.method) {
+                        yind <- win[[j]]$deltaind
+                        outind <- win[[j]]$deltaind
+                  } 
+                  yw <- y$Data[yind,,, drop = FALSE]
+                  pw <- pred$Data[,,win[[j]]$window,,, drop = FALSE]
+                  sw <- sim$Data[,,win[[j]]$step,,, drop = FALSE]
+                  runarr <- lapply(1:n.run, function(l){
+                        memarr <- lapply(1:n.mem, function(m){
+                              #join members message
+                              if (j == 1 & m == 1) {
+                                    if (!isTRUE(join.members)) {
+                                          message("[", Sys.time(), "] Bias-correcting ", n.mem, " members separately...")
+                                    } else {
+                                          message("[", Sys.time(), "] Bias-correcting ", attr(pred, "orig.mem.shape"), " members considering their joint distribution...")
+                                    }
                               }
-                        }
-                        o = yw[, , , drop = FALSE]
-                        p = adrop(pw[l, m, , , , drop = FALSE], drop = c(T, T, F, F, F))
-                        s = adrop(sw[l, m, , , , drop = FALSE], drop = c(T, T, F, F, F))
-                        data <- list(o, p, s)
-                        if (!station) {
-                              data <- lapply(1:length(data), function(x) {
-                                    attr(data[[x]], "dimensions") <- dimNames
-                                    abind(array3Dto2Dmat(data[[x]]), along = 3)
-                              }) 
-                        }
-                        o <- lapply(seq_len(ncol(data[[1]])), function(i) data[[1]][,i,1])
-                        p <- lapply(seq_len(ncol(data[[2]])), function(i) data[[2]][,i,1])
-                        s <- lapply(seq_len(ncol(data[[3]])), function(i) data[[3]][,i,1])
-                        data <- NULL
-                        mat <- biasCorrection1D(o, p, s,
-                                                method = method,
-                                                scaling.type = scaling.type,
-                                                fitdistr.args = fitdistr.args,
-                                                precip = precip,
-                                                pr.threshold = pr.threshold,
-                                                n.quantiles = n.quantiles,
-                                                extrapolation = extrapolation,
-                                                theta = theta,
-                                                detrend = detrend,
-                                                isimip3.args = isimip3.args,
-                                                parallel = parallel,
-                                                max.ncores = max.ncores,
-                                                ncores = ncores)  
-                        if (!station) mat <- mat2Dto3Darray(mat, xy$x, xy$y)
-                        mat
+                              o = yw[, , , drop = FALSE]
+                              p = adrop(pw[l, m, , , , drop = FALSE], drop = c(T, T, F, F, F))
+                              s = adrop(sw[l, m, , , , drop = FALSE], drop = c(T, T, F, F, F))
+                              data <- list(o, p, s)
+                              if (!station) {
+                                    data <- lapply(1:length(data), function(x) {
+                                          attr(data[[x]], "dimensions") <- dimNames
+                                          abind(array3Dto2Dmat(data[[x]]), along = 3)
+                                    }) 
+                              }
+                              o <- lapply(seq_len(ncol(data[[1]])), function(i) data[[1]][,i,1])
+                              p <- lapply(seq_len(ncol(data[[2]])), function(i) data[[2]][,i,1])
+                              s <- lapply(seq_len(ncol(data[[3]])), function(i) data[[3]][,i,1])
+                              data <- NULL
+                              mat <- biasCorrection1D(o, p, s,
+                                                      method = method,
+                                                      scaling.type = scaling.type,
+                                                      fitdistr.args = fitdistr.args,
+                                                      precip = precip,
+                                                      pr.threshold = pr.threshold,
+                                                      n.quantiles = n.quantiles,
+                                                      extrapolation = extrapolation,
+                                                      theta = theta,
+                                                      detrend = detrend,
+                                                      isimip3.args = isimip3.args,
+                                                      parallel = parallel,
+                                                      max.ncores = max.ncores,
+                                                      ncores = ncores)  
+                              if (!station) {
+                                    if(class(mat) == "numeric") mat <- as.matrix(mat)
+                                    mat <- mat2Dto3Darray(mat, xy$x, xy$y)
+                              }
+                              mat
+                        })
+                        unname(do.call("abind", list(memarr, along = 0)))
                   })
-                  unname(do.call("abind", list(memarr, along = 0)))
-            })
-            yw <- pw <- sw <- NULL
-            winarr[,,outind,,] <- unname(do.call("abind", list(runarr, along = 0))) 
-            runarr <- NULL
+                  yw <- pw <- sw <- NULL
+                  winarr[,,outind,,] <- unname(do.call("abind", list(runarr, along = 0))) 
+                  runarr <- NULL
+            }
       }
       bc$Data <- unname(do.call("abind", list(winarr, along = 3)))
       winarr <- NULL
@@ -569,7 +574,7 @@ biasCorrectionXD <- function(y, x, newdata,
             sim[["Variable"]][["varName"]] <- paste0(bc[["Variable"]][["varName"]], "_raw")
             bc <- makeMultiGrid(bc, sim)
             if (station){
-                bc <- redim(bc, loc = TRUE)
+                  bc <- redim(bc, loc = TRUE)
             }
       }
       pred <- newdata <- sim <- y <- NULL
