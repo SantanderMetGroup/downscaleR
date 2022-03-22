@@ -148,11 +148,22 @@ downscaleCV <- function(x, y, method,
     if (any(duplicated(unlist(folds)))) stop("Years can not appear in more than one fold")
   }
   
-  data <- dataSplit(x,y, f = folds, type = type)
-  p <- lapply(1:length(data), FUN = function(xx) {
+  if (is.null(folds)) {
+    data <- dataSplit(x,y, f = folds, type = type)
+    num_folds <- length(data)
+  } else {
+    num_folds <- length(folds)
+  }
+  p <- lapply(1:num_folds, FUN = function(xx) {
     message(paste("fold:",xx,"-->","calculating..."))
+    if (is.null(folds)) {
     xT <- data[[xx]]$train$x ; yT <- data[[xx]]$train$y
-    xt <- data[[xx]]$test$x  ; yt <- data[[xx]]$test$y
+    xt <- data[[xx]]$test$x  
+    } else {
+      xT <- subsetGrid(x, years = folds[setdiff(1:num_folds, xx)] %>% unlist())
+      xt <- subsetGrid(x, years = folds[[xx]])
+      yT <- subsetGrid(y, years = folds[setdiff(1:num_folds, xx)] %>% unlist())
+    }
     if (!is.null(scaleGrid.args)) {
       scaleGrid.args$base <- xT
       scaleGrid.args$grid <- xt
