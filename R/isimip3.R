@@ -36,6 +36,9 @@
 #' @param if_all_invalid_use : list of floats, optional. Used to replace invalid values if there are no valid values. An error is raised 
 #'        if there are no valid values and this parameter is None.
 #' @param invalid_value_warnings : boolean, optional. Raise user warnings when invalid values are replaced bafore bias adjustment.
+#' @param halfwin_upper_bound_climatology : Determines the lengths of running windows used in the calculations of climatologies of upper bounds that are used to scale values 
+#' of obs_hist, sim_hist, and sim_fut to the interval [0,1] before bias adjustment. The window length is set to: 
+#' halfwin_upper_bound_climatology * 2 + 1 time steps. If halfwin_upper_bound_climatology == 0 then no rescaling is done.
 #' @keywords internal
 #' @importFrom stats approxfun ecdf quantile
 #' @importFrom reticulate dict source_python
@@ -56,13 +59,22 @@ isimip3 <- function(o, p, s,
                     trend_preservation = array(data = "additive", dim = 1),
                     adjust_p_values = array(data = FALSE, dim = 1),
                     if_all_invalid_use = c(NULL),
-                    invalid_value_warnings = FALSE) {
+                    invalid_value_warnings = FALSE,
+                    halfwin_upper_bound_climatology = 0) {
       
       smap <- s
       if (any(!is.na(o)) & any(!is.na(p)) & any(!is.na(s))) {
-            ## source python routines
+             ## source python routines
             lf <- list.files(file.path(find.package("downscaleR")), pattern = "\\.py$", recursive = TRUE, full.names = TRUE)
             sapply(lf, source_python, .GlobalEnv)
+            if (halfwin_upper_bound_climatology != 0){
+                  aux <- scale_by_upper_bound_climatology(o,dates$obs_hist, halfwin = halfwin_upper_bound_climatology)
+                  o <- aux$data
+                  aux <- scale_by_upper_bound_climatology(p,dates$sim_hist, halfwin = halfwin_upper_bound_climatology)
+                  p <- aux$data
+                  s.rescale <- scale_by_upper_bound_climatology(s,dates$sim_fut, halfwin = halfwin_upper_bound_climatology)
+                  s <- s.rescale$data
+            }
             if (is.null(long_term_mean)) {
                   lt.o <- average_valid_values(array(o), if_all_invalid_use = if_all_invalid_use,
                                                lower_bound=lower_bound, lower_threshold = lower_threshold,
@@ -102,10 +114,77 @@ isimip3 <- function(o, p, s,
                   indMonth.s <- which(meses.s == meses.name[m])
                   smap[indMonth.s] <- auxMonths[[m]][[1]]
             }
+            if (halfwin_upper_bound_climatology != 0){
+                  smap <- re_scale_by_upper_bound_climatology(smap,dates$sim_fut,s.rescale)
+            }
       } else{
              smap[] <- NA
 ##             print("No valid values have been found, so the raw un-corrected data is returned.") 
       }
       return(smap)
 }
+#end
+
+#' @title Scaling by upper bound climatology
+#' @description Scaling by upper bound climatology
+#' @param data A vector containing the climate data
+#' @param dates A vector containing the dates to which corresponds the data. 
+#' @param halfwin A number defining the length of running windows used in the calculations of 
+#'                climatologies of upper bounds that are used to scale values. The
+#'                window length is set to halfwin * 2 + 1 time
+#'                steps. If halfwin == 0 then no rescaling is done.
+#' 
+#' @keywords internal
+#' @author S. Herrera (sixto.herrera@@unican.es)
+
+scale_by_upper_bound_climatology <- function(data, dates, halfwin = 0) {
+      if (halfwin != 0){
+        doys.o <- unique(substr(dates, 6, 10))
+        mydmrm.o <- lapply(c(1:length(doys.o)), function(d){
+          ind.d <- which(substr(dates, 6, 10) == doys.o[d])
+          if (length(ind.d) > 0){
+            d.p <- lapply(c(1:length(ind.d)), function(dd){
+              ind.dd <- c(max(c(1,ind.d[dd]-halfwin)):min(c(length(data),ind.d[dd]+halfwin)))
+              l <- max(data[ind.dd], na.rm = TRUE)
+            })
+            l <- max(as.numeric(unlist(d.p)), na.rm = TRUE)
+          }else{
+            l <- NA
+          }
+        })
+        mydmrm.o <- as.numeric(unlist(mydmrm.o))
+        ubc.o <- mydmrm.o
+        mydmrm.o <- c(mydmrm.o[(length(doys.o)-halfwin+1):length(doys.o)],mydmrm.o,mydmrm.o[1:halfwin])
+        for (d in c(1:length(doys.o))){
+          center <- d+halfwin
+          ubc.o[d] <- mean(mydmrm.o[c((center-halfwin):(center+halfwin))], na.rm = TRUE)
+          ind.d <- which(substr(dates, 6, 10) == doys.o[d])
+          if (length(ind.d) > 0){
+            data[ind.d] <- data[ind.d]/ubc.o[d]
+          }
+        }
+      }
+      out <- list("data" = data, "doys" = doys.o, "normd" = ubc.o)
+      return(out)
+    }
+#end
+
+#' @title Re-Scaling by upper bound climatology
+#' @description Re-Scaling by upper bound climatology
+#' @param data A vector containing the climate data
+#' @param dates A vector containing the dates to which corresponds the data. 
+#' @param rescale A list with the elements needed (day-of-year and scale corresponding to each day-of-year) to re-scale the bias adjusted data.
+#' 
+#' @keywords internal
+#' @author S. Herrera (sixto.herrera@@unican.es)
+
+re_scale_by_upper_bound_climatology <- function(data, dates, rescale) {
+      for (d in c(1:length(rescale$doys))){
+        ind.d <- which(substr(dates, 6, 10) == rescale$doys[d])
+        if (length(ind.d) > 0){
+          data[ind.d] <- data[ind.d]*rescale$normd[d]
+        }
+      }
+      return(data)
+    }
 #end
