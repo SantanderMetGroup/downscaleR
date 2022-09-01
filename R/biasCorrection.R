@@ -783,6 +783,10 @@ pqm <- function(o, p, s, fitdistr.args, precip, pr.threshold){
       ind.o <- 1:length(o)
       ind.p <- 1:length(p)
       rain <- 1:length(s)
+      if (all(is.na(o[ind.o]))) {
+         run <- FALSE
+         s <- rep(NA, length(s))
+      }
       if (precip) {
             threshold <- pr.threshold
             if (any(!is.na(o))) {
@@ -805,10 +809,9 @@ pqm <- function(o, p, s, fitdistr.args, precip, pr.threshold){
                   run <- FALSE
                   warning("For the window step selected, location without rainfall above the threshold.\n no bias correction applied in location.")
             } 
-      }
-      if (all(is.na(o[ind.o]))) {
-            run <- FALSE
-            s <- rep(NA, length(s))
+      } else{
+         ind.o <- which(!is.na(o))
+         ind.p <- which(!is.na(p))
       }
       if (run) {
             fitdistr.args.o <- c("x" = list(o[ind.o]), fitdistr.args)
