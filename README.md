@@ -38,8 +38,8 @@ analog.2000 <- subsetGrid(analog$pred,station.id = "000234",years = 2000)
 regression.2000 <- subsetGrid(regression$pred,station.id = "000234",years = 2000)
 neuralnet.2000 <- subsetGrid(neuralnet$pred,station.id = "000234",years = 2000)
 
-
-library(visualizeR)  # Data visualization utilities
+# Data visualization utilities
+library(visualizeR) 
 temporalPlot(igueldo.2000, analog.2000, regression.2000, neuralnet.2000)
 ```
 
