@@ -8,8 +8,9 @@ This package is part of the [climate4R bundle](http://www.meteo.unican.es/climat
 The recommended installation procedure is to use the `install_github` command from the devtools R package:
 
 ```r
-devtools::install_github(c("SantanderMetGroup/transformeR", 
+remotes::install_github(c("SantanderMetGroup/transformeR", 
                            "SantanderMetGroup/downscaleR", 
+                           "SantanderMetGroup/visualizeR",
                            "SantanderMetGroup/climate4R.datasets"))
 ```
 **NOTE:** Note that `transformeR` is a dependency for `downscaleR`. The utilities in `transformeR` were formerly part of `downscaleR` (up to v1.3-4). Since `downscaleR` v2.0-0, these are in `transformeR` and `downscaleR` is strictly aimed to statistical downscaling. Note that `transformeR` also includes illustrative datasets for the `climate4r`framework.
@@ -22,17 +23,22 @@ data("VALUE_Iberia_tas") # illustrative datasets included in transformeR
 y <- VALUE_Iberia_tas 
 data("NCEP_Iberia_hus850", "NCEP_Iberia_psl", "NCEP_Iberia_ta850")
 x <- makeMultiGrid(NCEP_Iberia_hus850, NCEP_Iberia_psl, NCEP_Iberia_ta850)
+
 # calculating predictors
 data <- prepareData(x = x, y = y,spatial.predictors = list(v.exp = 0.95)) 
+
 # Fitting statistical downscaling methods (simple case, no cross-validation)
 analog <- downscaleTrain(data, method = "analogs", n.analogs = 1)
 regression <- downscaleTrain(data, method = "GLM",family = gaussian)
 neuralnet <- downscaleTrain(data, method = "NN", hidden = c(10,5), output = "linear")
+
 # Extracting the results for a particula station (Igueldo) for a single year (2000)
 igueldo.2000 <- subsetGrid(y,station.id = "000234",years = 2000)
 analog.2000 <- subsetGrid(analog$pred,station.id = "000234",years = 2000)
 regression.2000 <- subsetGrid(regression$pred,station.id = "000234",years = 2000)
 neuralnet.2000 <- subsetGrid(neuralnet$pred,station.id = "000234",years = 2000)
+
+
 library(visualizeR)  # Data visualization utilities
 temporalPlot(igueldo.2000, analog.2000, regression.2000, neuralnet.2000)
 ```
