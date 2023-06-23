@@ -85,6 +85,7 @@ See the [Releases section](https://github.com/SantanderMetGroup/downscaleR/relea
 ## v3.3.3 (05 Jul 2021)
 * Minor bug fixes, documentation updates and enhancements
 
-## V3.3.4 (in devel)
+## V3.3.4 (23 Jun 2023)
 * Import fillGrid instead of fillGridDates
+* Add LICENSE file
 

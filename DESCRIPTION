@@ -22,11 +22,12 @@ Suggests:
     loadeR.ECOMS,
     visualizeR,
     knitr,
-    rmarkdown
+    rmarkdown,
+    climate4R.UDG
 Type: Package
 Title: A climate4R package for statistical downscaling <http://meteo.unican.es/climate4r>
-Version: 3.3.3
-Date: 2021-11-01
+Version: 3.3.4
+Date: 2023-06-22
 Authors@R: as.person(c(
     "Santander Meteorology Group <http://meteo.unican.es> [cph]",
     "Joaquín Bedia <bediaj@unican.es> [aut, cre]",
@@ -46,7 +47,7 @@ BugReports: https://github.com/SantanderMetGroup/downscaleR/issues
 URL: http://www.meteo.unican.es/climate4r
 Encoding: UTF-8
 Description: Tools for climate data calibration (bias correction, quantile mapping etc.) and perfect-prog downscaling, as part of the climate4R framework (<http://meteo.unican.es/climate4R>). 
-License: GPL (>= 3)
+License: file LICENSE
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 VignetteBuilder: knitr
