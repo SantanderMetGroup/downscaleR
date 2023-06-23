@@ -167,7 +167,7 @@
 #'  
 #'  The precipitation subroutines are switched-on when the variable name of the grid 
 #'  (i.e., the value returned by \code{gridData$Variable$varName}) is one of the following: 
-#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (\code{\link[loadeR.UDG]{C4R.vocabulary}}), \code{"precipitation"} or \code{"precip"}.
+#'  \code{"pr"}, \code{"tp"} (this is the standard name defined in the vocabulary (\code{\link[cliamte4R.UDG]{C4R.vocabulary}}), \code{"precipitation"} or \code{"precip"}.
 #'  Thus, caution must be taken to ensure that the correct bias correction is being undertaken when dealing with
 #'  non-standard variables.
 #'     
@@ -542,7 +542,7 @@ biasCorrectionXD <- function(y, x, newdata,
                                                       max.ncores = max.ncores,
                                                       ncores = ncores)  
                               if (!station) {
-                                    if(class(mat) == "numeric") mat <- as.matrix(mat)
+                                    if(is.numeric(mat)) mat <- as.matrix(mat)
                                     mat <- mat2Dto3Darray(mat, xy$x, xy$y)
                               }
                               mat
