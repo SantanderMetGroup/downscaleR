@@ -1272,8 +1272,9 @@ dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
             } else{
                   s.mn <- o.mn
             }
-            if(is.null(n.quantiles)) n.quantiles <- max(length(o), length(p))
-            tau <- c(0, (1:n.quantiles)/(n.quantiles+1), 1)
+            if (is.null(n.quantiles)) n.quantiles <- length(p)
+            bins <- n.quantiles
+            tau <- seq(1/bins,1 - 1/bins,1/bins)
             if(precip & any(o < sqrt(.Machine$double.eps), na.rm=TRUE)){
                   x <- quantile(p/p.mn, tau, na.rm=T)
                   y <- quantile(o/o.mn, tau, na.rm=T)
@@ -1356,9 +1357,9 @@ qdm <- function(o, p, s, precip, pr.threshold, n.quantiles, jitter.factor=0.01){
             }
             
             # Calculate empirical quantiles using Weibull plotting position
-            n <- max(length(o), length(p), length(s))
-            if(is.null(n.quantiles)) n.quantiles <- n
-            tau <- seq(1/(n+1), n/(n+1), length=n.quantiles)
+            if (is.null(n.quantiles)) n.quantiles <- length(p)
+            bins <- n.quantiles
+            tau <- seq(1/bins,1 - 1/bins,1/bins)
             quant.o <- quantile(o, tau, type=6, na.rm=TRUE)
             quant.p <- quantile(p, tau, type=6, na.rm=TRUE)
             quant.s <- quantile(s, tau, type=6, na.rm=TRUE)
