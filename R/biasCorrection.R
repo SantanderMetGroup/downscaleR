@@ -1242,8 +1242,8 @@ recoverMemberDim <- function(plain.grid, bc.grid, newdata) {
 #' @keywords internal
 #' @author A. Cannon (acannon@@uvic.ca), A. Casanueva
 
-dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
-      
+dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend){
+     
       if (all(is.na(o)) | all(is.na(p)) | all(is.na(s))) {
             return(yout=rep(NA, length(s)))
             
@@ -1276,37 +1276,44 @@ dqm <- function(o, p, s, precip, pr.threshold, n.quantiles, detrend=TRUE){
             bins <- n.quantiles
             tau <- seq(1/bins,1 - 1/bins,1/bins)
             if(precip & any(o < sqrt(.Machine$double.eps), na.rm=TRUE)){
-                  x <- quantile(p/p.mn, tau, na.rm=T)
-                  y <- quantile(o/o.mn, tau, na.rm=T)
-                  yout <- approx(x, y, xout=s/s.mn, rule=2:1)$y # if rule = 1, NAs are returned outside the training interval; if rule= 2, the value at the closest data extreme is used. rule = 2:1, if the left and right side extrapolation should differ.
+                  anom.p <- p/p.mn
+                  anom.o <- o/o.mn
+                  anom.s <- s/s.mn
+                  x <- quantile(anom.p, tau, na.rm=T)
+                  y <- quantile(anom.o, tau, na.rm=T)
+                  yout <- approx(x, y, xout=anom.s, rule=2:1)$y # if rule = 1, NAs are returned outside the training interval; if rule= 2, the value at the closest data extreme is used. rule = 2:1, if the left and right side extrapolation should differ.
                   extrap <- !is.na(s) & is.na(yout)
-                  yout[extrap] <- max(o/o.mn, na.rm=T)*((s/s.mn)[extrap]/max(p/p.mn, na.rm=T)) # extrapolation on the upper tail
+                  yout[extrap] <- y[length(y)]*(anom.s[extrap]/x[length(x)]) # extrapolation on the upper tail
                   yout <- yout*s.mn
-                  #yout.h <- approx(x, y, xout=p/p.mn, rule=1)$y*o.mn
+                  #yout.h <- approx(x, y, xout=anom.p, rule=1)$y*o.mn
             } else if(precip & !any(o < sqrt(.Machine$double.eps), na.rm=TRUE)){
-                  x <- quantile(p/p.mn, tau, na.rm=T)
-                  y <- quantile(o/o.mn, tau, na.rm=T)
-                  yout <- approx(x, y, xout=s/s.mn, rule=1)$y
-                  extrap.lower <- !is.na(s) & is.na(yout) & ((s/s.mn) < min(p/p.mn, na.rm=T))
-                  extrap.upper <- !is.na(s) & is.na(yout) & ((s/s.mn) > max(p/p.mn, na.rm=T))
-                  yout[extrap.lower] <- min(o/o.mn, na.rm=T)*((s/s.mn)[extrap.lower]/
-                                                                    min(p/p.mn, na.rm=T))
-                  yout[extrap.upper] <- max(o/o.mn, na.rm=T)*((s/s.mn)[extrap.upper]/
-                                                                    max(p/p.mn, na.rm=T))
+                  anom.p <- p/p.mn
+                  anom.o <- o/o.mn
+                  anom.s <- s/s.mn    
+                  x <- quantile(anom.p, tau, na.rm=T)
+                  y <- quantile(anom.o, tau, na.rm=T)
+                  yout <- approx(x, y, xout=anom.s, rule=1)$y
+                  extrap.lower <- !is.na(s) & is.na(yout) & (anom.s < min(x, na.rm=T))
+                  extrap.upper <- !is.na(s) & is.na(yout) & (anom.s > max(x, na.rm=T))
+                  yout[extrap.lower] <- y[1]*(anom.s[extrap.lower]/x[1])
+                  yout[extrap.upper] <- y[length(y)]*(anom.s[extrap.upper]/x[length(x)])
                   yout <- yout*s.mn
-                  #yout.h <- approx(x, y, xout=p/p.mn, rule=1)$y*o.mn
+                  #yout.h <- approx(x, y, xout=anom.p, rule=1)$y*o.mn
             } else{
-                  x <- quantile(p-p.mn, tau, na.rm=T)
-                  y <- quantile(o-o.mn, tau, na.rm=T)
-                  yout <- approx(x, y, xout=s-s.mn, rule=1)$y
-                  extrap.lower <- !is.na(s) & is.na(yout) & ((s-s.mn) < min(p-p.mn, na.rm=T))
-                  extrap.upper <- !is.na(s) & is.na(yout) & ((s-s.mn) > max(p-p.mn, na.rm=T))
-                  yout[extrap.lower] <- min(o-o.mn) + ((s-s.mn)[extrap.lower]-
-                                                             min(p-p.mn, na.rm=T))
-                  yout[extrap.upper] <- max(o-o.mn) + ((s-s.mn)[extrap.upper]-
-                                                             max(p-p.mn, na.rm=T))
+                  anom.p <- p-p.mn
+                  anom.o <- o-o.mn
+                  anom.s <- s-s.mn
+                  x <- quantile(anom.p, tau, na.rm=T)
+                  y <- quantile(anom.o, tau, na.rm=T)
+                  yout <- approx(x, y, xout=anom.s, rule=1)$y
+                  extrap.lower <- !is.na(s) & is.na(yout) & (anom.s < min(x, na.rm=T))
+                  extrap.upper <- !is.na(s) & is.na(yout) & (anom.s > max(x, na.rm=T))
+                  yout[extrap.lower] <- y[1] + (anom.s[extrap.lower]- x[1])
+                  yout[extrap.upper] <- y[length(y)] + (anom.s[extrap.upper]-
+                                                          x[length(x)])
+                   
                   yout <- yout+s.mn
-                  #yout.h <- approx(x, y, xout=p-p.mn, rule=1)$y+o.mn
+                  #yout.h <- approx(x, y, xout=anom.p, rule=1)$y+o.mn
             }
             if(precip){
                   yout[which(yout < sqrt(.Machine$double.eps))] <- 0
