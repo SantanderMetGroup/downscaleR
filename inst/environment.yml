@@ -1,0 +1,17 @@
+name: r-reticulate
+channels:
+# very permissive list of conda channels
+  - conda-forge
+  - r
+  - defaults
+  - santandermetgroup
+  - conda-forge/label/broken
+dependencies:
+# explicit dependencies for ISIMIP3 bias correction Python scripts
+  - python
+  - dask
+  - iris
+  - scipy
+  - numpy
+  - pandas
+
